@@ -13,7 +13,7 @@
 */
 
 // Delay between demo pages
-#define WAIT 1000                // Delay between tests, set to 0 to demo speed, 2000 to see what it does!
+#define WAIT 2000                // Delay between tests, set to 0 to demo speed, 2000 to see what it does!
 
 #define TFT_DISPLAY_RESOLUTION_X  320
 #define TFT_DISPLAY_RESOLUTION_Y  480
@@ -31,7 +31,7 @@ SET_LOOP_TASK_STACK_SIZE(32 * 1024);
 
 // TFT SPI
 #define TFT_LED          33      // TFT backlight pin
-#define TFT_LED_PWM      200     // dutyCycle 0-255 last minimum was 15
+#define TFT_LED_PWM      255     // dutyCycle 0-255 last minimum was 15
 
 TFT_eSPI tft = TFT_eSPI();       // Invoke custom library with default width and height
 
@@ -43,34 +43,54 @@ typedef struct {
   int pv2Power;
   int soc;
   int batteryPower;
-
-  int inverterTemperature;
+  int L1Power;
+  int L2Power;
+  int L3Power;
+  int feedInPower;
   int batteryTemperature;
+  double yieldToday;
+  long yieldTotal;
 } InverterData_t;
 
 InverterData_t inverterData;
 
 void drawDashboard() {
-  tft.fillScreen(TFT_WHITE);
-  tft.fillRect(0, 0, 160, 320, TFT_ORANGE);
-  tft.setTextSize(56);
-
+  int margin = 16;
+  
+  tft.fillRectVGradient(0, 0, 160, 320, TFT_ORANGE, TFT_YELLOW);
+  tft.setFreeFont(&FreeSansBold24pt7b);
   tft.setTextColor(TFT_WHITE);
   tft.setCursor(50, 50);
-  
   tft.print("PV");
 
+  tft.fillRect(160, 0, 480 - 160, 320, TFT_WHITE);
   tft.setTextColor(TFT_BLACK);
-  tft.setCursor(170, 50);
-  tft.printf("%d W", inverterData.pv1Power);
-  tft.setCursor(170, 150);
-  tft.printf("%d W", inverterData.pv1Power);
-  tft.setCursor(170, 250);
-  tft.printf("%d %%", inverterData.soc);
-  
-  tft.setTextSize(0);
 
-  tft.setCursor(50, 280);
+  tft.setFreeFont(&FreeSansBold12pt7b);
+  tft.setCursor(160 + margin, FreeSansBold12pt7b.yAdvance + margin);
+  tft.printf("%d W", inverterData.pv1Power);
+  tft.setCursor(325 + margin, margin + FreeSansBold12pt7b.yAdvance);
+  tft.printf("%d W", inverterData.pv1Power);
+  tft.setFreeFont(&FreeSansBold24pt7b);
+  tft.setCursor(160 + margin, margin + FreeSansBold12pt7b.yAdvance + margin + FreeSansBold24pt7b.yAdvance);
+  tft.printf("%d W", inverterData.pv1Power + inverterData.pv2Power);
+  tft.setCursor(160 + margin, margin + FreeSansBold12pt7b.yAdvance + margin + FreeSansBold24pt7b.yAdvance * 2 + margin);
+  tft.printf("%d %%", inverterData.soc);
+
+  tft.setFreeFont(&FreeSansBold12pt7b);
+  tft.setCursor(160 + margin, margin + FreeSansBold12pt7b.yAdvance * 2 + margin + FreeSansBold24pt7b.yAdvance * 2 + margin * 2);
+  tft.printf("%d W", inverterData.L1Power);
+  tft.setCursor(160 + 106 * 1 + margin, margin + FreeSansBold12pt7b.yAdvance * 2 + margin + FreeSansBold24pt7b.yAdvance * 2 + margin * 2);
+  tft.printf("%d W", inverterData.L2Power);
+  tft.setCursor(160 + 106 * 2 + margin, margin + FreeSansBold12pt7b.yAdvance * 2 + margin + FreeSansBold24pt7b.yAdvance * 2 + margin * 2);
+  tft.printf("%d W", inverterData.L3Power);
+
+  tft.setFreeFont(&FreeSansBold24pt7b);
+  tft.setCursor(160 + margin, margin + FreeSansBold12pt7b.yAdvance * 2 + margin + FreeSansBold24pt7b.yAdvance * 3 + margin * 2);
+  tft.printf("%d W", inverterData.feedInPower);
+
+  tft.setFreeFont(&FreeSansBold9pt7b);
+  tft.setCursor(170, 310);
   tft.print(WiFi.status() == WL_CONNECTED ? "Status: " + String(inverterData.status) : "WiFi disconnected");   
 }
 
@@ -87,8 +107,15 @@ InverterData_t loadData() {
         inverterData.status = 0;
         inverterData.pv1Power = doc["Data"][14].as<int>();
         inverterData.pv2Power = doc["Data"][15].as<int>();
-        inverterData.batteryPower = doc["Data"][15].as<int>();
+        inverterData.batteryPower = doc["Data"][41].as<int>();
+        inverterData.batteryTemperature = doc["Data"][105].as<int>();
+        inverterData.L1Power = doc["Data"][6].as<int>();
+        inverterData.L2Power = doc["Data"][7].as<int>();
+        inverterData.L3Power = doc["Data"][8].as<int>();
         inverterData.soc = doc["Data"][103].as<int>();
+        inverterData.yieldToday = doc["Data"][70].as<double>() / 10.0;
+        inverterData.yieldTotal = doc["Data"][68].as<long>() << 16 + doc["Data"][69].as<long>();
+        inverterData.feedInPower = doc["Data"][86].as<long>() << 16 + doc["Data"][87].as<long>();
       } else {
         inverterData.status = -3;
       }
@@ -113,7 +140,8 @@ void setup() {
 
   tft.init();
   tft.setRotation(1);
-  
+  tft.fillScreen(TFT_WHITE);
+
   WiFi.begin("Wifi_SXBYETVWHZ");
 }
 
