@@ -22,10 +22,9 @@
 #include <TFT_eSPI.h>            // Hardware-specific library
 #include <SPI.h>
 #include <Arduino.h>
-#include <WiFi.h>
-#include <WiFiMulti.h>
-#include <ArduinoJson.h>
-#include <HTTPClient.h>
+
+#include "Solax/SolaxDongleDiscovery.hpp"
+#include "Solax/SolaxDongleAPI.hpp"
 
 SET_LOOP_TASK_STACK_SIZE(32 * 1024);
 
@@ -37,34 +36,12 @@ TFT_eSPI tft = TFT_eSPI();       // Invoke custom library with default width and
 
 #define TFT_GREY 0x7BEF
 
-typedef struct {
-  int status = -1;
-  int pv1Power;
-  int pv2Power;
-  int soc;
-  int batteryPower;
-  int L1Power;
-  int L2Power;
-  int L3Power;
-  int32_t feedInPower;
-  int batteryTemperature;
-  double yieldToday;
-  uint32_t yieldTotal;
-} InverterData_t;
+SolaxDongleAPI dongleAPI;
+SolaxDongleDiscovery dongleDiscovery;
 
-InverterData_t inverterData;
+SolaxDongleInverterData_t inverterData;
+SolaxDongleDiscoveryResult_t discoveryResult;
 
-uint32_t read32BitUnsigned(uint32_t a, uint32_t b) {
-  return b + 65536 * a;
-}
-
-int32_t read32BitSigned(int32_t a, int32_t b) {
-  if (a < 32768) {
-    return b + 65536 * a;
-  } else {
-    return b + 65536 * a - 4294967296;
-  }
-}
 
 void drawDashboard() {
   int margin = 16;
@@ -110,41 +87,6 @@ void drawDashboard() {
   tft.print(WiFi.status() == WL_CONNECTED ? "Status: " + String(inverterData.status) : "WiFi disconnected");   
 }
 
-InverterData_t loadData() {
-  String url = "http://5.8.8.8";
-  HTTPClient http;
-  if (http.begin(url)) {
-    int httpCode = http.POST("optType=ReadRealTimeData&pwd=SXBYETVWHZ");
-    if (httpCode == HTTP_CODE_OK) {
-      StaticJsonDocument<8192> doc;
-      String payload = http.getString();
-      DeserializationError err = deserializeJson(doc, payload);
-      if(err == DeserializationError::Ok) {
-        inverterData.status = 0;
-        inverterData.pv1Power = doc["Data"][14].as<int>();
-        inverterData.pv2Power = doc["Data"][15].as<int>();
-        inverterData.batteryPower = doc["Data"][41].as<int>();
-        inverterData.batteryTemperature = doc["Data"][105].as<int>();
-        inverterData.L1Power = doc["Data"][6].as<int>();
-        inverterData.L2Power = doc["Data"][7].as<int>();
-        inverterData.L3Power = doc["Data"][8].as<int>();
-        inverterData.soc = doc["Data"][103].as<int>();
-        inverterData.yieldToday = doc["Data"][70].as<double>() / 10.0;
-        inverterData.yieldTotal = read32BitUnsigned(doc["Data"][68].as<uint32_t>(), doc["Data"][69].as<uint32_t>());
-        inverterData.feedInPower = read32BitSigned(doc["Data"][34].as<int32_t>(), doc["Data"][35].as<int32_t>());
-      } else {
-        inverterData.status = -3;
-      }
-    } else {
-      inverterData.status = -2;
-    }
-    http.end();
-  } else {
-    inverterData.status = -1;
-  }
-  return inverterData;
-}
-
 void setup() {
 // configure backlight LED PWM functionalitites
   ledcSetup(1, 5000, 8);              // ledChannel, freq, resolution
@@ -157,14 +99,15 @@ void setup() {
   tft.init();
   tft.setRotation(1);
   tft.fillScreen(TFT_WHITE);
-
-  WiFi.begin("Wifi_SXBYETVWHZ");
 }
 
 void loop() {
-  if(WiFi.status() == WL_CONNECTED) {
-    inverterData = loadData();
+  discoveryResult = dongleDiscovery.discoverDongle();
+  if(discoveryResult.result) {
+    inverterData = dongleAPI.loadData(discoveryResult.sn);
   }
+
   drawDashboard();
+
   delay(WAIT);
 }
