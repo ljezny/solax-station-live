@@ -46,13 +46,25 @@ typedef struct {
   int L1Power;
   int L2Power;
   int L3Power;
-  int feedInPower;
+  int32_t feedInPower;
   int batteryTemperature;
   double yieldToday;
-  long yieldTotal;
+  uint32_t yieldTotal;
 } InverterData_t;
 
 InverterData_t inverterData;
+
+uint32_t read32BitUnsigned(uint32_t a, uint32_t b) {
+  return b + 65536 * a;
+}
+
+int32_t read32BitSigned(int32_t a, int32_t b) {
+  if (a < 32768) {
+    return b + 65536 * a;
+  } else {
+    return b + 65536 * a - 4294967296;
+  }
+}
 
 void drawDashboard() {
   int margin = 16;
@@ -60,8 +72,12 @@ void drawDashboard() {
   tft.fillRectVGradient(0, 0, 160, 320, TFT_ORANGE, TFT_YELLOW);
   tft.setFreeFont(&FreeSansBold24pt7b);
   tft.setTextColor(TFT_WHITE);
-  tft.setCursor(50, 50);
+  tft.setCursor(margin, margin + FreeSansBold24pt7b.yAdvance);
   tft.print("PV");
+  
+  tft.setCursor(margin, 2 * (margin + FreeSansBold24pt7b.yAdvance));
+  //tft.printf("%d kW", inverterData.yieldToday);
+  
 
   tft.fillRect(160, 0, 480 - 160, 320, TFT_WHITE);
   tft.setTextColor(TFT_BLACK);
@@ -87,7 +103,7 @@ void drawDashboard() {
 
   tft.setFreeFont(&FreeSansBold24pt7b);
   tft.setCursor(160 + margin, margin + FreeSansBold12pt7b.yAdvance * 2 + margin + FreeSansBold24pt7b.yAdvance * 3 + margin * 2);
-  tft.printf("%d W", inverterData.feedInPower);
+  //tft.printf("%d W", inverterData.feedInPower);
 
   tft.setFreeFont(&FreeSansBold9pt7b);
   tft.setCursor(170, 310);
@@ -98,7 +114,7 @@ InverterData_t loadData() {
   String url = "http://5.8.8.8";
   HTTPClient http;
   if (http.begin(url)) {
-    int httpCode = http.POST("optType=ReadRealTimeData&pwd=502200");
+    int httpCode = http.POST("optType=ReadRealTimeData&pwd=SXBYETVWHZ");
     if (httpCode == HTTP_CODE_OK) {
       StaticJsonDocument<8192> doc;
       String payload = http.getString();
@@ -114,8 +130,8 @@ InverterData_t loadData() {
         inverterData.L3Power = doc["Data"][8].as<int>();
         inverterData.soc = doc["Data"][103].as<int>();
         inverterData.yieldToday = doc["Data"][70].as<double>() / 10.0;
-        inverterData.yieldTotal = doc["Data"][68].as<long>() << 16 + doc["Data"][69].as<long>();
-        inverterData.feedInPower = doc["Data"][86].as<long>() << 16 + doc["Data"][87].as<long>();
+        inverterData.yieldTotal = read32BitUnsigned(doc["Data"][68].as<uint32_t>(), doc["Data"][69].as<uint32_t>());
+        inverterData.feedInPower = read32BitSigned(doc["Data"][34].as<int32_t>(), doc["Data"][35].as<int32_t>());
       } else {
         inverterData.status = -3;
       }
