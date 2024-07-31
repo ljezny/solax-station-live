@@ -1,4 +1,5 @@
-SET(SOURCES ui_Dashboard.c
+SET(SOURCES ui_Splash.c
+    ui_Dashboard.c
     ui.c
     ui_comp_hook.c
     ui_helpers.c

@@ -20,7 +20,9 @@ typedef struct
     int L1Power;
     int L2Power;
     int L3Power;
+    int inverterPower;
     int16_t loadPower;
+    float loadToday;
     int32_t feedInPower;
     int inverterTemperature;
     int batteryTemperature;
@@ -55,11 +57,13 @@ public:
                     inverterData.L1Power = doc["Data"][6].as<int>();
                     inverterData.L2Power = doc["Data"][7].as<int>();
                     inverterData.L3Power = doc["Data"][8].as<int>();
+                    inverterData.inverterPower = doc["Data"][9].as<int>();
                     inverterData.loadPower = read16BitSigned(doc["Data"][47].as<uint16_t>());
                     inverterData.soc = doc["Data"][103].as<int>();
                     inverterData.yieldToday = doc["Data"][13].as<uint16_t>() / 10.0;
-                    inverterData.yieldTotal = read32BitUnsigned(doc["Data"][11].as<uint16_t>(), doc["Data"][12].as<uint16_t>()) / 10.0;;
-                    inverterData.feedInPower = read32BitSigned(doc["Data"][34].as<uint16_t>(), doc["Data"][35].as<uint16_t>());
+                    inverterData.yieldTotal = doc["Data"][68].as<uint16_t>() / 10.0;
+                    inverterData.loadToday = doc["Data"][92].as<uint16_t>() / 100.0;
+                    inverterData.feedInPower = read16BitSigned(doc["Data"][34].as<uint16_t>());
                     inverterData.gridSellToday = doc["Data"][90].as<uint16_t>() / 100.0; 
                     inverterData.gridBuyToday = doc["Data"][92].as<uint16_t>() / 100.0;
                     inverterData.batteryChargedToday = doc["Data"][79].as<uint16_t>() / 10.0;

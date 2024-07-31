@@ -25,6 +25,11 @@ extern "C" {
 #include "ui_helpers.h"
 #include "ui_events.h"
 
+// SCREEN: ui_Splash
+void ui_Splash_screen_init(void);
+extern lv_obj_t *ui_Splash;
+extern lv_obj_t *ui_MainContainer2;
+extern lv_obj_t *ui_Label1;
 // SCREEN: ui_Dashboard
 void ui_Dashboard_screen_init(void);
 extern lv_obj_t *ui_Dashboard;
@@ -49,6 +54,8 @@ extern lv_obj_t *ui_PVRowContainer1;
 extern lv_obj_t *ui_PVContainer2;
 extern lv_obj_t *ui_Image3;
 extern lv_obj_t *ui_Container2;
+extern lv_obj_t *ui_loadTodayLabel;
+extern lv_obj_t *ui_Container8;
 extern lv_obj_t *ui_l1Label;
 extern lv_obj_t *ui_l2Label;
 extern lv_obj_t *ui_l3Label;

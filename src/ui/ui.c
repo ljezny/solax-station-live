@@ -9,6 +9,13 @@
 ///////////////////// VARIABLES ////////////////////
 
 
+// SCREEN: ui_Splash
+void ui_Splash_screen_init(void);
+lv_obj_t *ui_Splash;
+lv_obj_t *ui_MainContainer2;
+lv_obj_t *ui_Label1;
+
+
 // SCREEN: ui_Dashboard
 void ui_Dashboard_screen_init(void);
 lv_obj_t *ui_Dashboard;
@@ -33,6 +40,8 @@ lv_obj_t *ui_PVRowContainer1;
 lv_obj_t *ui_PVContainer2;
 lv_obj_t *ui_Image3;
 lv_obj_t *ui_Container2;
+lv_obj_t *ui_loadTodayLabel;
+lv_obj_t *ui_Container8;
 lv_obj_t *ui_l1Label;
 lv_obj_t *ui_l2Label;
 lv_obj_t *ui_l3Label;
@@ -67,7 +76,8 @@ void ui_init( void )
 lv_disp_t *dispp = lv_disp_get_default();
 lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), false, LV_FONT_DEFAULT);
 lv_disp_set_theme(dispp, theme);
+ui_Splash_screen_init();
 ui_Dashboard_screen_init();
 ui____initial_actions0 = lv_obj_create(NULL);
-lv_disp_load_scr( ui_Dashboard);
+lv_disp_load_scr( ui_Splash);
 }

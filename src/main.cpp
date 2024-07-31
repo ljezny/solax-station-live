@@ -31,6 +31,8 @@ SolaxDongleDiscovery dongleDiscovery;
 SolaxDongleInverterData_t inverterData;
 SolaxDongleDiscoveryResult_t discoveryResult;
 
+bool firstLoad = true;
+
 /* Display flushing */
 void display_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p) 
 {
@@ -79,6 +81,7 @@ void updateUI() {
   lv_label_set_text_fmt(ui_socLabel, "%d %%", inverterData.soc);
   lv_label_set_text_fmt(ui_batteryPowerLabel, "%d W", inverterData.batteryPower);
   lv_label_set_text_fmt(ui_pvTodayYield, "%s kWh", String(inverterData.yieldToday,1).c_str());
+  lv_label_set_text_fmt(ui_loadTodayLabel, "%s kWh", String(inverterData.loadToday,1).c_str());
   lv_label_set_text_fmt(ui_gridSellTodayLabel, "+ %s kWh", String(inverterData.gridSellToday,1).c_str());
   lv_label_set_text_fmt(ui_gridBuyTodayLabel, "- %s kWh", String(inverterData.gridBuyToday,1).c_str());
   lv_label_set_text_fmt(ui_batteryChargedTodayLabel, "+ %s kWh", String(inverterData.batteryChargedToday,1).c_str());
@@ -133,6 +136,11 @@ void loop() {
     inverterData = dongleAPI.loadData(discoveryResult.sn);
   }
 
+  if(firstLoad && inverterData.status == 0) {
+    lv_disp_load_scr( ui_Dashboard);
+    firstLoad = false;
+  }
+  
   updateUI();
 
   lv_timer_handler(); /* let the GUI do its work */
