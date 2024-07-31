@@ -1,8 +1,14 @@
-SET(SOURCES ui_Screen1.c
+SET(SOURCES ui_Dashboard.c
     ui.c
     ui_comp_hook.c
     ui_helpers.c
     ui_events.c
-    fonts/ui_font_Font1.c)
+    ui_img_80640877.c
+    ui_img_battery_png.c
+    ui_img_880406665.c
+    ui_img_2001872125.c
+    fonts/ui_font_OpenSans12.c
+    fonts/ui_font_OpenSans16.c
+    fonts/ui_font_OpenSans48.c)
 
 add_library(ui ${SOURCES})

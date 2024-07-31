@@ -46,53 +46,8 @@ SolaxDongleDiscovery dongleDiscovery;
 SolaxDongleInverterData_t inverterData;
 SolaxDongleDiscoveryResult_t discoveryResult;
 
-
-// void drawDashboard() {
-//   int margin = 16;
-  
-//   tft.fillRectVGradient(0, 0, 160, 320, TFT_ORANGE, TFT_YELLOW);
-//   tft.setFreeFont(&FreeSansBold24pt7b);
-//   tft.setTextColor(TFT_WHITE);
-//   tft.setCursor(margin, margin + FreeSansBold24pt7b.yAdvance);
-//   tft.print("PV");
-  
-//   tft.setCursor(margin, 2 * (margin + FreeSansBold24pt7b.yAdvance));
-//   //tft.printf("%d kW", inverterData.yieldToday);
-  
-
-//   tft.fillRect(160, 0, 480 - 160, 320, TFT_WHITE);
-//   tft.setTextColor(TFT_BLACK);
-
-//   tft.setFreeFont(&FreeSansBold12pt7b);
-//   tft.setCursor(160 + margin, FreeSansBold12pt7b.yAdvance + margin);
-//   tft.printf("%d W", inverterData.pv1Power);
-//   tft.setCursor(325 + margin, margin + FreeSansBold12pt7b.yAdvance);
-//   tft.printf("%d W", inverterData.pv1Power);
-//   tft.setFreeFont(&FreeSansBold24pt7b);
-//   tft.setCursor(160 + margin, margin + FreeSansBold12pt7b.yAdvance + margin + FreeSansBold24pt7b.yAdvance);
-//   tft.printf("%d W", inverterData.pv1Power + inverterData.pv2Power);
-//   tft.setCursor(160 + margin, margin + FreeSansBold12pt7b.yAdvance + margin + FreeSansBold24pt7b.yAdvance * 2 + margin);
-//   tft.printf("%d %%", inverterData.soc);
-
-//   tft.setFreeFont(&FreeSansBold12pt7b);
-//   tft.setCursor(160 + margin, margin + FreeSansBold12pt7b.yAdvance * 2 + margin + FreeSansBold24pt7b.yAdvance * 2 + margin * 2);
-//   tft.printf("%d W", inverterData.L1Power);
-//   tft.setCursor(160 + 106 * 1 + margin, margin + FreeSansBold12pt7b.yAdvance * 2 + margin + FreeSansBold24pt7b.yAdvance * 2 + margin * 2);
-//   tft.printf("%d W", inverterData.L2Power);
-//   tft.setCursor(160 + 106 * 2 + margin, margin + FreeSansBold12pt7b.yAdvance * 2 + margin + FreeSansBold24pt7b.yAdvance * 2 + margin * 2);
-//   tft.printf("%d W", inverterData.L3Power);
-
-//   tft.setFreeFont(&FreeSansBold24pt7b);
-//   tft.setCursor(160 + margin, margin + FreeSansBold12pt7b.yAdvance * 2 + margin + FreeSansBold24pt7b.yAdvance * 3 + margin * 2);
-//   //tft.printf("%d W", inverterData.feedInPower);
-
-//   tft.setFreeFont(&FreeSansBold9pt7b);
-//   tft.setCursor(170, 310);
-//   tft.print(WiFi.status() == WL_CONNECTED ? "Status: " + String(inverterData.status) : "WiFi disconnected");   
-// }
-
 /* Display flushing */
-void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p) 
+void display_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p) 
 {
   uint32_t w = (area->x2 - area->x1 + 1);
   uint32_t h = (area->y2 - area->y1 + 1);
@@ -128,6 +83,20 @@ void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
   // }
 }
 
+void updateUI() {
+  lv_label_set_text_fmt(ui_pvLabel, "%d W", inverterData.pv1Power + inverterData.pv2Power);
+  lv_label_set_text_fmt(ui_pvStringsLabel, "%d W  |  %d W", inverterData.pv1Power, inverterData.pv2Power);
+  lv_label_set_text_fmt(ui_loadLabel, "%d W", inverterData.L1Power + inverterData.L2Power + inverterData.L3Power);
+  lv_label_set_text_fmt(ui_l1Label, "%d W", inverterData.L1Power);
+  lv_label_set_text_fmt(ui_l2Label, "%d W", inverterData.L2Power);
+  lv_label_set_text_fmt(ui_l3Label, "%d W", inverterData.L3Power);
+  lv_label_set_text_fmt(ui_feedinLabel, "%d W", inverterData.feedInPower);
+  lv_label_set_text_fmt(ui_socLabel, "%d %%", inverterData.soc);
+  lv_label_set_text_fmt(ui_batteryPowerLabel, "%d W", inverterData.batteryPower);
+  lv_label_set_text(ui_statusLabel, discoveryResult.result ? discoveryResult.sn.c_str() : "Disconnected");
+  lv_refr_now(NULL);
+}
+
 void setup() {
 // configure backlight LED PWM functionalitites
   ledcSetup(1, 5000, 8);              // ledChannel, freq, resolution
@@ -139,7 +108,8 @@ void setup() {
 
   tft.init();
   tft.setRotation(1);
-  //tft.fillScreen(TFT_WHITE);
+  tft.fillScreen(TFT_WHITE);
+
   lv_init();
   
   lv_disp_draw_buf_init(&draw_buf, buf, NULL, TFT_DISPLAY_RESOLUTION_X * 10);
@@ -150,7 +120,7 @@ void setup() {
   /*Change the following line to your display resolution*/
   disp_drv.hor_res = TFT_DISPLAY_RESOLUTION_X;
   disp_drv.ver_res = TFT_DISPLAY_RESOLUTION_Y;
-  disp_drv.flush_cb = my_disp_flush;
+  disp_drv.flush_cb = display_flush;
   disp_drv.draw_buf = &draw_buf;
   lv_disp_drv_register(&disp_drv);
 
@@ -162,15 +132,19 @@ void setup() {
   lv_indev_drv_register(&indev_drv);
 
   ui_init();
+
+  updateUI();
+  lv_timer_handler();
 }
 
 void loop() {
-  // discoveryResult = dongleDiscovery.discoverDongle();
-  // if(discoveryResult.result) {
-  //   inverterData = dongleAPI.loadData(discoveryResult.sn);
-  // }
+  discoveryResult = dongleDiscovery.discoverDongle();
+  if(discoveryResult.result) {
+    inverterData = dongleAPI.loadData(discoveryResult.sn);
+  }
+
+  updateUI();
+
   lv_timer_handler(); /* let the GUI do its work */
-  lv_label_set_text(ui_Label1, String(millis()).c_str());
-  lv_refr_now(NULL);
-  //delay(WAIT);
+  delay(WAIT);
 }

@@ -25,16 +25,46 @@ extern "C" {
 #include "ui_helpers.h"
 #include "ui_events.h"
 
-// SCREEN: ui_Screen1
-void ui_Screen1_screen_init(void);
-extern lv_obj_t *ui_Screen1;
-extern lv_obj_t *ui_Label1;
-extern lv_obj_t *ui_Chart1;
+// SCREEN: ui_Dashboard
+void ui_Dashboard_screen_init(void);
+extern lv_obj_t *ui_Dashboard;
+extern lv_obj_t *ui_MainContainer;
+extern lv_obj_t *ui_PVRowContainer;
+extern lv_obj_t *ui_PVContainer;
+extern lv_obj_t *ui_Image1;
+extern lv_obj_t *ui_Container6;
+extern lv_obj_t *ui_pvStringsLabel;
+extern lv_obj_t *ui_pvLabel;
+extern lv_obj_t *ui_PVContainer1;
+extern lv_obj_t *ui_Image2;
+extern lv_obj_t *ui_Container1;
+extern lv_obj_t *ui_batteryPowerLabel;
+extern lv_obj_t *ui_socLabel;
+extern lv_obj_t *ui_PVRowContainer1;
+extern lv_obj_t *ui_PVContainer2;
+extern lv_obj_t *ui_Image3;
+extern lv_obj_t *ui_Container2;
+extern lv_obj_t *ui_l1Label;
+extern lv_obj_t *ui_l2Label;
+extern lv_obj_t *ui_l3Label;
+extern lv_obj_t *ui_loadLabel;
+extern lv_obj_t *ui_PVContainer3;
+extern lv_obj_t *ui_Image4;
+extern lv_obj_t *ui_Container4;
+extern lv_obj_t *ui_Label9;
+extern lv_obj_t *ui_feedinLabel;
+extern lv_obj_t *ui_statusLabel;
 extern lv_obj_t *ui____initial_actions0;
 
+LV_IMG_DECLARE( ui_img_80640877);   // assets/solar-panel-3.png
+LV_IMG_DECLARE( ui_img_battery_png);   // assets/battery.png
+LV_IMG_DECLARE( ui_img_880406665);   // assets/eco-house.png
+LV_IMG_DECLARE( ui_img_2001872125);   // assets/power-line.png
 
 
-LV_FONT_DECLARE( ui_font_Font1);
+LV_FONT_DECLARE( ui_font_OpenSans12);
+LV_FONT_DECLARE( ui_font_OpenSans16);
+LV_FONT_DECLARE( ui_font_OpenSans48);
 
 
 void ui_init(void);

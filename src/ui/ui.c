@@ -9,12 +9,37 @@
 ///////////////////// VARIABLES ////////////////////
 
 
-// SCREEN: ui_Screen1
-void ui_Screen1_screen_init(void);
-lv_obj_t *ui_Screen1;
-lv_obj_t *ui_Label1;
-lv_obj_t *ui_Chart1;
+// SCREEN: ui_Dashboard
+void ui_Dashboard_screen_init(void);
+lv_obj_t *ui_Dashboard;
+lv_obj_t *ui_MainContainer;
+lv_obj_t *ui_PVRowContainer;
+lv_obj_t *ui_PVContainer;
+lv_obj_t *ui_Image1;
+lv_obj_t *ui_Container6;
+lv_obj_t *ui_pvStringsLabel;
+lv_obj_t *ui_pvLabel;
+lv_obj_t *ui_PVContainer1;
+lv_obj_t *ui_Image2;
+lv_obj_t *ui_Container1;
+lv_obj_t *ui_batteryPowerLabel;
+lv_obj_t *ui_socLabel;
+lv_obj_t *ui_PVRowContainer1;
+lv_obj_t *ui_PVContainer2;
+lv_obj_t *ui_Image3;
+lv_obj_t *ui_Container2;
+lv_obj_t *ui_l1Label;
+lv_obj_t *ui_l2Label;
+lv_obj_t *ui_l3Label;
+lv_obj_t *ui_loadLabel;
+lv_obj_t *ui_PVContainer3;
+lv_obj_t *ui_Image4;
+lv_obj_t *ui_Container4;
+lv_obj_t *ui_Label9;
+lv_obj_t *ui_feedinLabel;
+lv_obj_t *ui_statusLabel;
 lv_obj_t *ui____initial_actions0;
+const lv_img_dsc_t *ui_imgset_1565640187[1] = {&ui_img_80640877};
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
 #if LV_COLOR_DEPTH != 16
@@ -35,7 +60,7 @@ void ui_init( void )
 lv_disp_t *dispp = lv_disp_get_default();
 lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), false, LV_FONT_DEFAULT);
 lv_disp_set_theme(dispp, theme);
-ui_Screen1_screen_init();
+ui_Dashboard_screen_init();
 ui____initial_actions0 = lv_obj_create(NULL);
-lv_disp_load_scr( ui_Screen1);
+lv_disp_load_scr( ui_Dashboard);
 }
