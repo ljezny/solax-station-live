@@ -14,8 +14,6 @@ ui_MainContainer2 = lv_obj_create(ui_Splash);
 lv_obj_remove_style_all(ui_MainContainer2);
 lv_obj_set_width( ui_MainContainer2, lv_pct(100));
 lv_obj_set_height( ui_MainContainer2, lv_pct(100));
-lv_obj_set_x( ui_MainContainer2, -1 );
-lv_obj_set_y( ui_MainContainer2, 2 );
 lv_obj_set_align( ui_MainContainer2, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_MainContainer2,LV_FLEX_FLOW_COLUMN);
 lv_obj_set_flex_align(ui_MainContainer2, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
