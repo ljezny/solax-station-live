@@ -1,19 +1,4 @@
-/* 
- * Display only test for LaskaKit ESPD-3.5" 320x480, ILI9488 
- * example from TFT_eSPI library is used
- * 
- * How to steps:
- * 1. Copy file Setup300_ILI9488_ESPD-3_5.h from https://github.com/LaskaKit/ESPD-35/tree/main/SW to Arduino/libraries/TFT_eSPI/User_Setups/
- * 2. in Arduino/libraries/TFT_eSPI/User_Setup_Select.h 
-      a. comment: #include <User_Setup.h> 
-      b. add: #include <User_Setups/Setup300_ILI9488_ESPD-3_5.h>  // Setup file for LaskaKit ESPD-3.5" 320x480, ILI9488 
- * 
- * Email:podpora@laskakit.cz
- * Web:laskakit.cz
-*/
-
-// Delay between demo pages
-#define WAIT 2000                // Delay between tests, set to 0 to demo speed, 2000 to see what it does!
+#define WAIT 1000
 
 #define TFT_DISPLAY_RESOLUTION_X  480
 #define TFT_DISPLAY_RESOLUTION_Y  320
@@ -85,14 +70,19 @@ void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
 
 void updateUI() {
   lv_label_set_text_fmt(ui_pvLabel, "%d W", inverterData.pv1Power + inverterData.pv2Power);
-  lv_label_set_text_fmt(ui_pvStringsLabel, "%d W  |  %d W", inverterData.pv1Power, inverterData.pv2Power);
-  lv_label_set_text_fmt(ui_loadLabel, "%d W", inverterData.L1Power + inverterData.L2Power + inverterData.L3Power);
+  lv_label_set_text_fmt(ui_pvStringsLabel, "%d W  %d W", inverterData.pv1Power, inverterData.pv2Power);
+  lv_label_set_text_fmt(ui_loadLabel, "%d W", inverterData.loadPower);
   lv_label_set_text_fmt(ui_l1Label, "%d W", inverterData.L1Power);
   lv_label_set_text_fmt(ui_l2Label, "%d W", inverterData.L2Power);
   lv_label_set_text_fmt(ui_l3Label, "%d W", inverterData.L3Power);
   lv_label_set_text_fmt(ui_feedinLabel, "%d W", inverterData.feedInPower);
   lv_label_set_text_fmt(ui_socLabel, "%d %%", inverterData.soc);
   lv_label_set_text_fmt(ui_batteryPowerLabel, "%d W", inverterData.batteryPower);
+  lv_label_set_text_fmt(ui_pvTodayYield, "%s kWh", String(inverterData.yieldToday,1).c_str());
+  lv_label_set_text_fmt(ui_gridSellTodayLabel, "+ %s kWh", String(inverterData.gridSellToday,1).c_str());
+  lv_label_set_text_fmt(ui_gridBuyTodayLabel, "- %s kWh", String(inverterData.gridBuyToday,1).c_str());
+  lv_label_set_text_fmt(ui_batteryChargedTodayLabel, "+ %s kWh", String(inverterData.batteryChargedToday,1).c_str());
+  lv_label_set_text_fmt(ui_batteryDischargedTodayLabel, "- %s kWh", String(inverterData.batteryDischargedToday,1).c_str());
   lv_label_set_text(ui_statusLabel, discoveryResult.result ? discoveryResult.sn.c_str() : "Disconnected");
   lv_refr_now(NULL);
 }

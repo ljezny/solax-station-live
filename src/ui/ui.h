@@ -33,11 +33,16 @@ extern lv_obj_t *ui_PVRowContainer;
 extern lv_obj_t *ui_PVContainer;
 extern lv_obj_t *ui_Image1;
 extern lv_obj_t *ui_Container6;
+extern lv_obj_t *ui_pvTodayYield;
+extern lv_obj_t *ui_Container5;
 extern lv_obj_t *ui_pvStringsLabel;
 extern lv_obj_t *ui_pvLabel;
 extern lv_obj_t *ui_PVContainer1;
 extern lv_obj_t *ui_Image2;
 extern lv_obj_t *ui_Container1;
+extern lv_obj_t *ui_batteryChargedTodayLabel;
+extern lv_obj_t *ui_batteryDischargedTodayLabel;
+extern lv_obj_t *ui_Container7;
 extern lv_obj_t *ui_batteryPowerLabel;
 extern lv_obj_t *ui_socLabel;
 extern lv_obj_t *ui_PVRowContainer1;
@@ -51,7 +56,9 @@ extern lv_obj_t *ui_loadLabel;
 extern lv_obj_t *ui_PVContainer3;
 extern lv_obj_t *ui_Image4;
 extern lv_obj_t *ui_Container4;
-extern lv_obj_t *ui_Label9;
+extern lv_obj_t *ui_gridSellTodayLabel;
+extern lv_obj_t *ui_gridBuyTodayLabel;
+extern lv_obj_t *ui_Container3;
 extern lv_obj_t *ui_feedinLabel;
 extern lv_obj_t *ui_statusLabel;
 extern lv_obj_t *ui____initial_actions0;
@@ -62,9 +69,9 @@ LV_IMG_DECLARE( ui_img_880406665);   // assets/eco-house.png
 LV_IMG_DECLARE( ui_img_2001872125);   // assets/power-line.png
 
 
-LV_FONT_DECLARE( ui_font_OpenSans12);
-LV_FONT_DECLARE( ui_font_OpenSans16);
-LV_FONT_DECLARE( ui_font_OpenSans48);
+LV_FONT_DECLARE( ui_font_RobotoMono32);
+LV_FONT_DECLARE( ui_font_RobotoMono16);
+LV_FONT_DECLARE( ui_font_RobotoMono12);
 
 
 void ui_init(void);

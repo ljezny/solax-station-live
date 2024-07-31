@@ -7,8 +7,8 @@ SET(SOURCES ui_Dashboard.c
     ui_img_battery_png.c
     ui_img_880406665.c
     ui_img_2001872125.c
-    fonts/ui_font_OpenSans12.c
-    fonts/ui_font_OpenSans16.c
-    fonts/ui_font_OpenSans48.c)
+    fonts/ui_font_RobotoMono32.c
+    fonts/ui_font_RobotoMono16.c
+    fonts/ui_font_RobotoMono12.c)
 
 add_library(ui ${SOURCES})
