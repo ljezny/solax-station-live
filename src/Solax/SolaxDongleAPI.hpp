@@ -60,9 +60,9 @@ public:
                     inverterData.inverterPower = doc["Data"][9].as<int>();
                     inverterData.loadPower = read16BitSigned(doc["Data"][47].as<uint16_t>());
                     inverterData.soc = doc["Data"][103].as<int>();
-                    inverterData.yieldToday = doc["Data"][13].as<uint16_t>() / 10.0;
+                    inverterData.yieldToday = doc["Data"][70].as<uint16_t>() / 10.0;
                     inverterData.yieldTotal = doc["Data"][68].as<uint16_t>() / 10.0;
-                    inverterData.loadToday = doc["Data"][92].as<uint16_t>() / 100.0;
+                    inverterData.loadToday = doc["Data"][88].as<uint16_t>() / 100.0;
                     inverterData.feedInPower = read16BitSigned(doc["Data"][34].as<uint16_t>());
                     inverterData.gridSellToday = doc["Data"][90].as<uint16_t>() / 100.0; 
                     inverterData.gridBuyToday = doc["Data"][92].as<uint16_t>() / 100.0;

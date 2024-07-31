@@ -1,4 +1,4 @@
-#define WAIT 1000
+#define WAIT 100
 
 #define TFT_DISPLAY_RESOLUTION_X  480
 #define TFT_DISPLAY_RESOLUTION_Y  320
@@ -97,7 +97,6 @@ void setup() {
   ledcWrite(1, TFT_LED_PWM);          // dutyCycle 0-255
 
   Serial.begin(115200);
-  delay(3000);
 
   tft.init();
   tft.setRotation(1);
@@ -140,7 +139,7 @@ void loop() {
     lv_disp_load_scr( ui_Dashboard);
     firstLoad = false;
   }
-  
+
   updateUI();
 
   lv_timer_handler(); /* let the GUI do its work */
