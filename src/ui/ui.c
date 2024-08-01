@@ -54,8 +54,61 @@ lv_obj_t *ui_gridBuyTodayLabel;
 lv_obj_t *ui_Container3;
 lv_obj_t *ui_feedinLabel;
 lv_obj_t *ui_statusLabel;
+
+
+// SCREEN: ui_Screen1
+void ui_Screen1_screen_init(void);
+lv_obj_t *ui_Screen1;
+lv_obj_t *ui_MainContainer1;
+lv_obj_t *ui_LeftContainer;
+lv_obj_t *ui_Container9;
+lv_obj_t *ui_Image6;
+lv_obj_t *ui_Label2;
+lv_obj_t *ui_Label3;
+lv_obj_t *ui_Container10;
+lv_obj_t *ui_Image10;
+lv_obj_t *ui_Label13;
+lv_obj_t *ui_Label4;
+lv_obj_t *ui_Label5;
+lv_obj_t *ui_Container12;
+lv_obj_t *ui_Image8;
+lv_obj_t *ui_Label8;
+lv_obj_t *ui_Label9;
+lv_obj_t *ui_Container13;
+lv_obj_t *ui_Image9;
+lv_obj_t *ui_Label10;
+lv_obj_t *ui_Label11;
+lv_obj_t *ui_Container14;
+lv_obj_t *ui_Image7;
+lv_obj_t *ui_Label12;
+lv_obj_t *ui_Container11;
+lv_obj_t *ui_Label20;
+lv_obj_t *ui_Image5;
+lv_obj_t *ui_Label6;
+lv_obj_t *ui_Label7;
+lv_obj_t *ui_RightContainer;
+lv_obj_t *ui_TopRightContainer;
+lv_obj_t *ui_Container15;
+lv_obj_t *ui_Image11;
+lv_obj_t *ui_Label14;
+lv_obj_t *ui_Label15;
+lv_obj_t *ui_Container16;
+lv_obj_t *ui_Image12;
+lv_obj_t *ui_Label16;
+lv_obj_t *ui_Label17;
+lv_obj_t *ui_Container17;
+lv_obj_t *ui_Image13;
+lv_obj_t *ui_Label18;
+lv_obj_t *ui_Label19;
+lv_obj_t *ui_Container18;
+lv_obj_t *ui_Image14;
+lv_obj_t *ui_Label21;
+lv_obj_t *ui_Label22;
+lv_obj_t *ui_TopBottomContainer;
+lv_obj_t *ui_Chart1;
 lv_obj_t *ui____initial_actions0;
-const lv_img_dsc_t *ui_imgset_1565640187[1] = {&ui_img_80640877};
+const lv_img_dsc_t *ui_imgset_1565640187[1] = {&ui_img_1516017106};
+const lv_img_dsc_t *ui_imgset_2097694489[1] = {&ui_img_2000019334};
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
 #if LV_COLOR_DEPTH != 16
@@ -78,6 +131,7 @@ lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE
 lv_disp_set_theme(dispp, theme);
 ui_Splash_screen_init();
 ui_Dashboard_screen_init();
+ui_Screen1_screen_init();
 ui____initial_actions0 = lv_obj_create(NULL);
 lv_disp_load_scr( ui_Splash);
 }

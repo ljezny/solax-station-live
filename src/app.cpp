@@ -108,7 +108,7 @@ void loop()
     lvgl_port_lock(-1);
     if (firstLoad /*&& inverterData.status == 0*/)
     {
-        lv_disp_load_scr(ui_Dashboard);
+        lv_disp_load_scr(ui_Screen1);
         firstLoad = false;
     }
 

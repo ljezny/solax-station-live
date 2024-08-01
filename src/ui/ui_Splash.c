@@ -14,6 +14,8 @@ ui_MainContainer2 = lv_obj_create(ui_Splash);
 lv_obj_remove_style_all(ui_MainContainer2);
 lv_obj_set_width( ui_MainContainer2, lv_pct(100));
 lv_obj_set_height( ui_MainContainer2, lv_pct(100));
+lv_obj_set_x( ui_MainContainer2, -1 );
+lv_obj_set_y( ui_MainContainer2, 2 );
 lv_obj_set_align( ui_MainContainer2, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_MainContainer2,LV_FLEX_FLOW_COLUMN);
 lv_obj_set_flex_align(ui_MainContainer2, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -41,6 +43,6 @@ lv_label_set_text(ui_Label1,"SOLAX STATION\nLive!");
 lv_obj_set_style_text_color(ui_Label1, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_text_opa(ui_Label1, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_align(ui_Label1, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_text_font(ui_Label1, &ui_font_RobotoMono32, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_font(ui_Label1, &ui_font_RobotoMonoLarge, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 }

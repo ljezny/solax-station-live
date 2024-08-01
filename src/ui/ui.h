@@ -68,17 +68,73 @@ extern lv_obj_t *ui_gridBuyTodayLabel;
 extern lv_obj_t *ui_Container3;
 extern lv_obj_t *ui_feedinLabel;
 extern lv_obj_t *ui_statusLabel;
+// SCREEN: ui_Screen1
+void ui_Screen1_screen_init(void);
+extern lv_obj_t *ui_Screen1;
+extern lv_obj_t *ui_MainContainer1;
+extern lv_obj_t *ui_LeftContainer;
+extern lv_obj_t *ui_Container9;
+extern lv_obj_t *ui_Image6;
+extern lv_obj_t *ui_Label2;
+extern lv_obj_t *ui_Label3;
+extern lv_obj_t *ui_Container10;
+extern lv_obj_t *ui_Image10;
+extern lv_obj_t *ui_Label13;
+extern lv_obj_t *ui_Label4;
+extern lv_obj_t *ui_Label5;
+extern lv_obj_t *ui_Container12;
+extern lv_obj_t *ui_Image8;
+extern lv_obj_t *ui_Label8;
+extern lv_obj_t *ui_Label9;
+extern lv_obj_t *ui_Container13;
+extern lv_obj_t *ui_Image9;
+extern lv_obj_t *ui_Label10;
+extern lv_obj_t *ui_Label11;
+extern lv_obj_t *ui_Container14;
+extern lv_obj_t *ui_Image7;
+extern lv_obj_t *ui_Label12;
+extern lv_obj_t *ui_Container11;
+extern lv_obj_t *ui_Label20;
+extern lv_obj_t *ui_Image5;
+extern lv_obj_t *ui_Label6;
+extern lv_obj_t *ui_Label7;
+extern lv_obj_t *ui_RightContainer;
+extern lv_obj_t *ui_TopRightContainer;
+extern lv_obj_t *ui_Container15;
+extern lv_obj_t *ui_Image11;
+extern lv_obj_t *ui_Label14;
+extern lv_obj_t *ui_Label15;
+extern lv_obj_t *ui_Container16;
+extern lv_obj_t *ui_Image12;
+extern lv_obj_t *ui_Label16;
+extern lv_obj_t *ui_Label17;
+extern lv_obj_t *ui_Container17;
+extern lv_obj_t *ui_Image13;
+extern lv_obj_t *ui_Label18;
+extern lv_obj_t *ui_Label19;
+extern lv_obj_t *ui_Container18;
+extern lv_obj_t *ui_Image14;
+extern lv_obj_t *ui_Label21;
+extern lv_obj_t *ui_Label22;
+extern lv_obj_t *ui_TopBottomContainer;
+extern lv_obj_t *ui_Chart1;
 extern lv_obj_t *ui____initial_actions0;
 
-LV_IMG_DECLARE( ui_img_80640877);   // assets/solar-panel-3.png
 LV_IMG_DECLARE( ui_img_battery_png);   // assets/battery.png
-LV_IMG_DECLARE( ui_img_880406665);   // assets/eco-house.png
 LV_IMG_DECLARE( ui_img_2001872125);   // assets/power-line.png
+LV_IMG_DECLARE( ui_img_1516017106);   // assets/solar-panel-4.png
+LV_IMG_DECLARE( ui_img_1666978921);   // assets/80-percent.png
+LV_IMG_DECLARE( ui_img_2000019334);   // assets/eco-house-2.png
+LV_IMG_DECLARE( ui_img_1930319305);   // assets/electric-factory.png
+LV_IMG_DECLARE( ui_img_leaf_png);   // assets/leaf.png
+LV_IMG_DECLARE( ui_img_1061873486);   // assets/solar-inverter.png
 
 
-LV_FONT_DECLARE( ui_font_RobotoMono32);
-LV_FONT_DECLARE( ui_font_RobotoMono16);
 LV_FONT_DECLARE( ui_font_RobotoMono12);
+LV_FONT_DECLARE( ui_font_RobotoMono16);
+LV_FONT_DECLARE( ui_font_RobotoMonoLarge);
+LV_FONT_DECLARE( ui_font_RobotoMonoMedium);
+LV_FONT_DECLARE( ui_font_RobotoMonoSmall);
 
 
 void ui_init(void);
