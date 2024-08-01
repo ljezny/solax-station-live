@@ -1,12 +1,8 @@
-ui_Splash.c
 ui_Dashboard.c
-ui_Screen1.c
 ui.c
 ui_comp_hook.c
 ui_helpers.c
 ui_events.c
-ui_img_battery_png.c
-ui_img_2001872125.c
 ui_img_1516017106.c
 ui_img_1666978921.c
 ui_img_2000019334.c

@@ -7,6 +7,7 @@
 #include "Solax/SolaxDongleAPI.hpp"
 
 #define WAIT 100
+SET_LOOP_TASK_STACK_SIZE(32 * 1024);
 
 SolaxDongleAPI dongleAPI;
 SolaxDongleDiscovery dongleDiscovery;
@@ -16,62 +17,77 @@ SolaxDongleDiscoveryResult_t discoveryResult;
 
 bool firstLoad = true;
 
-//JEZNY - touches are disabled in ESP_PANEL_BOARD_CUSTOM for now!!!
-void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data) 
+SolaxDongleInverterData_t createRandomMockData()
 {
-  // if (!ts.touched()) 
-  // {
-  //   data->state = LV_INDEV_STATE_REL;
-  // } 
-  // else 
-  // {
-  //   uint16_t touchX, touchY;
-  //   // Retrieve a point
-  //   TS_Point p = ts.getPoint();
-  //   touchX = p.x;
-  //   touchY = p.y;
-
-  //   data->state = LV_INDEV_STATE_PR;
-
-  //   /*Set the coordinates*/
-  //   data->point.x = touchX;
-  //   data->point.y = touchY;
-  // }
+    SolaxDongleInverterData_t inverterData;
+    inverterData.status = 0;
+    inverterData.pv1Power = random(0, 1000);
+    inverterData.pv2Power = random(0, 1000);
+    inverterData.batteryPower = random(-1000, 1000);
+    inverterData.batteryTemperature = random(0, 50);
+    inverterData.inverterTemperature = random(0, 50);
+    inverterData.L1Power = random(0, 1000);
+    inverterData.L2Power = random(0, 1000);
+    inverterData.L3Power = random(0, 1000);
+    inverterData.inverterPower = random(0, 1000);
+    inverterData.loadPower = random(0, 1000);
+    inverterData.loadToday = random(0, 1000);
+    inverterData.feedInPower = random(0, 1000);
+    inverterData.soc = random(0, 100);
+    inverterData.yieldToday = random(0, 1000);
+    inverterData.yieldTotal = random(0, 1000);
+    inverterData.batteryChargedToday = random(0, 1000);
+    inverterData.batteryDischargedToday = random(0, 1000);
+    inverterData.gridBuyToday = random(0, 1000);
+    inverterData.gridSellToday = random(0, 1000);
+    return inverterData;
 }
 
-void updateUI() {
-  lv_label_set_text_fmt(ui_pvLabel, "%d W", inverterData.pv1Power + inverterData.pv2Power);
-  lv_label_set_text_fmt(ui_pvStringsLabel, "%d W  %d W", inverterData.pv1Power, inverterData.pv2Power);
-  lv_label_set_text_fmt(ui_loadLabel, "%d W", inverterData.loadPower);
-  lv_label_set_text_fmt(ui_l1Label, "%d W", inverterData.L1Power);
-  lv_label_set_text_fmt(ui_l2Label, "%d W", inverterData.L2Power);
-  lv_label_set_text_fmt(ui_l3Label, "%d W", inverterData.L3Power);
-  lv_label_set_text_fmt(ui_feedinLabel, "%d W", inverterData.feedInPower);
-  lv_label_set_text_fmt(ui_socLabel, "%d %%", inverterData.soc);
-  lv_label_set_text_fmt(ui_batteryPowerLabel, "%d W", inverterData.batteryPower);
-  lv_label_set_text_fmt(ui_pvTodayYield, "%s kWh", String(inverterData.yieldToday,1).c_str());
-  lv_label_set_text_fmt(ui_loadTodayLabel, "%s kWh", String(inverterData.loadToday,1).c_str());
-  lv_label_set_text_fmt(ui_gridSellTodayLabel, "+ %s kWh", String(inverterData.gridSellToday,1).c_str());
-  lv_label_set_text_fmt(ui_gridBuyTodayLabel, "- %s kWh", String(inverterData.gridBuyToday,1).c_str());
-  lv_label_set_text_fmt(ui_batteryChargedTodayLabel, "+ %s kWh", String(inverterData.batteryChargedToday,1).c_str());
-  lv_label_set_text_fmt(ui_batteryDischargedTodayLabel, "- %s kWh", String(inverterData.batteryDischargedToday,1).c_str());
-  lv_label_set_text(ui_statusLabel, discoveryResult.result ? discoveryResult.sn.c_str() : "Disconnected");
-  lv_refr_now(NULL);
-}
 
-void refreshDataTask( void * pvParameters )
-{
-    for( ;; )
-    {
-        discoveryResult = dongleDiscovery.discoverDongle();
-        if (discoveryResult.result)
-        {
-            inverterData = dongleAPI.loadData(discoveryResult.sn);
+void updateDashboardUI() {
+    int selfUsePercent = inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0;
+    selfUsePercent = constrain(selfUsePercent, 0, 100);
+    lvgl_port_lock(-1);
+
+    // lv_obj_t *line = lv_line_create(ui_LeftContainer);
+    // lv_point_t p1 = {ui_gridContainer->coords.x1, ui_gridContainer->coords.y1};
+    // lv_point_t p2 = {ui_inverterContainer->coords.x1, ui_inverterContainer->coords.y1};
+    // const lv_point_t points[] = {p1, p2};
+    // lv_line_set_points(line, points, 2);
+    
+
+    lv_label_set_text_fmt(ui_pvLabel, "%d W", inverterData.pv1Power + inverterData.pv2Power);
+    lv_label_set_text_fmt(ui_pv1Label, "%d W", inverterData.pv1Power);
+    lv_label_set_text_fmt(ui_pv2Label, "%d W", inverterData.pv2Power);
+    lv_label_set_text_fmt(ui_inverterTemperatureLabel, "%d°C", inverterData.inverterTemperature);
+    lv_label_set_text_fmt(ui_inverterPowerLabel, "%d W", inverterData.inverterPower);
+    lv_label_set_text_fmt(ui_inverterPowerL1Label, "%d W", inverterData.L1Power);
+    lv_label_set_text_fmt(ui_inverterPowerL2Label, "%d W", inverterData.L2Power);
+    lv_label_set_text_fmt(ui_inverterPowerL3Label, "%d W", inverterData.L3Power);
+    lv_label_set_text_fmt(ui_loadPowerLabel, "%d W", inverterData.loadPower);
+    lv_label_set_text_fmt(ui_feedInPowerLabel, "%d W", inverterData.feedInPower);
+    lv_label_set_text_fmt(ui_socLabel, "%d%%", inverterData.soc);
+    lv_label_set_text_fmt(ui_batteryPowerLabel, "%d W", inverterData.batteryPower);
+    lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d°C", inverterData.batteryTemperature);
+    lv_label_set_text_fmt(ui_selfUsePercentLabel, "%d%%", selfUsePercent);
+//   lv_label_set_text_fmt(ui_pvTodayYield, "%s kWh", String(inverterData.yieldToday,1).c_str());
+//   lv_label_set_text_fmt(ui_loadTodayLabel, "%s kWh", String(inverterData.loadToday,1).c_str());
+//   lv_label_set_text_fmt(ui_gridSellTodayLabel, "+ %s kWh", String(inverterData.gridSellToday,1).c_str());
+//   lv_label_set_text_fmt(ui_gridBuyTodayLabel, "- %s kWh", String(inverterData.gridBuyToday,1).c_str());
+//   lv_label_set_text_fmt(ui_batteryChargedTodayLabel, "+ %s kWh", String(inverterData.batteryChargedToday,1).c_str());
+//   lv_label_set_text_fmt(ui_batteryDischargedTodayLabel, "- %s kWh", String(inverterData.batteryDischargedToday,1).c_str());
+    if(discoveryResult.result) {
+        if(inverterData.status != 0) {
+            lv_label_set_text_fmt(ui_statusLabel, "Error: %d", inverterData.status);
+        } else {
+            lv_label_set_text(ui_statusLabel, discoveryResult.sn.c_str());
         }
-
-        delay(100);
+    } else {
+        lv_label_set_text(ui_statusLabel, "Disconnected");
     }
+    lvgl_port_unlock();
 }
+
 
 void setup()
 {
@@ -87,36 +103,31 @@ void setup()
     rgb_bus->configRgbBounceBufferSize(LVGL_PORT_RGB_BOUNCE_BUFFER_SIZE);
 #endif
     panel->begin();
+    
     lvgl_port_init(panel->getLcd(), panel->getTouch());
     
     lvgl_port_lock(-1);
     ui_init();
+    updateDashboardUI();
     lvgl_port_unlock();
 
-    TaskHandle_t refreshDataTaskHandle = NULL;
-    int ret = xTaskCreate(
-                    refreshDataTask,       /* Function that implements the task. */
-                    "refresh_data_task",          /* Text name for the task. */
-                    32 * 1024,      /* Stack size in words, not bytes. */
-                    ( void * ) 1,    /* Parameter passed into the task. */
-                    tskIDLE_PRIORITY,/* Priority at which the task is created. */
-                    &refreshDataTaskHandle);   
+   // WiFi.begin("Wifi_SXBYETVWHZ");
 }
 
 void loop()
 {
-    lvgl_port_lock(-1);
-    if (firstLoad /*&& inverterData.status == 0*/)
+    
+    // while (WiFi.status() != WL_CONNECTED)
+    // {
+    //     delay(500);
+    // }
+    //discoveryResult = dongleDiscovery.discoverDongle();
+    //if (discoveryResult.result)
     {
-        lv_disp_load_scr(ui_Screen1);
-        firstLoad = false;
+       // inverterData = dongleAPI.loadData("SXBYETVWHZ");
     }
-
-    updateUI();
+    inverterData = createRandomMockData();
+    updateDashboardUI();
     
-    lv_timer_handler();
-
-    lvgl_port_unlock();
-    
-    delay(1000);
+    //delay(2000);
 }

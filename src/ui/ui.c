@@ -9,83 +9,36 @@
 ///////////////////// VARIABLES ////////////////////
 
 
-// SCREEN: ui_Splash
-void ui_Splash_screen_init(void);
-lv_obj_t *ui_Splash;
-lv_obj_t *ui_MainContainer2;
-lv_obj_t *ui_Label1;
-
-
 // SCREEN: ui_Dashboard
 void ui_Dashboard_screen_init(void);
 lv_obj_t *ui_Dashboard;
-lv_obj_t *ui_MainContainer;
-lv_obj_t *ui_PVRowContainer;
-lv_obj_t *ui_PVContainer;
-lv_obj_t *ui_Image1;
-lv_obj_t *ui_Container6;
-lv_obj_t *ui_pvTodayYield;
-lv_obj_t *ui_Container5;
-lv_obj_t *ui_pvStringsLabel;
-lv_obj_t *ui_pvLabel;
-lv_obj_t *ui_PVContainer1;
-lv_obj_t *ui_Image2;
-lv_obj_t *ui_Container1;
-lv_obj_t *ui_batteryChargedTodayLabel;
-lv_obj_t *ui_batteryDischargedTodayLabel;
-lv_obj_t *ui_Container7;
-lv_obj_t *ui_batteryPowerLabel;
-lv_obj_t *ui_socLabel;
-lv_obj_t *ui_PVRowContainer1;
-lv_obj_t *ui_PVContainer2;
-lv_obj_t *ui_Image3;
-lv_obj_t *ui_Container2;
-lv_obj_t *ui_loadTodayLabel;
-lv_obj_t *ui_Container8;
-lv_obj_t *ui_l1Label;
-lv_obj_t *ui_l2Label;
-lv_obj_t *ui_l3Label;
-lv_obj_t *ui_loadLabel;
-lv_obj_t *ui_PVContainer3;
-lv_obj_t *ui_Image4;
-lv_obj_t *ui_Container4;
-lv_obj_t *ui_gridSellTodayLabel;
-lv_obj_t *ui_gridBuyTodayLabel;
-lv_obj_t *ui_Container3;
-lv_obj_t *ui_feedinLabel;
-lv_obj_t *ui_statusLabel;
-
-
-// SCREEN: ui_Screen1
-void ui_Screen1_screen_init(void);
-lv_obj_t *ui_Screen1;
-lv_obj_t *ui_MainContainer1;
 lv_obj_t *ui_LeftContainer;
-lv_obj_t *ui_Container9;
+lv_obj_t *ui_pvContainer;
 lv_obj_t *ui_Image6;
-lv_obj_t *ui_Label2;
-lv_obj_t *ui_Label3;
-lv_obj_t *ui_Container10;
+lv_obj_t *ui_pvLabel;
+lv_obj_t *ui_pv1Label;
+lv_obj_t *ui_pv2Label;
+lv_obj_t *ui_batteryContainer;
+lv_obj_t *ui_batteryTemperatureLabel;
 lv_obj_t *ui_Image10;
-lv_obj_t *ui_Label13;
-lv_obj_t *ui_Label4;
-lv_obj_t *ui_Label5;
-lv_obj_t *ui_Container12;
+lv_obj_t *ui_socLabel;
+lv_obj_t *ui_batteryPowerLabel;
+lv_obj_t *ui_loadContainer;
 lv_obj_t *ui_Image8;
-lv_obj_t *ui_Label8;
-lv_obj_t *ui_Label9;
-lv_obj_t *ui_Container13;
+lv_obj_t *ui_loadPowerLabel;
+lv_obj_t *ui_gridContainer;
 lv_obj_t *ui_Image9;
-lv_obj_t *ui_Label10;
-lv_obj_t *ui_Label11;
+lv_obj_t *ui_feedInPowerLabel;
 lv_obj_t *ui_Container14;
 lv_obj_t *ui_Image7;
-lv_obj_t *ui_Label12;
-lv_obj_t *ui_Container11;
-lv_obj_t *ui_Label20;
+lv_obj_t *ui_selfUsePercentLabel;
+lv_obj_t *ui_inverterContainer;
+lv_obj_t *ui_inverterTemperatureLabel;
 lv_obj_t *ui_Image5;
-lv_obj_t *ui_Label6;
-lv_obj_t *ui_Label7;
+lv_obj_t *ui_inverterPowerLabel;
+lv_obj_t *ui_inverterPowerL1Label;
+lv_obj_t *ui_inverterPowerL2Label;
+lv_obj_t *ui_inverterPowerL3Label;
 lv_obj_t *ui_RightContainer;
 lv_obj_t *ui_TopRightContainer;
 lv_obj_t *ui_Container15;
@@ -104,11 +57,12 @@ lv_obj_t *ui_Container18;
 lv_obj_t *ui_Image14;
 lv_obj_t *ui_Label21;
 lv_obj_t *ui_Label22;
+lv_obj_t *ui_statusLabel;
 lv_obj_t *ui_TopBottomContainer;
 lv_obj_t *ui_Chart1;
 lv_obj_t *ui____initial_actions0;
-const lv_img_dsc_t *ui_imgset_1565640187[1] = {&ui_img_1516017106};
 const lv_img_dsc_t *ui_imgset_2097694489[1] = {&ui_img_2000019334};
+const lv_img_dsc_t *ui_imgset_1565640187[1] = {&ui_img_1516017106};
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
 #if LV_COLOR_DEPTH != 16
@@ -129,9 +83,7 @@ void ui_init( void )
 lv_disp_t *dispp = lv_disp_get_default();
 lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), false, LV_FONT_DEFAULT);
 lv_disp_set_theme(dispp, theme);
-ui_Splash_screen_init();
 ui_Dashboard_screen_init();
-ui_Screen1_screen_init();
 ui____initial_actions0 = lv_obj_create(NULL);
-lv_disp_load_scr( ui_Splash);
+lv_disp_load_scr( ui_Dashboard);
 }

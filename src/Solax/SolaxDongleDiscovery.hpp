@@ -22,25 +22,25 @@ class SolaxDongleDiscovery {
             int found = WiFi.scanNetworks(false);
             for(int i = 0; i < found; i++) {
                 String ssid = WiFi.SSID(i);
-                if(isSolaxDongleSSID(ssid)) {
-                    WiFi.begin(ssid);
+                // if(isSolaxDongleSSID(ssid)) {
+                //     WiFi.begin(ssid);
                     
-                    int retries = 50;
-                    for(int r = 0; r < retries; r++) {
-                        if(WiFi.status() == WL_CONNECTED) {
-                            if(canConnect()) {
-                                result.sn = parseDongleSN(WiFi.SSID());
-                                result.result = true;
-                                return result;
-                            }
-                            break;
-                        } else {
-                            delay(100);
-                        }
-                    }
+                //     int retries = 50;
+                //     for(int r = 0; r < retries; r++) {
+                //         if(WiFi.status() == WL_CONNECTED) {
+                //             if(canConnect()) {
+                //                 result.sn = parseDongleSN(WiFi.SSID());
+                //                 result.result = true;
+                //                 return result;
+                //             }
+                //             break;
+                //         } else {
+                //             delay(100);
+                //         }
+                //     }
 
-                    WiFi.disconnect();
-                }
+                //     WiFi.disconnect();
+                // }
             }
 
             return result;

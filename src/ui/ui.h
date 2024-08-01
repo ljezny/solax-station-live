@@ -25,79 +25,36 @@ extern "C" {
 #include "ui_helpers.h"
 #include "ui_events.h"
 
-// SCREEN: ui_Splash
-void ui_Splash_screen_init(void);
-extern lv_obj_t *ui_Splash;
-extern lv_obj_t *ui_MainContainer2;
-extern lv_obj_t *ui_Label1;
 // SCREEN: ui_Dashboard
 void ui_Dashboard_screen_init(void);
 extern lv_obj_t *ui_Dashboard;
-extern lv_obj_t *ui_MainContainer;
-extern lv_obj_t *ui_PVRowContainer;
-extern lv_obj_t *ui_PVContainer;
-extern lv_obj_t *ui_Image1;
-extern lv_obj_t *ui_Container6;
-extern lv_obj_t *ui_pvTodayYield;
-extern lv_obj_t *ui_Container5;
-extern lv_obj_t *ui_pvStringsLabel;
-extern lv_obj_t *ui_pvLabel;
-extern lv_obj_t *ui_PVContainer1;
-extern lv_obj_t *ui_Image2;
-extern lv_obj_t *ui_Container1;
-extern lv_obj_t *ui_batteryChargedTodayLabel;
-extern lv_obj_t *ui_batteryDischargedTodayLabel;
-extern lv_obj_t *ui_Container7;
-extern lv_obj_t *ui_batteryPowerLabel;
-extern lv_obj_t *ui_socLabel;
-extern lv_obj_t *ui_PVRowContainer1;
-extern lv_obj_t *ui_PVContainer2;
-extern lv_obj_t *ui_Image3;
-extern lv_obj_t *ui_Container2;
-extern lv_obj_t *ui_loadTodayLabel;
-extern lv_obj_t *ui_Container8;
-extern lv_obj_t *ui_l1Label;
-extern lv_obj_t *ui_l2Label;
-extern lv_obj_t *ui_l3Label;
-extern lv_obj_t *ui_loadLabel;
-extern lv_obj_t *ui_PVContainer3;
-extern lv_obj_t *ui_Image4;
-extern lv_obj_t *ui_Container4;
-extern lv_obj_t *ui_gridSellTodayLabel;
-extern lv_obj_t *ui_gridBuyTodayLabel;
-extern lv_obj_t *ui_Container3;
-extern lv_obj_t *ui_feedinLabel;
-extern lv_obj_t *ui_statusLabel;
-// SCREEN: ui_Screen1
-void ui_Screen1_screen_init(void);
-extern lv_obj_t *ui_Screen1;
-extern lv_obj_t *ui_MainContainer1;
 extern lv_obj_t *ui_LeftContainer;
-extern lv_obj_t *ui_Container9;
+extern lv_obj_t *ui_pvContainer;
 extern lv_obj_t *ui_Image6;
-extern lv_obj_t *ui_Label2;
-extern lv_obj_t *ui_Label3;
-extern lv_obj_t *ui_Container10;
+extern lv_obj_t *ui_pvLabel;
+extern lv_obj_t *ui_pv1Label;
+extern lv_obj_t *ui_pv2Label;
+extern lv_obj_t *ui_batteryContainer;
+extern lv_obj_t *ui_batteryTemperatureLabel;
 extern lv_obj_t *ui_Image10;
-extern lv_obj_t *ui_Label13;
-extern lv_obj_t *ui_Label4;
-extern lv_obj_t *ui_Label5;
-extern lv_obj_t *ui_Container12;
+extern lv_obj_t *ui_socLabel;
+extern lv_obj_t *ui_batteryPowerLabel;
+extern lv_obj_t *ui_loadContainer;
 extern lv_obj_t *ui_Image8;
-extern lv_obj_t *ui_Label8;
-extern lv_obj_t *ui_Label9;
-extern lv_obj_t *ui_Container13;
+extern lv_obj_t *ui_loadPowerLabel;
+extern lv_obj_t *ui_gridContainer;
 extern lv_obj_t *ui_Image9;
-extern lv_obj_t *ui_Label10;
-extern lv_obj_t *ui_Label11;
+extern lv_obj_t *ui_feedInPowerLabel;
 extern lv_obj_t *ui_Container14;
 extern lv_obj_t *ui_Image7;
-extern lv_obj_t *ui_Label12;
-extern lv_obj_t *ui_Container11;
-extern lv_obj_t *ui_Label20;
+extern lv_obj_t *ui_selfUsePercentLabel;
+extern lv_obj_t *ui_inverterContainer;
+extern lv_obj_t *ui_inverterTemperatureLabel;
 extern lv_obj_t *ui_Image5;
-extern lv_obj_t *ui_Label6;
-extern lv_obj_t *ui_Label7;
+extern lv_obj_t *ui_inverterPowerLabel;
+extern lv_obj_t *ui_inverterPowerL1Label;
+extern lv_obj_t *ui_inverterPowerL2Label;
+extern lv_obj_t *ui_inverterPowerL3Label;
 extern lv_obj_t *ui_RightContainer;
 extern lv_obj_t *ui_TopRightContainer;
 extern lv_obj_t *ui_Container15;
@@ -116,12 +73,11 @@ extern lv_obj_t *ui_Container18;
 extern lv_obj_t *ui_Image14;
 extern lv_obj_t *ui_Label21;
 extern lv_obj_t *ui_Label22;
+extern lv_obj_t *ui_statusLabel;
 extern lv_obj_t *ui_TopBottomContainer;
 extern lv_obj_t *ui_Chart1;
 extern lv_obj_t *ui____initial_actions0;
 
-LV_IMG_DECLARE( ui_img_battery_png);   // assets/battery.png
-LV_IMG_DECLARE( ui_img_2001872125);   // assets/power-line.png
 LV_IMG_DECLARE( ui_img_1516017106);   // assets/solar-panel-4.png
 LV_IMG_DECLARE( ui_img_1666978921);   // assets/80-percent.png
 LV_IMG_DECLARE( ui_img_2000019334);   // assets/eco-house-2.png

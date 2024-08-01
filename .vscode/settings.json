@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "*.tcc": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "lv_conf_internal.h": "c"
     }
 }
