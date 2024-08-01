@@ -25,13 +25,7 @@ TFT_eSPI tft = TFT_eSPI();       // Invoke custom library with default width and
 static lv_disp_draw_buf_t draw_buf;
 static lv_color_t buf[TFT_DISPLAY_RESOLUTION_X * 10];
 
-SolaxDongleAPI dongleAPI;
-SolaxDongleDiscovery dongleDiscovery;
 
-SolaxDongleInverterData_t inverterData;
-SolaxDongleDiscoveryResult_t discoveryResult;
-
-bool firstLoad = true;
 
 /* Display flushing */
 void display_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p) 
