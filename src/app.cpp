@@ -47,7 +47,7 @@ SolaxDongleInverterData_t createRandomMockData()
 void updateDashboardUI() {
     int selfUsePercent = inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0;
     selfUsePercent = constrain(selfUsePercent, 0, 100);
-    lvgl_port_lock(-1);
+    
 
     // lv_obj_t *line = lv_line_create(ui_LeftContainer);
     // lv_point_t p1 = {ui_gridContainer->coords.x1, ui_gridContainer->coords.y1};
@@ -85,9 +85,13 @@ void updateDashboardUI() {
     } else {
         lv_label_set_text(ui_statusLabel, "Disconnected");
     }
-    lvgl_port_unlock();
+
+    
 }
 
+void timerCB(struct _lv_timer_t *timer) {
+    updateDashboardUI();
+}
 
 void setup()
 {
@@ -108,26 +112,26 @@ void setup()
     
     lvgl_port_lock(-1);
     ui_init();
-    updateDashboardUI();
     lvgl_port_unlock();
 
-   // WiFi.begin("Wifi_SXBYETVWHZ");
+    lv_timer_t * timer = lv_timer_create(timerCB, 100, NULL);
+    
+    WiFi.begin("Wifi_SXBYETVWHZ");
 }
 
 void loop()
 {
-    
-    // while (WiFi.status() != WL_CONNECTED)
-    // {
-    //     delay(500);
-    // }
+    while (WiFi.status() != WL_CONNECTED)
+    {
+        delay(500);
+    }
     //discoveryResult = dongleDiscovery.discoverDongle();
     //if (discoveryResult.result)
     {
-       // inverterData = dongleAPI.loadData("SXBYETVWHZ");
+        inverterData = dongleAPI.loadData("SXBYETVWHZ");
     }
-    inverterData = createRandomMockData();
-    updateDashboardUI();
+    //inverterData = createRandomMockData();
+    //updateDashboardUI();
     
-    //delay(2000);
+    delay(1000);
 }
