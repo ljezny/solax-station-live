@@ -70,12 +70,17 @@ void updateDashboardUI() {
     lv_label_set_text_fmt(ui_batteryPowerLabel, "%d W", inverterData.batteryPower);
     lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d°C", inverterData.batteryTemperature);
     lv_label_set_text_fmt(ui_selfUsePercentLabel, "%d%%", selfUsePercent);
+
+
+    //Serial.printf("Left Container origin: %d, %d\n", ui_Dashboard->coords.x1, ui_Dashboard->coords.y1);
+
 //   lv_label_set_text_fmt(ui_pvTodayYield, "%s kWh", String(inverterData.yieldToday,1).c_str());
 //   lv_label_set_text_fmt(ui_loadTodayLabel, "%s kWh", String(inverterData.loadToday,1).c_str());
 //   lv_label_set_text_fmt(ui_gridSellTodayLabel, "+ %s kWh", String(inverterData.gridSellToday,1).c_str());
 //   lv_label_set_text_fmt(ui_gridBuyTodayLabel, "- %s kWh", String(inverterData.gridBuyToday,1).c_str());
 //   lv_label_set_text_fmt(ui_batteryChargedTodayLabel, "+ %s kWh", String(inverterData.batteryChargedToday,1).c_str());
 //   lv_label_set_text_fmt(ui_batteryDischargedTodayLabel, "- %s kWh", String(inverterData.batteryDischargedToday,1).c_str());
+    
     if(discoveryResult.result) {
         if(inverterData.status != 0) {
             lv_label_set_text_fmt(ui_statusLabel, "Error: %d", inverterData.status);
@@ -88,8 +93,12 @@ void updateDashboardUI() {
 
     
 }
-
+bool uiInitialized = false;
 void timerCB(struct _lv_timer_t *timer) {
+    if(!uiInitialized) {
+        uiInitialized = true;
+        ui_init();
+    }
     updateDashboardUI();
 }
 
@@ -107,31 +116,31 @@ void setup()
     rgb_bus->configRgbBounceBufferSize(LVGL_PORT_RGB_BOUNCE_BUFFER_SIZE);
 #endif
     panel->begin();
-    
-    lvgl_port_init(panel->getLcd(), panel->getTouch());
+
     
     lvgl_port_lock(-1);
-    ui_init();
+    lvgl_port_init(panel->getLcd(), panel->getTouch());
     lvgl_port_unlock();
-
-    lv_timer_t * timer = lv_timer_create(timerCB, 100, NULL);
+    
+    //delay(1000);
+    lv_timer_t * timer = lv_timer_create(timerCB, 16, NULL);
     
     WiFi.begin("Wifi_SXBYETVWHZ");
 }
 
 void loop()
 {
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        delay(500);
-    }
+    // while (WiFi.status() != WL_CONNECTED)
+    // {
+    //     delay(500);
+    // }
     //discoveryResult = dongleDiscovery.discoverDongle();
     //if (discoveryResult.result)
     {
         inverterData = dongleAPI.loadData("SXBYETVWHZ");
     }
-    //inverterData = createRandomMockData();
+    inverterData = createRandomMockData();
     //updateDashboardUI();
     
-    delay(1000);
+    delay(5);
 }

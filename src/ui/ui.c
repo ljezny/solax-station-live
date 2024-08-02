@@ -58,6 +58,7 @@ lv_obj_t *ui_Image14;
 lv_obj_t *ui_Label21;
 lv_obj_t *ui_Label22;
 lv_obj_t *ui_statusLabel;
+lv_obj_t *ui_Spinner1;
 lv_obj_t *ui_TopBottomContainer;
 lv_obj_t *ui_Chart1;
 lv_obj_t *ui____initial_actions0;

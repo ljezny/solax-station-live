@@ -74,6 +74,7 @@ extern lv_obj_t *ui_Image14;
 extern lv_obj_t *ui_Label21;
 extern lv_obj_t *ui_Label22;
 extern lv_obj_t *ui_statusLabel;
+extern lv_obj_t *ui_Spinner1;
 extern lv_obj_t *ui_TopBottomContainer;
 extern lv_obj_t *ui_Chart1;
 extern lv_obj_t *ui____initial_actions0;
