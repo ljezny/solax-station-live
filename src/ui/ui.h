@@ -25,10 +25,23 @@ extern "C" {
 #include "ui_helpers.h"
 #include "ui_events.h"
 
+void pvBall_Animation( lv_obj_t *TargetObject, int delay);
+void toGridBall_Animation( lv_obj_t *TargetObject, int delay);
+void toBatteryBall_Animation( lv_obj_t *TargetObject, int delay);
+void toLoadBall_Animation( lv_obj_t *TargetObject, int delay);
+void fromBatteryBall_Animation( lv_obj_t *TargetObject, int delay);
+void fromGridBall_Animation( lv_obj_t *TargetObject, int delay);
 // SCREEN: ui_Dashboard
 void ui_Dashboard_screen_init(void);
+void ui_event_Dashboard( lv_event_t * e);
 extern lv_obj_t *ui_Dashboard;
 extern lv_obj_t *ui_LeftContainer;
+extern lv_obj_t *ui_pvBall;
+extern lv_obj_t *ui_toGridBall;
+extern lv_obj_t *ui_toBatteryBall;
+extern lv_obj_t *ui_fromBatteryBall;
+extern lv_obj_t *ui_fromGridBall;
+extern lv_obj_t *ui_toLoadBall;
 extern lv_obj_t *ui_pvContainer;
 extern lv_obj_t *ui_Image6;
 extern lv_obj_t *ui_pvLabel;
@@ -74,7 +87,6 @@ extern lv_obj_t *ui_Image14;
 extern lv_obj_t *ui_Label21;
 extern lv_obj_t *ui_Label22;
 extern lv_obj_t *ui_statusLabel;
-extern lv_obj_t *ui_Spinner1;
 extern lv_obj_t *ui_TopBottomContainer;
 extern lv_obj_t *ui_Chart1;
 extern lv_obj_t *ui____initial_actions0;

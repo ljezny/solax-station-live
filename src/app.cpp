@@ -6,7 +6,7 @@
 #include "Solax/SolaxDongleDiscovery.hpp"
 #include "Solax/SolaxDongleAPI.hpp"
 
-#define WAIT 100
+#define WAIT 250
 SET_LOOP_TASK_STACK_SIZE(32 * 1024);
 
 SolaxDongleAPI dongleAPI;
@@ -32,7 +32,7 @@ SolaxDongleInverterData_t createRandomMockData()
     inverterData.inverterPower = random(0, 1000);
     inverterData.loadPower = random(0, 1000);
     inverterData.loadToday = random(0, 1000);
-    inverterData.feedInPower = random(0, 1000);
+    inverterData.feedInPower = random(-1000, 1000);
     inverterData.soc = random(0, 100);
     inverterData.yieldToday = random(0, 1000);
     inverterData.yieldTotal = random(0, 1000);
@@ -56,9 +56,9 @@ void updateDashboardUI() {
     // lv_line_set_points(line, points, 2);
     
 
-    lv_label_set_text_fmt(ui_pvLabel, "%d W", inverterData.pv1Power + inverterData.pv2Power);
-    lv_label_set_text_fmt(ui_pv1Label, "%d W", inverterData.pv1Power);
-    lv_label_set_text_fmt(ui_pv2Label, "%d W", inverterData.pv2Power);
+    lv_label_set_text_fmt(ui_pvLabel, "%dW", inverterData.pv1Power + inverterData.pv2Power);
+    lv_label_set_text_fmt(ui_pv1Label, "%dW", inverterData.pv1Power);
+    lv_label_set_text_fmt(ui_pv2Label, "%dW", inverterData.pv2Power);
     lv_label_set_text_fmt(ui_inverterTemperatureLabel, "%d°C", inverterData.inverterTemperature);
     lv_label_set_text_fmt(ui_inverterPowerLabel, "%d W", inverterData.inverterPower);
     lv_label_set_text_fmt(ui_inverterPowerL1Label, "%d W", inverterData.L1Power);
@@ -71,7 +71,34 @@ void updateDashboardUI() {
     lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d°C", inverterData.batteryTemperature);
     lv_label_set_text_fmt(ui_selfUsePercentLabel, "%d%%", selfUsePercent);
 
-
+    // if(inverterData.pv1Power + inverterData.pv2Power > 0) {
+    //     lv_obj_clear_state(ui_pvBall, LV_OBJ_FLAG_HIDDEN);
+    //     pvBall_Animation(ui_pvBall, 0);
+    // } else {
+    //     lv_obj_add_flag(ui_pvBall, LV_OBJ_FLAG_HIDDEN);
+    // }
+    
+    if(inverterData.batteryPower > 0) {
+        //lv_obj_clear_state(ui_toBatteryBall, LV_OBJ_FLAG_HIDDEN);
+        //lv_obj_add_flag(ui_fromBatteryBall, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_set_style_opa(ui_toBatteryBall, 255, 0);
+        lv_obj_set_style_opa(ui_fromBatteryBall, 0, 0);
+    } else {
+        //lv_obj_clear_state(ui_fromBatteryBall, LV_OBJ_FLAG_HIDDEN);
+        //lv_obj_add_flag(ui_toBatteryBall, LV_OBJ_FLAG_HIDDEN);
+        //fromBatteryBall_Animation(ui_fromBatteryBall, 0);
+        lv_obj_set_style_opa(ui_toBatteryBall, 0, 0);
+        lv_obj_set_style_opa(ui_fromBatteryBall, 255, 0);
+    }
+    if(inverterData.feedInPower > 0) {
+       //lv_obj_clear_state(ui_toGridBall, LV_OBJ_FLAG_HIDDEN);
+        //lv_obj_add_flag(ui_fromGridBall, LV_OBJ_FLAG_HIDDEN);
+        //toGridBall_Animation(ui_toGridBall, 0);
+    } else {
+        //lv_obj_clear_state(ui_fromGridBall, LV_OBJ_FLAG_HIDDEN);
+        //lv_obj_add_flag(ui_toGridBall, LV_OBJ_FLAG_HIDDEN);
+        //fromGridBall_Animation(ui_fromGridBall, 0);
+    }
     //Serial.printf("Left Container origin: %d, %d\n", ui_Dashboard->coords.x1, ui_Dashboard->coords.y1);
 
 //   lv_label_set_text_fmt(ui_pvTodayYield, "%s kWh", String(inverterData.yieldToday,1).c_str());
@@ -123,24 +150,18 @@ void setup()
     lvgl_port_unlock();
     
     //delay(1000);
-    lv_timer_t * timer = lv_timer_create(timerCB, 16, NULL);
-    
-    WiFi.begin("Wifi_SXBYETVWHZ");
+    lv_timer_t * timer = lv_timer_create(timerCB, WAIT, NULL);
 }
 
 void loop()
 {
-    // while (WiFi.status() != WL_CONNECTED)
-    // {
-    //     delay(500);
-    // }
-    //discoveryResult = dongleDiscovery.discoverDongle();
-    //if (discoveryResult.result)
+    discoveryResult = dongleDiscovery.discoverDongle();
+    if (discoveryResult.result)
     {
-        inverterData = dongleAPI.loadData("SXBYETVWHZ");
+        inverterData = dongleAPI.loadData(discoveryResult.sn);
+    } else {
+        inverterData = createRandomMockData();
     }
-    inverterData = createRandomMockData();
-    //updateDashboardUI();
     
-    delay(5);
+    delay(WAIT);
 }
