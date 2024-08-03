@@ -6,7 +6,7 @@
 #include "Solax/SolaxDongleDiscovery.hpp"
 #include "Solax/SolaxDongleAPI.hpp"
 
-#define WAIT 250
+#define WAIT 1000
 SET_LOOP_TASK_STACK_SIZE(32 * 1024);
 
 SolaxDongleAPI dongleAPI;
@@ -14,7 +14,7 @@ SolaxDongleDiscovery dongleDiscovery;
 
 SolaxDongleInverterData_t inverterData;
 SolaxDongleDiscoveryResult_t discoveryResult;
-
+ESP_Panel *panel = new ESP_Panel();
 bool firstLoad = true;
 
 SolaxDongleInverterData_t createRandomMockData()
@@ -71,33 +71,38 @@ void updateDashboardUI() {
     lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d°C", inverterData.batteryTemperature);
     lv_label_set_text_fmt(ui_selfUsePercentLabel, "%d%%", selfUsePercent);
 
-    // if(inverterData.pv1Power + inverterData.pv2Power > 0) {
-    //     lv_obj_clear_state(ui_pvBall, LV_OBJ_FLAG_HIDDEN);
-    //     pvBall_Animation(ui_pvBall, 0);
-    // } else {
-    //     lv_obj_add_flag(ui_pvBall, LV_OBJ_FLAG_HIDDEN);
-    // }
+    if(inverterData.pv1Power + inverterData.pv2Power > 0) {
+        lv_obj_set_style_opa(ui_pvBall, 255, 0);
+    } else {
+        lv_obj_set_style_opa(ui_pvBall, 0, 0);
+    }
+
+    if(inverterData.loadPower > 0) {
+        lv_obj_set_style_opa(ui_toLoadBall, 255, 0);
+    } else {
+        lv_obj_set_style_opa(ui_toLoadBall, 0, 0);
+    }
     
     if(inverterData.batteryPower > 0) {
-        //lv_obj_clear_state(ui_toBatteryBall, LV_OBJ_FLAG_HIDDEN);
-        //lv_obj_add_flag(ui_fromBatteryBall, LV_OBJ_FLAG_HIDDEN);
         lv_obj_set_style_opa(ui_toBatteryBall, 255, 0);
         lv_obj_set_style_opa(ui_fromBatteryBall, 0, 0);
+    } else if (inverterData.batteryPower == 0) {
+        lv_obj_set_style_opa(ui_toBatteryBall, 0, 0);
+        lv_obj_set_style_opa(ui_fromBatteryBall, 0, 0);
     } else {
-        //lv_obj_clear_state(ui_fromBatteryBall, LV_OBJ_FLAG_HIDDEN);
-        //lv_obj_add_flag(ui_toBatteryBall, LV_OBJ_FLAG_HIDDEN);
-        //fromBatteryBall_Animation(ui_fromBatteryBall, 0);
         lv_obj_set_style_opa(ui_toBatteryBall, 0, 0);
         lv_obj_set_style_opa(ui_fromBatteryBall, 255, 0);
     }
+
     if(inverterData.feedInPower > 0) {
-       //lv_obj_clear_state(ui_toGridBall, LV_OBJ_FLAG_HIDDEN);
-        //lv_obj_add_flag(ui_fromGridBall, LV_OBJ_FLAG_HIDDEN);
-        //toGridBall_Animation(ui_toGridBall, 0);
+        lv_obj_set_style_opa(ui_toGridBall, 255, 0);
+        lv_obj_set_style_opa(ui_fromGridBall, 0, 0);
+    } else if (inverterData.feedInPower == 0) {
+        lv_obj_set_style_opa(ui_toGridBall, 0, 0);
+        lv_obj_set_style_opa(ui_fromGridBall, 0, 0);
     } else {
-        //lv_obj_clear_state(ui_fromGridBall, LV_OBJ_FLAG_HIDDEN);
-        //lv_obj_add_flag(ui_toGridBall, LV_OBJ_FLAG_HIDDEN);
-        //fromGridBall_Animation(ui_fromGridBall, 0);
+        lv_obj_set_style_opa(ui_toGridBall, 0, 0);
+        lv_obj_set_style_opa(ui_fromGridBall, 255, 0);
     }
     //Serial.printf("Left Container origin: %d, %d\n", ui_Dashboard->coords.x1, ui_Dashboard->coords.y1);
 
@@ -117,8 +122,6 @@ void updateDashboardUI() {
     } else {
         lv_label_set_text(ui_statusLabel, "Disconnected");
     }
-
-    
 }
 bool uiInitialized = false;
 void timerCB(struct _lv_timer_t *timer) {
@@ -127,6 +130,8 @@ void timerCB(struct _lv_timer_t *timer) {
         ui_init();
     }
     updateDashboardUI();
+
+    esp_lcd_rgb_panel_restart(panel->getLcd()->getHandle());
 }
 
 void setup()
@@ -134,7 +139,7 @@ void setup()
     Serial.begin(115200);
   
     Serial.println("Initialize panel device");
-    ESP_Panel *panel = new ESP_Panel();
+    
     panel->init();
 #if LVGL_PORT_AVOID_TEAR
     // When avoid tearing function is enabled, configure the RGB bus according to the LVGL configuration
@@ -160,7 +165,7 @@ void loop()
     {
         inverterData = dongleAPI.loadData(discoveryResult.sn);
     } else {
-        inverterData = createRandomMockData();
+        //inverterData = createRandomMockData();
     }
     
     delay(WAIT);
