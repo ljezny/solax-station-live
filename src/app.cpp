@@ -5,6 +5,8 @@
 #include "ui/ui.h"
 #include "Solax/SolaxDongleDiscovery.hpp"
 #include "Solax/SolaxDongleAPI.hpp"
+#include "utils/UnitFormatter.hpp"
+#include "utils/ChartDataProvider.hpp"
 
 #define WAIT 1000
 SET_LOOP_TASK_STACK_SIZE(32 * 1024);
@@ -15,7 +17,7 @@ SolaxDongleDiscovery dongleDiscovery;
 SolaxDongleInverterData_t inverterData;
 SolaxDongleDiscoveryResult_t discoveryResult;
 ESP_Panel *panel = new ESP_Panel();
-bool firstLoad = true;
+ChartDataProvider *chartDataProvider = new ChartDataProvider();
 
 SolaxDongleInverterData_t createRandomMockData()
 {
@@ -47,29 +49,12 @@ SolaxDongleInverterData_t createRandomMockData()
 void updateDashboardUI() {
     int selfUsePercent = inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0;
     selfUsePercent = constrain(selfUsePercent, 0, 100);
-    
 
     // lv_obj_t *line = lv_line_create(ui_LeftContainer);
     // lv_point_t p1 = {ui_gridContainer->coords.x1, ui_gridContainer->coords.y1};
     // lv_point_t p2 = {ui_inverterContainer->coords.x1, ui_inverterContainer->coords.y1};
     // const lv_point_t points[] = {p1, p2};
-    // lv_line_set_points(line, points, 2);
-    
-
-    lv_label_set_text_fmt(ui_pvLabel, "%dW", inverterData.pv1Power + inverterData.pv2Power);
-    lv_label_set_text_fmt(ui_pv1Label, "%dW", inverterData.pv1Power);
-    lv_label_set_text_fmt(ui_pv2Label, "%dW", inverterData.pv2Power);
-    lv_label_set_text_fmt(ui_inverterTemperatureLabel, "%d°C", inverterData.inverterTemperature);
-    lv_label_set_text_fmt(ui_inverterPowerLabel, "%d W", inverterData.inverterPower);
-    lv_label_set_text_fmt(ui_inverterPowerL1Label, "%d W", inverterData.L1Power);
-    lv_label_set_text_fmt(ui_inverterPowerL2Label, "%d W", inverterData.L2Power);
-    lv_label_set_text_fmt(ui_inverterPowerL3Label, "%d W", inverterData.L3Power);
-    lv_label_set_text_fmt(ui_loadPowerLabel, "%d W", inverterData.loadPower);
-    lv_label_set_text_fmt(ui_feedInPowerLabel, "%d W", inverterData.feedInPower);
-    lv_label_set_text_fmt(ui_socLabel, "%d%%", inverterData.soc);
-    lv_label_set_text_fmt(ui_batteryPowerLabel, "%d W", inverterData.batteryPower);
-    lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d°C", inverterData.batteryTemperature);
-    lv_label_set_text_fmt(ui_selfUsePercentLabel, "%d%%", selfUsePercent);
+    // lv_line_set_points(line, points, 2);    
 
     if(inverterData.pv1Power + inverterData.pv2Power > 0) {
         lv_obj_set_style_opa(ui_pvBall, 255, 0);
@@ -104,15 +89,38 @@ void updateDashboardUI() {
         lv_obj_set_style_opa(ui_toGridBall, 0, 0);
         lv_obj_set_style_opa(ui_fromGridBall, 255, 0);
     }
-    //Serial.printf("Left Container origin: %d, %d\n", ui_Dashboard->coords.x1, ui_Dashboard->coords.y1);
+    lv_label_set_text(ui_pvLabel, format(POWER, inverterData.pv1Power + inverterData.pv2Power).formatted.c_str());
+    lv_label_set_text(ui_pv1Label, format(POWER, inverterData.pv1Power, 1.0f, true).formatted.c_str());
+    lv_label_set_text(ui_pv2Label, format(POWER, inverterData.pv2Power, 1.0f, true).formatted.c_str());
+    lv_label_set_text_fmt(ui_inverterTemperatureLabel, "%d°C", inverterData.inverterTemperature);
+    lv_label_set_text(ui_inverterPowerLabel, format(POWER, inverterData.inverterPower).formatted.c_str());
+    lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.L1Power).formatted.c_str());
+    lv_label_set_text(ui_inverterPowerL2Label, format(POWER, inverterData.L2Power).formatted.c_str());
+    lv_label_set_text(ui_inverterPowerL3Label, format(POWER, inverterData.L3Power).formatted.c_str());
+    lv_label_set_text(ui_loadPowerLabel, format(POWER, inverterData.loadPower).formatted.c_str());
+    lv_label_set_text(ui_feedInPowerLabel, format(POWER, inverterData.feedInPower).formatted.c_str());
+    lv_label_set_text_fmt(ui_socLabel, "%d%%", inverterData.soc);
+    lv_label_set_text(ui_batteryPowerLabel, format(POWER, inverterData.batteryPower).formatted.c_str());
+    lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d°C", inverterData.batteryTemperature);
+    lv_label_set_text_fmt(ui_selfUsePercentLabel, "%d%%", selfUsePercent);
+    lv_label_set_text(ui_yieldTodayLabel, format(ENERGY, inverterData.yieldToday * 1000.0,1).formatted.c_str());
+    lv_label_set_text(ui_loadTotalLabel, format(ENERGY, inverterData.loadTotal * 1000.0,1).formatted.c_str());
+    lv_label_set_text(ui_gridSellTodayLabel, ("+ " + format(ENERGY, inverterData.gridSellToday * 1000.0,1).formatted).c_str());
+    lv_label_set_text(ui_gridBuyTodayLabel, ("-" + format(ENERGY, inverterData.gridBuyToday * 1000.0,1).formatted).c_str());
+    lv_label_set_text(ui_batteryChargedTodayLabel, ("+" + format(ENERGY, inverterData.batteryChargedToday * 1000.0,1).formatted).c_str());
+    lv_label_set_text(ui_batteryDischargedTodayLabel, ("-" + format(ENERGY, inverterData.batteryDischargedToday * 1000.0,1).formatted).c_str());
+    lv_label_set_text(ui_yieldTotalLabel, format(ENERGY, inverterData.yieldTotal * 1000.0,1).formatted.c_str());
+    lv_label_set_text(ui_loadTotalLabel, format(ENERGY, inverterData.loadToday * 1000.0,1).formatted.c_str());
+    lv_label_set_text(ui_gridSellTotalLabel, ("+ " + format(ENERGY, inverterData.gridSellTotal * 1000.0,1).formatted).c_str());
+    lv_label_set_text(ui_gridBuyTotalLabel, ("- " + format(ENERGY, inverterData.gridBuyTotal * 1000.0,1).formatted).c_str());
+    lv_label_set_text(ui_batteryChargedTotalLabel, ("+ " + format(ENERGY, inverterData.batteryChargedTotal * 1000.0,1).formatted).c_str());
+    lv_label_set_text(ui_batteryDischargedTotalLabel, ("- " + format(ENERGY, inverterData.batteryDischargedTotal * 1000.0,1).formatted).c_str());
 
-//   lv_label_set_text_fmt(ui_pvTodayYield, "%s kWh", String(inverterData.yieldToday,1).c_str());
-//   lv_label_set_text_fmt(ui_loadTodayLabel, "%s kWh", String(inverterData.loadToday,1).c_str());
-//   lv_label_set_text_fmt(ui_gridSellTodayLabel, "+ %s kWh", String(inverterData.gridSellToday,1).c_str());
-//   lv_label_set_text_fmt(ui_gridBuyTodayLabel, "- %s kWh", String(inverterData.gridBuyToday,1).c_str());
-//   lv_label_set_text_fmt(ui_batteryChargedTodayLabel, "+ %s kWh", String(inverterData.batteryChargedToday,1).c_str());
-//   lv_label_set_text_fmt(ui_batteryDischargedTodayLabel, "- %s kWh", String(inverterData.batteryDischargedToday,1).c_str());
+    while(lv_chart_get_series_next(ui_Chart1, NULL)) {
+        lv_chart_remove_series(ui_Chart1, chartDataProvider->getSeries(0));
+    }
     
+
     if(discoveryResult.result) {
         if(inverterData.status != 0) {
             lv_label_set_text_fmt(ui_statusLabel, "Error: %d", inverterData.status);
@@ -123,12 +131,20 @@ void updateDashboardUI() {
         lv_label_set_text(ui_statusLabel, "Disconnected");
     }
 }
+
 bool uiInitialized = false;
+bool dashboardShown = false;
+
 void timerCB(struct _lv_timer_t *timer) {
     if(!uiInitialized) {
         uiInitialized = true;
         ui_init();
     }
+    if(!dashboardShown && inverterData.status == 0) {        
+        lv_disp_load_scr(ui_Dashboard);
+        dashboardShown = true;
+    }
+    
     updateDashboardUI();
 
     esp_lcd_rgb_panel_restart(panel->getLcd()->getHandle());
@@ -149,13 +165,11 @@ void setup()
 #endif
     panel->begin();
 
-    
     lvgl_port_lock(-1);
     lvgl_port_init(panel->getLcd(), panel->getTouch());
     lvgl_port_unlock();
     
-    //delay(1000);
-    lv_timer_t * timer = lv_timer_create(timerCB, WAIT, NULL);
+    lv_timer_t * timer = lv_timer_create(timerCB, 5000, NULL); //60fps
 }
 
 void loop()
@@ -164,8 +178,9 @@ void loop()
     if (discoveryResult.result)
     {
         inverterData = dongleAPI.loadData(discoveryResult.sn);
-    } else {
-        //inverterData = createRandomMockData();
+        if(inverterData.status == 1) {
+            chartDataProvider->addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
+        }
     }
     
     delay(WAIT);

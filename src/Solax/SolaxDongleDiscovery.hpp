@@ -18,14 +18,15 @@ class SolaxDongleDiscovery {
                 result.result = true;
                 return result;
             }
-
+            
             int found = WiFi.scanNetworks(false);
             for(int i = 0; i < found; i++) {
+                log_d("Found network: %s", WiFi.SSID(i).c_str());
                 String ssid = WiFi.SSID(i);
                 if(isSolaxDongleSSID(ssid)) {
                     WiFi.begin(ssid);
                     
-                    int retries = 50;
+                    int retries = 100;
                     for(int r = 0; r < retries; r++) {
                         if(WiFi.status() == WL_CONNECTED) {
                             if(canConnect()) {
@@ -42,7 +43,7 @@ class SolaxDongleDiscovery {
                     WiFi.disconnect();
                 }
             }
-
+            WiFi.mode(WIFI_OFF);
             return result;
         }
     private:

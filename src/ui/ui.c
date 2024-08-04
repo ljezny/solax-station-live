@@ -15,11 +15,18 @@ void fromBatteryBall_Animation( lv_obj_t *TargetObject, int delay);
 void fromGridBall_Animation( lv_obj_t *TargetObject, int delay);
 
 
+// SCREEN: ui_Splash
+void ui_Splash_screen_init(void);
+lv_obj_t *ui_Splash;
+lv_obj_t *ui_Label1;
+
+
 // SCREEN: ui_Dashboard
 void ui_Dashboard_screen_init(void);
 void ui_event_Dashboard( lv_event_t * e);
 lv_obj_t *ui_Dashboard;
 lv_obj_t *ui_LeftContainer;
+lv_obj_t *ui_statusLabel;
 lv_obj_t *ui_pvBall;
 lv_obj_t *ui_toGridBall;
 lv_obj_t *ui_toBatteryBall;
@@ -28,9 +35,10 @@ lv_obj_t *ui_fromGridBall;
 lv_obj_t *ui_toLoadBall;
 lv_obj_t *ui_pvContainer;
 lv_obj_t *ui_Image6;
-lv_obj_t *ui_pvLabel;
+lv_obj_t *ui_Container1;
 lv_obj_t *ui_pv1Label;
 lv_obj_t *ui_pv2Label;
+lv_obj_t *ui_pvLabel;
 lv_obj_t *ui_batteryContainer;
 lv_obj_t *ui_batteryTemperatureLabel;
 lv_obj_t *ui_Image10;
@@ -56,21 +64,24 @@ lv_obj_t *ui_RightContainer;
 lv_obj_t *ui_TopRightContainer;
 lv_obj_t *ui_Container15;
 lv_obj_t *ui_Image11;
-lv_obj_t *ui_Label14;
-lv_obj_t *ui_Label15;
+lv_obj_t *ui_yieldTodayLabel;
+lv_obj_t *ui_yieldTotalLabel;
 lv_obj_t *ui_Container16;
 lv_obj_t *ui_Image12;
-lv_obj_t *ui_Label16;
-lv_obj_t *ui_Label17;
+lv_obj_t *ui_batteryChargedTodayLabel;
+lv_obj_t *ui_batteryDischargedTodayLabel;
+lv_obj_t *ui_batteryChargedTotalLabel;
+lv_obj_t *ui_batteryDischargedTotalLabel;
 lv_obj_t *ui_Container17;
 lv_obj_t *ui_Image13;
-lv_obj_t *ui_Label18;
-lv_obj_t *ui_Label19;
+lv_obj_t *ui_loadTodayLabel;
+lv_obj_t *ui_loadTotalLabel;
 lv_obj_t *ui_Container18;
 lv_obj_t *ui_Image14;
-lv_obj_t *ui_Label21;
-lv_obj_t *ui_Label22;
-lv_obj_t *ui_statusLabel;
+lv_obj_t *ui_gridSellTodayLabel;
+lv_obj_t *ui_gridBuyTodayLabel;
+lv_obj_t *ui_gridSellTotalLabel;
+lv_obj_t *ui_gridBuyTotalLabel;
 lv_obj_t *ui_TopBottomContainer;
 lv_obj_t *ui_Chart1;
 lv_obj_t *ui____initial_actions0;
@@ -358,7 +369,8 @@ void ui_init( void )
 lv_disp_t *dispp = lv_disp_get_default();
 lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), false, LV_FONT_DEFAULT);
 lv_disp_set_theme(dispp, theme);
+ui_Splash_screen_init();
 ui_Dashboard_screen_init();
 ui____initial_actions0 = lv_obj_create(NULL);
-lv_disp_load_scr( ui_Dashboard);
+lv_disp_load_scr( ui_Splash);
 }
