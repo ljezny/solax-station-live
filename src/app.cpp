@@ -52,7 +52,7 @@ static void draw_event_cb(lv_event_t * e)
     lv_obj_draw_part_dsc_t * dsc = lv_event_get_draw_part_dsc(e);
     if(dsc->part == LV_PART_ITEMS) {
         if(!dsc->p1 || !dsc->p2) return;
-
+        
         /*Add a line mask that keeps the area below the line*/
         lv_draw_mask_line_param_t line_mask_param;
         lv_draw_mask_line_points_init(&line_mask_param, dsc->p1->x, dsc->p1->y, dsc->p2->x, dsc->p2->y,
@@ -69,7 +69,7 @@ static void draw_event_cb(lv_event_t * e)
         /*Draw a rectangle that will be affected by the mask*/
         lv_draw_rect_dsc_t draw_rect_dsc;
         lv_draw_rect_dsc_init(&draw_rect_dsc);
-        draw_rect_dsc.bg_opa = LV_OPA_20;
+        draw_rect_dsc.bg_opa = LV_OPA_10;
         draw_rect_dsc.bg_color = dsc->line_dsc->color;
 
         lv_area_t a;
@@ -113,9 +113,9 @@ void updateChart()
     lv_chart_series_t *socSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_batteryColor[0]), LV_CHART_AXIS_PRIMARY_Y);
     uint32_t i;
     for(i = 0; i < CHART_SAMPLES_PER_DAY; i++) {
-        lv_chart_set_next_value(ui_Chart1, pvPowerSeries, lv_rand(4, 15));
+        lv_chart_set_next_value(ui_Chart1, pvPowerSeries, lv_rand(5, 8));
         lv_chart_set_next_value(ui_Chart1, acPowerSeries, lv_rand(1, 5));
-        lv_chart_set_next_value(ui_Chart1, socSeries, lv_rand(40, 60));
+        lv_chart_set_next_value(ui_Chart1, socSeries, lv_rand(80, 100));
     }
 }
 
@@ -181,61 +181,30 @@ void updateDashboardUI()
     int selfUsePercent = inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0;
     selfUsePercent = constrain(selfUsePercent, 0, 100);
 
-    // lv_obj_t *line = lv_line_create(ui_LeftContainer);
-    // lv_point_t p1 = {ui_gridContainer->coords.x1, ui_gridContainer->coords.y1};
-    // lv_point_t p2 = {ui_inverterContainer->coords.x1, ui_inverterContainer->coords.y1};
-    // const lv_point_t points[] = {p1, p2};
-    // lv_line_set_points(line, points, 2);
-
-    if (inverterData.pv1Power + inverterData.pv2Power > 0)
-    {
-        lv_obj_set_style_opa(ui_pvBall, 255, 0);
-    }
-    else
-    {
-        lv_obj_set_style_opa(ui_pvBall, 0, 0);
-    }
 
     if (inverterData.loadPower > 0)
     {
-        lv_obj_set_style_opa(ui_toLoadBall, 255, 0);
-    }
-    else
-    {
-        lv_obj_set_style_opa(ui_toLoadBall, 0, 0);
+        pvBall_Animation(ui_pvBall, 0);
     }
 
     if (inverterData.batteryPower > 0)
     {
-        lv_obj_set_style_opa(ui_toBatteryBall, 255, 0);
-        lv_obj_set_style_opa(ui_fromBatteryBall, 0, 0);
+        toBatteryBall_Animation(ui_toBatteryBall, 0);
     }
-    else if (inverterData.batteryPower == 0)
+    else if(inverterData.batteryPower < 0)
     {
-        lv_obj_set_style_opa(ui_toBatteryBall, 0, 0);
-        lv_obj_set_style_opa(ui_fromBatteryBall, 0, 0);
-    }
-    else
-    {
-        lv_obj_set_style_opa(ui_toBatteryBall, 0, 0);
-        lv_obj_set_style_opa(ui_fromBatteryBall, 255, 0);
+        fromBatteryBall_Animation(ui_fromBatteryBall, 1000);
     }
 
     if (inverterData.feedInPower > 0)
     {
-        lv_obj_set_style_opa(ui_toGridBall, 255, 0);
-        lv_obj_set_style_opa(ui_fromGridBall, 0, 0);
+        toGridBall_Animation(ui_toGridBall, 1000);
     }
-    else if (inverterData.feedInPower == 0)
+    else if (inverterData.feedInPower < 0)
     {
-        lv_obj_set_style_opa(ui_toGridBall, 0, 0);
-        lv_obj_set_style_opa(ui_fromGridBall, 0, 0);
+        fromGridBall_Animation(ui_fromGridBall, 0);
     }
-    else
-    {
-        lv_obj_set_style_opa(ui_toGridBall, 0, 0);
-        lv_obj_set_style_opa(ui_fromGridBall, 255, 0);
-    }
+
     lv_label_set_text(ui_pvLabel, format(POWER, inverterData.pv1Power + inverterData.pv2Power).formatted.c_str());
     lv_label_set_text(ui_pv1Label, format(POWER, inverterData.pv1Power, 1.0f, true).formatted.c_str());
     lv_label_set_text(ui_pv2Label, format(POWER, inverterData.pv2Power, 1.0f, true).formatted.c_str());
