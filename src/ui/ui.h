@@ -24,6 +24,8 @@ extern "C" {
 
 #include "ui_helpers.h"
 #include "ui_events.h"
+#include "ui_theme_manager.h"
+#include "ui_themes.h"
 
 void pvBall_Animation( lv_obj_t *TargetObject, int delay);
 void toGridBall_Animation( lv_obj_t *TargetObject, int delay);
@@ -108,11 +110,10 @@ LV_IMG_DECLARE( ui_img_leaf_png);   // assets/leaf.png
 LV_IMG_DECLARE( ui_img_1061873486);   // assets/solar-inverter.png
 
 
-LV_FONT_DECLARE( ui_font_RobotoMono12);
-LV_FONT_DECLARE( ui_font_RobotoMono16);
-LV_FONT_DECLARE( ui_font_RobotoMonoSmall);
+LV_FONT_DECLARE( ui_font_RobotoMonoExtraSmall);
 LV_FONT_DECLARE( ui_font_RobotoMonoLarge);
 LV_FONT_DECLARE( ui_font_RobotoMonoMedium);
+LV_FONT_DECLARE( ui_font_RobotoMonoSmall);
 
 
 void ui_init(void);

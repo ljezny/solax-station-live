@@ -1,7 +1,68 @@
 {
   "deftheme": {
     "name": "Default",
-    "properties": []
+    "properties": [
+      {
+        "nid": 1646890208,
+        "strtype": "THEME_COLOR",
+        "strval": "loadColor",
+        "intarray": [
+          119,
+          221,
+          119,
+          255
+        ],
+        "InheritedType": 0
+      },
+      {
+        "nid": -436202122,
+        "strtype": "THEME_COLOR",
+        "strval": "pvColor",
+        "intarray": [
+          255,
+          212,
+          0,
+          255
+        ],
+        "InheritedType": 0
+      },
+      {
+        "nid": -644687784,
+        "strtype": "THEME_COLOR",
+        "strval": "batteryColor",
+        "intarray": [
+          119,
+          158,
+          203,
+          255
+        ],
+        "InheritedType": 0
+      },
+      {
+        "nid": 681623078,
+        "strtype": "THEME_COLOR",
+        "strval": "inverterColor",
+        "intarray": [
+          65,
+          65,
+          62,
+          255
+        ],
+        "InheritedType": 0
+      },
+      {
+        "nid": -222477374,
+        "strtype": "THEME_COLOR",
+        "strval": "gridColor",
+        "intarray": [
+          131,
+          105,
+          83,
+          255
+        ],
+        "InheritedType": 0
+      }
+    ]
   },
   "themes": [],
   "selected_theme": "Default"

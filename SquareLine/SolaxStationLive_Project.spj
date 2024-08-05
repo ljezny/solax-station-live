@@ -877,7 +877,7 @@
                           {
                             "nid": 106624850,
                             "strtype": "_style/Text_Font",
-                            "strval": "RobotoMono12",
+                            "strval": "RobotoMonoExtraSmall",
                             "InheritedType": 3
                           }
                         ],
@@ -1168,10 +1168,12 @@
                           {
                             "nid": -1566831098,
                             "strtype": "_style/Bg_Color",
+                            "strval": "pvColor",
+                            "integer": -436202122,
                             "intarray": [
-                              250,
-                              200,
-                              152,
+                              255,
+                              212,
+                              0,
                               255
                             ],
                             "InheritedType": 7
@@ -1471,10 +1473,12 @@
                           {
                             "nid": 1043957690,
                             "strtype": "_style/Bg_Color",
+                            "strval": "gridColor",
+                            "integer": -222477374,
                             "intarray": [
-                              128,
-                              239,
-                              128,
+                              131,
+                              105,
+                              83,
                               255
                             ],
                             "InheritedType": 7
@@ -1775,10 +1779,12 @@
                           {
                             "nid": -861185037,
                             "strtype": "_style/Bg_Color",
+                            "strval": "batteryColor",
+                            "integer": -644687784,
                             "intarray": [
-                              128,
-                              239,
-                              128,
+                              119,
+                              158,
+                              203,
                               255
                             ],
                             "InheritedType": 7
@@ -2079,10 +2085,12 @@
                           {
                             "nid": -1456090875,
                             "strtype": "_style/Bg_Color",
+                            "strval": "batteryColor",
+                            "integer": -644687784,
                             "intarray": [
-                              128,
-                              239,
-                              128,
+                              119,
+                              158,
+                              203,
                               255
                             ],
                             "InheritedType": 7
@@ -2383,6 +2391,8 @@
                           {
                             "nid": -864173789,
                             "strtype": "_style/Bg_Color",
+                            "strval": "gridColor",
+                            "integer": -222477374,
                             "intarray": [
                               131,
                               105,
@@ -2687,10 +2697,12 @@
                           {
                             "nid": -1735828159,
                             "strtype": "_style/Bg_Color",
+                            "strval": "loadColor",
+                            "integer": 1646890208,
                             "intarray": [
-                              173,
-                              216,
-                              230,
+                              119,
+                              221,
+                              119,
                               255
                             ],
                             "InheritedType": 7
@@ -4562,10 +4574,12 @@
                           {
                             "nid": 1996493714,
                             "strtype": "_style/Border_Color",
+                            "strval": "pvColor",
+                            "integer": -436202122,
                             "intarray": [
-                              250,
-                              200,
-                              152,
+                              255,
+                              212,
+                              0,
                               255
                             ],
                             "InheritedType": 7
@@ -6165,10 +6179,12 @@
                           {
                             "nid": 639969883,
                             "strtype": "_style/Border_Color",
+                            "strval": "batteryColor",
+                            "integer": -644687784,
                             "intarray": [
-                              128,
-                              239,
-                              128,
+                              119,
+                              158,
+                              203,
                               255
                             ],
                             "InheritedType": 7
@@ -7120,10 +7136,12 @@
                           {
                             "nid": 347705202,
                             "strtype": "_style/Border_Color",
+                            "strval": "loadColor",
+                            "integer": 1646890208,
                             "intarray": [
-                              173,
-                              216,
-                              230,
+                              119,
+                              221,
+                              119,
                               255
                             ],
                             "InheritedType": 7
@@ -8075,6 +8093,8 @@
                           {
                             "nid": -767901452,
                             "strtype": "_style/Border_Color",
+                            "strval": "gridColor",
+                            "integer": -222477374,
                             "intarray": [
                               131,
                               105,
@@ -8731,10 +8751,12 @@
                               {
                                 "nid": 230627222,
                                 "strtype": "_style/Text_Color",
+                                "strval": "loadColor",
+                                "integer": 1646890208,
                                 "intarray": [
-                                  86,
-                                  174,
-                                  87,
+                                  119,
+                                  221,
+                                  119,
                                   255
                                 ],
                                 "InheritedType": 7
@@ -11242,10 +11264,12 @@
                           {
                             "nid": 1981479577,
                             "strtype": "_style/Border_Color",
+                            "strval": "inverterColor",
+                            "integer": 681623078,
                             "intarray": [
-                              207,
-                              207,
-                              196,
+                              65,
+                              65,
+                              62,
                               255
                             ],
                             "InheritedType": 7
@@ -11671,11 +11695,11 @@
                           },
                           {
                             "nid": 838858336,
-                            "flags": 17,
+                            "flags": 51,
                             "strtype": "OBJECT/Size",
                             "intarray": [
-                              64,
-                              64
+                              1,
+                              1
                             ],
                             "InheritedType": 7
                           },
@@ -18538,7 +18562,7 @@
                       {
                         "nid": 610235053,
                         "strtype": "CHART/Number_of_points",
-                        "integer": 24,
+                        "integer": 96,
                         "InheritedType": 6
                       },
                       {
@@ -18546,7 +18570,7 @@
                         "strtype": "CHART/Division_lines",
                         "intarray": [
                           5,
-                          4
+                          0
                         ],
                         "InheritedType": 7
                       },
@@ -18568,8 +18592,8 @@
                         "nid": 586329046,
                         "strtype": "CHART/XMajor",
                         "intarray": [
-                          10,
-                          10
+                          0,
+                          5
                         ],
                         "InheritedType": 7
                       },
@@ -18577,8 +18601,8 @@
                         "nid": -1467502795,
                         "strtype": "CHART/XMinor",
                         "intarray": [
-                          5,
-                          5
+                          0,
+                          24
                         ],
                         "InheritedType": 7
                       },
@@ -18591,7 +18615,7 @@
                       {
                         "nid": 1335901347,
                         "strtype": "CHART/Font_size_on_X_axis",
-                        "integer": 20,
+                        "integer": 32,
                         "InheritedType": 6
                       },
                       {
@@ -18612,7 +18636,7 @@
                         "nid": 2081139307,
                         "strtype": "CHART/PrimaryYMajor",
                         "intarray": [
-                          10,
+                          0,
                           5
                         ],
                         "InheritedType": 7
@@ -18621,7 +18645,7 @@
                         "nid": 1550230462,
                         "strtype": "CHART/PrimaryYMinor",
                         "intarray": [
-                          5,
+                          0,
                           2
                         ],
                         "InheritedType": 7
@@ -18635,12 +18659,11 @@
                       {
                         "nid": -1759478914,
                         "strtype": "CHART/Font_size_on_Primary_Y_axis",
-                        "integer": 50,
+                        "integer": 32,
                         "InheritedType": 6
                       },
                       {
                         "nid": 1183681880,
-                        "flags": 1048576,
                         "strtype": "CHART/Secondary_Y_Axis",
                         "InheritedType": 1
                       },
@@ -18649,7 +18672,7 @@
                         "strtype": "CHART/Secondary_Y_range",
                         "intarray": [
                           0,
-                          100
+                          15
                         ],
                         "InheritedType": 7
                       },
@@ -18657,8 +18680,8 @@
                         "nid": 747660407,
                         "strtype": "CHART/SecondaryYMajor",
                         "intarray": [
-                          10,
-                          5
+                          0,
+                          3
                         ],
                         "InheritedType": 7
                       },
@@ -18666,7 +18689,7 @@
                         "nid": 108245246,
                         "strtype": "CHART/SecondaryYMinor",
                         "intarray": [
-                          5,
+                          0,
                           2
                         ],
                         "InheritedType": 7
@@ -18680,18 +18703,19 @@
                       {
                         "nid": 764752293,
                         "strtype": "CHART/Font_size_on_Secondary_Y_axis",
-                        "integer": 25,
+                        "integer": 32,
                         "InheritedType": 6
                       },
                       {
                         "nid": -1993603728,
+                        "flags": 1048576,
                         "strtype": "CHART/Chart_data",
                         "InheritedType": 1
                       },
                       {
                         "nid": 801067503,
                         "strtype": "CHART/ChartData",
-                        "strval": "[{\"Axis\":0,\"Color\":[255,128,0,255],\"Series\":[0,10,20,40,80,80,40,20,10,0,0,10,20,40,80,80,40,20,10,0,0,10,20,40,80]},{\"Axis\":2,\"Color\":[10,27,237,255],\"Series\":[100,100,100,80,60,60,40,40,20,10,100,100,100,80,60,60,40,40,20,10,100,100,100,80,60,60,40,40,20,10]}]",
+                        "strval": "[]",
                         "InheritedType": 12
                       },
                       {
@@ -18702,17 +18726,6 @@
                             "strtype": "_style/StyleState",
                             "strval": "DEFAULT",
                             "childs": [
-                              {
-                                "nid": 426741972,
-                                "strtype": "_style/Border_Color",
-                                "intarray": [
-                                  0,
-                                  0,
-                                  0,
-                                  255
-                                ],
-                                "InheritedType": 7
-                              },
                               {
                                 "nid": 1973710602,
                                 "strtype": "_style/Border width",
@@ -18788,7 +18801,33 @@
                       },
                       {
                         "part": "lv.PART.TICKS",
-                        "childs": [],
+                        "childs": [
+                          {
+                            "nid": -681090598,
+                            "strtype": "_style/StyleState",
+                            "strval": "DEFAULT",
+                            "childs": [
+                              {
+                                "nid": 31929815,
+                                "strtype": "_style/Text_Color",
+                                "intarray": [
+                                  0,
+                                  0,
+                                  0,
+                                  255
+                                ],
+                                "InheritedType": 7
+                              },
+                              {
+                                "nid": 1439534553,
+                                "strtype": "_style/Text_Font",
+                                "strval": "RobotoMonoExtraSmall",
+                                "InheritedType": 3
+                              }
+                            ],
+                            "InheritedType": 1
+                          }
+                        ],
                         "nid": -1926417049,
                         "strtype": "CHART/Style_ticks",
                         "strval": "lv.PART.TICKS, Line, Text",
@@ -19082,10 +19121,10 @@
                             "nid": 1767154577,
                             "strtype": "_style/Padding",
                             "intarray": [
-                              48,
-                              48,
-                              20,
-                              40
+                              52,
+                              52,
+                              16,
+                              24
                             ],
                             "InheritedType": 7
                           }
@@ -19146,7 +19185,7 @@
                 "flags": 17,
                 "strtype": "OBJECT/Position",
                 "intarray": [
-                  0,
+                  -1,
                   0
                 ],
                 "InheritedType": 7
@@ -22095,9 +22134,9 @@
     "theme_dark": false,
     "theme_color1": 5,
     "theme_color2": 0,
-    "uiExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
-    "projectExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
-    "backup_cnt": 275,
+    "uiExportFolderPath": "/Users/ljezny/solax-station-live/src/ui",
+    "projectExportFolderPath": "/Users/ljezny/solax-station-live/src/ui",
+    "backup_cnt": 298,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",

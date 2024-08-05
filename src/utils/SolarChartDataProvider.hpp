@@ -1,31 +1,31 @@
 #pragma once
 
-typedef struct ChartDataItem
+typedef struct SolarChartDataItem
 {
     long timestampMS;
     int samples = 0;
     float pvPower = 0;
     float loadPower = 0;
     int soc = 0;
-} ChartDataItem_t;
+} SolarChartDataItem_t;
 
-#define SAMPLE_INTERVAL_MS (5 * 60 * 1000)
-#define SAMPLES_PER_DAY (24 * 60 / 5)
+#define CHART_SAMPLE_INTERVAL_MS (15 * 60 * 1000)
+#define CHART_SAMPLES_PER_DAY (24 * 60 / 15)
 
-class ChartDataProvider
+class SolarChartDataProvider
 {
 private:
-    ChartDataItem_t data[SAMPLES_PER_DAY];
+    SolarChartDataItem data[CHART_SAMPLES_PER_DAY];
 
     void shiftData() {
-        for(int i = SAMPLES_PER_DAY - 1; i > 0; i--) {
+        for(int i = CHART_SAMPLES_PER_DAY - 1; i > 0; i--) {
             data[i] = data[i - 1];
         }
     }
 
 public:
     void addSample(long timestampMS, float pvPower, float loadPower, int soc) {
-        if(timestampMS > (data[0].timestampMS + SAMPLE_INTERVAL_MS)) {
+        if(timestampMS > (data[0].timestampMS + CHART_SAMPLE_INTERVAL_MS)) {
             shiftData();
             data[0].timestampMS = timestampMS;
         }

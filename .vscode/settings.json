@@ -2,6 +2,9 @@
     "files.associations": {
         "*.tcc": "cpp",
         "string": "cpp",
-        "lv_conf_internal.h": "c"
+        "lv_conf_internal.h": "c",
+        "memory": "cpp",
+        "random": "cpp",
+        "optional": "cpp"
     }
 }
