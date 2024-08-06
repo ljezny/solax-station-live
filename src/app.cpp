@@ -7,8 +7,9 @@
 #include "Solax/SolaxDongleAPI.hpp"
 #include "utils/UnitFormatter.hpp"
 #include "utils/SolarChartDataProvider.hpp"
+#include "utils/UIBallAnimator.hpp"
 
-#define WAIT 1000
+#define WAIT 500
 SET_LOOP_TASK_STACK_SIZE(32 * 1024);
 
 SolaxDongleAPI dongleAPI;
@@ -22,7 +23,7 @@ SolarChartDataProvider *solarChartDataProvider = new SolarChartDataProvider();
 SolaxDongleInverterData_t createRandomMockData()
 {
     SolaxDongleInverterData_t inverterData;
-    inverterData.status = 0;
+    inverterData.status = SOLAX_DONGLE_STATUS_OK;
     inverterData.pv1Power = random(0, 5000);
     inverterData.pv2Power = random(0, 5000);
     inverterData.batteryPower = random(-3000, 3000);
@@ -42,6 +43,10 @@ SolaxDongleInverterData_t createRandomMockData()
     inverterData.batteryDischargedToday = random(0, 1000);
     inverterData.gridBuyToday = random(0, 1000);
     inverterData.gridSellToday = random(0, 1000);
+    inverterData.gridBuyTotal = random(0, 1000);
+    inverterData.gridSellTotal = random(0, 1000);
+    inverterData.batteryChargedTotal = random(0, 1000);
+    inverterData.batteryDischargedTotal = random(0, 1000);
     return inverterData;
 }
 
@@ -112,98 +117,77 @@ void updateChart()
     lv_chart_series_t *acPowerSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_loadColor[0]), LV_CHART_AXIS_SECONDARY_Y);
     lv_chart_series_t *socSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_batteryColor[0]), LV_CHART_AXIS_PRIMARY_Y);
     uint32_t i;
+
     for(i = 0; i < CHART_SAMPLES_PER_DAY; i++) {
-        lv_chart_set_next_value(ui_Chart1, pvPowerSeries, lv_rand(5, 8));
-        lv_chart_set_next_value(ui_Chart1, acPowerSeries, lv_rand(1, 5));
-        lv_chart_set_next_value(ui_Chart1, socSeries, lv_rand(80, 100));
+        SolarChartDataItem_t item = solarChartDataProvider->getData()[CHART_SAMPLES_PER_DAY - i - 1];
+        
+        lv_chart_set_next_value(ui_Chart1, pvPowerSeries, item.pvPower);
+        lv_chart_set_next_value(ui_Chart1, acPowerSeries, item.loadPower);
+        lv_chart_set_next_value(ui_Chart1, socSeries, item.soc);
     }
 }
 
+UIBallAnimator *pvAnimator = NULL;
+UIBallAnimator *batteryAnimator = NULL;
+UIBallAnimator *gridAnimator = NULL;
+UIBallAnimator *loadAnimator = NULL;
 
-// static void add_faded_area(lv_event_t * e)
-// {
-//     lv_obj_t * obj = lv_event_get_target(e);
-//     lv_area_t coords;
-//     lv_obj_get_coords(obj, &coords);
+void updateFlowAnimations() {
+    lv_anim_del_all();
+    int duration = 800;
+    if(pvAnimator != NULL) {
+        delete pvAnimator;
+        pvAnimator = NULL;
+    }
+    if (inverterData.loadPower > 0)
+    {
+        pvAnimator = new UIBallAnimator(ui_LeftContainer,  _ui_theme_color_pvColor);
+        pvAnimator->run(ui_pvContainer->coords, ui_inverterContainer->coords, duration, 0, 0);
+    }
 
-//     lv_draw_task_t * draw_task = lv_event_get_draw_task(e);
-//     lv_draw_dsc_base_t * base_dsc = lv_draw_task_get_draw_dsc(draw_task);
+    if(batteryAnimator != NULL) {
+        delete batteryAnimator;
+        batteryAnimator = NULL;
+    }
+    if (inverterData.batteryPower > 0)
+    {
+        batteryAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_batteryColor);
+        batteryAnimator->run(ui_inverterContainer->coords, ui_batteryContainer->coords, duration, duration, 1);
+    } else if (inverterData.batteryPower < 0){
+        batteryAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_batteryColor);
+        batteryAnimator->run(ui_batteryContainer->coords, ui_inverterContainer->coords, duration, 0, 0);
+    }
 
-//     const lv_chart_series_t * ser = lv_chart_get_series_next(obj, NULL);
-//     lv_color_t ser_color = lv_chart_get_series_color(obj, ser);
+    if(gridAnimator != NULL) {
+        delete gridAnimator;
+        gridAnimator = NULL;
+    }
 
-//     /*Draw a triangle below the line witch some opacity grradient*/
-//     lv_draw_line_dsc_t * draw_line_dsc = lv_draw_task_get_draw_dsc(draw_task);
-//     lv_draw_triangle_dsc_t tri_dsc;
-
-//     lv_draw_triangle_dsc_init(&tri_dsc);
-//     tri_dsc.p[0].x = draw_line_dsc->p1.x;
-//     tri_dsc.p[0].y = draw_line_dsc->p1.y;
-//     tri_dsc.p[1].x = draw_line_dsc->p2.x;
-//     tri_dsc.p[1].y = draw_line_dsc->p2.y;
-//     tri_dsc.p[2].x = draw_line_dsc->p1.y < draw_line_dsc->p2.y ? draw_line_dsc->p1.x : draw_line_dsc->p2.x;
-//     tri_dsc.p[2].y = LV_MAX(draw_line_dsc->p1.y, draw_line_dsc->p2.y);
-//     tri_dsc.bg_grad.dir = LV_GRAD_DIR_VER;
-
-//     int32_t full_h = lv_obj_get_height(obj);
-//     int32_t fract_uppter = (int32_t)(LV_MIN(draw_line_dsc->p1.y, draw_line_dsc->p2.y) - coords.y1) * 255 / full_h;
-//     int32_t fract_lower = (int32_t)(LV_MAX(draw_line_dsc->p1.y, draw_line_dsc->p2.y) - coords.y1) * 255 / full_h;
-//     tri_dsc.bg_grad.stops[0].color = ser_color;
-//     tri_dsc.bg_grad.stops[0].opa = 255 - fract_uppter;
-//     tri_dsc.bg_grad.stops[0].frac = 0;
-//     tri_dsc.bg_grad.stops[1].color = ser_color;
-//     tri_dsc.bg_grad.stops[1].opa = 255 - fract_lower;
-//     tri_dsc.bg_grad.stops[1].frac = 255;
-
-//     lv_draw_triangle(base_dsc->layer, &tri_dsc);
-
-//     /*Draw rectangle below the triangle*/
-//     lv_draw_rect_dsc_t rect_dsc;
-//     lv_draw_rect_dsc_init(&rect_dsc);
-//     rect_dsc.bg_grad.dir = LV_GRAD_DIR_VER;
-//     rect_dsc.bg_grad.stops[0].color = ser_color;
-//     rect_dsc.bg_grad.stops[0].frac = 0;
-//     rect_dsc.bg_grad.stops[0].opa = 255 - fract_lower;
-//     rect_dsc.bg_grad.stops[1].color = ser_color;
-//     rect_dsc.bg_grad.stops[1].frac = 255;
-//     rect_dsc.bg_grad.stops[1].opa = 0;
-
-//     lv_area_t rect_area;
-//     rect_area.x1 = (int32_t)draw_line_dsc->p1.x;
-//     rect_area.x2 = (int32_t)draw_line_dsc->p2.x - 1;
-//     rect_area.y1 = (int32_t)LV_MAX(draw_line_dsc->p1.y, draw_line_dsc->p2.y) - 1;
-//     rect_area.y2 = (int32_t)coords.y2;
-//     lv_draw_rect(base_dsc->layer, &rect_dsc, &rect_area);
-// }
+    if (inverterData.feedInPower > 0)
+    {
+        gridAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_gridColor);
+        gridAnimator->run(ui_inverterContainer->coords, ui_gridContainer->coords, duration, duration, 1);
+    } else if (inverterData.feedInPower < 0){
+        gridAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_gridColor);
+        gridAnimator->run(ui_gridContainer->coords, ui_inverterContainer->coords, duration, 0, 0);
+    }
+    
+    if(loadAnimator != NULL) {
+        delete loadAnimator;
+        loadAnimator = NULL;
+    }
+    if (inverterData.loadPower > 0)
+    {
+        loadAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_loadColor);
+        loadAnimator->run(ui_inverterContainer->coords, ui_loadContainer->coords, duration, duration, 1);
+    }
+}
 
 void updateDashboardUI()
 {
     int selfUsePercent = inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0;
     selfUsePercent = constrain(selfUsePercent, 0, 100);
-
-
-    if (inverterData.loadPower > 0)
-    {
-        pvBall_Animation(ui_pvBall, 0);
-    }
-
-    if (inverterData.batteryPower > 0)
-    {
-        toBatteryBall_Animation(ui_toBatteryBall, 0);
-    }
-    else if(inverterData.batteryPower < 0)
-    {
-        fromBatteryBall_Animation(ui_fromBatteryBall, 1000);
-    }
-
-    if (inverterData.feedInPower > 0)
-    {
-        toGridBall_Animation(ui_toGridBall, 1000);
-    }
-    else if (inverterData.feedInPower < 0)
-    {
-        fromGridBall_Animation(ui_fromGridBall, 0);
-    }
+    
 
     lv_label_set_text(ui_pvLabel, format(POWER, inverterData.pv1Power + inverterData.pv2Power).formatted.c_str());
     lv_label_set_text(ui_pv1Label, format(POWER, inverterData.pv1Power, 1.0f, true).formatted.c_str());
@@ -233,12 +217,12 @@ void updateDashboardUI()
     lv_label_set_text(ui_batteryDischargedTotalLabel, ("- " + format(ENERGY, inverterData.batteryDischargedTotal * 1000.0, 1).formatted).c_str());
 
     updateChart();
-
+    
     if (discoveryResult.result)
     {
-        if (inverterData.status != 0)
+        if (inverterData.status != SOLAX_DONGLE_STATUS_OK)
         {
-            lv_label_set_text_fmt(ui_statusLabel, "Error: %d", inverterData.status);
+            lv_label_set_text_fmt(ui_statusLabel, dongleAPI.getStatusText(inverterData.status).c_str());
         }
         else
         {
@@ -249,6 +233,8 @@ void updateDashboardUI()
     {
         lv_label_set_text(ui_statusLabel, "Disconnected");
     }
+    
+    updateFlowAnimations();
 }
 
 bool uiInitialized = false;
@@ -261,7 +247,7 @@ void timerCB(struct _lv_timer_t *timer)
         uiInitialized = true;
         ui_init();
     }
-    if (!dashboardShown && inverterData.status == 0)
+    if (!dashboardShown && inverterData.status == SOLAX_DONGLE_STATUS_OK)
     {
         lv_disp_load_scr(ui_Dashboard);
         dashboardShown = true;
@@ -292,19 +278,22 @@ void setup()
     lvgl_port_unlock();
 
     lv_timer_t *timer = lv_timer_create(timerCB, 2000, NULL);
+    lv_log_register_print_cb([](const char * txt) {
+        log_i("%s\n", txt);
+    });
 }
 
 void loop()
 {
-    //discoveryResult = dongleDiscovery.discoverDongle();
-    //if (discoveryResult.result)
-    {
-        inverterData = createRandomMockData();
-        if (inverterData.status == 1)
+    discoveryResult = dongleDiscovery.discoverDongle();
+    if (discoveryResult.result)
+    { 
+        //inverterData = createRandomMockData();  
+        inverterData = dongleAPI.loadData(discoveryResult.sn);
+        if (inverterData.status == SOLAX_DONGLE_STATUS_OK)
         {
-            solarChartDataProvider->addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
+           solarChartDataProvider->addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
         }
     }
-
     delay(WAIT);
 }

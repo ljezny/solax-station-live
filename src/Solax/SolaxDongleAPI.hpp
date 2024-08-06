@@ -6,9 +6,17 @@
 #include <WiFiMulti.h>
 #include <HTTPClient.h>
 
+typedef enum SolaxDongleStatus {
+    SOLAX_DONGLE_STATUS_OK = 1,
+    SOLAX_DONGLE_STATUS_UNKNOWN = 0,
+    SOLAX_DONGLE_STATUS_CONNECTION_ERROR = -1,
+    SOLAX_DONGLE_STATUS_HTTP_ERROR = -2,
+    SOLAX_DONGLE_STATUS_JSON_ERROR = -3
+} SolaxDongleStatus_t;
+
 typedef struct
 {
-    int status = -1;
+    SolaxDongleStatus_t status = SOLAX_DONGLE_STATUS_UNKNOWN;
     int pv1Power = 0;
     int pv2Power = 0;
     int soc = 0;
@@ -53,7 +61,7 @@ public:
                 DeserializationError err = deserializeJson(doc, payload);
                 if (err == DeserializationError::Ok)
                 {
-                    inverterData.status = 0;
+                    inverterData.status = SOLAX_DONGLE_STATUS_OK;
                     inverterData.pv1Power = doc["Data"][14].as<int>();
                     inverterData.pv2Power = doc["Data"][15].as<int>();
                     inverterData.batteryPower = read16BitSigned(doc["Data"][41].as<uint16_t>());
@@ -81,22 +89,39 @@ public:
                 }
                 else
                 {
-                    inverterData.status = -3;
+                    inverterData.status = SOLAX_DONGLE_STATUS_JSON_ERROR;
                 }
             }
             else
             {
-                inverterData.status = -2;
+                inverterData.status = SOLAX_DONGLE_STATUS_HTTP_ERROR;
             }
             http.end();
         }
         else
         {
-            inverterData.status = -1;
+            inverterData.status = SOLAX_DONGLE_STATUS_CONNECTION_ERROR;
         }
         return inverterData;
     }
 
+    String getStatusText(SolaxDongleStatus_t status)
+    {
+        switch (status)
+        {
+        case SOLAX_DONGLE_STATUS_OK:
+            return "OK";
+        case SOLAX_DONGLE_STATUS_CONNECTION_ERROR:
+            return "Connection error";
+        case SOLAX_DONGLE_STATUS_HTTP_ERROR:
+            return "HTTP error";
+        case SOLAX_DONGLE_STATUS_JSON_ERROR:
+            return "JSON error";
+        default:
+            return "Unknown";
+        }
+    }
+    
 private:
     int16_t read16BitSigned(uint16_t a)
     {

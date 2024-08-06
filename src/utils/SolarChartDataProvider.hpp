@@ -34,4 +34,8 @@ public:
         data[0].soc = ((soc * data[0].samples) + soc) / (data[0].samples + 1);
         data[0].samples++;
     }
+
+    SolarChartDataItem *getData() {
+        return data;
+    }
 };
