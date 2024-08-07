@@ -753,7 +753,7 @@ lv_obj_set_height( ui_Chart1, lv_pct(100));
 lv_obj_set_align( ui_Chart1, LV_ALIGN_CENTER );
 lv_chart_set_type( ui_Chart1, LV_CHART_TYPE_LINE);
 lv_chart_set_point_count( ui_Chart1, 96);
-lv_chart_set_range( ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, 15);
+lv_chart_set_range( ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, 15000);
 lv_chart_set_div_line_count( ui_Chart1, 5, 0);
 lv_chart_set_axis_tick( ui_Chart1, LV_CHART_AXIS_PRIMARY_X, 0, 0, 5, 24, true, 32);
 lv_chart_set_axis_tick( ui_Chart1, LV_CHART_AXIS_PRIMARY_Y, 0, 0, 5, 2, true, 32);
@@ -768,7 +768,5 @@ lv_obj_set_style_size(ui_Chart1, 0, LV_PART_INDICATOR| LV_STATE_DEFAULT);
 lv_obj_set_style_text_color(ui_Chart1, lv_color_hex(0x000000), LV_PART_TICKS | LV_STATE_DEFAULT );
 lv_obj_set_style_text_opa(ui_Chart1, 255, LV_PART_TICKS| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_Chart1, &ui_font_RobotoMonoExtraSmall, LV_PART_TICKS| LV_STATE_DEFAULT);
-
-lv_obj_add_event_cb(ui_Dashboard, ui_event_Dashboard, LV_EVENT_ALL, NULL);
 
 }

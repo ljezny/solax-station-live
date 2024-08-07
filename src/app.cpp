@@ -118,13 +118,16 @@ void updateChart()
     lv_chart_series_t *socSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_batteryColor[0]), LV_CHART_AXIS_PRIMARY_Y);
     uint32_t i;
 
+    int maxPower = 10000;
     for(i = 0; i < CHART_SAMPLES_PER_DAY; i++) {
         SolarChartDataItem_t item = solarChartDataProvider->getData()[CHART_SAMPLES_PER_DAY - i - 1];
         
         lv_chart_set_next_value(ui_Chart1, pvPowerSeries, item.pvPower);
         lv_chart_set_next_value(ui_Chart1, acPowerSeries, item.loadPower);
         lv_chart_set_next_value(ui_Chart1, socSeries, item.soc);
+        maxPower = max(maxPower, max(item.pvPower, item.loadPower));
     }
+    lv_chart_set_range( ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, maxPower);
 }
 
 UIBallAnimator *pvAnimator = NULL;

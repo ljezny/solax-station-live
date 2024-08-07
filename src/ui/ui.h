@@ -27,19 +27,12 @@ extern "C" {
 #include "ui_theme_manager.h"
 #include "ui_themes.h"
 
-void pvBall_Animation( lv_obj_t *TargetObject, int delay);
-void toGridBall_Animation( lv_obj_t *TargetObject, int delay);
-void toBatteryBall_Animation( lv_obj_t *TargetObject, int delay);
-void toLoadBall_Animation( lv_obj_t *TargetObject, int delay);
-void fromBatteryBall_Animation( lv_obj_t *TargetObject, int delay);
-void fromGridBall_Animation( lv_obj_t *TargetObject, int delay);
 // SCREEN: ui_Splash
 void ui_Splash_screen_init(void);
 extern lv_obj_t *ui_Splash;
 extern lv_obj_t *ui_Label1;
 // SCREEN: ui_Dashboard
 void ui_Dashboard_screen_init(void);
-void ui_event_Dashboard( lv_event_t * e);
 extern lv_obj_t *ui_Dashboard;
 extern lv_obj_t *ui_LeftContainer;
 extern lv_obj_t *ui_statusLabel;
