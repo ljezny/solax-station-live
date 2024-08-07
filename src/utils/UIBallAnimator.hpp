@@ -8,6 +8,8 @@
 
 typedef struct UIBallAnimationItem {
     lv_obj_t *ball;
+    lv_obj_t *vLine;
+    lv_obj_t *hLine;
     lv_anim_t posXAnimation;
     lv_anim_t posYAnimation;
 } UIBallAnimationItem_t;
@@ -17,9 +19,19 @@ class UIBallAnimator
 public:
     UIBallAnimator(lv_obj_t *parent, const ui_theme_variable_t *color) {
         for(int i = 0; i < BALLS_COUNT; i++) {
+            items[i].hLine = lv_obj_create(parent);
+            lv_obj_remove_style_all(items[i].hLine);
+            ui_object_set_themeable_style_property(items[i].hLine, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BG_COLOR, color);
+            ui_object_set_themeable_style_property(items[i].hLine, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BG_OPA, _ui_theme_alpha_pvColor);
+
+            items[i].vLine = lv_obj_create(parent);
+            lv_obj_remove_style_all(items[i].vLine);
+            ui_object_set_themeable_style_property(items[i].vLine, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BG_COLOR, color);
+            ui_object_set_themeable_style_property(items[i].vLine, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BG_OPA, _ui_theme_alpha_pvColor);
+
             items[i].ball = lv_obj_create(parent);
             lv_obj_remove_style_all(items[i].ball);
-            int radius = 10 * (BALLS_COUNT - i);
+            int radius = 2 * (BALLS_COUNT - i);
             lv_obj_set_width(items[i].ball, radius);
             lv_obj_set_height(items[i].ball, radius);
             lv_obj_clear_flag(items[i].ball, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
@@ -36,6 +48,8 @@ public:
             lv_anim_del(&items[i].posXAnimation, (lv_anim_exec_xcb_t) lv_obj_set_x);
             lv_anim_del(&items[i].posYAnimation, (lv_anim_exec_xcb_t) lv_obj_set_y);
             lv_obj_del(items[i].ball);
+            lv_obj_del(items[i].vLine);
+            lv_obj_del(items[i].hLine);
         }
     }
 
@@ -54,6 +68,12 @@ public:
             int ballSize = items[i].ball->coords.x2 - items[i].ball->coords.x1;
             lv_obj_set_pos(items[i].ball, centerStartX + ballSize / 2, centerStartY + ballSize / 2);
             
+            lv_obj_set_pos(items[i].vLine, centerStartX, centerStartY);
+            lv_obj_set_size(items[i].vLine, 2, distanceY);
+
+            lv_obj_set_pos(items[i].hLine, centerStartX, centerStartY);
+            lv_obj_set_size(items[i].hLine, distanceX, 2);
+
             lv_anim_init(&items[i].posXAnimation);
             lv_anim_set_exec_cb(&items[i].posXAnimation, (lv_anim_exec_xcb_t) lv_obj_set_x);
             lv_anim_set_var(&items[i].posXAnimation, items[i].ball);
