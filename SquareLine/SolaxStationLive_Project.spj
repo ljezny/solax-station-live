@@ -5276,7 +5276,7 @@
                           {
                             "nid": -610867742,
                             "strtype": "OBJECT/Name",
-                            "strval": "socLabel",
+                            "strval": "batteryPowerLabel",
                             "InheritedType": 10
                           },
                           {
@@ -5893,7 +5893,7 @@
                       {
                         "nid": -1989267819,
                         "strtype": "OBJECT/Name",
-                        "strval": "batteryPowerLabel",
+                        "strval": "socLabel",
                         "InheritedType": 10
                       },
                       {

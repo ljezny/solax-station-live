@@ -9,7 +9,8 @@
 #include "utils/SolarChartDataProvider.hpp"
 #include "utils/UIBallAnimator.hpp"
 #include <mat.h>
-#define WAIT 500
+
+#define WAIT 2000
 SET_LOOP_TASK_STACK_SIZE(32 * 1024);
 
 SolaxDongleAPI dongleAPI;
@@ -136,8 +137,8 @@ UIBallAnimator *gridAnimator = NULL;
 UIBallAnimator *loadAnimator = NULL;
 
 void updateFlowAnimations() {
-    lv_anim_del_all();
-    int duration = 800;
+    int duration = 1400;
+    int offsetY = 15;
     if(pvAnimator != NULL) {
         delete pvAnimator;
         pvAnimator = NULL;
@@ -145,7 +146,7 @@ void updateFlowAnimations() {
     if ((inverterData.pv1Power + inverterData.pv2Power) > 0)
     {
         pvAnimator = new UIBallAnimator(ui_LeftContainer,  _ui_theme_color_pvColor);
-        pvAnimator->run(ui_pvContainer, ui_inverterContainer, duration, 0, 0, -20);
+        pvAnimator->run(ui_pvContainer, ui_inverterContainer, duration, 0, 0, -offsetY);
     }
 
     if(batteryAnimator != NULL) {
@@ -155,10 +156,10 @@ void updateFlowAnimations() {
     if (inverterData.batteryPower > 0)
     {
         batteryAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_batteryColor);
-        batteryAnimator->run(ui_inverterContainer, ui_batteryContainer, duration, duration, 1, -20);
+        batteryAnimator->run(ui_inverterContainer, ui_batteryContainer, duration, duration, 1, -offsetY);
     } else if (inverterData.batteryPower < 0){
         batteryAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_batteryColor);
-        batteryAnimator->run(ui_batteryContainer, ui_inverterContainer, duration, 0, 0, -20);
+        batteryAnimator->run(ui_batteryContainer, ui_inverterContainer, duration, 0, 0, -offsetY);
     }
 
     if(gridAnimator != NULL) {
@@ -169,10 +170,10 @@ void updateFlowAnimations() {
     if (inverterData.feedInPower > 0)
     {
         gridAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_gridColor);
-        gridAnimator->run(ui_inverterContainer, ui_gridContainer, duration, duration, 1, 20);
+        gridAnimator->run(ui_inverterContainer, ui_gridContainer, duration, duration, 1, offsetY);
     } else if (inverterData.feedInPower < 0){
         gridAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_gridColor);
-        gridAnimator->run(ui_gridContainer, ui_inverterContainer, duration, 0, 0, 20);
+        gridAnimator->run(ui_gridContainer, ui_inverterContainer, duration, 0, 0, offsetY);
     }
     
     if(loadAnimator != NULL) {
@@ -206,6 +207,10 @@ void updateDashboardUI()
     if(inverterData.feedInPower > 0) {
         outPower += inverterData.feedInPower;
     }
+    int totalPhasePower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
+    int l1PercentUsage = inverterData.L1Power > 0 ? (100 * inverterData.L1Power) / totalPhasePower : 0;
+    int l2PercentUsage = inverterData.L2Power > 0 ? (100 * inverterData.L2Power) / totalPhasePower : 0;
+    int l3PercentUsage = inverterData.L3Power > 0 ? (100 * inverterData.L3Power) / totalPhasePower : 0;
 
     lv_label_set_text(ui_pvLabel, format(POWER, inverterData.pv1Power + inverterData.pv2Power).formatted.c_str());
     lv_label_set_text(ui_pv1Label, format(POWER, inverterData.pv1Power, 1.0f, true).formatted.c_str());
@@ -213,8 +218,11 @@ void updateDashboardUI()
     lv_label_set_text_fmt(ui_inverterTemperatureLabel, "%d°C", inverterData.inverterTemperature);
     lv_label_set_text(ui_inverterPowerLabel, format(POWER, inverterData.inverterPower).formatted.c_str());
     lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.L1Power).formatted.c_str());
+    lv_obj_set_style_text_color(ui_inverterPowerL1Label, lv_palette_main(l1PercentUsage > 50 ? LV_PALETTE_DEEP_ORANGE : LV_PALETTE_GREY), 0);
     lv_label_set_text(ui_inverterPowerL2Label, format(POWER, inverterData.L2Power).formatted.c_str());
+    lv_obj_set_style_text_color(ui_inverterPowerL2Label, lv_palette_main(l2PercentUsage > 50 ? LV_PALETTE_DEEP_ORANGE : LV_PALETTE_GREY), 0);
     lv_label_set_text(ui_inverterPowerL3Label, format(POWER, inverterData.L3Power).formatted.c_str());
+    lv_obj_set_style_text_color(ui_inverterPowerL3Label, lv_palette_main(l3PercentUsage > 50 ? LV_PALETTE_DEEP_ORANGE : LV_PALETTE_GREY), 0);
     lv_label_set_text(ui_loadPowerLabel, format(POWER, inverterData.loadPower).formatted.c_str());
     lv_label_set_text(ui_feedInPowerLabel, format(POWER, abs(inverterData.feedInPower)).formatted.c_str());
     lv_label_set_text_fmt(ui_socLabel, "%d%%", inverterData.soc);
@@ -295,7 +303,7 @@ void setup()
     lvgl_port_init(panel->getLcd(), panel->getTouch());
     lvgl_port_unlock();
 
-    lv_timer_t *timer = lv_timer_create(timerCB, 2000, NULL);
+    lv_timer_t *timer = lv_timer_create(timerCB, 3000, NULL);
     lv_log_register_print_cb([](const char * txt) {
         log_i("%s\n", txt);
     });
