@@ -244,6 +244,7 @@ void updateDashboardUI()
 
     updateChart();
     
+    lv_obj_set_style_text_color(ui_statusLabel, lv_palette_main(LV_PALETTE_DEEP_ORANGE), 0);
     if (discoveryResult.result)
     {
         if (inverterData.status != SOLAX_DONGLE_STATUS_OK)
@@ -252,6 +253,7 @@ void updateDashboardUI()
         }
         else
         {
+            lv_obj_set_style_text_color(ui_statusLabel, lv_palette_main(LV_PALETTE_GREY), 0);
             lv_label_set_text(ui_statusLabel, discoveryResult.sn.c_str());
         }
     }
