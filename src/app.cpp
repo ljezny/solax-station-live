@@ -8,7 +8,7 @@
 #include "utils/UnitFormatter.hpp"
 #include "utils/SolarChartDataProvider.hpp"
 #include "utils/UIBallAnimator.hpp"
-
+#include <mat.h>
 #define WAIT 500
 SET_LOOP_TASK_STACK_SIZE(32 * 1024);
 
@@ -93,7 +93,7 @@ static void draw_event_cb(lv_event_t * e)
         if(dsc->id == LV_CHART_AXIS_PRIMARY_Y) {
             lv_snprintf (dsc->text, dsc->text_length, "%d%%", dsc->value);
         } else if(dsc->id == LV_CHART_AXIS_SECONDARY_Y) {
-            lv_snprintf (dsc->text, dsc->text_length, "%d\nkW", dsc->value);
+            lv_snprintf (dsc->text, dsc->text_length, "%d\nkW", dsc->value / 1000);
         } else if (dsc->id == LV_CHART_AXIS_PRIMARY_X) {
             lv_snprintf (dsc->text, dsc->text_length, "%dh", -24 + 6 * dsc->value);
         }
@@ -118,7 +118,7 @@ void updateChart()
     lv_chart_series_t *socSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_batteryColor[0]), LV_CHART_AXIS_PRIMARY_Y);
     uint32_t i;
 
-    int maxPower = 10000;
+    float maxPower = 10000.0f;
     for(i = 0; i < CHART_SAMPLES_PER_DAY; i++) {
         SolarChartDataItem_t item = solarChartDataProvider->getData()[CHART_SAMPLES_PER_DAY - i - 1];
         
@@ -127,7 +127,7 @@ void updateChart()
         lv_chart_set_next_value(ui_Chart1, socSeries, item.soc);
         maxPower = max(maxPower, max(item.pvPower, item.loadPower));
     }
-    lv_chart_set_range( ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, maxPower);
+    lv_chart_set_range( ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, (lv_coord_t) maxPower);
 }
 
 UIBallAnimator *pvAnimator = NULL;
@@ -142,10 +142,10 @@ void updateFlowAnimations() {
         delete pvAnimator;
         pvAnimator = NULL;
     }
-    if (inverterData.loadPower > 0)
+    if ((inverterData.pv1Power + inverterData.pv2Power) > 0)
     {
         pvAnimator = new UIBallAnimator(ui_LeftContainer,  _ui_theme_color_pvColor);
-        pvAnimator->run(ui_pvContainer->coords, ui_inverterContainer->coords, duration, 0, 0);
+        pvAnimator->run(ui_pvContainer, ui_inverterContainer, duration, 0, 0, -20);
     }
 
     if(batteryAnimator != NULL) {
@@ -155,10 +155,10 @@ void updateFlowAnimations() {
     if (inverterData.batteryPower > 0)
     {
         batteryAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_batteryColor);
-        batteryAnimator->run(ui_inverterContainer->coords, ui_batteryContainer->coords, duration, duration, 1);
+        batteryAnimator->run(ui_inverterContainer, ui_batteryContainer, duration, duration, 1, -20);
     } else if (inverterData.batteryPower < 0){
         batteryAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_batteryColor);
-        batteryAnimator->run(ui_batteryContainer->coords, ui_inverterContainer->coords, duration, 0, 0);
+        batteryAnimator->run(ui_batteryContainer, ui_inverterContainer, duration, 0, 0, -20);
     }
 
     if(gridAnimator != NULL) {
@@ -169,10 +169,10 @@ void updateFlowAnimations() {
     if (inverterData.feedInPower > 0)
     {
         gridAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_gridColor);
-        gridAnimator->run(ui_inverterContainer->coords, ui_gridContainer->coords, duration, duration, 1);
+        gridAnimator->run(ui_inverterContainer, ui_gridContainer, duration, duration, 1, 20);
     } else if (inverterData.feedInPower < 0){
         gridAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_gridColor);
-        gridAnimator->run(ui_gridContainer->coords, ui_inverterContainer->coords, duration, 0, 0);
+        gridAnimator->run(ui_gridContainer, ui_inverterContainer, duration, 0, 0, 20);
     }
     
     if(loadAnimator != NULL) {
@@ -182,7 +182,7 @@ void updateFlowAnimations() {
     if (inverterData.loadPower > 0)
     {
         loadAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_loadColor);
-        loadAnimator->run(ui_inverterContainer->coords, ui_loadContainer->coords, duration, duration, 1);
+        loadAnimator->run(ui_inverterContainer, ui_loadContainer, duration, duration, 1, 20);
     }
 }
 
@@ -191,6 +191,21 @@ void updateDashboardUI()
     int selfUsePercent = inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0;
     selfUsePercent = constrain(selfUsePercent, 0, 100);
     
+    int inPower = inverterData.pv1Power + inverterData.pv2Power;
+    if(inverterData.batteryPower < 0) {
+        inPower += abs(inverterData.batteryPower);
+    }
+    if(inverterData.feedInPower < 0) {
+        inPower += abs(inverterData.feedInPower);
+    }
+
+    int outPower = inverterData.loadPower;
+    if(inverterData.batteryPower > 0) {
+        outPower += inverterData.batteryPower;
+    }
+    if(inverterData.feedInPower > 0) {
+        outPower += inverterData.feedInPower;
+    }
 
     lv_label_set_text(ui_pvLabel, format(POWER, inverterData.pv1Power + inverterData.pv2Power).formatted.c_str());
     lv_label_set_text(ui_pv1Label, format(POWER, inverterData.pv1Power, 1.0f, true).formatted.c_str());
@@ -201,9 +216,9 @@ void updateDashboardUI()
     lv_label_set_text(ui_inverterPowerL2Label, format(POWER, inverterData.L2Power).formatted.c_str());
     lv_label_set_text(ui_inverterPowerL3Label, format(POWER, inverterData.L3Power).formatted.c_str());
     lv_label_set_text(ui_loadPowerLabel, format(POWER, inverterData.loadPower).formatted.c_str());
-    lv_label_set_text(ui_feedInPowerLabel, format(POWER, inverterData.feedInPower).formatted.c_str());
+    lv_label_set_text(ui_feedInPowerLabel, format(POWER, abs(inverterData.feedInPower)).formatted.c_str());
     lv_label_set_text_fmt(ui_socLabel, "%d%%", inverterData.soc);
-    lv_label_set_text(ui_batteryPowerLabel, format(POWER, inverterData.batteryPower).formatted.c_str());
+    lv_label_set_text(ui_batteryPowerLabel, format(POWER, abs(inverterData.batteryPower)).formatted.c_str());
     lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d°C", inverterData.batteryTemperature);
     lv_label_set_text_fmt(ui_selfUsePercentLabel, "%d%%", selfUsePercent);
     lv_label_set_text(ui_yieldTodayLabel, format(ENERGY, inverterData.yieldToday * 1000.0, 1).formatted.c_str());
