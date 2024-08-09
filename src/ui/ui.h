@@ -104,11 +104,12 @@ extern lv_obj_t *ui_Chart1;
 extern lv_obj_t *ui____initial_actions0;
 
 LV_IMG_DECLARE( ui_img_1516017106);   // assets/solar-panel-4.png
-LV_IMG_DECLARE( ui_img_1666978921);   // assets/80-percent.png
-LV_IMG_DECLARE( ui_img_2000019334);   // assets/eco-house-2.png
+LV_IMG_DECLARE( ui_img_1279321064);   // assets/eco-battery.png
+LV_IMG_DECLARE( ui_img_564643105);   // assets/eco-house-3.png
 LV_IMG_DECLARE( ui_img_960241876);   // assets/power-plant.png
 LV_IMG_DECLARE( ui_img_leaf_png);   // assets/leaf.png
 LV_IMG_DECLARE( ui_img_1061873486);   // assets/solar-inverter.png
+LV_IMG_DECLARE( ui_img_performance_png);   // assets/performance.png
 
 
 LV_FONT_DECLARE( ui_font_RobotoMonoExtraSmall);

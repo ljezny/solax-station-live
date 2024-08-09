@@ -3591,7 +3591,7 @@
                           {
                             "nid": 1250090866,
                             "strtype": "IMAGE/Asset",
-                            "strval": "assets/80-percent.png",
+                            "strval": "assets/eco-battery.png",
                             "InheritedType": 5
                           },
                           {
@@ -5747,7 +5747,7 @@
                       {
                         "nid": -1274647716,
                         "strtype": "IMAGE/Asset",
-                        "strval": "assets/eco-house-2.png",
+                        "strval": "assets/eco-house-3.png",
                         "InheritedType": 5
                       },
                       {
@@ -13519,7 +13519,7 @@
                           {
                             "nid": -1518370447,
                             "strtype": "IMAGE/Asset",
-                            "strval": "assets/eco-house-2.png",
+                            "strval": "assets/eco-house-3.png",
                             "InheritedType": 5
                           },
                           {
@@ -15370,7 +15370,7 @@
                           {
                             "nid": -2090400239,
                             "strtype": "IMAGE/Asset",
-                            "strval": "assets/80-percent.png",
+                            "strval": "assets/performance.png",
                             "InheritedType": 5
                           },
                           {
@@ -21759,7 +21759,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/Users/ljezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/ljezny/solax-station-live/src/ui",
-    "backup_cnt": 369,
+    "backup_cnt": 372,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",
