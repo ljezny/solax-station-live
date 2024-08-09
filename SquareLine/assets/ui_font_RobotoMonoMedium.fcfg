@@ -1,6 +1,6 @@
 {
   "codename": "RobotoMonoMedium",
-  "ttf_path": "/assets/OpenSans-SemiBold.ttf",
+  "ttf_path": "/assets/RobotoMono-SemiBold.ttf",
   "bin_path": "/assets/ui_font_RobotoMonoMedium.bin",
   "c_path": "/assets/ui_font_RobotoMonoMedium.c",
   "cfg_path": "/assets/ui_font_RobotoMonoMedium.fcfg",

@@ -9,9 +9,10 @@ void ui_Splash_screen_init(void)
 {
 ui_Splash = lv_obj_create(NULL);
 lv_obj_clear_flag( ui_Splash, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_obj_set_style_bg_color(ui_Splash, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
-lv_obj_set_style_bg_opa(ui_Splash, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_bg_grad_dir(ui_Splash, LV_GRAD_DIR_VER, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_flex_flow(ui_Splash,LV_FLEX_FLOW_COLUMN);
+lv_obj_set_flex_align(ui_Splash, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+lv_obj_set_style_pad_row(ui_Splash, 32, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_column(ui_Splash, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Label1 = lv_label_create(ui_Splash);
 lv_obj_set_width( ui_Label1, LV_SIZE_CONTENT);  /// 1
@@ -19,10 +20,32 @@ lv_obj_set_height( ui_Label1, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_x( ui_Label1, 2 );
 lv_obj_set_y( ui_Label1, -11 );
 lv_obj_set_align( ui_Label1, LV_ALIGN_CENTER );
-lv_label_set_text(ui_Label1,"Only for:\nSolax X3 Hybrid G4\nwith WiFi dongle\n\nwww.solar-station.cz");
-lv_obj_set_style_text_color(ui_Label1, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_flex_flow(ui_Label1,LV_FLEX_FLOW_ROW);
+lv_obj_set_flex_align(ui_Label1, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+lv_label_set_text(ui_Label1,"SOLAR LIVE!");
+lv_obj_set_style_text_color(ui_Label1, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_text_opa(ui_Label1, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_align(ui_Label1, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_Label1, &ui_font_RobotoMonoLarge, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+ui_Spinner1 = lv_spinner_create(ui_Splash,1000,90);
+lv_obj_set_width( ui_Spinner1, 80);
+lv_obj_set_height( ui_Spinner1, 80);
+lv_obj_set_x( ui_Spinner1, -47 );
+lv_obj_set_y( ui_Spinner1, 104 );
+lv_obj_set_align( ui_Spinner1, LV_ALIGN_CENTER );
+lv_obj_clear_flag( ui_Spinner1, LV_OBJ_FLAG_CLICKABLE );    /// Flags
+
+ui_object_set_themeable_style_property(ui_Spinner1, LV_PART_INDICATOR| LV_STATE_DEFAULT, LV_STYLE_ARC_COLOR, _ui_theme_color_pvColor);
+ui_object_set_themeable_style_property(ui_Spinner1, LV_PART_INDICATOR| LV_STATE_DEFAULT, LV_STYLE_ARC_OPA, _ui_theme_alpha_pvColor);
+
+ui_Label2 = lv_label_create(ui_Splash);
+lv_obj_set_width( ui_Label2, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( ui_Label2, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_x( ui_Label2, -178 );
+lv_obj_set_y( ui_Label2, 67 );
+lv_obj_set_align( ui_Label2, LV_ALIGN_CENTER );
+lv_label_set_text(ui_Label2,"www.solar-station.cz");
+lv_obj_set_style_text_font(ui_Label2, &ui_font_RobotoMonoMedium, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 }

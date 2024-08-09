@@ -26,7 +26,7 @@
       "openocd_target": "esp32s3.cfg"
     },
     "frameworks": ["arduino", "espidf"],
-    "name": "WaveShareESP32S3-touch-lcd",
+    "name": "CrowPanel70",
     "upload": {
       "flash_size": "4MB",
       "maximum_ram_size": 327680,
@@ -35,5 +35,5 @@
       "speed": 921600
     },
     "url": "https://www.espressif.com",
-    "vendor": "WaveShare"
+    "vendor": "Elecrow"
   }

@@ -10,7 +10,7 @@ typedef struct FormattedUnit
     String formatted;
 } FormattedUnit_t;
 
-FormattedUnit_t format(Unit_t unit, float value, float limitingFactor = 1.0f, bool compact = false) {
+FormattedUnit_t format(Unit_t unit, float value, float limitingFactor = 1.0f, bool compact = false, int padLeft = 0) {
     FormattedUnit_t formattedUnit;
     String space = compact ? "" : " ";
     switch(unit) {
@@ -49,6 +49,7 @@ FormattedUnit_t format(Unit_t unit, float value, float limitingFactor = 1.0f, bo
             }
             break;
     }
+    
     formattedUnit.formatted = formattedUnit.value + space + formattedUnit.unit;
     return formattedUnit;
 }

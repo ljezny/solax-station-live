@@ -1,6 +1,6 @@
 {
   "codename": "RobotoMonoExtraSmall",
-  "ttf_path": "/assets/OpenSans-SemiBold.ttf",
+  "ttf_path": "/assets/RobotoMono-SemiBold.ttf",
   "bin_path": "/assets/ui_font_RobotoMonoExtraSmall.bin",
   "c_path": "/assets/ui_font_RobotoMonoExtraSmall.c",
   "cfg_path": "/assets/ui_font_RobotoMonoExtraSmall.fcfg",

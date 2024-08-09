@@ -13,6 +13,8 @@
 void ui_Splash_screen_init(void);
 lv_obj_t *ui_Splash;
 lv_obj_t *ui_Label1;
+lv_obj_t *ui_Spinner1;
+lv_obj_t *ui_Label2;
 
 
 // SCREEN: ui_Dashboard
@@ -20,12 +22,6 @@ void ui_Dashboard_screen_init(void);
 lv_obj_t *ui_Dashboard;
 lv_obj_t *ui_LeftContainer;
 lv_obj_t *ui_statusLabel;
-lv_obj_t *ui_pvBall;
-lv_obj_t *ui_toGridBall;
-lv_obj_t *ui_toBatteryBall;
-lv_obj_t *ui_fromBatteryBall;
-lv_obj_t *ui_fromGridBall;
-lv_obj_t *ui_toLoadBall;
 lv_obj_t *ui_pvContainer;
 lv_obj_t *ui_Image6;
 lv_obj_t *ui_Container1;
@@ -33,9 +29,10 @@ lv_obj_t *ui_pv1Label;
 lv_obj_t *ui_pv2Label;
 lv_obj_t *ui_pvLabel;
 lv_obj_t *ui_batteryContainer;
+lv_obj_t *ui_Container12;
 lv_obj_t *ui_Image10;
-lv_obj_t *ui_Container2;
 lv_obj_t *ui_batteryTemperatureLabel;
+lv_obj_t *ui_Container2;
 lv_obj_t *ui_batteryPowerLabel;
 lv_obj_t *ui_socLabel;
 lv_obj_t *ui_loadContainer;

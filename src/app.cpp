@@ -211,6 +211,9 @@ void updateDashboardUI()
     int l1PercentUsage = inverterData.L1Power > 0 ? (100 * inverterData.L1Power) / totalPhasePower : 0;
     int l2PercentUsage = inverterData.L2Power > 0 ? (100 * inverterData.L2Power) / totalPhasePower : 0;
     int l3PercentUsage = inverterData.L3Power > 0 ? (100 * inverterData.L3Power) / totalPhasePower : 0;
+    
+    lv_color_t black = lv_color_make(0,0,0);
+    lv_color_t red = lv_color_make(192,0,0);
 
     lv_label_set_text(ui_pvLabel, format(POWER, inverterData.pv1Power + inverterData.pv2Power).formatted.c_str());
     lv_label_set_text(ui_pv1Label, format(POWER, inverterData.pv1Power, 1.0f, true).formatted.c_str());
@@ -218,15 +221,17 @@ void updateDashboardUI()
     lv_label_set_text_fmt(ui_inverterTemperatureLabel, "%d°C", inverterData.inverterTemperature);
     lv_label_set_text(ui_inverterPowerLabel, format(POWER, inverterData.inverterPower).formatted.c_str());
     lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.L1Power).formatted.c_str());
-    lv_obj_set_style_text_color(ui_inverterPowerL1Label, lv_palette_main(l1PercentUsage > 50 ? LV_PALETTE_DEEP_ORANGE : LV_PALETTE_GREY), 0);
+    lv_obj_set_style_text_color(ui_inverterPowerL1Label, l1PercentUsage > 50 ? red : black, 0);
     lv_label_set_text(ui_inverterPowerL2Label, format(POWER, inverterData.L2Power).formatted.c_str());
-    lv_obj_set_style_text_color(ui_inverterPowerL2Label, lv_palette_main(l2PercentUsage > 50 ? LV_PALETTE_DEEP_ORANGE : LV_PALETTE_GREY), 0);
+    lv_obj_set_style_text_color(ui_inverterPowerL2Label, l2PercentUsage > 50 ? red : black, 0);
     lv_label_set_text(ui_inverterPowerL3Label, format(POWER, inverterData.L3Power).formatted.c_str());
-    lv_obj_set_style_text_color(ui_inverterPowerL3Label, lv_palette_main(l3PercentUsage > 50 ? LV_PALETTE_DEEP_ORANGE : LV_PALETTE_GREY), 0);
+    lv_obj_set_style_text_color(ui_inverterPowerL3Label, l3PercentUsage > 50 ? red : black, 0);
     lv_label_set_text(ui_loadPowerLabel, format(POWER, inverterData.loadPower).formatted.c_str());
     lv_label_set_text(ui_feedInPowerLabel, format(POWER, abs(inverterData.feedInPower)).formatted.c_str());
+    lv_obj_set_style_text_color(ui_feedInPowerLabel, inverterData.feedInPower < 0 ? red : black, 0);
     lv_label_set_text_fmt(ui_socLabel, "%d%%", inverterData.soc);
     lv_label_set_text(ui_batteryPowerLabel, format(POWER, abs(inverterData.batteryPower)).formatted.c_str());
+    lv_obj_set_style_text_color(ui_batteryPowerLabel, inverterData.batteryPower < 0 ? red : black, 0);
     lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d°C", inverterData.batteryTemperature);
     lv_label_set_text_fmt(ui_selfUsePercentLabel, "%d%%", selfUsePercent);
     lv_label_set_text(ui_yieldTodayLabel, format(ENERGY, inverterData.yieldToday * 1000.0, 1).value.c_str());
@@ -271,16 +276,11 @@ void updateDashboardUI()
     updateFlowAnimations();
 }
 
-bool uiInitialized = false;
+
 bool dashboardShown = false;
 
 void timerCB(struct _lv_timer_t *timer)
 {
-    if (!uiInitialized)
-    {
-        uiInitialized = true;
-        ui_init();
-    }
     if (!dashboardShown && inverterData.status == SOLAX_DONGLE_STATUS_OK)
     {
         lv_disp_load_scr(ui_Dashboard);
@@ -307,10 +307,14 @@ void setup()
 #endif
     panel->begin();
 
+    panel->getBacklight()->setBrightness(100);
+
     lvgl_port_lock(-1);
     lvgl_port_init(panel->getLcd(), panel->getTouch());
+    ui_init();
+    lv_disp_load_scr(ui_Splash);
     lvgl_port_unlock();
-
+    
     lv_timer_t *timer = lv_timer_create(timerCB, 3000, NULL);
     lv_log_register_print_cb([](const char * txt) {
         log_i("%s\n", txt);
@@ -319,11 +323,11 @@ void setup()
 
 void loop()
 {
-    discoveryResult = dongleDiscovery.discoverDongle();
-    if (discoveryResult.result)
+    //discoveryResult = dongleDiscovery.discoverDongle();
+    //if (discoveryResult.result)
     { 
-        //inverterData = createRandomMockData();  
-        inverterData = dongleAPI.loadData(discoveryResult.sn);
+        inverterData = createRandomMockData();  
+        //inverterData = dongleAPI.loadData(discoveryResult.sn);
         if (inverterData.status == SOLAX_DONGLE_STATUS_OK)
         {
            solarChartDataProvider->addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);

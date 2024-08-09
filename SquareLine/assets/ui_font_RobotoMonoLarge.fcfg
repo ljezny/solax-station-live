@@ -1,10 +1,10 @@
 {
   "codename": "RobotoMonoLarge",
-  "ttf_path": "/assets/OpenSans-SemiBold.ttf",
+  "ttf_path": "/assets/RobotoMono-SemiBold.ttf",
   "bin_path": "/assets/ui_font_RobotoMonoLarge.bin",
   "c_path": "/assets/ui_font_RobotoMonoLarge.c",
   "cfg_path": "/assets/ui_font_RobotoMonoLarge.fcfg",
-  "size": 64,
+  "size": 72,
   "bpp": 4,
   "letters": 0,
   "ranges": [

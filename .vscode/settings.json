@@ -5,6 +5,11 @@
         "lv_conf_internal.h": "c",
         "memory": "cpp",
         "random": "cpp",
-        "optional": "cpp"
+        "optional": "cpp",
+        "istream": "cpp",
+        "mutex": "cpp",
+        "ostream": "cpp",
+        "stop_token": "cpp",
+        "typeinfo": "cpp"
     }
 }

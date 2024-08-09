@@ -80,7 +80,7 @@
 #define LVGL_PORT_RGB_BOUNCE_BUFFER_SIZE        (LVGL_PORT_DISP_WIDTH * 10)
 /**
  * When avoid tearing is enabled, the LVGL software rotation `lv_disp_set_rotation()` is not supported.
- * But users can set the rotation degree(0/90/180/270) here, but this funciton will extremely reduce FPS.
+ * But users can set the rotation degree(0/90/180/270 ) here, but this funciton will extremely reduce FPS.
  * So it is recommended to be used when using a low resolution display.
  *
  * Set the rotation degree:
@@ -90,7 +90,7 @@
  *      - 270: 270 degree
  *
  */
-#define LVGL_PORT_ROTATION_DEGREE               (0)
+#define LVGL_PORT_ROTATION_DEGREE               (180)
 
 /**
  * Here, some important configurations will be set based on different anti-tearing modes and rotation angles.

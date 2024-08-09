@@ -5,7 +5,7 @@
 #include "ui/ui.h"
 
 #define BALLS_COUNT 4
-#define BALLS_RADIUS 20
+#define BALLS_RADIUS 12
 typedef struct UIBallAnimationItem
 {
     lv_obj_t *ball;
@@ -25,8 +25,8 @@ public:
             items[i].ball = lv_obj_create(parent);
             lv_obj_remove_style_all(items[i].ball);
 
-            int radius = BALLS_RADIUS - i * (BALLS_RADIUS / BALLS_COUNT);
-            int opa = 255 - i * (255 / BALLS_COUNT);
+            int radius = BALLS_RADIUS;// - i * (BALLS_RADIUS / BALLS_COUNT);
+            int opa = 255 - i * (128 / BALLS_COUNT);
             lv_obj_set_width(items[i].ball, radius);
             lv_obj_set_height(items[i].ball, radius);
             lv_obj_clear_flag(items[i].ball, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
@@ -38,10 +38,10 @@ public:
         }
 
         hLine = lv_obj_create(parent);
-        lv_obj_set_style_bg_color(hLine, lv_palette_main(LV_PALETTE_GREY), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_color(hLine, lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
 
         vLine = lv_obj_create(parent);
-        lv_obj_set_style_bg_color(vLine, lv_palette_main(LV_PALETTE_GREY), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_color(vLine, lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
 
         lv_obj_move_background(hLine);
         lv_obj_move_background(vLine);
@@ -80,7 +80,7 @@ public:
 
         for (int i = 0; i < BALLS_COUNT; i++)
         {
-            int radius = BALLS_RADIUS - i * (BALLS_RADIUS / BALLS_COUNT);
+            int radius = BALLS_RADIUS;// - i * (BALLS_RADIUS / BALLS_COUNT);
             lv_obj_set_pos(items[i].ball, centerStartX - radius / 2, centerStartY - radius / 2 + yOffset);
             lv_anim_init(&items[i].posXAnimation);
             lv_anim_set_exec_cb(&items[i].posXAnimation, (lv_anim_exec_xcb_t)lv_obj_set_x);
