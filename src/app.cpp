@@ -229,18 +229,24 @@ void updateDashboardUI()
     lv_label_set_text(ui_batteryPowerLabel, format(POWER, abs(inverterData.batteryPower)).formatted.c_str());
     lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d°C", inverterData.batteryTemperature);
     lv_label_set_text_fmt(ui_selfUsePercentLabel, "%d%%", selfUsePercent);
-    lv_label_set_text(ui_yieldTodayLabel, format(ENERGY, inverterData.yieldToday * 1000.0, 1).formatted.c_str());
-    lv_label_set_text(ui_loadTotalLabel, format(ENERGY, inverterData.loadTotal * 1000.0, 1).formatted.c_str());
-    lv_label_set_text(ui_gridSellTodayLabel, ("+ " + format(ENERGY, inverterData.gridSellToday * 1000.0, 1).formatted).c_str());
-    lv_label_set_text(ui_gridBuyTodayLabel, ("-" + format(ENERGY, inverterData.gridBuyToday * 1000.0, 1).formatted).c_str());
-    lv_label_set_text(ui_batteryChargedTodayLabel, ("+" + format(ENERGY, inverterData.batteryChargedToday * 1000.0, 1).formatted).c_str());
-    lv_label_set_text(ui_batteryDischargedTodayLabel, ("-" + format(ENERGY, inverterData.batteryDischargedToday * 1000.0, 1).formatted).c_str());
-    lv_label_set_text(ui_yieldTotalLabel, format(ENERGY, inverterData.yieldTotal * 1000.0, 1).formatted.c_str());
-    lv_label_set_text(ui_loadTotalLabel, format(ENERGY, inverterData.loadToday * 1000.0, 1).formatted.c_str());
-    lv_label_set_text(ui_gridSellTotalLabel, ("+ " + format(ENERGY, inverterData.gridSellTotal * 1000.0, 1).formatted).c_str());
-    lv_label_set_text(ui_gridBuyTotalLabel, ("- " + format(ENERGY, inverterData.gridBuyTotal * 1000.0, 1).formatted).c_str());
-    lv_label_set_text(ui_batteryChargedTotalLabel, ("+ " + format(ENERGY, inverterData.batteryChargedTotal * 1000.0, 1).formatted).c_str());
-    lv_label_set_text(ui_batteryDischargedTotalLabel, ("- " + format(ENERGY, inverterData.batteryDischargedTotal * 1000.0, 1).formatted).c_str());
+    lv_label_set_text(ui_yieldTodayLabel, format(ENERGY, inverterData.yieldToday * 1000.0, 1).value.c_str());
+    lv_label_set_text(ui_yieldTodayUnitLabel, format(ENERGY, inverterData.yieldToday * 1000.0, 1).unit.c_str());
+    lv_label_set_text(ui_yieldTotalLabel, format(ENERGY, inverterData.yieldTotal * 1000.0, 1, true).formatted.c_str());
+    lv_label_set_text(ui_gridSellTodayLabel, (format(ENERGY, inverterData.gridSellToday * 1000.0, 1).value).c_str());
+    lv_label_set_text(ui_gridSellTodayUnitLabel, format(ENERGY, inverterData.gridSellToday * 1000.0, 1).unit.c_str());
+    lv_label_set_text(ui_gridBuyTodayLabel, ("-" + format(ENERGY, inverterData.gridBuyToday * 1000.0, 1).value).c_str());
+    lv_label_set_text(ui_gridBuyTodayUnitLabel, format(ENERGY, inverterData.gridBuyToday * 1000.0, 1).unit.c_str());
+    lv_label_set_text(ui_batteryChargedTodayLabel, (format(ENERGY, inverterData.batteryChargedToday * 1000.0, 1).value).c_str());
+    lv_label_set_text(ui_batteryChargedTodayUnitLabel, (format(ENERGY, inverterData.batteryChargedToday * 1000.0, 1).unit).c_str());
+    lv_label_set_text(ui_batteryDischargedTodayLabel, ("-" + format(ENERGY, inverterData.batteryDischargedToday * 1000.0, 1).value).c_str());
+    lv_label_set_text(ui_batteryDischargedTodayUnitLabel, (format(ENERGY, inverterData.batteryDischargedToday * 1000.0, 1).unit).c_str());
+    lv_label_set_text(ui_loadTodayLabel, format(ENERGY, inverterData.loadToday * 1000.0, 1).value.c_str());
+    lv_label_set_text(ui_loadTodayUnitLabel, format(ENERGY, inverterData.loadToday * 1000.0, 1).unit.c_str());
+    lv_label_set_text(ui_loadTotalLabel, format(ENERGY, inverterData.loadTotal * 1000.0, 1, true).formatted.c_str());
+    //lv_label_set_text(ui_gridSellTotalLabel, ("+ " + format(ENERGY, inverterData.gridSellTotal * 1000.0, 1).formatted).c_str());
+    //lv_label_set_text(ui_gridBuyTotalLabel, ("- " + format(ENERGY, inverterData.gridBuyTotal * 1000.0, 1).formatted).c_str());
+    //lv_label_set_text(ui_batteryChargedTotalLabel, ("+ " + format(ENERGY, inverterData.batteryChargedTotal * 1000.0, 1).formatted).c_str());
+    //lv_label_set_text(ui_batteryDischargedTotalLabel, ("- " + format(ENERGY, inverterData.batteryDischargedTotal * 1000.0, 1).formatted).c_str());
 
     updateChart();
     
@@ -313,11 +319,11 @@ void setup()
 
 void loop()
 {
-    //discoveryResult = dongleDiscovery.discoverDongle();
-    //if (discoveryResult.result)
+    discoveryResult = dongleDiscovery.discoverDongle();
+    if (discoveryResult.result)
     { 
-        inverterData = createRandomMockData();  
-        //inverterData = dongleAPI.loadData(discoveryResult.sn);
+        //inverterData = createRandomMockData();  
+        inverterData = dongleAPI.loadData(discoveryResult.sn);
         if (inverterData.status == SOLAX_DONGLE_STATUS_OK)
         {
            solarChartDataProvider->addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);

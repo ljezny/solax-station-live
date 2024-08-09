@@ -4,8 +4,8 @@
 #include <lvgl.h>
 #include "ui/ui.h"
 
-#define BALLS_COUNT 5
-#define BALLS_RADIUS 15
+#define BALLS_COUNT 4
+#define BALLS_RADIUS 20
 typedef struct UIBallAnimationItem
 {
     lv_obj_t *ball;

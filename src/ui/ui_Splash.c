@@ -9,9 +9,8 @@ void ui_Splash_screen_init(void)
 {
 ui_Splash = lv_obj_create(NULL);
 lv_obj_clear_flag( ui_Splash, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_obj_set_style_bg_color(ui_Splash, lv_color_hex(0xFDFD96), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_bg_color(ui_Splash, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_bg_opa(ui_Splash, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_bg_grad_color(ui_Splash, lv_color_hex(0xADD8E6), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_bg_grad_dir(ui_Splash, LV_GRAD_DIR_VER, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Label1 = lv_label_create(ui_Splash);
@@ -21,6 +20,8 @@ lv_obj_set_x( ui_Label1, 2 );
 lv_obj_set_y( ui_Label1, -11 );
 lv_obj_set_align( ui_Label1, LV_ALIGN_CENTER );
 lv_label_set_text(ui_Label1,"Only for:\nSolax X3 Hybrid G4\nwith WiFi dongle\n\nwww.solar-station.cz");
+lv_obj_set_style_text_color(ui_Label1, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_text_opa(ui_Label1, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_align(ui_Label1, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_Label1, &ui_font_RobotoMonoLarge, LV_PART_MAIN| LV_STATE_DEFAULT);
 
