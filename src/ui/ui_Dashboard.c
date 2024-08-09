@@ -255,7 +255,7 @@ lv_obj_set_style_pad_row(ui_gridContainer, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_gridContainer, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Image9 = lv_img_create(ui_gridContainer);
-lv_img_set_src(ui_Image9, &ui_img_1930319305);
+lv_img_set_src(ui_Image9, &ui_img_960241876);
 lv_obj_set_width( ui_Image9, LV_SIZE_CONTENT);  /// 48
 lv_obj_set_height( ui_Image9, LV_SIZE_CONTENT);   /// 48
 lv_obj_set_x( ui_Image9, -141 );
@@ -642,7 +642,7 @@ lv_obj_set_style_pad_row(ui_Container18, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_Container18, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Image14 = lv_img_create(ui_Container18);
-lv_img_set_src(ui_Image14, &ui_img_1930319305);
+lv_img_set_src(ui_Image14, &ui_img_960241876);
 lv_obj_set_width( ui_Image14, LV_SIZE_CONTENT);  /// 48
 lv_obj_set_height( ui_Image14, LV_SIZE_CONTENT);   /// 48
 lv_obj_set_x( ui_Image14, -141 );
@@ -732,7 +732,7 @@ lv_obj_set_style_bg_color(ui_Chart1, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_S
 lv_obj_set_style_bg_opa(ui_Chart1, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_border_width(ui_Chart1, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-lv_obj_set_style_line_width(ui_Chart1, 2, LV_PART_ITEMS| LV_STATE_DEFAULT);
+lv_obj_set_style_line_width(ui_Chart1, 3, LV_PART_ITEMS| LV_STATE_DEFAULT);
 lv_obj_set_style_line_rounded(ui_Chart1, true, LV_PART_ITEMS| LV_STATE_DEFAULT);
 
 lv_obj_set_style_size(ui_Chart1, 0, LV_PART_INDICATOR| LV_STATE_DEFAULT);
