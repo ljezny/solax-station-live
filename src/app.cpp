@@ -323,11 +323,11 @@ void setup()
 
 void loop()
 {
-    //discoveryResult = dongleDiscovery.discoverDongle();
-    //if (discoveryResult.result)
+    discoveryResult = dongleDiscovery.discoverDongle();
+    if (discoveryResult.result)
     { 
-        inverterData = createRandomMockData();  
-        //inverterData = dongleAPI.loadData(discoveryResult.sn);
+        //inverterData = createRandomMockData();  
+        inverterData = dongleAPI.loadData(discoveryResult.sn);
         if (inverterData.status == SOLAX_DONGLE_STATUS_OK)
         {
            solarChartDataProvider->addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
