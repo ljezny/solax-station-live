@@ -8283,7 +8283,7 @@
                             "nid": 773872469,
                             "strtype": "_style/Padding_RowCol",
                             "intarray": [
-                              16,
+                              4,
                               0
                             ],
                             "InheritedType": 7
@@ -21757,8 +21757,8 @@
     "theme_dark": false,
     "theme_color1": 5,
     "theme_color2": 0,
-    "uiExportFolderPath": "/Users/ljezny/solax-station-live/src/ui",
-    "projectExportFolderPath": "/Users/ljezny/solax-station-live/src/ui",
+    "uiExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
+    "projectExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
     "backup_cnt": 372,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",

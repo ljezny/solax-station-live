@@ -86,8 +86,8 @@ lv_obj_t *ui_gridBuyTodayUnitLabel;
 lv_obj_t *ui_TopBottomContainer;
 lv_obj_t *ui_Chart1;
 lv_obj_t *ui____initial_actions0;
-const lv_img_dsc_t *ui_imgset_1565640187[1] = {&ui_img_1516017106};
 const lv_img_dsc_t *ui_imgset_2097694489[1] = {&ui_img_564643105};
+const lv_img_dsc_t *ui_imgset_1565640187[1] = {&ui_img_1516017106};
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
 #if LV_COLOR_DEPTH != 16

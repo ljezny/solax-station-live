@@ -75,7 +75,7 @@ static void draw_event_cb(lv_event_t * e)
         /*Draw a rectangle that will be affected by the mask*/
         lv_draw_rect_dsc_t draw_rect_dsc;
         lv_draw_rect_dsc_init(&draw_rect_dsc);
-        draw_rect_dsc.bg_opa = LV_OPA_10;
+        draw_rect_dsc.bg_opa = LV_OPA_40;
         draw_rect_dsc.bg_color = dsc->line_dsc->color;
 
         lv_area_t a;
@@ -126,6 +126,11 @@ void updateChart()
         lv_chart_set_next_value(ui_Chart1, pvPowerSeries, item.pvPower);
         lv_chart_set_next_value(ui_Chart1, acPowerSeries, item.loadPower);
         lv_chart_set_next_value(ui_Chart1, socSeries, item.soc);
+        //randomize data
+        // lv_chart_set_next_value(ui_Chart1, pvPowerSeries, random(4000, 10000));
+        // lv_chart_set_next_value(ui_Chart1, acPowerSeries, random(500, 2000));
+        // lv_chart_set_next_value(ui_Chart1, socSeries, random(20, 40));
+
         maxPower = max(maxPower, max(item.pvPower, item.loadPower));
     }
     lv_chart_set_range( ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, (lv_coord_t) maxPower);
@@ -239,11 +244,13 @@ void updateDashboardUI()
     lv_label_set_text(ui_yieldTotalLabel, format(ENERGY, inverterData.yieldTotal * 1000.0, 1, true).formatted.c_str());
     lv_label_set_text(ui_gridSellTodayLabel, (format(ENERGY, inverterData.gridSellToday * 1000.0, 1).value).c_str());
     lv_label_set_text(ui_gridSellTodayUnitLabel, format(ENERGY, inverterData.gridSellToday * 1000.0, 1).unit.c_str());
-    lv_label_set_text(ui_gridBuyTodayLabel, ("-" + format(ENERGY, inverterData.gridBuyToday * 1000.0, 1).value).c_str());
+    lv_label_set_text(ui_gridBuyTodayLabel, (format(ENERGY, inverterData.gridBuyToday * 1000.0, 1).value).c_str());
+    lv_obj_set_style_text_color(ui_gridBuyTodayLabel, red, 0);
     lv_label_set_text(ui_gridBuyTodayUnitLabel, format(ENERGY, inverterData.gridBuyToday * 1000.0, 1).unit.c_str());
     lv_label_set_text(ui_batteryChargedTodayLabel, (format(ENERGY, inverterData.batteryChargedToday * 1000.0, 1).value).c_str());
     lv_label_set_text(ui_batteryChargedTodayUnitLabel, (format(ENERGY, inverterData.batteryChargedToday * 1000.0, 1).unit).c_str());
-    lv_label_set_text(ui_batteryDischargedTodayLabel, ("-" + format(ENERGY, inverterData.batteryDischargedToday * 1000.0, 1).value).c_str());
+    lv_label_set_text(ui_batteryDischargedTodayLabel, (format(ENERGY, inverterData.batteryDischargedToday * 1000.0, 1).value).c_str());
+    lv_obj_set_style_text_color(ui_batteryDischargedTodayLabel, red, 0);
     lv_label_set_text(ui_batteryDischargedTodayUnitLabel, (format(ENERGY, inverterData.batteryDischargedToday * 1000.0, 1).unit).c_str());
     lv_label_set_text(ui_loadTodayLabel, format(ENERGY, inverterData.loadToday * 1000.0, 1).value.c_str());
     lv_label_set_text(ui_loadTodayUnitLabel, format(ENERGY, inverterData.loadToday * 1000.0, 1).unit.c_str());
@@ -261,19 +268,24 @@ void updateDashboardUI()
         if (inverterData.status != SOLAX_DONGLE_STATUS_OK)
         {
             lv_label_set_text_fmt(ui_statusLabel, dongleAPI.getStatusText(inverterData.status).c_str());
+            panel->getBacklight()->setBrightness(inverterData.pv1Power + inverterData.pv2Power > 0 ? 100 : 40);
         }
         else
         {
             lv_obj_set_style_text_color(ui_statusLabel, lv_palette_main(LV_PALETTE_GREY), 0);
             lv_label_set_text(ui_statusLabel, discoveryResult.sn.c_str());
+            panel->getBacklight()->setBrightness(100);
         }
     }
     else
     {
         lv_label_set_text(ui_statusLabel, "Disconnected");
+        panel->getBacklight()->setBrightness(100);
     }
     
     updateFlowAnimations();
+
+    
 }
 
 
@@ -283,7 +295,7 @@ void timerCB(struct _lv_timer_t *timer)
 {
     if (!dashboardShown && inverterData.status == SOLAX_DONGLE_STATUS_OK)
     {
-        lv_disp_load_scr(ui_Dashboard);
+        lv_scr_load_anim(ui_Dashboard, LV_SCR_LOAD_ANIM_FADE_IN, 500, 0, true);
         dashboardShown = true;
     }
 
@@ -307,12 +319,12 @@ void setup()
 #endif
     panel->begin();
 
-    panel->getBacklight()->setBrightness(100);
+    
 
     lvgl_port_lock(-1);
     lvgl_port_init(panel->getLcd(), panel->getTouch());
     ui_init();
-    lv_disp_load_scr(ui_Splash);
+    lv_scr_load_anim(ui_Splash, LV_SCR_LOAD_ANIM_FADE_IN, 500, 0, false);
     lvgl_port_unlock();
     
     lv_timer_t *timer = lv_timer_create(timerCB, 3000, NULL);
@@ -333,5 +345,6 @@ void loop()
            solarChartDataProvider->addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
         }
     }
+    
     delay(WAIT);
 }

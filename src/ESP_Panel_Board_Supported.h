@@ -7,7 +7,7 @@
 #pragma once
 
 /* Set to 1 if using a supported board */
-#define ESP_PANEL_USE_SUPPORTED_BOARD       (1)         // 0/1
+#define ESP_PANEL_USE_SUPPORTED_BOARD       (0)         // 0/1
 
 #if ESP_PANEL_USE_SUPPORTED_BOARD
 /**
@@ -51,7 +51,7 @@
  *
  *  - BOARD_ELECROW_CROWPANEL_7_0 (ELECROW_CROWPANEL_7_0): https://www.elecrow.com/esp32-display-7-inch-hmi-display-rgb-tft-lcd-touch-screen-support-lvgl.html
  */
-#define BOARD_ELECROW_CROWPANEL_7_0
+//#define BOARD_ELECROW_CROWPANEL_7_0
 
 /*
  * M5Stack (https://m5stack.com/):
