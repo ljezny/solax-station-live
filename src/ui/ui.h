@@ -82,7 +82,7 @@ extern lv_obj_t *ui_Image13;
 extern lv_obj_t *ui_Container8;
 extern lv_obj_t *ui_loadTodayLabel;
 extern lv_obj_t *ui_loadTodayUnitLabel;
-extern lv_obj_t *ui_loadTotalLabel;
+extern lv_obj_t *ui_selfUseTodayLabel;
 extern lv_obj_t *ui_Container16;
 extern lv_obj_t *ui_Image12;
 extern lv_obj_t *ui_Container6;

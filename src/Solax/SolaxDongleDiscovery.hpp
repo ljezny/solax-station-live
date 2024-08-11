@@ -43,7 +43,6 @@ class SolaxDongleDiscovery {
                     WiFi.disconnect();
                 }
             }
-            WiFi.mode(WIFI_OFF);
             return result;
         }
     private:

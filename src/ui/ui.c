@@ -66,7 +66,7 @@ lv_obj_t *ui_Image13;
 lv_obj_t *ui_Container8;
 lv_obj_t *ui_loadTodayLabel;
 lv_obj_t *ui_loadTodayUnitLabel;
-lv_obj_t *ui_loadTotalLabel;
+lv_obj_t *ui_selfUseTodayLabel;
 lv_obj_t *ui_Container16;
 lv_obj_t *ui_Image12;
 lv_obj_t *ui_Container6;

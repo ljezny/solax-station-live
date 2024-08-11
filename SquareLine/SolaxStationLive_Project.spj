@@ -14429,25 +14429,7 @@
                           },
                           {
                             "part": "lv.PART.MAIN",
-                            "childs": [
-                              {
-                                "nid": 750768467,
-                                "strtype": "_style/StyleState",
-                                "strval": "DEFAULT",
-                                "childs": [
-                                  {
-                                    "nid": 1824897166,
-                                    "strtype": "_style/Padding_RowCol",
-                                    "intarray": [
-                                      -6,
-                                      0
-                                    ],
-                                    "InheritedType": 7
-                                  }
-                                ],
-                                "InheritedType": 1
-                              }
-                            ],
+                            "childs": [],
                             "nid": -32993650,
                             "strtype": "CONTAINER/Style_main",
                             "strval": "lv.PART.MAIN, Rectangle, Pad, Text",
@@ -14473,7 +14455,7 @@
                           {
                             "nid": -1663789156,
                             "strtype": "OBJECT/Name",
-                            "strval": "loadTotalLabel",
+                            "strval": "selfUseTodayLabel",
                             "InheritedType": 10
                           },
                           {
@@ -14737,7 +14719,7 @@
                           {
                             "nid": -441608168,
                             "strtype": "LABEL/Text",
-                            "strval": "11 MWh",
+                            "strval": "11%",
                             "InheritedType": 10
                           },
                           {
@@ -14755,6 +14737,19 @@
                                 "strval": "DEFAULT",
                                 "childs": [
                                   {
+                                    "nid": 1128220505,
+                                    "strtype": "_style/Text_Color",
+                                    "strval": "loadColor",
+                                    "integer": 1646890208,
+                                    "intarray": [
+                                      3,
+                                      173,
+                                      54,
+                                      255
+                                    ],
+                                    "InheritedType": 7
+                                  },
+                                  {
                                     "nid": -249811911,
                                     "strtype": "_style/Text_Align",
                                     "strval": "CENTER",
@@ -14763,7 +14758,7 @@
                                   {
                                     "nid": -909793803,
                                     "strtype": "_style/Text_Font",
-                                    "strval": "RobotoMonoSmall",
+                                    "strval": "RobotoMonoMedium",
                                     "InheritedType": 3
                                   }
                                 ],
@@ -21759,7 +21754,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
-    "backup_cnt": 372,
+    "backup_cnt": 385,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",

@@ -38,16 +38,12 @@ SolaxDongleInverterData_t createRandomMockData()
     inverterData.loadToday = random(0, 1000);
     inverterData.feedInPower = random(-1000, 1000);
     inverterData.soc = random(0, 100);
-    inverterData.yieldToday = random(0, 1000);
-    inverterData.yieldTotal = random(0, 1000);
+    inverterData.pvToday = random(0, 1000);
+    inverterData.pvTotal = random(0, 1000);
     inverterData.batteryChargedToday = random(0, 1000);
     inverterData.batteryDischargedToday = random(0, 1000);
     inverterData.gridBuyToday = random(0, 1000);
     inverterData.gridSellToday = random(0, 1000);
-    inverterData.gridBuyTotal = random(0, 1000);
-    inverterData.gridSellTotal = random(0, 1000);
-    inverterData.batteryChargedTotal = random(0, 1000);
-    inverterData.batteryDischargedTotal = random(0, 1000);
     return inverterData;
 }
 
@@ -58,6 +54,10 @@ static void draw_event_cb(lv_event_t * e)
     lv_obj_draw_part_dsc_t * dsc = lv_event_get_draw_part_dsc(e);
     if(dsc->part == LV_PART_ITEMS) {
         if(!dsc->p1 || !dsc->p2) return;
+        const lv_chart_series_t *ser = (const lv_chart_series_t *) dsc->sub_part_ptr;
+        if(ser->y_axis_sec == 0) {
+            return;
+        }
         
         /*Add a line mask that keeps the area below the line*/
         lv_draw_mask_line_param_t line_mask_param;
@@ -71,13 +71,15 @@ static void draw_event_cb(lv_event_t * e)
         lv_draw_mask_fade_init(&fade_mask_param, &obj->coords, LV_OPA_COVER, obj->coords.y1 + h / 8, LV_OPA_TRANSP,
                                obj->coords.y2);
         int16_t fade_mask_id = lv_draw_mask_add(&fade_mask_param, NULL);
+        
+
 
         /*Draw a rectangle that will be affected by the mask*/
         lv_draw_rect_dsc_t draw_rect_dsc;
         lv_draw_rect_dsc_init(&draw_rect_dsc);
-        draw_rect_dsc.bg_opa = LV_OPA_40;
+        draw_rect_dsc.bg_opa = LV_OPA_20;
         draw_rect_dsc.bg_color = dsc->line_dsc->color;
-
+      
         lv_area_t a;
         a.x1 = dsc->p1->x;
         a.x2 = dsc->p2->x - 1;
@@ -117,6 +119,7 @@ void updateChart()
     lv_chart_series_t *pvPowerSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_pvColor[0]), LV_CHART_AXIS_SECONDARY_Y);
     lv_chart_series_t *acPowerSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_loadColor[0]), LV_CHART_AXIS_SECONDARY_Y);
     lv_chart_series_t *socSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_batteryColor[0]), LV_CHART_AXIS_PRIMARY_Y);
+    
     uint32_t i;
 
     float maxPower = 10000.0f;
@@ -127,9 +130,9 @@ void updateChart()
         lv_chart_set_next_value(ui_Chart1, acPowerSeries, item.loadPower);
         lv_chart_set_next_value(ui_Chart1, socSeries, item.soc);
         //randomize data
-        // lv_chart_set_next_value(ui_Chart1, pvPowerSeries, random(4000, 10000));
+        // lv_chart_set_next_value(ui_Chart1, pvPowerSeries, random(4000, 8000));
         // lv_chart_set_next_value(ui_Chart1, acPowerSeries, random(500, 2000));
-        // lv_chart_set_next_value(ui_Chart1, socSeries, random(20, 40));
+        // lv_chart_set_next_value(ui_Chart1, socSeries, random(80, 100));
 
         maxPower = max(maxPower, max(item.pvPower, item.loadPower));
     }
@@ -194,9 +197,12 @@ void updateFlowAnimations() {
 
 void updateDashboardUI()
 {
-    int selfUsePercent = inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0;
-    selfUsePercent = constrain(selfUsePercent, 0, 100);
-    
+    int selfUsePowerPercent = inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0;
+    selfUsePowerPercent = constrain(selfUsePowerPercent, 0, 100);
+
+    int selfUseEnergyTodayPercent = inverterData.loadToday > 0 ? ((inverterData.batteryDischargedToday + inverterData.pvToday) / inverterData.loadToday) * 100 : 0;
+    selfUseEnergyTodayPercent = constrain(selfUseEnergyTodayPercent, 0, 100);
+
     int inPower = inverterData.pv1Power + inverterData.pv2Power;
     if(inverterData.batteryPower < 0) {
         inPower += abs(inverterData.batteryPower);
@@ -219,6 +225,8 @@ void updateDashboardUI()
     
     lv_color_t black = lv_color_make(0,0,0);
     lv_color_t red = lv_color_make(192,0,0);
+    lv_color_t orange = lv_color_make(192,96,0);
+    lv_color_t green = lv_color_make(0,128,0);
 
     lv_label_set_text(ui_pvLabel, format(POWER, inverterData.pv1Power + inverterData.pv2Power).formatted.c_str());
     lv_label_set_text(ui_pv1Label, format(POWER, inverterData.pv1Power, 1.0f, true).formatted.c_str());
@@ -238,10 +246,17 @@ void updateDashboardUI()
     lv_label_set_text(ui_batteryPowerLabel, format(POWER, abs(inverterData.batteryPower)).formatted.c_str());
     lv_obj_set_style_text_color(ui_batteryPowerLabel, inverterData.batteryPower < 0 ? red : black, 0);
     lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d°C", inverterData.batteryTemperature);
-    lv_label_set_text_fmt(ui_selfUsePercentLabel, "%d%%", selfUsePercent);
-    lv_label_set_text(ui_yieldTodayLabel, format(ENERGY, inverterData.yieldToday * 1000.0, 1).value.c_str());
-    lv_label_set_text(ui_yieldTodayUnitLabel, format(ENERGY, inverterData.yieldToday * 1000.0, 1).unit.c_str());
-    lv_label_set_text(ui_yieldTotalLabel, format(ENERGY, inverterData.yieldTotal * 1000.0, 1, true).formatted.c_str());
+    lv_label_set_text_fmt(ui_selfUsePercentLabel, "%d%%", selfUsePowerPercent);
+    if(selfUsePowerPercent > 50) {
+        lv_obj_set_style_text_color(ui_selfUsePercentLabel, green, 0);
+    } else if(selfUsePowerPercent > 30) {
+        lv_obj_set_style_text_color(ui_selfUsePercentLabel, orange, 0);
+    } else {
+        lv_obj_set_style_text_color(ui_selfUsePercentLabel, red, 0);
+    }
+    lv_label_set_text(ui_yieldTodayLabel, format(ENERGY, inverterData.pvToday * 1000.0, 1).value.c_str());
+    lv_label_set_text(ui_yieldTodayUnitLabel, format(ENERGY, inverterData.pvToday * 1000.0, 1).unit.c_str());
+    lv_label_set_text(ui_yieldTotalLabel, format(ENERGY, inverterData.pvTotal * 1000.0, 1, true).formatted.c_str());
     lv_label_set_text(ui_gridSellTodayLabel, (format(ENERGY, inverterData.gridSellToday * 1000.0, 1).value).c_str());
     lv_label_set_text(ui_gridSellTodayUnitLabel, format(ENERGY, inverterData.gridSellToday * 1000.0, 1).unit.c_str());
     lv_label_set_text(ui_gridBuyTodayLabel, (format(ENERGY, inverterData.gridBuyToday * 1000.0, 1).value).c_str());
@@ -254,7 +269,16 @@ void updateDashboardUI()
     lv_label_set_text(ui_batteryDischargedTodayUnitLabel, (format(ENERGY, inverterData.batteryDischargedToday * 1000.0, 1).unit).c_str());
     lv_label_set_text(ui_loadTodayLabel, format(ENERGY, inverterData.loadToday * 1000.0, 1).value.c_str());
     lv_label_set_text(ui_loadTodayUnitLabel, format(ENERGY, inverterData.loadToday * 1000.0, 1).unit.c_str());
-    lv_label_set_text(ui_loadTotalLabel, format(ENERGY, inverterData.loadTotal * 1000.0, 1, true).formatted.c_str());
+    
+    lv_label_set_text_fmt(ui_selfUseTodayLabel, "%d%%", selfUseEnergyTodayPercent);
+    if(selfUseEnergyTodayPercent > 50) {
+        lv_obj_set_style_text_color(ui_selfUseTodayLabel, green, 0);
+    } else if(selfUseEnergyTodayPercent > 30) {
+        lv_obj_set_style_text_color(ui_selfUseTodayLabel, orange, 0);
+    } else {
+        lv_obj_set_style_text_color(ui_selfUseTodayLabel, red, 0);
+    }
+
     //lv_label_set_text(ui_gridSellTotalLabel, ("+ " + format(ENERGY, inverterData.gridSellTotal * 1000.0, 1).formatted).c_str());
     //lv_label_set_text(ui_gridBuyTotalLabel, ("- " + format(ENERGY, inverterData.gridBuyTotal * 1000.0, 1).formatted).c_str());
     //lv_label_set_text(ui_batteryChargedTotalLabel, ("+ " + format(ENERGY, inverterData.batteryChargedTotal * 1000.0, 1).formatted).c_str());
@@ -332,7 +356,7 @@ void setup()
         log_i("%s\n", txt);
     });
 }
-
+bool startSoftAP = false;
 void loop()
 {
     discoveryResult = dongleDiscovery.discoverDongle();
@@ -343,6 +367,10 @@ void loop()
         if (inverterData.status == SOLAX_DONGLE_STATUS_OK)
         {
            solarChartDataProvider->addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
+        }
+        if(!startSoftAP) {
+            startSoftAP = true;
+            WiFi.softAP("SolarStationLive", "12345678");
         }
     }
     
