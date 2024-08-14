@@ -30,7 +30,7 @@ extern "C" {
 // SCREEN: ui_Splash
 void ui_Splash_screen_init(void);
 extern lv_obj_t *ui_Splash;
-extern lv_obj_t *ui_Label1;
+extern lv_obj_t *ui_Image1;
 extern lv_obj_t *ui_Spinner1;
 extern lv_obj_t *ui_Label2;
 // SCREEN: ui_Dashboard
@@ -103,6 +103,7 @@ extern lv_obj_t *ui_TopBottomContainer;
 extern lv_obj_t *ui_Chart1;
 extern lv_obj_t *ui____initial_actions0;
 
+LV_IMG_DECLARE( ui_img_logo_png);   // assets/logo.png
 LV_IMG_DECLARE( ui_img_1516017106);   // assets/solar-panel-4.png
 LV_IMG_DECLARE( ui_img_1279321064);   // assets/eco-battery.png
 LV_IMG_DECLARE( ui_img_564643105);   // assets/eco-house-3.png

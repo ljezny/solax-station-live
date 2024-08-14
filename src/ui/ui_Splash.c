@@ -14,17 +14,15 @@ lv_obj_set_flex_align(ui_Splash, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_
 lv_obj_set_style_pad_row(ui_Splash, 32, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_Splash, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-ui_Label1 = lv_label_create(ui_Splash);
-lv_obj_set_width( ui_Label1, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_Label1, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( ui_Label1, 2 );
-lv_obj_set_y( ui_Label1, -11 );
-lv_obj_set_align( ui_Label1, LV_ALIGN_CENTER );
-lv_label_set_text(ui_Label1,"SOLAR LIVE!");
-lv_obj_set_style_text_color(ui_Label1, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
-lv_obj_set_style_text_opa(ui_Label1, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_text_align(ui_Label1, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_text_font(ui_Label1, &ui_font_RobotoMonoLarge, LV_PART_MAIN| LV_STATE_DEFAULT);
+ui_Image1 = lv_img_create(ui_Splash);
+lv_img_set_src(ui_Image1, &ui_img_logo_png);
+lv_obj_set_width( ui_Image1, LV_SIZE_CONTENT);  /// 318
+lv_obj_set_height( ui_Image1, LV_SIZE_CONTENT);   /// 128
+lv_obj_set_x( ui_Image1, 11 );
+lv_obj_set_y( ui_Image1, -307 );
+lv_obj_set_align( ui_Image1, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_Image1, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
+lv_obj_clear_flag( ui_Image1, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_Spinner1 = lv_spinner_create(ui_Splash,1000,90);
 lv_obj_set_width( ui_Spinner1, 80);
@@ -32,6 +30,7 @@ lv_obj_set_height( ui_Spinner1, 80);
 lv_obj_set_x( ui_Spinner1, -277 );
 lv_obj_set_y( ui_Spinner1, -48 );
 lv_obj_set_align( ui_Spinner1, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_Spinner1, LV_OBJ_FLAG_HIDDEN );   /// Flags
 lv_obj_clear_flag( ui_Spinner1, LV_OBJ_FLAG_CLICKABLE );    /// Flags
 
 ui_object_set_themeable_style_property(ui_Spinner1, LV_PART_INDICATOR| LV_STATE_DEFAULT, LV_STYLE_ARC_COLOR, _ui_theme_color_pvColor);
@@ -44,6 +43,7 @@ lv_obj_set_x( ui_Label2, -287 );
 lv_obj_set_y( ui_Label2, -87 );
 lv_obj_set_align( ui_Label2, LV_ALIGN_CENTER );
 lv_label_set_text(ui_Label2,"www.solar-station.cz");
+lv_obj_add_flag( ui_Label2, LV_OBJ_FLAG_HIDDEN );   /// Flags
 lv_obj_set_style_text_font(ui_Label2, &ui_font_RobotoMonoMedium, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 }

@@ -12,7 +12,7 @@
 // SCREEN: ui_Splash
 void ui_Splash_screen_init(void);
 lv_obj_t *ui_Splash;
-lv_obj_t *ui_Label1;
+lv_obj_t *ui_Image1;
 lv_obj_t *ui_Spinner1;
 lv_obj_t *ui_Label2;
 
