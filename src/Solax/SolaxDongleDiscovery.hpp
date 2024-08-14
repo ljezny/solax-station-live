@@ -19,7 +19,6 @@ class SolaxDongleDiscovery {
                 result.result = true;
                 return result;
             }
-            WiFi.scanNetworks(true);
             
             int found = WiFi.scanNetworks(false);
             for(int i = 0; i < found; i++) {

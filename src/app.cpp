@@ -36,6 +36,31 @@ String getESPIdHex()
   return idHex;
 }
 
+bool canActivateShelly() {
+    int powerTreshold = 500;
+
+    if(inverterData.status != SOLAX_DONGLE_STATUS_OK) {
+        return false;
+    }
+    return true;
+    if(inverterData.soc >= 99) {
+        log_d("Battery full");
+        return true;
+    }
+
+    if(inverterData.soc > 90 && inverterData.batteryPower > powerTreshold) {
+        log_d("Battery almost full and charging");
+        return true;
+    }
+
+    if(inverterData.feedInPower > powerTreshold) {
+        log_d("Feeding in power");
+        return true;
+    }
+
+    return false;
+}
+
 SolaxDongleInverterData_t createRandomMockData()
 {
     SolaxDongleInverterData_t inverterData;
@@ -396,6 +421,45 @@ void timerCB(struct _lv_timer_t *timer)
     esp_lcd_rgb_panel_restart(panel->getLcd()->getHandle());
 }
 
+void runReloadDataTask(void *pvParameters) {
+    for(;;) {
+        log_d("Reloading data");
+        if (discoveryResult.result)
+        {
+            //inverterData = createRandomMockData();
+
+            int MAX_RETRIES = 5;
+            for(int i = 0; i < MAX_RETRIES; i++) {
+                SolaxDongleInverterData_t d = dongleAPI.loadData(discoveryResult.sn);
+                if(d.status == SOLAX_DONGLE_STATUS_OK) {
+                    inverterData = d;
+                    break;
+                }
+                delay(100);
+            }
+            if (inverterData.status == SOLAX_DONGLE_STATUS_OK)
+            {
+                solarChartDataProvider->addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
+            }
+        }
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    }
+}
+
+void runShellyReloadTask(void *pvParameters) {
+    long lastActivateShellyAttempt = 0;
+    for(;;) {
+        log_d("Reloading Shelly data");
+        shellyResult = shellyAPI.getState();
+        if(lastActivateShellyAttempt == 0 || millis() - lastActivateShellyAttempt > 10000) {
+            log_d("Activating Shelly");
+            shellyAPI.activateOneShelly(20); //(5 * 60);            
+            lastActivateShellyAttempt = millis();            
+        }
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+    }
+}
+
 void setup()
 {
     Serial.begin(115200);
@@ -422,31 +486,9 @@ void setup()
     lv_timer_t *timer = lv_timer_create(timerCB, 3000, NULL);
     lv_log_register_print_cb([](const char *txt)
                              { log_i("%s\n", txt); });
-}
-
-bool canActivateShelly() {
-    int powerTreshold = 500;
-
-    if(inverterData.status != SOLAX_DONGLE_STATUS_OK) {
-        return false;
-    }
-    return true;
-    if(inverterData.soc >= 99) {
-        log_d("Battery full");
-        return true;
-    }
-
-    if(inverterData.soc > 90 && inverterData.batteryPower > powerTreshold) {
-        log_d("Battery almost full and charging");
-        return true;
-    }
-
-    if(inverterData.feedInPower > powerTreshold) {
-        log_d("Feeding in power");
-        return true;
-    }
-
-    return false;
+                
+    xTaskCreate(runReloadDataTask, "ReloadDataTask", 32 * 1024, NULL, 1, NULL);
+    xTaskCreate(runShellyReloadTask, "ShellyReloadTask", 32 * 1024, NULL, 1, NULL);
 }
 
 void discoverDongle()
@@ -456,33 +498,6 @@ void discoverDongle()
     if (lastAttempt == 0 ||millis() - lastAttempt > 20000)
     {
         discoveryResult = dongleDiscovery.discoverDongle();
-        lastAttempt = millis();
-    }
-}
-
-void reloadData()
-{
-    static long lastAttempt = 0;
-    if (lastAttempt == 0 ||millis() - lastAttempt > 3000)
-    {
-        log_d("Reloading data");
-        if (discoveryResult.result)
-        {
-            //inverterData = createRandomMockData();
-
-            int MAX_RETRIES = 5;
-            for(int i = 0; i < MAX_RETRIES; i++) {
-                inverterData = dongleAPI.loadData(discoveryResult.sn);
-                if(inverterData.status == SOLAX_DONGLE_STATUS_OK) {
-                    break;
-                }
-                delay(100);
-            }
-            if (inverterData.status == SOLAX_DONGLE_STATUS_OK)
-            {
-                solarChartDataProvider->addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
-            }
-        }
         lastAttempt = millis();
     }
 }
@@ -526,42 +541,11 @@ void checkSoftAP() {
     }
 }
 
-bool reloadShellyState() {
-    bool result = false;
-    static long lastAttempt = 0;
-    if (lastAttempt == 0 ||millis() - lastAttempt > 3000)
-    {
-        log_d("Reloading Shelly state");
-        shellyResult = shellyAPI.getState();
-        lastAttempt = millis();
-        result = true;
-    }
-    return result;
-}
-
-void checkShellyActivation() {
-    static long lastAttempt = 0;
-    if (lastAttempt == 0 || millis() - lastAttempt > 10000)
-    {
-        if(canActivateShelly()) {
-            log_d("Activating Shelly");
-            shellyAPI.activateOneShelly(20); //(5 * 60);
-
-        }
-        lastAttempt = millis();
-    }
-}
-
 void loop()
 {
     discoverDongle();
     checkNewShellyPairings();
     discoverShellyPairings();
     checkSoftAP();
-    if(reloadShellyState()) {
-        checkShellyActivation();
-    }
-    
-    reloadData();
     delay(100); //yield other tasks
 }
