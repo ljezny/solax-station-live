@@ -14,8 +14,7 @@
 
 SET_LOOP_TASK_STACK_SIZE(32 * 1024);
 
-#define SOFT_AP_SSID "SolarStationLive"
-#define SOFT_AP_PASSWORD "12345678"
+#define SOFT_AP_SSID_PREFIX String("SolarStationLive-")
 
 SolaxDongleAPI dongleAPI;
 SolaxDongleDiscovery dongleDiscovery;
@@ -28,6 +27,14 @@ ShellyResult_t shellyResult;
 
 ESP_Panel *panel = new ESP_Panel();
 SolarChartDataProvider *solarChartDataProvider = new SolarChartDataProvider();
+
+String getESPIdHex()
+{
+  char idHex[23];
+  snprintf(idHex, 23, "%llX", ESP.getEfuseMac());
+
+  return idHex;
+}
 
 SolaxDongleInverterData_t createRandomMockData()
 {
@@ -464,7 +471,7 @@ void checkNewShellyPairings()
         String shellyAPSSID = shellyAPI.findShellyAP();
         if (shellyAPSSID.length() > 0)
         {
-            shellyAPI.pairShelly(shellyAPSSID, SOFT_AP_SSID, SOFT_AP_PASSWORD);
+            shellyAPI.pairShelly(shellyAPSSID, SOFT_AP_SSID_PREFIX + getESPIdHex(), getESPIdHex());
         }
         lastAttempt = millis();
     }
@@ -487,8 +494,8 @@ void checkSoftAP() {
         if (WiFi.softAPSSID().isEmpty())
         {
             log_d("Starting SoftAP");
-            WiFi.softAP(SOFT_AP_SSID, SOFT_AP_PASSWORD);
-            shellyAPI.initMDNS(SOFT_AP_SSID);
+            WiFi.softAP(SOFT_AP_SSID_PREFIX + getESPIdHex(), getESPIdHex(), 1, 1, MAX_SHELLY_PAIRS);
+            shellyAPI.initMDNS(SOFT_AP_SSID_PREFIX + getESPIdHex());
         }
         lastAttempt = millis();
     }
@@ -496,7 +503,7 @@ void checkSoftAP() {
 
 void reloadShellyState() {
     static long lastAttempt = 0;
-    if (millis() - lastAttempt > 1000)
+    if (millis() - lastAttempt > 3000)
     {
         log_d("Reloading Shelly state");
         shellyResult = shellyAPI.getState();
