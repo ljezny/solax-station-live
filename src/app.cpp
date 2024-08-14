@@ -8,16 +8,24 @@
 #include "utils/UnitFormatter.hpp"
 #include "utils/SolarChartDataProvider.hpp"
 #include "utils/UIBallAnimator.hpp"
+#include "utils/BacklightResolver.hpp"
 #include <mat.h>
+#include "Shelly/Shelly.hpp"
 
-#define WAIT 2000
 SET_LOOP_TASK_STACK_SIZE(32 * 1024);
+
+#define SOFT_AP_SSID "SolarStationLive"
+#define SOFT_AP_PASSWORD "12345678"
 
 SolaxDongleAPI dongleAPI;
 SolaxDongleDiscovery dongleDiscovery;
+ShellyAPI shellyAPI;
+BacklightResolver backlightResolver;
 
 SolaxDongleInverterData_t inverterData;
 SolaxDongleDiscoveryResult_t discoveryResult;
+ShellyResult_t shellyResult;
+
 ESP_Panel *panel = new ESP_Panel();
 SolarChartDataProvider *solarChartDataProvider = new SolarChartDataProvider();
 
@@ -47,18 +55,21 @@ SolaxDongleInverterData_t createRandomMockData()
     return inverterData;
 }
 
-static void draw_event_cb(lv_event_t * e)
+static void draw_event_cb(lv_event_t *e)
 {
-    lv_obj_t * obj = lv_event_get_target(e);
+    lv_obj_t *obj = lv_event_get_target(e);
     /*Add the faded area before the lines are drawn*/
-    lv_obj_draw_part_dsc_t * dsc = lv_event_get_draw_part_dsc(e);
-    if(dsc->part == LV_PART_ITEMS) {
-        if(!dsc->p1 || !dsc->p2) return;
-        const lv_chart_series_t *ser = (const lv_chart_series_t *) dsc->sub_part_ptr;
-        if(ser->y_axis_sec == 0) {
+    lv_obj_draw_part_dsc_t *dsc = lv_event_get_draw_part_dsc(e);
+    if (dsc->part == LV_PART_ITEMS)
+    {
+        if (!dsc->p1 || !dsc->p2)
+            return;
+        const lv_chart_series_t *ser = (const lv_chart_series_t *)dsc->sub_part_ptr;
+        if (ser->y_axis_sec == 0)
+        {
             return;
         }
-        
+
         /*Add a line mask that keeps the area below the line*/
         lv_draw_mask_line_param_t line_mask_param;
         lv_draw_mask_line_points_init(&line_mask_param, dsc->p1->x, dsc->p1->y, dsc->p2->x, dsc->p2->y,
@@ -71,15 +82,13 @@ static void draw_event_cb(lv_event_t * e)
         lv_draw_mask_fade_init(&fade_mask_param, &obj->coords, LV_OPA_COVER, obj->coords.y1 + h / 8, LV_OPA_TRANSP,
                                obj->coords.y2);
         int16_t fade_mask_id = lv_draw_mask_add(&fade_mask_param, NULL);
-        
-
 
         /*Draw a rectangle that will be affected by the mask*/
         lv_draw_rect_dsc_t draw_rect_dsc;
         lv_draw_rect_dsc_init(&draw_rect_dsc);
         draw_rect_dsc.bg_opa = LV_OPA_20;
         draw_rect_dsc.bg_color = dsc->line_dsc->color;
-      
+
         lv_area_t a;
         a.x1 = dsc->p1->x;
         a.x2 = dsc->p2->x - 1;
@@ -92,13 +101,20 @@ static void draw_event_cb(lv_event_t * e)
         lv_draw_mask_free_param(&fade_mask_param);
         lv_draw_mask_remove_id(line_mask_id);
         lv_draw_mask_remove_id(fade_mask_id);
-    } else if (dsc->part == LV_PART_TICKS) {
-        if(dsc->id == LV_CHART_AXIS_PRIMARY_Y) {
-            lv_snprintf (dsc->text, dsc->text_length, "%d%%", dsc->value);
-        } else if(dsc->id == LV_CHART_AXIS_SECONDARY_Y) {
-            lv_snprintf (dsc->text, dsc->text_length, "%d\nkW", dsc->value / 1000);
-        } else if (dsc->id == LV_CHART_AXIS_PRIMARY_X) {
-            lv_snprintf (dsc->text, dsc->text_length, "%dh", -24 + 6 * dsc->value);
+    }
+    else if (dsc->part == LV_PART_TICKS)
+    {
+        if (dsc->id == LV_CHART_AXIS_PRIMARY_Y)
+        {
+            lv_snprintf(dsc->text, dsc->text_length, "%d%%", dsc->value);
+        }
+        else if (dsc->id == LV_CHART_AXIS_SECONDARY_Y)
+        {
+            lv_snprintf(dsc->text, dsc->text_length, "%d\nkW", dsc->value / 1000);
+        }
+        else if (dsc->id == LV_CHART_AXIS_PRIMARY_X)
+        {
+            lv_snprintf(dsc->text, dsc->text_length, "%dh", -24 + 6 * dsc->value);
         }
     }
 }
@@ -106,7 +122,8 @@ static void draw_event_cb(lv_event_t * e)
 bool setupChart = false;
 void updateChart()
 {
-    if(!setupChart) {
+    if (!setupChart)
+    {
         setupChart = true;
         lv_obj_add_event_cb(ui_Chart1, draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
     }
@@ -119,45 +136,48 @@ void updateChart()
     lv_chart_series_t *pvPowerSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_pvColor[0]), LV_CHART_AXIS_SECONDARY_Y);
     lv_chart_series_t *acPowerSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_loadColor[0]), LV_CHART_AXIS_SECONDARY_Y);
     lv_chart_series_t *socSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_batteryColor[0]), LV_CHART_AXIS_PRIMARY_Y);
-    
+
     uint32_t i;
 
     float maxPower = 10000.0f;
-    for(i = 0; i < CHART_SAMPLES_PER_DAY; i++) {
+    for (i = 0; i < CHART_SAMPLES_PER_DAY; i++)
+    {
         SolarChartDataItem_t item = solarChartDataProvider->getData()[CHART_SAMPLES_PER_DAY - i - 1];
-        
+
         lv_chart_set_next_value(ui_Chart1, pvPowerSeries, item.pvPower);
         lv_chart_set_next_value(ui_Chart1, acPowerSeries, item.loadPower);
         lv_chart_set_next_value(ui_Chart1, socSeries, item.soc);
-        //randomize data
-        // lv_chart_set_next_value(ui_Chart1, pvPowerSeries, random(4000, 8000));
-        // lv_chart_set_next_value(ui_Chart1, acPowerSeries, random(500, 2000));
-        // lv_chart_set_next_value(ui_Chart1, socSeries, random(80, 100));
 
         maxPower = max(maxPower, max(item.pvPower, item.loadPower));
     }
-    lv_chart_set_range( ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, (lv_coord_t) maxPower);
+    lv_chart_set_range(ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, (lv_coord_t)maxPower);
 }
 
-UIBallAnimator *pvAnimator = NULL;
-UIBallAnimator *batteryAnimator = NULL;
-UIBallAnimator *gridAnimator = NULL;
-UIBallAnimator *loadAnimator = NULL;
 
-void updateFlowAnimations() {
+
+void updateFlowAnimations()
+{
+    static UIBallAnimator *pvAnimator = NULL;
+    static UIBallAnimator *batteryAnimator = NULL;
+    static UIBallAnimator *gridAnimator = NULL;
+    static UIBallAnimator *loadAnimator = NULL;
+    static UIBallAnimator *shellyAnimator = NULL;
+
     int duration = 1400;
     int offsetY = 15;
-    if(pvAnimator != NULL) {
+    if (pvAnimator != NULL)
+    {
         delete pvAnimator;
         pvAnimator = NULL;
     }
     if ((inverterData.pv1Power + inverterData.pv2Power) > 0)
     {
-        pvAnimator = new UIBallAnimator(ui_LeftContainer,  _ui_theme_color_pvColor);
+        pvAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_pvColor);
         pvAnimator->run(ui_pvContainer, ui_inverterContainer, duration, 0, 0, -offsetY);
     }
 
-    if(batteryAnimator != NULL) {
+    if (batteryAnimator != NULL)
+    {
         delete batteryAnimator;
         batteryAnimator = NULL;
     }
@@ -165,12 +185,15 @@ void updateFlowAnimations() {
     {
         batteryAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_batteryColor);
         batteryAnimator->run(ui_inverterContainer, ui_batteryContainer, duration, duration, 1, -offsetY);
-    } else if (inverterData.batteryPower < 0){
+    }
+    else if (inverterData.batteryPower < 0)
+    {
         batteryAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_batteryColor);
         batteryAnimator->run(ui_batteryContainer, ui_inverterContainer, duration, 0, 0, -offsetY);
     }
 
-    if(gridAnimator != NULL) {
+    if (gridAnimator != NULL)
+    {
         delete gridAnimator;
         gridAnimator = NULL;
     }
@@ -179,12 +202,15 @@ void updateFlowAnimations() {
     {
         gridAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_gridColor);
         gridAnimator->run(ui_inverterContainer, ui_gridContainer, duration, duration, 1, offsetY);
-    } else if (inverterData.feedInPower < 0){
+    }
+    else if (inverterData.feedInPower < 0)
+    {
         gridAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_gridColor);
         gridAnimator->run(ui_gridContainer, ui_inverterContainer, duration, 0, 0, offsetY);
     }
-    
-    if(loadAnimator != NULL) {
+
+    if (loadAnimator != NULL)
+    {
         delete loadAnimator;
         loadAnimator = NULL;
     }
@@ -192,6 +218,14 @@ void updateFlowAnimations() {
     {
         loadAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_loadColor);
         loadAnimator->run(ui_inverterContainer, ui_loadContainer, duration, duration, 1, 20);
+    }
+    if(shellyAnimator != NULL) {
+        delete shellyAnimator;
+        shellyAnimator = NULL;
+    }
+    if(shellyResult.totalPower > 0) { //TODO: check if shelly is on
+        shellyAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_pvColor);
+        shellyAnimator->run(ui_loadContainer, ui_shellyContainer, duration, duration, 1, 20);
     }
 }
 
@@ -204,41 +238,48 @@ void updateDashboardUI()
     selfUseEnergyTodayPercent = constrain(selfUseEnergyTodayPercent, 0, 100);
 
     int inPower = inverterData.pv1Power + inverterData.pv2Power;
-    if(inverterData.batteryPower < 0) {
+    if (inverterData.batteryPower < 0)
+    {
         inPower += abs(inverterData.batteryPower);
     }
-    if(inverterData.feedInPower < 0) {
+    if (inverterData.feedInPower < 0)
+    {
         inPower += abs(inverterData.feedInPower);
     }
 
     int outPower = inverterData.loadPower;
-    if(inverterData.batteryPower > 0) {
+    if (inverterData.batteryPower > 0)
+    {
         outPower += inverterData.batteryPower;
     }
-    if(inverterData.feedInPower > 0) {
+    if (inverterData.feedInPower > 0)
+    {
         outPower += inverterData.feedInPower;
     }
     int totalPhasePower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
     int l1PercentUsage = inverterData.L1Power > 0 ? (100 * inverterData.L1Power) / totalPhasePower : 0;
     int l2PercentUsage = inverterData.L2Power > 0 ? (100 * inverterData.L2Power) / totalPhasePower : 0;
     int l3PercentUsage = inverterData.L3Power > 0 ? (100 * inverterData.L3Power) / totalPhasePower : 0;
-    
-    lv_color_t black = lv_color_make(0,0,0);
-    lv_color_t red = lv_color_make(192,0,0);
-    lv_color_t orange = lv_color_make(192,96,0);
-    lv_color_t green = lv_color_make(0,128,0);
+
+    lv_color_t black = lv_color_make(0, 0, 0);
+    lv_color_t red = lv_color_make(192, 0, 0);
+    lv_color_t orange = lv_color_make(192, 96, 0);
+    lv_color_t green = lv_color_make(0, 128, 0);
 
     lv_label_set_text(ui_pvLabel, format(POWER, inverterData.pv1Power + inverterData.pv2Power).formatted.c_str());
     lv_label_set_text(ui_pv1Label, format(POWER, inverterData.pv1Power, 1.0f, true).formatted.c_str());
     lv_label_set_text(ui_pv2Label, format(POWER, inverterData.pv2Power, 1.0f, true).formatted.c_str());
-    if(inverterData.pv1Power == 0 || inverterData.pv2Power == 0) { //hide
+    if (inverterData.pv1Power == 0 || inverterData.pv2Power == 0)
+    { // hide
         lv_obj_add_flag(ui_pv1Label, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_pv2Label, LV_OBJ_FLAG_HIDDEN);
-    } else {
+    }
+    else
+    {
         lv_obj_clear_flag(ui_pv1Label, LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ui_pv2Label, LV_OBJ_FLAG_HIDDEN);
     }
-    
+
     lv_label_set_text_fmt(ui_inverterTemperatureLabel, "%d°C", inverterData.inverterTemperature);
     lv_label_set_text(ui_inverterPowerLabel, format(POWER, inverterData.inverterPower).formatted.c_str());
     lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.L1Power).formatted.c_str());
@@ -255,11 +296,16 @@ void updateDashboardUI()
     lv_obj_set_style_text_color(ui_batteryPowerLabel, inverterData.batteryPower < 0 ? red : black, 0);
     lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d°C", inverterData.batteryTemperature);
     lv_label_set_text_fmt(ui_selfUsePercentLabel, "%d%%", selfUsePowerPercent);
-    if(selfUsePowerPercent > 50) {
+    if (selfUsePowerPercent > 50)
+    {
         lv_obj_set_style_text_color(ui_selfUsePercentLabel, green, 0);
-    } else if(selfUsePowerPercent > 30) {
+    }
+    else if (selfUsePowerPercent > 30)
+    {
         lv_obj_set_style_text_color(ui_selfUsePercentLabel, orange, 0);
-    } else {
+    }
+    else
+    {
         lv_obj_set_style_text_color(ui_selfUsePercentLabel, red, 0);
     }
     lv_label_set_text(ui_yieldTodayLabel, format(ENERGY, inverterData.pvToday * 1000.0, 1).value.c_str());
@@ -277,49 +323,53 @@ void updateDashboardUI()
     lv_label_set_text(ui_batteryDischargedTodayUnitLabel, (format(ENERGY, inverterData.batteryDischargedToday * 1000.0, 1).unit).c_str());
     lv_label_set_text(ui_loadTodayLabel, format(ENERGY, inverterData.loadToday * 1000.0, 1).value.c_str());
     lv_label_set_text(ui_loadTodayUnitLabel, format(ENERGY, inverterData.loadToday * 1000.0, 1).unit.c_str());
-    
+
     lv_label_set_text_fmt(ui_selfUseTodayLabel, "%d%%", selfUseEnergyTodayPercent);
-    if(selfUseEnergyTodayPercent > 50) {
+    if (selfUseEnergyTodayPercent > 50)
+    {
         lv_obj_set_style_text_color(ui_selfUseTodayLabel, green, 0);
-    } else if(selfUseEnergyTodayPercent > 30) {
+    }
+    else if (selfUseEnergyTodayPercent > 30)
+    {
         lv_obj_set_style_text_color(ui_selfUseTodayLabel, orange, 0);
-    } else {
+    }
+    else
+    {
         lv_obj_set_style_text_color(ui_selfUseTodayLabel, red, 0);
     }
 
-    //lv_label_set_text(ui_gridSellTotalLabel, ("+ " + format(ENERGY, inverterData.gridSellTotal * 1000.0, 1).formatted).c_str());
-    //lv_label_set_text(ui_gridBuyTotalLabel, ("- " + format(ENERGY, inverterData.gridBuyTotal * 1000.0, 1).formatted).c_str());
-    //lv_label_set_text(ui_batteryChargedTotalLabel, ("+ " + format(ENERGY, inverterData.batteryChargedTotal * 1000.0, 1).formatted).c_str());
-    //lv_label_set_text(ui_batteryDischargedTotalLabel, ("- " + format(ENERGY, inverterData.batteryDischargedTotal * 1000.0, 1).formatted).c_str());
+    if(shellyResult.pairedCount > 0) {
+        lv_obj_clear_flag(ui_shellyContainer, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_add_flag(ui_shellyContainer, LV_OBJ_FLAG_HIDDEN);
+    }
+    lv_label_set_text(ui_shellyPowerLabel1, format(POWER, shellyResult.totalPower).formatted.c_str());
+    lv_label_set_text_fmt(ui_shellyCountLabel, "%d / %d", shellyResult.activeCount, shellyResult.pairedCount);
 
     updateChart();
-    
+
     lv_obj_set_style_text_color(ui_statusLabel, lv_palette_main(LV_PALETTE_DEEP_ORANGE), 0);
     if (discoveryResult.result)
     {
         if (inverterData.status != SOLAX_DONGLE_STATUS_OK)
         {
             lv_label_set_text_fmt(ui_statusLabel, dongleAPI.getStatusText(inverterData.status).c_str());
-            panel->getBacklight()->setBrightness(100);
         }
         else
         {
             lv_obj_set_style_text_color(ui_statusLabel, lv_palette_main(LV_PALETTE_GREY), 0);
             lv_label_set_text(ui_statusLabel, discoveryResult.sn.c_str());
-            //panel->getBacklight()->setBrightness(inverterData.pv1Power + inverterData.pv2Power > 0 ? 100 : 40);            //display is whistling!!!
         }
     }
     else
     {
         lv_label_set_text(ui_statusLabel, "Disconnected");
-        panel->getBacklight()->setBrightness(100);
     }
-    
+
     updateFlowAnimations();
 
-    
+    backlightResolver.resolve(inverterData);
 }
-
 
 bool dashboardShown = false;
 
@@ -331,7 +381,10 @@ void timerCB(struct _lv_timer_t *timer)
         dashboardShown = true;
     }
 
-    updateDashboardUI();
+    if (dashboardShown)
+    {
+        updateDashboardUI();
+    }
 
     esp_lcd_rgb_panel_restart(panel->getLcd()->getHandle());
 }
@@ -351,43 +404,113 @@ void setup()
 #endif
     panel->begin();
 
-    
+    backlightResolver.setup(panel->getBacklight());
 
     lvgl_port_lock(-1);
     lvgl_port_init(panel->getLcd(), panel->getTouch());
     ui_init();
-    lv_scr_load_anim(ui_Splash, LV_SCR_LOAD_ANIM_FADE_IN, 500, 0, false);
+    lv_scr_load_anim(ui_Splash, LV_SCR_LOAD_ANIM_FADE_IN, 500, 0, true);
     lvgl_port_unlock();
-    
+
     lv_timer_t *timer = lv_timer_create(timerCB, 3000, NULL);
-    lv_log_register_print_cb([](const char * txt) {
-        log_i("%s\n", txt);
-    });
+    lv_log_register_print_cb([](const char *txt)
+                             { log_i("%s\n", txt); });
 }
-bool startSoftAP = false;
+
+void discoverDongle()
+{
+    static long lastAttempt = 0;
+    
+    if (millis() - lastAttempt > 20000)
+    {
+        discoveryResult = dongleDiscovery.discoverDongle();
+        lastAttempt = millis();
+    }
+}
+
+void reloadData()
+{
+    static long lastAttempt = 0;
+    if (millis() - lastAttempt > 3000)
+    {
+        log_d("Reloading data");
+        // if (discoveryResult.result)
+        {
+            inverterData = createRandomMockData();
+
+            // int MAX_RETRIES = 5;
+            // for(int i = 0; i < MAX_RETRIES; i++) {
+            //     inverterData = dongleAPI.loadData(discoveryResult.sn);
+            //     if(inverterData.status == SOLAX_DONGLE_STATUS_OK) {
+            //         break;
+            //     }
+            //     delay(100);
+            // }4
+            if (inverterData.status == SOLAX_DONGLE_STATUS_OK)
+            {
+                solarChartDataProvider->addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
+            }
+        }
+        lastAttempt = millis();
+    }
+}
+
+void checkNewShellyPairings()
+{
+    static long lastAttempt = 0;
+    if (millis() - lastAttempt > 20000)
+    {
+        log_d("Checking for new Shelly pairings");
+        String shellyAPSSID = shellyAPI.findShellyAP();
+        if (shellyAPSSID.length() > 0)
+        {
+            shellyAPI.pairShelly(shellyAPSSID, SOFT_AP_SSID, SOFT_AP_PASSWORD);
+        }
+        lastAttempt = millis();
+    }
+}
+
+void discoverShellyPairings() {
+    static long lastAttempt = 0;
+    if (millis() - lastAttempt > 1000)
+    {
+        log_d("Discovering Shelly on local network");
+        shellyAPI.discoverParings();
+        lastAttempt = millis();
+    }
+}
+
+void checkSoftAP() {
+    static long lastAttempt = 0;
+    if (millis() - lastAttempt > 10000)
+    {
+        if (WiFi.softAPSSID().isEmpty())
+        {
+            log_d("Starting SoftAP");
+            WiFi.softAP(SOFT_AP_SSID, SOFT_AP_PASSWORD);
+            shellyAPI.initMDNS(SOFT_AP_SSID);
+        }
+        lastAttempt = millis();
+    }
+}
+
+void reloadShellyState() {
+    static long lastAttempt = 0;
+    if (millis() - lastAttempt > 1000)
+    {
+        log_d("Reloading Shelly state");
+        shellyResult = shellyAPI.getState();
+        lastAttempt = millis();
+    }
+}
+
 void loop()
 {
-    discoveryResult = dongleDiscovery.discoverDongle();
-    if (discoveryResult.result)
-    { 
-        //inverterData = createRandomMockData();  
-        int MAX_RETRIES = 5;
-        for(int i = 0; i < MAX_RETRIES; i++) {
-            inverterData = dongleAPI.loadData(discoveryResult.sn);
-            if(inverterData.status == SOLAX_DONGLE_STATUS_OK) {
-                break;
-            }
-            delay(100);
-        }
-        if (inverterData.status == SOLAX_DONGLE_STATUS_OK)
-        {
-           solarChartDataProvider->addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
-        }
-        if(!startSoftAP) {
-            startSoftAP = true;
-            WiFi.softAP("SolarStationLive", "12345678");
-        }
-    }
-    
-    delay(WAIT);
+    discoverDongle();
+    reloadData();
+    checkNewShellyPairings();
+    discoverShellyPairings();
+    checkSoftAP();
+    reloadShellyState();
+    delay(100); //yield other tasks
 }

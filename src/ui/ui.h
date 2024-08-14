@@ -37,7 +37,6 @@ extern lv_obj_t *ui_Label2;
 void ui_Dashboard_screen_init(void);
 extern lv_obj_t *ui_Dashboard;
 extern lv_obj_t *ui_LeftContainer;
-extern lv_obj_t *ui_statusLabel;
 extern lv_obj_t *ui_pvContainer;
 extern lv_obj_t *ui_Image6;
 extern lv_obj_t *ui_Container1;
@@ -69,6 +68,11 @@ extern lv_obj_t *ui_Container3;
 extern lv_obj_t *ui_inverterPowerL1Label;
 extern lv_obj_t *ui_inverterPowerL2Label;
 extern lv_obj_t *ui_inverterPowerL3Label;
+extern lv_obj_t *ui_statusLabel;
+extern lv_obj_t *ui_shellyContainer;
+extern lv_obj_t *ui_Image2;
+extern lv_obj_t *ui_shellyCountLabel;
+extern lv_obj_t *ui_shellyPowerLabel1;
 extern lv_obj_t *ui_RightContainer;
 extern lv_obj_t *ui_TopRightContainer;
 extern lv_obj_t *ui_Container15;
@@ -110,6 +114,7 @@ LV_IMG_DECLARE( ui_img_564643105);   // assets/eco-house-3.png
 LV_IMG_DECLARE( ui_img_960241876);   // assets/power-plant.png
 LV_IMG_DECLARE( ui_img_leaf_png);   // assets/leaf.png
 LV_IMG_DECLARE( ui_img_1061873486);   // assets/solar-inverter.png
+LV_IMG_DECLARE( ui_img_1337922523);   // assets/solar-plug.png
 LV_IMG_DECLARE( ui_img_performance_png);   // assets/performance.png
 
 

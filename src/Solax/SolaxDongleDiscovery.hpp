@@ -13,6 +13,7 @@ class SolaxDongleDiscovery {
     public:
         SolaxDongleDiscoveryResult_t discoverDongle() {
             SolaxDongleDiscoveryResult_t result;
+            
             if(WiFi.status() == WL_CONNECTED) {
                 result.sn = parseDongleSN(WiFi.SSID());
                 result.result = true;
