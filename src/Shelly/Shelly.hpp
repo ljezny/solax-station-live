@@ -12,8 +12,6 @@
 
 #define MAX_SHELLY_PAIRS 8
 
-#define RETRY_COUNT 3
-
 typedef enum
 {
     PLUG_S,
@@ -42,14 +40,6 @@ const ShellyModelInfo_t supportedModels[SHELLY_SUPPORTED_MODEL_COUNT] = {
     {PLUS1PM, "Plus1PM-"}, //????
     {PRO3, "ShellyPro3-"},
     {PRO3, "Pro3-"}};
-
-typedef struct ShellyPair
-{
-    unsigned long long shellyId = 0;
-    IPAddress ip = INADDR_NONE;
-    ShellyModel_t model = PLUG_S;
-} ShellyPair_t;
-
 typedef struct ShellyStateResult {
     int updated = 0;
     ShellyModel_t model = PLUG_S;
@@ -58,6 +48,15 @@ typedef struct ShellyStateResult {
     int totalPower = 0;
     int totalEnergy = 0;
 } ShellyStateResult_t;
+
+typedef struct ShellyPair
+{
+    unsigned long long shellyId = 0;
+    IPAddress ip = INADDR_NONE;
+    ShellyModel_t model = PLUG_S;
+    ShellyStateResult_t lastState;
+} ShellyPair_t;
+
 
 typedef struct ShellyResult
 {
@@ -171,6 +170,7 @@ public:
                 result.pairedCount++;
 
                 ShellyStateResult_t state = getState(pairs[i]);
+                pairs[i].lastState = state;
                 if(state.updated != 0)
                 {
                     if(state.isOn)
@@ -181,11 +181,37 @@ public:
                     result.totalEnergy += state.totalEnergy;
                 } else {
                     log_e("Failed to get state for Shelly %s", String(pairs[i].shellyId, HEX).c_str());
-                    pairs[i].ip = INADDR_NONE;
                 }
             }
         }
         return result;
+    }
+
+    void activateOneShelly(int timeoutSec) {
+        bool newActivated = false;
+        for(int i = 0; i < MAX_SHELLY_PAIRS; i++)
+        {
+            if(pairs[i].shellyId != 0 && pairs[i].ip != INADDR_NONE)
+            {
+                ShellyStateResult_t state = pairs[i].lastState;
+                if(state.updated != 0) {
+                    bool canBeControlled = (state.isOn && (state.source == NULL || String("http").equals(state.source) || String("init").equals(state.source))) || !state.isOn;
+                    if(canBeControlled)
+                    {
+                        if(state.isOn) { //prolong timeout
+                            log_d("Prolonging timeout for Shelly %s", String(pairs[i].shellyId, HEX).c_str());
+                            setState(pairs[i], true, timeoutSec);
+                        } else {
+                            if(!newActivated) {
+                                log_d("Activating Shelly %s", String(pairs[i].shellyId, HEX).c_str());
+                                setState(pairs[i], true, timeoutSec);
+                                newActivated = true;
+                            }
+                        }
+                    }
+                }                
+            }
+        }
     }
 
 private:
@@ -286,33 +312,24 @@ private:
         ShellyStateResult_t result;
         result.updated = 0;
         String url = "http://" + ipAddress.toString() + "/status";
-        for (int i = 0; i < RETRY_COUNT; i++)
+        HTTPClient http;
+        if (http.begin(url))
         {
-            HTTPClient http;
-            if (http.begin(url))
+            int httpCode = http.GET();
+            if (httpCode == HTTP_CODE_OK)
             {
-                int httpCode = http.GET();
-                if (httpCode == HTTP_CODE_OK)
-                {
-                    String payload = http.getString();
-                    DynamicJsonDocument doc(8192);
-                    deserializeJson(doc, payload);
-                    result.updated = time(NULL); // doc["unixtime"].as<int>();
-                    result.isOn = doc["relays"][0]["ison"].as<bool>();
-                    result.source = doc["relays"][0]["source"].as<String>();
-                    result.totalPower = doc["meters"][0]["power"].as<float>();
-                    result.totalEnergy = doc["meters"][0]["total"].as<float>() / 60.0f;
-                }
+                String payload = http.getString();
+                DynamicJsonDocument doc(8192);
+                deserializeJson(doc, payload);
+                result.updated = time(NULL); // doc["unixtime"].as<int>();
+                result.isOn = doc["relays"][0]["ison"].as<bool>();
+                result.source = doc["relays"][0]["source"].as<String>();
+                result.totalPower = doc["meters"][0]["power"].as<float>();
+                result.totalEnergy = doc["meters"][0]["total"].as<float>() / 60.0f;
             }
-            http.end();
-
-            if (result.updated != 0)
-            {
-                break;
-            }
-            delay(i * 200);
         }
-
+        http.end();
+           
         return result;
     }
 
@@ -321,31 +338,92 @@ private:
         ShellyStateResult_t result;
         result.updated = 0;
         String url = "http://" + ipAddress.toString() + "/rpc/Switch.GetStatus?id=0";
-        for (int i = 0; i < RETRY_COUNT; i++)
+        HTTPClient http;
+        if (http.begin(url))
         {
-            HTTPClient http;
-            if (http.begin(url))
+            int httpCode = http.GET();
+            if (httpCode == HTTP_CODE_OK)
             {
-                int httpCode = http.GET();
-                if (httpCode == HTTP_CODE_OK)
-                {
-                    String payload = http.getString();
-                    DynamicJsonDocument doc(8192);
-                    deserializeJson(doc, payload);
-                    result.updated = time(NULL);
-                    result.isOn = doc["output"].as<bool>();
-                    result.totalPower = doc["apower"].as<float>();
-                    result.source = doc["source"].as<String>();
-                    result.totalEnergy = doc["aenergy"]["total"].as<float>();
-                }
+                String payload = http.getString();
+                DynamicJsonDocument doc(8192);
+                deserializeJson(doc, payload);
+                result.updated = time(NULL);
+                result.isOn = doc["output"].as<bool>();
+                result.totalPower = doc["apower"].as<float>();
+                result.source = doc["source"].as<String>();
+                result.totalEnergy = doc["aenergy"]["total"].as<float>();
             }
-            http.end();
-            if (result.updated != 0)
-            {
-                break;
-            }
-            delay(i * 200);
         }
+        http.end();
+       
+        return result;
+    }
+
+    bool setState(ShellyPair_t shellyPair, bool on, int timeoutSec)
+    {
+        bool result = true;
+        switch (shellyPair.model)
+        {
+        case PLUG:
+            result = setState_Gen1(shellyPair.ip, on, timeoutSec);
+            break;  
+        case PLUG_S:
+            result = setState_Gen1(shellyPair.ip, on, timeoutSec);
+            break;
+        case PRO1PM:
+        case PLUS_PLUG_S:
+        case PLUS1PM:
+            result = setState_Gen2(shellyPair.ip, 0, on, timeoutSec);
+            break;
+        case PRO3:
+            result = setState_Gen2(shellyPair.ip, 0, on, timeoutSec);
+            result = setState_Gen2(shellyPair.ip, 1, on, timeoutSec);
+            result = setState_Gen2(shellyPair.ip, 2, on, timeoutSec);
+            break;
+        }
+        return result;
+    }
+
+    bool setState_Gen1(IPAddress ipAddress, bool on, int timeoutSec)
+    {
+        bool result = false;
+        String url = "http://" + ipAddress.toString() + "/relay/0?turn=" + (on ? "on" : "off");
+        if (timeoutSec > 0)
+        {
+            url += "&timer=" + String(timeoutSec);
+        }
+        HTTPClient http;
+        if (http.begin(url))
+        {
+            int httpCode = http.GET();
+            if (httpCode == HTTP_CODE_OK)
+            {
+                result = true;
+            }
+        }
+        http.end();
+
+        return result;
+    }
+
+    bool setState_Gen2(IPAddress ipAddress, int relay, bool on, int timeoutSec)
+    {
+        bool result = true;
+        String url = "http://" + ipAddress.toString() + "/relay/" + String(relay) + "?turn=" + (on ? "on" : "off");
+        if (timeoutSec > 0)
+        {
+            url += "&timer=" + String(timeoutSec);
+        }
+        HTTPClient http;
+        if (http.begin(url))
+        {
+            int httpCode = http.GET();
+            if (httpCode == HTTP_CODE_OK)
+            {
+                result = true;
+            }
+        }
+        http.end();
 
         return result;
     }
