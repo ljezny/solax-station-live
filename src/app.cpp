@@ -200,7 +200,7 @@ void updateDashboardUI()
     int selfUsePowerPercent = inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0;
     selfUsePowerPercent = constrain(selfUsePowerPercent, 0, 100);
 
-    int selfUseEnergyTodayPercent = inverterData.loadToday > 0 ? ((inverterData.batteryDischargedToday + inverterData.pvToday) / inverterData.loadToday) * 100 : 0;
+    int selfUseEnergyTodayPercent = inverterData.loadToday > 0 ? ((inverterData.loadToday - inverterData.gridBuyToday) / inverterData.loadToday) * 100 : 0;
     selfUseEnergyTodayPercent = constrain(selfUseEnergyTodayPercent, 0, 100);
 
     int inPower = inverterData.pv1Power + inverterData.pv2Power;
@@ -231,6 +231,14 @@ void updateDashboardUI()
     lv_label_set_text(ui_pvLabel, format(POWER, inverterData.pv1Power + inverterData.pv2Power).formatted.c_str());
     lv_label_set_text(ui_pv1Label, format(POWER, inverterData.pv1Power, 1.0f, true).formatted.c_str());
     lv_label_set_text(ui_pv2Label, format(POWER, inverterData.pv2Power, 1.0f, true).formatted.c_str());
+    if(inverterData.pv1Power == 0 || inverterData.pv2Power == 0) { //hide
+        lv_obj_add_flag(ui_pv1Label, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_pv2Label, LV_OBJ_FLAG_HIDDEN);
+    } else {
+        lv_obj_clear_flag(ui_pv1Label, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ui_pv2Label, LV_OBJ_FLAG_HIDDEN);
+    }
+    
     lv_label_set_text_fmt(ui_inverterTemperatureLabel, "%d°C", inverterData.inverterTemperature);
     lv_label_set_text(ui_inverterPowerLabel, format(POWER, inverterData.inverterPower).formatted.c_str());
     lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.L1Power).formatted.c_str());
@@ -292,13 +300,13 @@ void updateDashboardUI()
         if (inverterData.status != SOLAX_DONGLE_STATUS_OK)
         {
             lv_label_set_text_fmt(ui_statusLabel, dongleAPI.getStatusText(inverterData.status).c_str());
-            panel->getBacklight()->setBrightness(inverterData.pv1Power + inverterData.pv2Power > 0 ? 100 : 40);
+            panel->getBacklight()->setBrightness(100);
         }
         else
         {
             lv_obj_set_style_text_color(ui_statusLabel, lv_palette_main(LV_PALETTE_GREY), 0);
             lv_label_set_text(ui_statusLabel, discoveryResult.sn.c_str());
-            panel->getBacklight()->setBrightness(100);
+            //panel->getBacklight()->setBrightness(inverterData.pv1Power + inverterData.pv2Power > 0 ? 100 : 40);            //display is whistling!!!
         }
     }
     else
@@ -363,7 +371,14 @@ void loop()
     if (discoveryResult.result)
     { 
         //inverterData = createRandomMockData();  
-        inverterData = dongleAPI.loadData(discoveryResult.sn);
+        int MAX_RETRIES = 5;
+        for(int i = 0; i < MAX_RETRIES; i++) {
+            inverterData = dongleAPI.loadData(discoveryResult.sn);
+            if(inverterData.status == SOLAX_DONGLE_STATUS_OK) {
+                break;
+            }
+            delay(100);
+        }
         if (inverterData.status == SOLAX_DONGLE_STATUS_OK)
         {
            solarChartDataProvider->addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
