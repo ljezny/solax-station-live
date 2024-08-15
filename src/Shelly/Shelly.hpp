@@ -139,10 +139,9 @@ public:
                 prefix.toLowerCase();
                 if (hostname.startsWith(prefix))
                 {
-                    log_d("Found Shelly: %s", hostname.c_str());
+                    log_d("Found Shelly: %s model: %s", hostname.c_str(), supportedModels[i].prefix.c_str());
                     String idText = hostname.substring(prefix.length());
                     unsigned long long shellyId = strtoull(idText.c_str(), NULL, 16);
-                
                     for (int j = 0; i < MAX_SHELLY_PAIRS; j++)
                     {
                         if (pairs[j].shellyId == 0 || pairs[j].shellyId == shellyId)
@@ -154,6 +153,7 @@ public:
                             break;
                         }
                     }
+                    break;
                 }
             }
         }
