@@ -80,13 +80,6 @@ public:
         }
     }
 
-    void initMDNS(String name)
-    {
-        if (!MDNS.begin(name.c_str()))
-        {
-            log_e("Error setting up MDNS responder!");
-        }
-    }
     String findShellyAP()
     {
         int found = WiFi.scanNetworks();

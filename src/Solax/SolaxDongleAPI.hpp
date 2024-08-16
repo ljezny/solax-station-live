@@ -11,12 +11,14 @@ typedef enum SolaxDongleStatus {
     SOLAX_DONGLE_STATUS_UNKNOWN = 0,
     SOLAX_DONGLE_STATUS_CONNECTION_ERROR = -1,
     SOLAX_DONGLE_STATUS_HTTP_ERROR = -2,
-    SOLAX_DONGLE_STATUS_JSON_ERROR = -3
+    SOLAX_DONGLE_STATUS_JSON_ERROR = -3,
+    SOLAX_DONGLE_STATUS_WIFI_DISCONNECTED = -4,
 } SolaxDongleStatus_t;
 
 typedef struct
 {
     SolaxDongleStatus_t status = SOLAX_DONGLE_STATUS_UNKNOWN;
+    String sn;
     int pv1Power = 0;
     int pv2Power = 0;
     int soc = 0;
@@ -82,6 +84,7 @@ public:
                     //inverterData.batteryDischargedTotal = ((doc["Data"][75].as<uint32_t>() << 16) + doc["Data"][74].as<uint16_t>()) / 10.0; 
                     //inverterData.loadTotal = inverterData.pvTotal + inverterData.gridBuyTotal;
                     inverterData.loadToday = inverterData.pvToday + inverterData.gridBuyToday;
+                    inverterData.sn = sn;
                 }
                 else
                 {
