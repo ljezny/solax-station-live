@@ -1,7 +1,7 @@
 #pragma once
 
 #include <ESP_Panel_Library.h>
-#include "Solax/SolaxDongleAPI.hpp"
+#include "Inverter/InverterResult.hpp"
 
 #define BACKLIGHT_TOUCH_TIMEOUT 5000
 
@@ -15,7 +15,7 @@ class BacklightResolver {
             backlight->setBrightness(20);
         }
 
-        void resolve(SolaxDongleInverterData_t inverterData) {
+        void resolve(DongleInverterData_t inverterData) {
             int pvPower = inverterData.pv1Power + inverterData.pv2Power;
             int brightness = 0;
             if(pvPower == 0) {

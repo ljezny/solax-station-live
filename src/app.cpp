@@ -3,6 +3,9 @@
 #include <lvgl.h>
 #include "lvgl_port_v8.h"
 #include "ui/ui.h"
+#include "Inverters/DongleDiscovery.hpp"
+#include "Inverters/Goodwe/GoodweDongleAPI.hpp"
+#include "Inverters/Solax/SolaxDongleAPI.hpp"
 #include "Solax/SolaxDongleDiscovery.hpp"
 #include "Solax/SolaxDongleAPI.hpp"
 #include "Shelly/Shelly.hpp"
@@ -19,12 +22,12 @@ SET_LOOP_TASK_STACK_SIZE(48 * 1024);
 #define DEMO 0
 
 SolaxDongleAPI dongleAPI;
-SolaxDongleDiscovery dongleDiscovery;
+DongleDiscovery dongleDiscovery;
 ShellyAPI shellyAPI;
 BacklightResolver backlightResolver;
 
-SolaxDongleInverterData_t inverterData;
-SolaxDongleDiscoveryResult_t discoveryResult;
+DongleInverterData_t inverterData;
+DongleDiscoveryResult_t discoveryResult;
 ShellyResult_t shellyResult;
 SolarChartDataProvider solarChartDataProvider;
 ShellyRuleResolver shellyRuleResolver;
@@ -40,10 +43,10 @@ IRAM_ATTR bool onTouchInterruptCallback(void *user_data)
     return false;
 }
 
-SolaxDongleInverterData_t createRandomMockData()
+DongleInverterData_t createRandomMockData()
 {
-    SolaxDongleInverterData_t inverterData;
-    inverterData.status = SOLAX_DONGLE_STATUS_OK;
+    DongleInverterData_t inverterData;
+    inverterData.status = DONGLE_STATUS_OK;
     inverterData.pv1Power = random(0, 5000);
     inverterData.pv2Power = random(0, 5000);
     inverterData.batteryPower = random(-3000, 3000);
@@ -120,7 +123,7 @@ bool dashboardShown = false;
 
 void timerCB(struct _lv_timer_t *timer)
 {
-    if (!dashboardShown && inverterData.status == SOLAX_DONGLE_STATUS_OK)
+    if (!dashboardShown && inverterData.status == DONGLE_STATUS_OK)
     {
         dashboardUI.show();
         dashboardShown = true;
