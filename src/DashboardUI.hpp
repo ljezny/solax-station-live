@@ -5,7 +5,7 @@
 #include "lvgl_port_v8.h"
 #include "ui/ui.h"
 #include "utils/UIBallAnimator.hpp"
-#include "Solax/SolaxDongleAPI.hpp"
+#include "Inverters/InverterResult.hpp"
 #include "Shelly/Shelly.hpp"
 
 static void draw_event_cb(lv_event_t *e)
@@ -81,7 +81,7 @@ public:
         lv_obj_add_event_cb(ui_Chart1, draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
     }
 
-    void update(SolaxDongleInverterData_t& inverterData, ShellyResult_t& shellyResult, SolarChartDataProvider& solarChartDataProvider)
+    void update(DongleInverterData_t& inverterData, ShellyResult_t& shellyResult, SolarChartDataProvider& solarChartDataProvider)
     {
         int selfUsePowerPercent = inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0;
         selfUsePowerPercent = constrain(selfUsePowerPercent, 0, 100);
@@ -207,20 +207,20 @@ public:
         
         switch(inverterData.status)
         {
-            case SOLAX_DONGLE_STATUS_OK:
+            case DONGLE_STATUS_OK:
                 lv_obj_set_style_text_color(ui_statusLabel, lv_palette_main(LV_PALETTE_GREY), 0);
                 lv_label_set_text(ui_statusLabel, inverterData.sn.c_str());
                 break;
-            case SOLAX_DONGLE_STATUS_CONNECTION_ERROR:
+            case DONGLE_STATUS_CONNECTION_ERROR:
                 lv_label_set_text(ui_statusLabel, "Connection error");
                 break;
-            case SOLAX_DONGLE_STATUS_HTTP_ERROR:
+            case DONGLE_STATUS_HTTP_ERROR:
                 lv_label_set_text(ui_statusLabel, "HTTP error");
                 break;
-            case SOLAX_DONGLE_STATUS_JSON_ERROR:
+            case DONGLE_STATUS_JSON_ERROR:
                 lv_label_set_text(ui_statusLabel, "JSON error");
                 break;
-            case SOLAX_DONGLE_STATUS_WIFI_DISCONNECTED:
+            case DONGLE_STATUS_WIFI_DISCONNECTED:
                 lv_label_set_text(ui_statusLabel, "WiFi disconnected");
                 break;
             default:
@@ -258,7 +258,7 @@ private:
         lv_chart_set_range(ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, (lv_coord_t)maxPower);
     }
 
-    void updateFlowAnimations(SolaxDongleInverterData_t inverterData, ShellyResult_t shellyResult)
+    void updateFlowAnimations(DongleInverterData_t inverterData, ShellyResult_t shellyResult)
     {
         static UIBallAnimator *pvAnimator = NULL;
         static UIBallAnimator *batteryAnimator = NULL;

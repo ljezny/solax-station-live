@@ -6,18 +6,18 @@
 #include <WiFiMulti.h>
 #include <HTTPClient.h>
 
-typedef enum SolaxDongleStatus {
-    SOLAX_DONGLE_STATUS_OK = 1,
-    SOLAX_DONGLE_STATUS_UNKNOWN = 0,
-    SOLAX_DONGLE_STATUS_CONNECTION_ERROR = -1,
-    SOLAX_DONGLE_STATUS_HTTP_ERROR = -2,
-    SOLAX_DONGLE_STATUS_JSON_ERROR = -3,
-    SOLAX_DONGLE_STATUS_WIFI_DISCONNECTED = -4,
-} SolaxDongleStatus_t;
+typedef enum DongleStatus {
+    DONGLE_STATUS_OK = 1,
+    DONGLE_STATUS_UNKNOWN = 0,
+    DONGLE_STATUS_CONNECTION_ERROR = -1,
+    DONGLE_STATUS_HTTP_ERROR = -2,
+    DONGLE_STATUS_JSON_ERROR = -3,
+    DONGLE_STATUS_WIFI_DISCONNECTED = -4,
+} DongleStatus_t;
 
 typedef struct
 {
-    SolaxDongleStatus_t status = SOLAX_DONGLE_STATUS_UNKNOWN;
+    DongleStatus_t status = DONGLE_STATUS_UNKNOWN;
     String sn;
     int pv1Power = 0;
     int pv2Power = 0;
@@ -38,14 +38,14 @@ typedef struct
     int batteryTemperature = 0;
     double pvToday = 0;
     uint32_t pvTotal = 0;
-} SolaxDongleInverterData_t;
+} DongleInverterData_t;
 
 class SolaxDongleAPI
 {
 public:
-    SolaxDongleInverterData_t loadData(String sn)
+    DongleInverterData_t loadData(String sn)
     {
-        SolaxDongleInverterData_t inverterData;
+        DongleInverterData_t inverterData;
         String url = "http://5.8.8.8";
         HTTPClient http;
         if (http.begin(url))
@@ -58,7 +58,7 @@ public:
                 DeserializationError err = deserializeJson(doc, payload);
                 if (err == DeserializationError::Ok)
                 {
-                    inverterData.status = SOLAX_DONGLE_STATUS_OK;
+                    inverterData.status = DONGLE_STATUS_OK;
                     inverterData.pv1Power = doc["Data"][14].as<int>();
                     inverterData.pv2Power = doc["Data"][15].as<int>();
                     inverterData.batteryPower = read16BitSigned(doc["Data"][41].as<uint16_t>());
@@ -88,33 +88,33 @@ public:
                 }
                 else
                 {
-                    inverterData.status = SOLAX_DONGLE_STATUS_JSON_ERROR;
+                    inverterData.status = DONGLE_STATUS_JSON_ERROR;
                 }
             }
             else
             {
-                inverterData.status = SOLAX_DONGLE_STATUS_HTTP_ERROR;
+                inverterData.status = DONGLE_STATUS_HTTP_ERROR;
             }
             http.end();
         }
         else
         {
-            inverterData.status = SOLAX_DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
         }
         return inverterData;
     }
 
-    String getStatusText(SolaxDongleStatus_t status)
+    String getStatusText(DongleStatus_t status)
     {
         switch (status)
         {
-        case SOLAX_DONGLE_STATUS_OK:
+        case DONGLE_STATUS_OK:
             return "OK";
-        case SOLAX_DONGLE_STATUS_CONNECTION_ERROR:
+        case DONGLE_STATUS_CONNECTION_ERROR:
             return "Connection error";
-        case SOLAX_DONGLE_STATUS_HTTP_ERROR:
+        case DONGLE_STATUS_HTTP_ERROR:
             return "HTTP error";
-        case SOLAX_DONGLE_STATUS_JSON_ERROR:
+        case DONGLE_STATUS_JSON_ERROR:
             return "JSON error";
         default:
             return "Unknown";
