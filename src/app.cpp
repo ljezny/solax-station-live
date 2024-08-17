@@ -12,6 +12,7 @@
 #include <mat.h>
 #include "DashboardUI.hpp"
 #include "utils/SoftAP.hpp"
+#include "utils/ShellyRuleResolver.hpp"
 
 SET_LOOP_TASK_STACK_SIZE(48 * 1024);
 
@@ -26,40 +27,11 @@ SolaxDongleInverterData_t inverterData;
 SolaxDongleDiscoveryResult_t discoveryResult;
 ShellyResult_t shellyResult;
 SolarChartDataProvider solarChartDataProvider;
+ShellyRuleResolver shellyRuleResolver;
 
 ESP_Panel *panel = new ESP_Panel();
 DashboardUI dashboardUI;
 
-
-bool canActivateShelly()
-{
-    int powerTreshold = 500;
-
-    if (inverterData.status != SOLAX_DONGLE_STATUS_OK)
-    {
-        return false;
-    }
-    return true;
-    if (inverterData.soc >= 99)
-    {
-        log_d("Battery full");
-        return true;
-    }
-
-    if (inverterData.soc > 90 && inverterData.batteryPower > powerTreshold)
-    {
-        log_d("Battery almost full and charging");
-        return true;
-    }
-
-    if (inverterData.feedInPower > powerTreshold)
-    {
-        log_d("Feeding in power");
-        return true;
-    }
-
-    return false;
-}
 
 IRAM_ATTR bool onTouchInterruptCallback(void *user_data)
 {
@@ -117,6 +89,7 @@ void runReloadDataTask(void *pvParameters)
             if (inverterData.status == SOLAX_DONGLE_STATUS_OK)
             {
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
+                shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
             }
         }
 #endif
@@ -133,8 +106,10 @@ void runShellyReloadTask(void *pvParameters)
         shellyResult = shellyAPI.getState();
         if (lastActivateShellyAttempt == 0 || millis() - lastActivateShellyAttempt > 30000)
         {
-            log_d("Activating Shelly");
-            shellyAPI.activateOneShelly(5 * 60);
+            if(shellyRuleResolver.canActivateShelly()) {
+                log_d("Activating Shelly");
+                shellyAPI.activateOneShelly(5 * 60);
+            }
             lastActivateShellyAttempt = millis();
         }
         vTaskDelay(4000 / portTICK_PERIOD_MS);
