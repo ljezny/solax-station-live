@@ -4,7 +4,6 @@
 #include <lvgl.h>
 #include "ui/ui.h"
 
-#define BALLS_COUNT 4
 #define BALLS_RADIUS 12
 typedef struct UIBallAnimationItem
 {
@@ -16,17 +15,17 @@ typedef struct UIBallAnimationItem
 class UIBallAnimator
 {
 public:
-    UIBallAnimator(lv_obj_t *parent, const ui_theme_variable_t *color)
+    UIBallAnimator(lv_obj_t *parent, const ui_theme_variable_t *color, int ballsCount)
     {
         this->parent = parent;
-
-        for (int i = 0; i < BALLS_COUNT; i++)
+        this->ballsCount = ballsCount;
+        for (int i = 0; i < ballsCount; i++)
         {
             items[i].ball = lv_obj_create(parent);
             lv_obj_remove_style_all(items[i].ball);
 
-            int radius = BALLS_RADIUS;// - i * (BALLS_RADIUS / BALLS_COUNT);
-            int opa = 255 - i * (128 / BALLS_COUNT);
+            int radius = BALLS_RADIUS;// - i * (BALLS_RADIUS / ballsCount);
+            int opa = 255 - i * (128 / ballsCount);
             lv_obj_set_width(items[i].ball, radius);
             lv_obj_set_height(items[i].ball, radius);
             lv_obj_clear_flag(items[i].ball, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
@@ -49,7 +48,7 @@ public:
 
     ~UIBallAnimator()
     {
-        for (int i = 0; i < BALLS_COUNT; i++)
+        for (int i = 0; i < ballsCount; i++)
         {
             lv_anim_del(&items[i].posXAnimation, (lv_anim_exec_xcb_t)lv_obj_set_x);
             lv_anim_del(&items[i].posYAnimation, (lv_anim_exec_xcb_t)lv_obj_set_y);
@@ -70,7 +69,7 @@ public:
 
         int xDelay = direction ? 0 : duration / 2;
         int yDelay = direction ? duration / 2 : 0;
-        int ballDelay = duration / BALLS_COUNT / 2;
+        int ballDelay = duration / ballsCount / 2;
         int lineWidth = 3;
         lv_obj_set_pos(vLine, (direction == 0 ? centerStartX : centerDestinationX) - lineWidth / 2, (distanceY > 0 ? centerStartY : centerDestinationY) + yOffset - lineWidth / 2);
         lv_obj_set_size(vLine, 3, abs(distanceY) + 3);
@@ -78,9 +77,9 @@ public:
         lv_obj_set_pos(hLine, (distanceX > 0 ? centerStartX : centerDestinationX) - lineWidth / 2, yOffset + (direction == 0 ? centerDestinationY : centerStartY) - lineWidth / 2);
         lv_obj_set_size(hLine, abs(distanceX) + lineWidth, 3);
 
-        for (int i = 0; i < BALLS_COUNT; i++)
+        for (int i = 0; i < ballsCount; i++)
         {
-            int radius = BALLS_RADIUS;// - i * (BALLS_RADIUS / BALLS_COUNT);
+            int radius = BALLS_RADIUS;// - i * (BALLS_RADIUS / ballsCount);
             lv_obj_set_pos(items[i].ball, centerStartX - radius / 2, centerStartY - radius / 2 + yOffset);
             lv_anim_init(&items[i].posXAnimation);
             lv_anim_set_exec_cb(&items[i].posXAnimation, (lv_anim_exec_xcb_t)lv_obj_set_x);
@@ -101,8 +100,9 @@ public:
     }
 
 private:
-    UIBallAnimationItem_t items[BALLS_COUNT];
+    UIBallAnimationItem_t items[ballsCount];
     lv_obj_t *parent;
     lv_obj_t *vLine;
     lv_obj_t *hLine;
+    int ballsCount;
 };
