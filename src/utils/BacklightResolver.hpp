@@ -16,17 +16,16 @@ class BacklightResolver {
         }
 
         void resolve(InverterData_t inverterData) {
-            if(inverterData.status != DONGLE_STATUS_OK) {
-                return;
-            }
-
             int pvPower = inverterData.pv1Power + inverterData.pv2Power;
-            int brightness = 0;
-            
-            if(pvPower == 0) {
-                brightness = 20;
-            } else {
-                brightness = 80;
+            int brightness = 100;
+            if(inverterData.status == DONGLE_STATUS_OK) {
+                if(pvPower > 4000) {
+                    brightness = 100;
+                } if(pvPower > 0) {
+                    brightness = 80;
+                } else {
+                    brightness = 20;
+                }
             }
 
             if((millis() - this->lastTouchTime) > BACKLIGHT_TOUCH_TIMEOUT) {

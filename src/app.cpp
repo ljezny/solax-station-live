@@ -23,13 +23,14 @@ SolaxDongleAPI dongleAPI;
 DongleDiscovery dongleDiscovery;
 ShellyAPI shellyAPI;
 BacklightResolver backlightResolver;
+SoftAP softAP;
 
 InverterData_t inverterData;
 DongleDiscoveryResult_t discoveryResult;
 ShellyResult_t shellyResult;
 SolarChartDataProvider solarChartDataProvider;
 ShellyRuleResolver shellyRuleResolver;
-SoftAP softAP;
+
 ESP_Panel *panel = new ESP_Panel();
 DashboardUI dashboardUI;
 

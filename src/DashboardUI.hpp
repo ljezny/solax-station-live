@@ -83,6 +83,8 @@ public:
 
     void update(InverterData_t& inverterData, ShellyResult_t& shellyResult, SolarChartDataProvider& solarChartDataProvider)
     {
+        updateFlowAnimations(inverterData, shellyResult);
+        
         int selfUsePowerPercent = inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0;
         selfUsePowerPercent = constrain(selfUsePowerPercent, 0, 100);
 
@@ -228,7 +230,7 @@ public:
                 break;
         }
         
-        updateFlowAnimations(inverterData, shellyResult);
+        
     }
 private:
     void updateChart(SolarChartDataProvider& solarChartDataProvider)

@@ -4836,7 +4836,7 @@
                     "flags": 34,
                     "strtype": "OBJECT/Position",
                     "intarray": [
-                      1,
+                      0,
                       0
                     ],
                     "InheritedType": 7
@@ -12371,7 +12371,7 @@
                 "strtype": "OBJECT/Position",
                 "intarray": [
                   4,
-                  -25
+                  -24
                 ],
                 "InheritedType": 7
               },
@@ -12954,7 +12954,8 @@
                             "InheritedType": 11
                           }
                         ],
-                        "saved_objtypeKey": "IMAGE"
+                        "saved_objtypeKey": "IMAGE",
+                        "tree_closed": true
                       },
                       {
                         "guid": "GUID45249293-708691S505503221",
@@ -13847,7 +13848,8 @@
                             "InheritedType": 11
                           }
                         ],
-                        "saved_objtypeKey": "CONTAINER"
+                        "saved_objtypeKey": "CONTAINER",
+                        "tree_closed": true
                       },
                       {
                         "guid": "GUID13550120-311394S6703214",
@@ -21512,6 +21514,23 @@
                         "strval": "DEFAULT",
                         "childs": [
                           {
+                            "nid": -1073708557,
+                            "strtype": "_style/Bg_Radius",
+                            "integer": 16,
+                            "InheritedType": 6
+                          },
+                          {
+                            "nid": 1918180502,
+                            "strtype": "_style/Bg_Color",
+                            "intarray": [
+                              255,
+                              255,
+                              255,
+                              255
+                            ],
+                            "InheritedType": 7
+                          },
+                          {
                             "nid": -472624196,
                             "strtype": "_style/Padding_RowCol",
                             "intarray": [
@@ -22916,6 +22935,22 @@
                 "strval": "DEFAULT",
                 "childs": [
                   {
+                    "nid": -124724474,
+                    "strtype": "_style/Bg_Radius",
+                    "InheritedType": 6
+                  },
+                  {
+                    "nid": 50571972,
+                    "strtype": "_style/Bg_Color",
+                    "intarray": [
+                      167,
+                      199,
+                      231,
+                      255
+                    ],
+                    "InheritedType": 7
+                  },
+                  {
                     "nid": 723455050,
                     "strtype": "_style/Padding",
                     "intarray": [
@@ -22994,7 +23029,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/Users/ljezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/ljezny/solax-station-live/src/ui",
-    "backup_cnt": 413,
+    "backup_cnt": 428,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",
