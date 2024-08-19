@@ -12,8 +12,16 @@ class DongleDiscovery {
             DongleDiscoveryResult_t result;
             
             if(WiFi.status() == WL_CONNECTED) {
-                result.sn = parseDongleSN(WiFi.SSID());
-                result.result = true;
+                if(isSolaxDongleSSID(WiFi.SSID())) {
+                    result.type = DONGLE_TYPE_SOLAX;
+                    result.sn = parseDongleSN(WiFi.SSID());
+                    result.result = true;
+                } else if(isGoodWeSSID(WiFi.SSID())) {
+                    result.type = DONGLE_TYPE_GOODWE;
+                    result.sn = parseDongleSN(WiFi.SSID());
+                    result.result = true;
+                }
+                
                 return result;
             }
             

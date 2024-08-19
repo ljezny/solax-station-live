@@ -6,8 +6,6 @@
 #include "Inverters/DongleDiscovery.hpp"
 #include "Inverters/Goodwe/GoodweDongleAPI.hpp"
 #include "Inverters/Solax/SolaxDongleAPI.hpp"
-#include "Solax/SolaxDongleDiscovery.hpp"
-#include "Solax/SolaxDongleAPI.hpp"
 #include "Shelly/Shelly.hpp"
 #include "utils/UnitFormatter.hpp"
 #include "utils/SolarChartDataProvider.hpp"
@@ -25,8 +23,9 @@ SolaxDongleAPI dongleAPI;
 DongleDiscovery dongleDiscovery;
 ShellyAPI shellyAPI;
 BacklightResolver backlightResolver;
+SoftAP softAP;
 
-DongleInverterData_t inverterData;
+InverterData_t inverterData;
 DongleDiscoveryResult_t discoveryResult;
 ShellyResult_t shellyResult;
 SolarChartDataProvider solarChartDataProvider;
@@ -43,9 +42,9 @@ IRAM_ATTR bool onTouchInterruptCallback(void *user_data)
     return false;
 }
 
-DongleInverterData_t createRandomMockData()
+InverterData_t createRandomMockData()
 {
-    DongleInverterData_t inverterData;
+    InverterData_t inverterData;
     inverterData.status = DONGLE_STATUS_OK;
     inverterData.pv1Power = random(0, 5000);
     inverterData.pv2Power = random(0, 5000);
@@ -188,7 +187,7 @@ void checkNewShellyPairings()
         String shellyAPSSID = shellyAPI.findShellyAP();
         if (shellyAPSSID.length() > 0)
         {
-            shellyAPI.pairShelly(shellyAPSSID, SOFT_AP_SSID_PREFIX + getESPIdHex(), getESPIdHex());
+            shellyAPI.pairShelly(shellyAPSSID, softAP.getSSID(), softAP.getPassword());
         }
         lastAttempt = millis();
     }
