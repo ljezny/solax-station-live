@@ -17,7 +17,7 @@
 
 SET_LOOP_TASK_STACK_SIZE(48 * 1024);
 
-#define DEMO 0
+#define DEMO 1
 
 SolaxDongleAPI dongleAPI;
 DongleDiscovery dongleDiscovery;
@@ -30,7 +30,7 @@ DongleDiscoveryResult_t discoveryResult;
 ShellyResult_t shellyResult;
 SolarChartDataProvider solarChartDataProvider;
 ShellyRuleResolver shellyRuleResolver;
-SoftAP softAP;
+
 ESP_Panel *panel = new ESP_Panel();
 DashboardUI dashboardUI;
 

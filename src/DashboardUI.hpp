@@ -275,7 +275,7 @@ private:
         }
         if ((inverterData.pv1Power + inverterData.pv2Power) > 0)
         {
-            pvAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_pvColor);
+            pvAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_pvColor, ((inverterData.pv1Power + inverterData.pv2Power) / 1000) + 1);
             pvAnimator->run(ui_pvContainer, ui_inverterContainer, duration, 0, 0, -offsetY);
         }
 
@@ -286,12 +286,12 @@ private:
         }
         if (inverterData.batteryPower > 0)
         {
-            batteryAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_batteryColor);
+            batteryAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_batteryColor, (inverterData.batteryPower / 1000) + 1);
             batteryAnimator->run(ui_inverterContainer, ui_batteryContainer, duration, duration, 1, -offsetY);
         }
         else if (inverterData.batteryPower < 0)
         {
-            batteryAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_batteryColor);
+            batteryAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_batteryColor, (abs(inverterData.batteryPower) / 1000) + 1);
             batteryAnimator->run(ui_batteryContainer, ui_inverterContainer, duration, 0, 0, -offsetY);
         }
 
@@ -303,12 +303,12 @@ private:
 
         if (inverterData.feedInPower > 0)
         {
-            gridAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_gridColor);
+            gridAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_gridColor, (inverterData.feedInPower / 1000) + 1);
             gridAnimator->run(ui_inverterContainer, ui_gridContainer, duration, duration, 1, offsetY);
         }
         else if (inverterData.feedInPower < 0)
         {
-            gridAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_gridColor);
+            gridAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_gridColor, (abs(inverterData.feedInPower) / 1000) + 1);
             gridAnimator->run(ui_gridContainer, ui_inverterContainer, duration, 0, 0, offsetY);
         }
 
@@ -319,7 +319,7 @@ private:
         }
         if (inverterData.loadPower > 0)
         {
-            loadAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_loadColor);
+            loadAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_loadColor, (inverterData.loadPower / 1000) + 1);
             loadAnimator->run(ui_inverterContainer, ui_loadContainer, duration, duration, 1, 20);
         }
         if (shellyAnimator != NULL)
@@ -329,7 +329,7 @@ private:
         }
         if (shellyResult.totalPower > 0)
         { // TODO: check if shelly is on
-            shellyAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_pvColor);
+            shellyAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_pvColor, (shellyResult.totalPower / 1000) + 1);
             shellyAnimator->run(ui_loadContainer, ui_shellyContainer, duration, duration, 1, 20);
         }
     }
