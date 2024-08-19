@@ -6,8 +6,6 @@
 #include "Inverters/DongleDiscovery.hpp"
 #include "Inverters/Goodwe/GoodweDongleAPI.hpp"
 #include "Inverters/Solax/SolaxDongleAPI.hpp"
-#include "Solax/SolaxDongleDiscovery.hpp"
-#include "Solax/SolaxDongleAPI.hpp"
 #include "Shelly/Shelly.hpp"
 #include "utils/UnitFormatter.hpp"
 #include "utils/SolarChartDataProvider.hpp"
@@ -26,7 +24,7 @@ DongleDiscovery dongleDiscovery;
 ShellyAPI shellyAPI;
 BacklightResolver backlightResolver;
 
-DongleInverterData_t inverterData;
+InverterData_t inverterData;
 DongleDiscoveryResult_t discoveryResult;
 ShellyResult_t shellyResult;
 SolarChartDataProvider solarChartDataProvider;
@@ -43,9 +41,9 @@ IRAM_ATTR bool onTouchInterruptCallback(void *user_data)
     return false;
 }
 
-DongleInverterData_t createRandomMockData()
+InverterData_t createRandomMockData()
 {
-    DongleInverterData_t inverterData;
+    InverterData_t inverterData;
     inverterData.status = DONGLE_STATUS_OK;
     inverterData.pv1Power = random(0, 5000);
     inverterData.pv2Power = random(0, 5000);
@@ -73,30 +71,31 @@ void runReloadDataTask(void *pvParameters)
 {
     for (;;)
     {
+        int start = millis();
 #if DEMO
         inverterData = createRandomMockData();
 #else
-        inverterData.status = SOLAX_DONGLE_STATUS_WIFI_DISCONNECTED;
         log_d("Reloading data");
         if (discoveryResult.result)
         {
+            //inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
             int MAX_RETRIES = 5;
             for(int i = 0; i < MAX_RETRIES; i++) {
-                SolaxDongleInverterData_t d = dongleAPI.loadData(discoveryResult.sn);
-                if(d.status == SOLAX_DONGLE_STATUS_OK) {
+                InverterData_t d = dongleAPI.loadData(discoveryResult.sn);
+                if(d.status == DONGLE_STATUS_OK) {
                     inverterData = d;
                     break;
                 }
                 delay(100);
             }
-            if (inverterData.status == SOLAX_DONGLE_STATUS_OK)
+            if (inverterData.status == DONGLE_STATUS_OK)
             {
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
                 shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
             }
         }
 #endif
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(constrain((3000 - (millis() - start)), 0, 3000) / portTICK_PERIOD_MS);
     }
 }
 
@@ -132,8 +131,9 @@ void timerCB(struct _lv_timer_t *timer)
     if (dashboardShown)
     {
         dashboardUI.update(inverterData, shellyResult, solarChartDataProvider);
+        backlightResolver.resolve(inverterData);
     }
-    backlightResolver.resolve(inverterData);
+    
     esp_lcd_rgb_panel_restart(panel->getLcd()->getHandle());
 }
 

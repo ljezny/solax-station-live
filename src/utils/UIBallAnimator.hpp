@@ -19,6 +19,7 @@ public:
     {
         this->parent = parent;
         this->ballsCount = ballsCount;
+        this->items = new UIBallAnimationItem_t[ballsCount];
         for (int i = 0; i < ballsCount; i++)
         {
             items[i].ball = lv_obj_create(parent);
@@ -56,6 +57,7 @@ public:
         }
         lv_obj_del(vLine);
         lv_obj_del(hLine);
+        delete[] items;
     }
 
     void run(lv_obj_t *start, lv_obj_t *destination, int duration, int delay, bool direction, int yOffset = 0)
@@ -69,7 +71,7 @@ public:
 
         int xDelay = direction ? 0 : duration / 2;
         int yDelay = direction ? duration / 2 : 0;
-        int ballDelay = duration / ballsCount / 2;
+        int ballDelay = duration / 10; //duration / ballsCount / 2;
         int lineWidth = 3;
         lv_obj_set_pos(vLine, (direction == 0 ? centerStartX : centerDestinationX) - lineWidth / 2, (distanceY > 0 ? centerStartY : centerDestinationY) + yOffset - lineWidth / 2);
         lv_obj_set_size(vLine, 3, abs(distanceY) + 3);
@@ -100,7 +102,7 @@ public:
     }
 
 private:
-    UIBallAnimationItem_t items[ballsCount];
+    UIBallAnimationItem_t *items;
     lv_obj_t *parent;
     lv_obj_t *vLine;
     lv_obj_t *hLine;

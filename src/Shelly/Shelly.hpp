@@ -11,6 +11,7 @@
 #include <ESPmDNS.h>
 
 #define MAX_SHELLY_PAIRS 8
+#define RETRIES 3
 
 typedef enum
 {
@@ -304,25 +305,34 @@ private:
     {
         ShellyStateResult_t result;
         result.updated = 0;
-        String url = "http://" + ipAddress.toString() + "/status";
-        HTTPClient http;
-        if (http.begin(url))
+
+        for(int i = 0; i < RETRIES; i++)
         {
-            int httpCode = http.GET();
-            if (httpCode == HTTP_CODE_OK)
+            String url = "http://" + ipAddress.toString() + "/status";
+            HTTPClient http;
+            if (http.begin(url))
             {
-                String payload = http.getString();
-                DynamicJsonDocument doc(8192);
-                deserializeJson(doc, payload);
-                result.updated = time(NULL); // doc["unixtime"].as<int>();
-                result.isOn = doc["relays"][0]["ison"].as<bool>();
-                result.source = doc["relays"][0]["source"].as<String>();
-                result.totalPower = doc["meters"][0]["power"].as<float>();
-                result.totalEnergy = doc["meters"][0]["total"].as<float>() / 60.0f;
+                int httpCode = http.GET();
+                if (httpCode == HTTP_CODE_OK)
+                {
+                    String payload = http.getString();
+                    DynamicJsonDocument doc(8192);
+                    deserializeJson(doc, payload);
+                    result.updated = time(NULL); // doc["unixtime"].as<int>();
+                    result.isOn = doc["relays"][0]["ison"].as<bool>();
+                    result.source = doc["relays"][0]["source"].as<String>();
+                    result.totalPower = doc["meters"][0]["power"].as<float>();
+                    result.totalEnergy = doc["meters"][0]["total"].as<float>() / 60.0f;
+                }
             }
+            http.end();
+
+            if(result.updated != 0) {
+                break;
+            }
+            delay(i * 1000);
         }
-        http.end();
-           
+        
         return result;
     }
 
@@ -330,24 +340,32 @@ private:
     {
         ShellyStateResult_t result;
         result.updated = 0;
-        String url = "http://" + ipAddress.toString() + "/rpc/Switch.GetStatus?id=0";
-        HTTPClient http;
-        if (http.begin(url))
+        for(int i = 0; i < RETRIES; i++)
         {
-            int httpCode = http.GET();
-            if (httpCode == HTTP_CODE_OK)
+            String url = "http://" + ipAddress.toString() + "/rpc/Switch.GetStatus?id=0";
+            HTTPClient http;
+            if (http.begin(url))
             {
-                String payload = http.getString();
-                DynamicJsonDocument doc(8192);
-                deserializeJson(doc, payload);
-                result.updated = time(NULL);
-                result.isOn = doc["output"].as<bool>();
-                result.totalPower = doc["apower"].as<float>();
-                result.source = doc["source"].as<String>();
-                result.totalEnergy = doc["aenergy"]["total"].as<float>();
+                int httpCode = http.GET();
+                if (httpCode == HTTP_CODE_OK)
+                {
+                    String payload = http.getString();
+                    DynamicJsonDocument doc(8192);
+                    deserializeJson(doc, payload);
+                    result.updated = time(NULL);
+                    result.isOn = doc["output"].as<bool>();
+                    result.totalPower = doc["apower"].as<float>();
+                    result.source = doc["source"].as<String>();
+                    result.totalEnergy = doc["aenergy"]["total"].as<float>();
+                }
             }
+            http.end();
+
+            if(result.updated != 0) {
+                break;
+            }
+            delay(i * 1000);
         }
-        http.end();
        
         return result;
     }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <ESP_Panel_Library.h>
-#include "Inverter/InverterResult.hpp"
+#include "Inverters/InverterResult.hpp"
 
 #define BACKLIGHT_TOUCH_TIMEOUT 5000
 
@@ -12,12 +12,17 @@ class BacklightResolver {
     public:
         void setup(ESP_PanelBacklight *backlight) {
             this->backlight = backlight;
-            backlight->setBrightness(20);
+            backlight->setBrightness(100);
         }
 
-        void resolve(DongleInverterData_t inverterData) {
+        void resolve(InverterData_t inverterData) {
+            if(inverterData.status != DONGLE_STATUS_OK) {
+                return;
+            }
+
             int pvPower = inverterData.pv1Power + inverterData.pv2Power;
             int brightness = 0;
+            
             if(pvPower == 0) {
                 brightness = 20;
             } else {

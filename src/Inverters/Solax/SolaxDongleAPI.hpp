@@ -38,14 +38,14 @@ typedef struct
     int batteryTemperature = 0;
     double pvToday = 0;
     uint32_t pvTotal = 0;
-} DongleInverterData_t;
+} InverterData_t;
 
 class SolaxDongleAPI
 {
 public:
-    DongleInverterData_t loadData(String sn)
+    InverterData_t loadData(String sn)
     {
-        DongleInverterData_t inverterData;
+        InverterData_t inverterData;
         String url = "http://5.8.8.8";
         HTTPClient http;
         if (http.begin(url))
