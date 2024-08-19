@@ -17,7 +17,7 @@
 
 SET_LOOP_TASK_STACK_SIZE(48 * 1024);
 
-#define DEMO 1
+#define DEMO 0
 
 SolaxDongleAPI dongleAPI;
 DongleDiscovery dongleDiscovery;
@@ -75,20 +75,20 @@ void runReloadDataTask(void *pvParameters)
 #if DEMO
         inverterData = createRandomMockData();
 #else
-        inverterData.status = SOLAX_DONGLE_STATUS_WIFI_DISCONNECTED;
+        inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
         log_d("Reloading data");
         if (discoveryResult.result)
         {
             int MAX_RETRIES = 5;
             for(int i = 0; i < MAX_RETRIES; i++) {
-                SolaxDongleInverterData_t d = dongleAPI.loadData(discoveryResult.sn);
-                if(d.status == SOLAX_DONGLE_STATUS_OK) {
+                InverterData_t d = dongleAPI.loadData(discoveryResult.sn);
+                if(d.status == DONGLE_STATUS_OK) {
                     inverterData = d;
                     break;
                 }
                 delay(100);
             }
-            if (inverterData.status == SOLAX_DONGLE_STATUS_OK)
+            if (inverterData.status == DONGLE_STATUS_OK)
             {
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
                 shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);

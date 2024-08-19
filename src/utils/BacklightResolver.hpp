@@ -12,16 +12,19 @@ class BacklightResolver {
     public:
         void setup(ESP_PanelBacklight *backlight) {
             this->backlight = backlight;
-            backlight->setBrightness(20);
+            backlight->setBrightness(100);
         }
 
         void resolve(InverterData_t inverterData) {
             int pvPower = inverterData.pv1Power + inverterData.pv2Power;
             int brightness = 0;
-            if(pvPower == 0) {
-                brightness = 20;
-            } else {
+            
+            if(pvPower > 4000) {
+                brightness = 100;
+            } if(pvPower > 0) {
                 brightness = 80;
+            } else {
+                brightness = 20;
             }
 
             if((millis() - this->lastTouchTime) > BACKLIGHT_TOUCH_TIMEOUT) {
