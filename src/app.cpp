@@ -17,7 +17,7 @@
 
 SET_LOOP_TASK_STACK_SIZE(48 * 1024);
 
-#define DEMO 1
+#define DEMO 0
 
 SolaxDongleAPI dongleAPI;
 DongleDiscovery dongleDiscovery;
@@ -30,7 +30,7 @@ DongleDiscoveryResult_t discoveryResult;
 ShellyResult_t shellyResult;
 SolarChartDataProvider solarChartDataProvider;
 ShellyRuleResolver shellyRuleResolver;
-
+SoftAP softAP;
 ESP_Panel *panel = new ESP_Panel();
 DashboardUI dashboardUI;
 
@@ -175,7 +175,7 @@ void discoverDongle()
     {
         discoveryResult = dongleDiscovery.discoverDongle();
         lastAttempt = millis();
-    }
+    } 
 }
 
 void checkNewShellyPairings()
@@ -187,7 +187,7 @@ void checkNewShellyPairings()
         String shellyAPSSID = shellyAPI.findShellyAP();
         if (shellyAPSSID.length() > 0)
         {
-            shellyAPI.pairShelly(shellyAPSSID, softAP.getSSID(), softAP.getPassword());
+            shellyAPI.pairShelly(shellyAPSSID, softAP.getSSID(), softAP.getPassword()); 
         }
         lastAttempt = millis();
     }
