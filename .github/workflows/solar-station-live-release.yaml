@@ -51,5 +51,5 @@ jobs:
           user: ${{ secrets.FTP_USERNAME }}
           pass: ${{ secrets.FTP_PASSWORD }}
           port: 22
-          local_path: './tempFirmware'
-          remote_path: 'solar-station-live/bin'
+          local-path: 'tempFirmware'
+          remote-path: 'solar-station-live/bin'
