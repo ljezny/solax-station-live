@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <ESP_Panel_Library.h>
 #include <lvgl.h>
-#include "const.h"
+#include "consts.h"
 #include "lvgl_port_v8.h"
 #include "ui/ui.h"
 #include "Inverters/DongleDiscovery.hpp"
