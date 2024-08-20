@@ -71,7 +71,7 @@ public:
 
         int xDelay = direction ? 0 : duration / 2;
         int yDelay = direction ? duration / 2 : 0;
-        int ballDelay = duration / ballsCount / 2;
+        int ballDelay = duration / 10; //duration / ballsCount / 2;
         int lineWidth = 3;
         lv_obj_set_pos(vLine, (direction == 0 ? centerStartX : centerDestinationX) - lineWidth / 2, (distanceY > 0 ? centerStartY : centerDestinationY) + yOffset - lineWidth / 2);
         lv_obj_set_size(vLine, 3, abs(distanceY) + 3);

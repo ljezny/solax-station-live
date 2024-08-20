@@ -72,13 +72,14 @@ void runReloadDataTask(void *pvParameters)
 {
     for (;;)
     {
+        int start = millis();
 #if DEMO
         inverterData = createRandomMockData();
 #else
-        inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
         log_d("Reloading data");
         if (discoveryResult.result)
         {
+            //inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
             int MAX_RETRIES = 5;
             for(int i = 0; i < MAX_RETRIES; i++) {
                 InverterData_t d = dongleAPI.loadData(discoveryResult.sn);
@@ -95,7 +96,7 @@ void runReloadDataTask(void *pvParameters)
             }
         }
 #endif
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(constrain((3000 - (millis() - start)), 0, 3000) / portTICK_PERIOD_MS);
     }
 }
 
@@ -131,8 +132,9 @@ void timerCB(struct _lv_timer_t *timer)
     if (dashboardShown)
     {
         dashboardUI.update(inverterData, shellyResult, solarChartDataProvider);
+        backlightResolver.resolve(inverterData);
     }
-    backlightResolver.resolve(inverterData);
+    
     esp_lcd_rgb_panel_restart(panel->getLcd()->getHandle());
 }
 
