@@ -1,0 +1,32 @@
+name: PlatformIO CI
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+      - name: Build PlatformIO Project
+        run: PLATFORMIO_BUILD_FLAGS="-DDEBUG=0 -DDEMO=0" pio run -e solar-station-live
+      - name: Archive
+        uses: actions/upload-artifact@v3
+        with:
+          name: firmware
+          path: .pio/build/*/firmware.bin
+          retention-days: 2

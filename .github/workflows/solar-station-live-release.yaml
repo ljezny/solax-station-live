@@ -1,0 +1,54 @@
+name: PlatformIO CI
+
+on:
+  push:
+    tags:
+      - 'Release_[0-9][0-9][0-9]'
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.platformio/.cache
+          key: ${{ runner.os }}-pio
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      - name: Get FW version
+        run: | 
+          echo Release FW version:
+          echo ${GITHUB_REF_NAME:8:3}
+      - name: Install PlatformIO Core
+        run: pip install --upgrade platformio
+      - name: Build PlatformIO Project
+        run: PLATFORMIO_BUILD_FLAGS="-DVERSION_NUMBER=${GITHUB_REF_NAME:8:3} -DDEMO=0" pio run -e solar-station-live
+      - name: Archive
+        uses: actions/upload-artifact@v3
+        with:
+          name: firmware
+          path: |
+            .pio/build/*/firmware.bin
+  upload-release:
+    needs: build-release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Download archive release files
+        uses: actions/download-artifact@v3
+        with:
+          name: firmware
+          path: tempFirmware
+      - name: FTP upload firmware
+        uses: airvzxf/ftp-deployment-action@latest
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          user: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local_dir: "tempFirmware"
+          remote_dir: "solar-station-live/bin"
