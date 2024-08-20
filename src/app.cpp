@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <ESP_Panel_Library.h>
 #include <lvgl.h>
+#include "const.h"
 #include "lvgl_port_v8.h"
 #include "ui/ui.h"
 #include "Inverters/DongleDiscovery.hpp"
@@ -17,7 +18,6 @@
 
 SET_LOOP_TASK_STACK_SIZE(48 * 1024);
 
-#define DEMO 0
 
 SolaxDongleAPI dongleAPI;
 DongleDiscovery dongleDiscovery;
