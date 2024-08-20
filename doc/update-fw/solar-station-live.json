@@ -1,13 +1,15 @@
 {
     "name": "Solar Station Live",
-    "version": "starter",
+    "version": "update",
     "home_assistant_domain": "Solar Station Live",
-    "new_install_prompt_erase": false,
     "builds": [
       {
         "chipFamily": "ESP32-S3",
         "parts": [
-          { "path": "bin/solar-station_laskakit_16MB.bin", "offset": 65536 }
+          { "path": "bin/solar-station-live/bootloader.bin", "offset": 0 },
+          { "path": "bin/solar-station-live/partitions.bin", "offset": 32768 },
+          { "path": "bin/solar-station-live/boot_app0.bin", "offset": 57344 },
+          { "path": "bin/solar-station-live/firmware.bin", "offset": 65536 }
         ]
       }
     ]
