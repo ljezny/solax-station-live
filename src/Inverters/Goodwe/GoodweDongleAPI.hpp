@@ -138,7 +138,7 @@ private:
                             inverterData.pv2Power = readUInt16(packetBuffer, 9) * 10;
                             inverterData.pv3Power = readUInt16(packetBuffer, 13) * 10;
                             inverterData.pv4Power = readUInt16(packetBuffer, 17) * 10; 
-                            inverterData.feedinPower -= readInt16(packetBuffer, 25) + readsw(packetBuffer, 30) + readsw(packetBuffer, 35);
+                            inverterData.feedinPower -= readInt16(packetBuffer, 25) + readInt16(packetBuffer, 30) + readInt16(packetBuffer, 35);
                             inverterData.inverterPower = readInt16(packetBuffer, 38);
                             inverterData.batteryPower = readInt16(packetBuffer, 83); //TODO: maybe sign readuw(packetBuffer, 84);
                             // _ac = readsw(packetBuffer, 40);
