@@ -15,6 +15,8 @@ typedef struct
     String sn;
     int pv1Power = 0;
     int pv2Power = 0;
+    int pv3Power = 0;
+    int pv4Power = 0;
     int soc = 0;
     int16_t batteryPower = 0;
     double batteryChargedToday = 0;

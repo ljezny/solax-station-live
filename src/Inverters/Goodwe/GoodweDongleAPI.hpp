@@ -44,7 +44,7 @@ private:
         udp.stop();
     }
 
-    bool sendPacket()
+    bool sendRunningDataRequestPacket()
     {
         if (!udp.beginPacket(IPAddress(10, 10, 100, 253), 8899))
         {
@@ -55,6 +55,34 @@ private:
         byte d[] = {0xF7, 0x03, 0, 0, 0, 0, 0, 0};
         uint16_t addr = 35100;
         uint8_t len = 125;
+        d[2] = addr >> 8;
+        d[3] = addr & 0xff;
+        d[5] = len;
+        unsigned c = crc16(d, 6, 0x8005, 0xFFFF, 0, true, true);
+        d[6] = c;
+        d[7] = c >> 8;
+        udp.write(d, sizeof(d));
+
+        if (!udp.endPacket())
+        {
+            log_d("Failed to send packet");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool sendBMSInfoRequestPacket()
+    {
+        if (!udp.beginPacket(IPAddress(10, 10, 100, 253), 8899))
+        {
+            log_d("Failed to begin packet");
+            return false;
+        }
+
+        byte d[] = {0xF7, 0x03, 0, 0, 0, 0, 0, 0};
+        uint16_t addr = 37000;
+        uint8_t len = 8;
         d[2] = addr >> 8;
         d[3] = addr & 0xff;
         d[5] = len;
@@ -91,11 +119,12 @@ private:
         InverterData_t inverterData;
         if (connect())
         {
-            sendPacket();
+            int PACKET_SIZE = 259; // WHY?
+            byte packetBuffer[PACKET_SIZE];
+            
+            sendRunningDataRequestPacket();
             if (awaitPacket(3000))
             {
-                int PACKET_SIZE = 259; // WHY?
-                byte packetBuffer[PACKET_SIZE];
                 int len = udp.read(packetBuffer, PACKET_SIZE);
                 if (len > 0)
                 {
@@ -105,22 +134,45 @@ private:
                         if (len == 7 + 2 * 125)
                         {
                             inverterData.status = DONGLE_STATUS_OK;
-                            inverterData.pv1Power = readUInt16(packetBuffer, 5);
-                            inverterData.pv2Power = readUInt16(packetBuffer, 9);
-                            // _g1 = readsw(packetBuffer, 25);
-                            // _g2 = readsw(packetBuffer, 30);
-                            // _g3 = readsw(packetBuffer, 35);
-                            // _inv = readsw(packetBuffer, 38);
+                            inverterData.pv1Power = readUInt16(packetBuffer, 5) * 10;
+                            inverterData.pv2Power = readUInt16(packetBuffer, 9) * 10;
+                            inverterData.pv3Power = readUInt16(packetBuffer, 13) * 10;
+                            inverterData.pv4Power = readUInt16(packetBuffer, 17) * 10; 
+                            inverterData.feedinPower -= readInt16(packetBuffer, 25) + readsw(packetBuffer, 30) + readsw(packetBuffer, 35);
+                            inverterData.inverterPower = readInt16(packetBuffer, 38);
+                            inverterData.batteryPower = readInt16(packetBuffer, 83); //TODO: maybe sign readuw(packetBuffer, 84);
                             // _ac = readsw(packetBuffer, 40);
-                            // _b1 = readsw(packetBuffer, 50);
-                            // _b2 = readsw(packetBuffer, 56);
-                            // _b3 = readsw(packetBuffer, 62);
                             inverterData.L1Power = readInt16(packetBuffer, 64) + readInt16(packetBuffer, 50);
                             inverterData.L2Power = readInt16(packetBuffer, 66) + readInt16(packetBuffer, 56);
                             inverterData.L3Power = readInt16(packetBuffer, 68) + readInt16(packetBuffer, 62);
                             inverterData.loadPower = readInt16(packetBuffer, 72) + readInt16(packetBuffer, 70);
-                            // _batt = readsw(packetBuffer, 83);
-                            // _bam = readuw(packetBuffer, 84);
+                            inverterData.soc = readUInt16(packetBuffer, 85);
+                            inverterData.inverterTemperature = readInt16(packetBuffer, 75) * 10;
+                            inverterData.pvTotal = readUInt32(packetBuffer, 91) * 10;
+                            inverterData.pvToday = readUInt32(packetBuffer, 93) * 10;
+                            inverterData.loadToday = readUInt16(packetBuffer, 105) * 10;
+                            inverterData.batteryChargedToday = readUInt16(packetBuffer, 108) * 10;
+                            inverterData.batteryDischargedToday = readUInt16(packetBuffer, 111) * 10;
+                            inverterData.gridBuyToday = readUInt16(packetBuffer, 101) * 10;
+                            inverterData.gridSellToday = readUInt16(packetBuffer, 99) * 10;                            
+                        }
+                    }
+                }
+            }
+
+            sendBMSInfoRequestPacket();
+            if (awaitPacket(3000))
+            {
+                int len = udp.read(packetBuffer, PACKET_SIZE);
+                if (len > 0)
+                {
+                    unsigned c = crc16(packetBuffer + 2, len - 2, 0x8005, 0xFFFF, 0, true, true);
+                    if (c == 0)
+                    {
+                        if (len == 7 + 2 * 8)
+                        {
+                            inverterData.batteryTemperature = readUInt16(packetBuffer, 3) * 10;
+                            inverterData.soc = readUInt16(packetBuffer, 7);
                         }
                     }
                 }

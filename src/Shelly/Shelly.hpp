@@ -9,7 +9,8 @@
 #include <ArduinoJson.h>
 #include "../utils/urlencoder.hpp"
 #include <ESPmDNS.h>
-
+#include "utils/ShellyRuleResolver.hpp"
+ 
 #define MAX_SHELLY_PAIRS 8
 #define RETRIES 3
 
@@ -181,7 +182,7 @@ public:
         return result;
     }
 
-    void activateOneShelly(int timeoutSec) {
+    void updateState(RequestedShellyState_t requestedState, int timeoutSec) {
         bool newActivated = false;
         for(int i = 0; i < MAX_SHELLY_PAIRS; i++)
         {
@@ -193,12 +194,16 @@ public:
                     if(canBeControlled)
                     {
                         if(state.isOn) { //prolong timeout
-                            log_d("Prolonging timeout for Shelly %s", String(pairs[i].shellyId, HEX).c_str());
-                            setState(pairs[i], true, timeoutSec);
+                            if(requestedState >= SHELLY_KEEP_CURRENT_STATE) {
+                                log_d("Prolonging timeout for Shelly %s", String(pairs[i].shellyId, HEX).c_str());
+                                setState(pairs[i], true, timeoutSec);
+                            }
                         } else {
                             if(!newActivated) {
-                                log_d("Activating Shelly %s", String(pairs[i].shellyId, HEX).c_str());
-                                setState(pairs[i], true, timeoutSec);
+                                if(requestedState == SHELLY_ACTIVATE) {
+                                    log_d("Activating Shelly %s", String(pairs[i].shellyId, HEX).c_str());
+                                    setState(pairs[i], true, timeoutSec);                                
+                                }
                                 newActivated = true;
                             }
                         }
