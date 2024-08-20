@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+    <style>
+        code {
+            font-family: monospace;
+            background: #EEEE;
+            color: #646B79;
+            padding: .25rem;
+            border-radius: .25rem;
+        }
+
+        a {
+            text-decoration: underline;
+        }
+
+        h1 {
+            background: black;
+            color: white;
+            padding: 1em;
+        }
+
+        h2 {
+            margin-top: 4em;
+            border-bottom: solid;
+        }
+
+        h3 {
+            font-weight: 300;
+        }
+
+        td,
+        th {
+            padding: 1em;
+        }
+
+        th {
+            background: black;
+            color: white;
+        }
+
+        td {
+            border-bottom: solid;
+        }
+
+        table {
+            margin: 1em;
+            width: 100%
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Aktualizace Solar Station Live přes USB</h1>
+    <p>Pro aktualizaci budeš potřebovat:</p>
+    <ul>
+        <li>Počítač s Windows nebo Mac</li>
+        <li>USB-C kabel (datový). Pozor některé kabely jsou pouze nabíjecí.</li>
+        <li>Prohlížeč Chrome, Microsoft Edge</li>
+    </ul>
+    <p>Na počítači si nejprve nainstaluj prohlížeč Chrome nebo Microsoft Edge. V jiném prohlížeči tento postup nebude fungovat.</p>
+    <p>Postupuj následovně:</p>
+    <ol>
+        <li>Propoj Solar Station a počítač pomocí USB-C kabelu</li>
+        <li>Tuto stránku otevři v prohlížeči.</li>
+        <li>Klikni na tlačítko Connect níže.</li>
+        <li>Po stisku Connect budeš vyzván k výběru sériové linky - pravděpodobně bude dostupná pouze jedna, zvol ji.
+            Bude mít v názvu "usb serial".</li>
+        <li>Následně zvol Install Solar Station Live. Dojde k vymazání a instalování nového firwmare. Operace trvá několik
+            minut.</li>
+        <li>Po aktualizaci odpoj a připoj znovu.</li>
+    </ol>
+    <h2>Solar Station Live</h2>
+    <esp-web-install-button
+        manifest="https://www.solar-station.cz/user/documents/solar-station-live/solar-station-live.json"></esp-web-install-button>
+</body>
+
+</html>

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include <Wifi.h>
+#include <WiFi.h>
 #include <WiFiUdp.h>
 #include <CRC.h>
 #include <CRC16.h>

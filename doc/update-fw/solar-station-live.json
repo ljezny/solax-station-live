@@ -1,0 +1,14 @@
+{
+    "name": "Solar Station Live",
+    "version": "starter",
+    "home_assistant_domain": "Solar Station Live",
+    "new_install_prompt_erase": false,
+    "builds": [
+      {
+        "chipFamily": "ESP32",
+        "parts": [
+          { "path": "bin/solar-station_laskakit_16MB.bin", "offset": 0x10000 }
+        ]
+      }
+    ]
+  }
