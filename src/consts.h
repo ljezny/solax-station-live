@@ -1,5 +1,5 @@
 #ifndef DEMO
-#define DEMO 0
+#define DEMO 1
 #endif
 
 #ifndef VERSION_NUMBER
