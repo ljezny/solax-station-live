@@ -45,10 +45,10 @@ jobs:
           name: firmware
           path: tempFirmware
       - name: FTP upload firmware
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        uses: danhendrickson/sftp-transfer-action@v1.23
         with:
           server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
+          user: ${{ secrets.FTP_USERNAME }}
+          pass: ${{ secrets.FTP_PASSWORD }}
           local_path: "tempFirmware"
           remote_path: "solar-station-live/bin"
