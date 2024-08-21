@@ -109,10 +109,8 @@ void runShellyReloadTask(void *pvParameters)
         shellyResult = shellyAPI.getState();
         if (lastActivateShellyAttempt == 0 || millis() - lastActivateShellyAttempt > 30000)
         {
-            if(shellyRuleResolver.canActivateShelly()) {
-                log_d("Activating Shelly");
-                shellyAPI.activateOneShelly(5 * 60);
-            }
+            RequestedShellyState_t state = shellyRuleResolver.resolveShellyState();
+            shellyAPI.updateState(state, 5 * 60);
             lastActivateShellyAttempt = millis();
         }
         vTaskDelay(4000 / portTICK_PERIOD_MS);

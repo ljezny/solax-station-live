@@ -2,6 +2,12 @@
 
 #include <Arduino.h>
 
+typedef enum {
+    SHELLY_DEACTIVATE = 0,
+    SHELLY_KEEP_CURRENT_STATE = 1,
+    SHELLY_ACTIVATE = 2
+} RequestedShellyState_t;
+
 typedef struct PowerSample {
     uint32_t timestamp;
     int pvPower = 0;
@@ -81,33 +87,48 @@ public:
         powerSamples[0] = sample;
     }
     
-    bool canActivateShelly()
+    RequestedShellyState_t resolveShellyState()
     {
         int powerTreshold = 1500;
 
         if (!hasValidSamples())
         {
-            return false;
+            return SHELLY_DEACTIVATE;
         }
-        
+
+        if(getMedianBatteryPower() < -powerTreshold) {
+            log_d("Battery discharging, deactivating");
+            return SHELLY_DEACTIVATE;
+        }
+
+        if(getMedianFeedInPower() < -powerTreshold) {
+            log_d("Grid power, deactivating");
+            return SHELLY_DEACTIVATE;
+        }
+
         if (getSOC() >= 99)
         {
-            log_d("Battery full");
-            return true;
+            log_d("Battery full, activating");
+            return SHELLY_ACTIVATE;
         }
 
         if (getSOC() > 90 && getMedianBatteryPower() > powerTreshold)
         {
-            log_d("Battery almost full and charging");
-            return true;
+            log_d("Battery almost full and charging, activating");
+            return SHELLY_ACTIVATE;
         }
 
         if (getMedianFeedInPower() > powerTreshold)
         {
-            log_d("Feeding in power");
-            return true;
+            log_d("Feeding in power, activating");
+            return SHELLY_ACTIVATE;
         }
 
-        return false;
+        if(getMedianFeedInPower() == 0 && getMedianBatteryPower() == 0 && abs(getMedianPVPower() - getMedianLoadPower()) < 500) {
+            log_d("No feedin, no battery power, load equals PV power, activating");
+            return SHELLY_ACTIVATE;
+        }
+
+        return SHELLY_KEEP_CURRENT_STATE;
     }
 };
