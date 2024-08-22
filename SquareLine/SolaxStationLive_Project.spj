@@ -22333,12 +22333,6 @@
                                     "strval": "DEFAULT",
                                     "childs": [
                                       {
-                                        "nid": 108711224,
-                                        "strtype": "_style/Text_Align",
-                                        "strval": "CENTER",
-                                        "InheritedType": 3
-                                      },
-                                      {
                                         "nid": 312442623,
                                         "strtype": "_style/Text_Font",
                                         "strval": "OpenSansSmall",
@@ -22630,7 +22624,8 @@
                             "InheritedType": 11
                           }
                         ],
-                        "saved_objtypeKey": "CONTAINER"
+                        "saved_objtypeKey": "CONTAINER",
+                        "tree_closed": true
                       },
                       {
                         "guid": "GUID92552078-310222S6663214",
@@ -28648,7 +28643,7 @@
                                       {
                                         "nid": -1823673118,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansExtraSmall",
+                                        "strval": "OpenSansSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -32257,7 +32252,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
-    "backup_cnt": 469,
+    "backup_cnt": 471,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",

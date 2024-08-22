@@ -49,7 +49,7 @@ FormattedUnit_t format(Unit_t unit, float value, float limitingFactor = 1.0f, bo
             }
             break;
     }
-    
+    formattedUnit.value.replace(".", ",");
     formattedUnit.formatted = formattedUnit.value + space + formattedUnit.unit;
     return formattedUnit;
 }
