@@ -5724,6 +5724,7 @@
                               },
                               {
                                 "nid": -1095495111,
+                                "flags": 1048576,
                                 "strtype": "LABEL/Label",
                                 "InheritedType": 1
                               },
@@ -5756,7 +5757,7 @@
                                       {
                                         "nid": 2002565027,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansExtraSmall",
+                                        "strval": "OpenSansSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -6119,7 +6120,7 @@
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
                                   1,
-                                  1
+                                  100
                                 ],
                                 "InheritedType": 7
                               },
@@ -6358,12 +6359,6 @@
                                     "strval": "DEFAULT",
                                     "childs": [
                                       {
-                                        "nid": 264927120,
-                                        "strtype": "_style/Text_Align",
-                                        "strval": "CENTER",
-                                        "InheritedType": 3
-                                      },
-                                      {
                                         "nid": -598614563,
                                         "strtype": "_style/Text_Font",
                                         "strval": "OpenSansMedium",
@@ -6432,7 +6427,7 @@
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
                                   1,
-                                  1
+                                  100
                                 ],
                                 "InheritedType": 7
                               },
@@ -6673,7 +6668,7 @@
                                       {
                                         "nid": 732573742,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansExtraSmall",
+                                        "strval": "OpenSansSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -6707,7 +6702,7 @@
                             "Flow": 0,
                             "Wrap": false,
                             "Reversed": false,
-                            "MainAlignment": 1,
+                            "MainAlignment": 0,
                             "CrossAlignment": 0,
                             "TrackAlignment": 0,
                             "LayoutType": 1,
@@ -6744,12 +6739,11 @@
                           {
                             "nid": 645291971,
                             "strtype": "OBJECT/Align",
-                            "strval": "BOTTOM_RIGHT",
+                            "strval": "TOP_LEFT",
                             "InheritedType": 3
                           },
                           {
                             "nid": -1513012053,
-                            "flags": 1048576,
                             "strtype": "OBJECT/Flags",
                             "InheritedType": 1
                           },
@@ -6947,7 +6941,25 @@
                           },
                           {
                             "part": "lv.PART.MAIN",
-                            "childs": [],
+                            "childs": [
+                              {
+                                "nid": -1648711092,
+                                "strtype": "_style/StyleState",
+                                "strval": "DEFAULT",
+                                "childs": [
+                                  {
+                                    "nid": -1682219553,
+                                    "strtype": "_style/Padding_RowCol",
+                                    "intarray": [
+                                      0,
+                                      4
+                                    ],
+                                    "InheritedType": 7
+                                  }
+                                ],
+                                "InheritedType": 1
+                              }
+                            ],
                             "nid": 695759807,
                             "strtype": "CONTAINER/Style_main",
                             "strval": "lv.PART.MAIN, Rectangle, Pad, Text",
@@ -8180,8 +8192,7 @@
                     "InheritedType": 11
                   }
                 ],
-                "saved_objtypeKey": "CONTAINER",
-                "tree_closed": true
+                "saved_objtypeKey": "CONTAINER"
               },
               {
                 "guid": "GUID55695007-301250S1813214",
@@ -12251,7 +12262,7 @@
                       {
                         "nid": -219595544,
                         "strtype": "OBJECT/Hidden",
-                        "strval": "False",
+                        "strval": "True",
                         "InheritedType": 2
                       },
                       {
@@ -12755,15 +12766,6 @@
                               12,
                               18,
                               12
-                            ],
-                            "InheritedType": 7
-                          },
-                          {
-                            "nid": 452028771,
-                            "strtype": "_style/Padding_RowCol",
-                            "intarray": [
-                              8,
-                              0
                             ],
                             "InheritedType": 7
                           }
@@ -13973,7 +13975,25 @@
                       },
                       {
                         "part": "lv.PART.MAIN",
-                        "childs": [],
+                        "childs": [
+                          {
+                            "nid": 1358950066,
+                            "strtype": "_style/StyleState",
+                            "strval": "DEFAULT",
+                            "childs": [
+                              {
+                                "nid": 1540445518,
+                                "strtype": "_style/Padding_RowCol",
+                                "intarray": [
+                                  0,
+                                  4
+                                ],
+                                "InheritedType": 7
+                              }
+                            ],
+                            "InheritedType": 1
+                          }
+                        ],
                         "nid": 1948390419,
                         "strtype": "CONTAINER/Style_main",
                         "strval": "lv.PART.MAIN, Rectangle, Pad, Text",
@@ -13988,8 +14008,7 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "CONTAINER",
-                    "tree_closed": true
+                    "saved_objtypeKey": "CONTAINER"
                   },
                   {
                     "guid": "GUID17507172-201507S471523235",
@@ -16092,7 +16111,7 @@
                               {
                                 "nid": -1932625594,
                                 "strtype": "LABEL/Text",
-                                "strval": "5600",
+                                "strval": "56",
                                 "InheritedType": 10
                               },
                               {
@@ -16732,8 +16751,7 @@
                             "InheritedType": 11
                           }
                         ],
-                        "saved_objtypeKey": "CONTAINER",
-                        "tree_closed": true
+                        "saved_objtypeKey": "CONTAINER"
                       },
                       {
                         "guid": "GUID22698893-212562S335273235",
@@ -17671,7 +17689,7 @@
                         "Wrap": false,
                         "Reversed": false,
                         "MainAlignment": 0,
-                        "CrossAlignment": 0,
+                        "CrossAlignment": 2,
                         "TrackAlignment": 0,
                         "LayoutType": 1,
                         "nid": 1809357049,
@@ -18253,7 +18271,7 @@
                     "Flow": 1,
                     "Wrap": false,
                     "Reversed": false,
-                    "MainAlignment": 1,
+                    "MainAlignment": 0,
                     "CrossAlignment": 1,
                     "TrackAlignment": 1,
                     "LayoutType": 1,
@@ -21404,7 +21422,7 @@
                                       {
                                         "nid": -1559803613,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansExtraSmall",
+                                        "strval": "OpenSansSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -21711,8 +21729,7 @@
                             "InheritedType": 11
                           }
                         ],
-                        "saved_objtypeKey": "CONTAINER",
-                        "tree_closed": true
+                        "saved_objtypeKey": "CONTAINER"
                       },
                       {
                         "guid": "GUID20725211-121575S3363235",
@@ -22324,7 +22341,7 @@
                                       {
                                         "nid": 312442623,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansExtraSmall",
+                                        "strval": "OpenSansSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -22613,8 +22630,7 @@
                             "InheritedType": 11
                           }
                         ],
-                        "saved_objtypeKey": "CONTAINER",
-                        "tree_closed": true
+                        "saved_objtypeKey": "CONTAINER"
                       },
                       {
                         "guid": "GUID92552078-310222S6663214",
@@ -23814,7 +23830,7 @@
                                       {
                                         "nid": 809471197,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansExtraSmall",
+                                        "strval": "OpenSansSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -24720,7 +24736,7 @@
                                       {
                                         "nid": 1741621092,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansExtraSmall",
+                                        "strval": "OpenSansSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -25008,8 +25024,7 @@
                             "InheritedType": 11
                           }
                         ],
-                        "saved_objtypeKey": "CONTAINER",
-                        "tree_closed": true
+                        "saved_objtypeKey": "CONTAINER"
                       },
                       {
                         "guid": "GUID57757698-315596S6503214",
@@ -26211,7 +26226,7 @@
                                       {
                                         "nid": 591637615,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansExtraSmall",
+                                        "strval": "OpenSansSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -27124,7 +27139,7 @@
                                       {
                                         "nid": 1110904298,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansExtraSmall",
+                                        "strval": "OpenSansSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -28925,7 +28940,7 @@
                                   {
                                     "nid": 1364121089,
                                     "strtype": "_style/Text_Font",
-                                    "strval": "montserrat_14",
+                                    "strval": "OpenSansSmall",
                                     "InheritedType": 3
                                   }
                                 ],
@@ -29552,7 +29567,7 @@
                                       {
                                         "nid": -1870339893,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansExtraSmall",
+                                        "strval": "OpenSansSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -31318,7 +31333,7 @@
                               {
                                 "nid": 1439534553,
                                 "strtype": "_style/Text_Font",
-                                "strval": "OpenSansExtraSmall",
+                                "strval": "OpenSansSmall",
                                 "InheritedType": 3
                               }
                             ],
@@ -32242,7 +32257,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
-    "backup_cnt": 462,
+    "backup_cnt": 469,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",

@@ -4,11 +4,11 @@
   "bin_path": "/assets/ui_font_OpenSansSmall.bin",
   "c_path": "/assets/ui_font_OpenSansSmall.c",
   "cfg_path": "/assets/ui_font_OpenSansSmall.fcfg",
-  "size": 16,
+  "size": 14,
   "bpp": 4,
   "letters": 0,
   "ranges": [
-    "0x20-0x7f"
+    "0x20-0xff"
   ],
   "symbols": "",
   "customparams": "--no-compress --no-prefilter",
