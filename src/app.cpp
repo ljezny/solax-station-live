@@ -156,6 +156,8 @@ void setup()
     lvgl_port_init(panel->getLcd(), panel->getTouch());
     ui_init();
     lv_scr_load_anim(ui_Splash, LV_SCR_LOAD_ANIM_FADE_IN, 500, 0, true);
+    lv_label_set_text(ui_fwVersionLabel, String("v" + String(VERSION_NUMBER)).c_str());
+    lv_label_set_text(ui_ESPIDLabel, softAP.getESPIdHex().c_str());
 
     lv_timer_t *timer = lv_timer_create(timerCB, 3000, NULL);
     lv_log_register_print_cb([](const char *txt)

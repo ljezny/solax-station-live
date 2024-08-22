@@ -30,11 +30,14 @@ public:
             }
         }
     }
-private:
+    
     String getESPIdHex()
     {
         char idHex[23];
         snprintf(idHex, 23, "%llX", ESP.getEfuseMac());
         return idHex;
     }
+
+private:
+    
 };
