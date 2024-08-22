@@ -147,12 +147,15 @@ public:
         lv_obj_set_style_text_color(ui_inverterPowerL3Label, l3PercentUsage > 50 ? red : black, 0);
         lv_label_set_text(ui_loadPowerLabel, format(POWER, inverterData.loadPower).value.c_str());
         lv_label_set_text(ui_loadPowerUnitLabel, format(POWER, inverterData.loadPower).unit.c_str());
-        lv_label_set_text(ui_feedInPowerLabel, format(POWER, abs(inverterData.feedInPower)).formatted.c_str());
+        lv_label_set_text(ui_feedInPowerLabel, format(POWER, abs(inverterData.feedInPower)).value.c_str());
+        lv_label_set_text(ui_feedInPowerUnitLabel, format(POWER, abs(inverterData.feedInPower)).unit.c_str());
         lv_obj_set_style_text_color(ui_feedInPowerLabel, inverterData.feedInPower < 0 ? red : black, 0);
-        lv_label_set_text_fmt(ui_socLabel, "%d%%", inverterData.soc);
-        lv_label_set_text(ui_batteryPowerLabel, format(POWER, abs(inverterData.batteryPower)).formatted.c_str());
+        lv_label_set_text_fmt(ui_socLabel, "%d", inverterData.soc);
+        lv_label_set_text(ui_batteryPowerLabel, format(POWER, abs(inverterData.batteryPower)).value.c_str());
+        lv_label_set_text(ui_batteryPowerUnitLabel, format(POWER, abs(inverterData.batteryPower)).unit.c_str());
         lv_obj_set_style_text_color(ui_batteryPowerLabel, inverterData.batteryPower < 0 ? red : black, 0);
-        lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d°C", inverterData.batteryTemperature);
+        lv_obj_set_style_text_color(ui_batteryPowerUnitLabel, inverterData.batteryPower < 0 ? red : black, 0);
+        lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d", inverterData.batteryTemperature);
         lv_label_set_text(ui_selfUsePercentLabel, String(selfUsePowerPercent).c_str());
         if (selfUsePowerPercent > 50)
         {
