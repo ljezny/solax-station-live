@@ -106,6 +106,11 @@ public:
             return SHELLY_DEACTIVATE;
         }
 
+        if(getSOC() < 80) {
+            log_d("Battery under limit empty, deactivating");
+            return SHELLY_DEACTIVATE;
+        }
+
         if (getSOC() >= 99)
         {
             log_d("Battery full, activating");
