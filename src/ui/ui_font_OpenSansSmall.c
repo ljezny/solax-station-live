@@ -1,7 +1,7 @@
 /*******************************************************************************
  * Size: 16 px
  * Bpp: 4
- * Opts: --bpp 4 --size 16 --font /Users/ljezny/solax-station-live/SquareLine/assets/OpenSans-SemiBold.ttf -o /Users/ljezny/solax-station-live/SquareLine/assets/ui_font_OpenSansSmall.c --format lvgl -r 0x20-0x7f --no-compress --no-prefilter
+ * Opts: --bpp 4 --size 16 --font /Users/ljezny/Projects/solax-station-live/SquareLine/assets/OpenSans-SemiBold.ttf -o /Users/ljezny/Projects/solax-station-live/SquareLine/assets/ui_font_OpenSansSmall.c --format lvgl -r 0x20-0x7f --no-compress --no-prefilter
  ******************************************************************************/
 
 #include "ui.h"

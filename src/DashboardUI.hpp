@@ -128,23 +128,28 @@ public:
         lv_label_set_text(ui_pv2UnitLabel, format(POWER, inverterData.pv2Power, 1.0f, true).unit.c_str());
         if (inverterData.pv1Power == 0 || inverterData.pv2Power == 0)
         { // hide
-            lv_obj_add_flag(ui_pv1Label, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_add_flag(ui_pv2Label, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_pvStringsContainer, LV_OBJ_FLAG_HIDDEN);
         }
         else
         {
-            lv_obj_clear_flag(ui_pv1Label, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_pv2Label, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_pvStringsContainer, LV_OBJ_FLAG_HIDDEN);
         }
 
-        lv_label_set_text_fmt(ui_inverterTemperatureLabel, "%d°C", inverterData.inverterTemperature);
-        lv_label_set_text(ui_inverterPowerLabel, format(POWER, inverterData.inverterPower).formatted.c_str());
-        lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.L1Power).formatted.c_str());
+        lv_label_set_text_fmt(ui_inverterTemperatureLabel, "%d", inverterData.inverterTemperature);
+        lv_label_set_text(ui_inverterPowerLabel, format(POWER, inverterData.inverterPower).value.c_str());
+        lv_label_set_text(ui_inverterPowerUnitLabel, format(POWER, inverterData.inverterPower).unit.c_str());
+        lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.L1Power).value.c_str());
+        lv_label_set_text(ui_inverterPowerL1UnitLabel, format(POWER, inverterData.L1Power).unit.c_str());
         lv_obj_set_style_text_color(ui_inverterPowerL1Label, l1PercentUsage > 50 ? red : black, 0);
-        lv_label_set_text(ui_inverterPowerL2Label, format(POWER, inverterData.L2Power).formatted.c_str());
+        lv_obj_set_style_text_color(ui_inverterPowerL1UnitLabel, l1PercentUsage > 50 ? red : black, 0);
+        lv_label_set_text(ui_inverterPowerL2Label, format(POWER, inverterData.L2Power).value.c_str());
+        lv_label_set_text(ui_inverterPowerL2UnitLabel, format(POWER, inverterData.L2Power).unit.c_str());        
         lv_obj_set_style_text_color(ui_inverterPowerL2Label, l2PercentUsage > 50 ? red : black, 0);
-        lv_label_set_text(ui_inverterPowerL3Label, format(POWER, inverterData.L3Power).formatted.c_str());
+        lv_obj_set_style_text_color(ui_inverterPowerL2UnitLabel, l2PercentUsage > 50 ? red : black, 0);
+        lv_label_set_text(ui_inverterPowerL3Label, format(POWER, inverterData.L3Power).value.c_str());
+        lv_label_set_text(ui_inverterPowerL3UnitLabel, format(POWER, inverterData.L3Power).unit.c_str());
         lv_obj_set_style_text_color(ui_inverterPowerL3Label, l3PercentUsage > 50 ? red : black, 0);
+        lv_obj_set_style_text_color(ui_inverterPowerL3UnitLabel, l3PercentUsage > 50 ? red : black, 0);
         lv_label_set_text(ui_loadPowerLabel, format(POWER, inverterData.loadPower).value.c_str());
         lv_label_set_text(ui_loadPowerUnitLabel, format(POWER, inverterData.loadPower).unit.c_str());
         lv_label_set_text(ui_feedInPowerLabel, format(POWER, abs(inverterData.feedInPower)).value.c_str());
@@ -174,7 +179,8 @@ public:
         }
         lv_label_set_text(ui_yieldTodayLabel, format(ENERGY, inverterData.pvToday * 1000.0, 1).value.c_str());
         lv_label_set_text(ui_yieldTodayUnitLabel, format(ENERGY, inverterData.pvToday * 1000.0, 1).unit.c_str());
-        lv_label_set_text(ui_yieldTotalLabel, format(ENERGY, inverterData.pvTotal * 1000.0, 1, true).formatted.c_str());
+        lv_label_set_text(ui_yieldTotalLabel, format(ENERGY, inverterData.pvTotal * 1000.0, 1, true).value.c_str());
+        lv_label_set_text(ui_yieldTotalUnitLabel, format(ENERGY, inverterData.pvTotal * 1000.0, 1, true).unit.c_str());
         lv_label_set_text(ui_gridSellTodayLabel, (format(ENERGY, inverterData.gridSellToday * 1000.0, 1).value).c_str());
         lv_label_set_text(ui_gridSellTodayUnitLabel, format(ENERGY, inverterData.gridSellToday * 1000.0, 1).unit.c_str());
         lv_label_set_text(ui_gridBuyTodayLabel, (format(ENERGY, inverterData.gridBuyToday * 1000.0, 1).value).c_str());
@@ -188,18 +194,21 @@ public:
         lv_label_set_text(ui_loadTodayLabel, format(ENERGY, inverterData.loadToday * 1000.0, 1).value.c_str());
         lv_label_set_text(ui_loadTodayUnitLabel, format(ENERGY, inverterData.loadToday * 1000.0, 1).unit.c_str());
 
-        lv_label_set_text_fmt(ui_selfUseTodayLabel, "%d%%", selfUseEnergyTodayPercent);
+        lv_label_set_text_fmt(ui_selfUseTodayLabel, "%d", selfUseEnergyTodayPercent);
         if (selfUseEnergyTodayPercent > 50)
         {
             lv_obj_set_style_text_color(ui_selfUseTodayLabel, green, 0);
+            lv_obj_set_style_text_color(ui_selfUseTodayUnitLabel, green, 0);
         }
         else if (selfUseEnergyTodayPercent > 30)
         {
             lv_obj_set_style_text_color(ui_selfUseTodayLabel, orange, 0);
+            lv_obj_set_style_text_color(ui_selfUseTodayUnitLabel, orange, 0);
         }
         else
         {
             lv_obj_set_style_text_color(ui_selfUseTodayLabel, red, 0);
+            lv_obj_set_style_text_color(ui_selfUseTodayUnitLabel, red, 0);
         }
 
         if (shellyResult.pairedCount > 0)
@@ -210,7 +219,8 @@ public:
         {
             lv_obj_add_flag(ui_shellyContainer, LV_OBJ_FLAG_HIDDEN);
         }
-        lv_label_set_text(ui_shellyPowerLabel1, format(POWER, shellyResult.totalPower).formatted.c_str());
+        lv_label_set_text(ui_shellyPowerLabel, format(POWER, shellyResult.totalPower).value.c_str());
+        lv_label_set_text(ui_shellyPowerUnitLabel, format(POWER, shellyResult.totalPower).unit.c_str());
         lv_label_set_text_fmt(ui_shellyCountLabel, "%d / %d", shellyResult.activeCount, shellyResult.pairedCount);
 
         updateChart(solarChartDataProvider);

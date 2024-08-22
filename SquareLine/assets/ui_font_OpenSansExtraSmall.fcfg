@@ -4,7 +4,7 @@
   "bin_path": "/assets/ui_font_OpenSansExtraSmall.bin",
   "c_path": "/assets/ui_font_OpenSansExtraSmall.c",
   "cfg_path": "/assets/ui_font_OpenSansExtraSmall.fcfg",
-  "size": 10,
+  "size": 12,
   "bpp": 4,
   "letters": 0,
   "ranges": [

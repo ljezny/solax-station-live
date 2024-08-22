@@ -39,11 +39,15 @@ public:
 
         hLine = lv_obj_create(parent);
         lv_obj_set_style_bg_color(hLine, lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
-        //lv_obj_set_style_line_dash_gap(hLine, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
-        //lv_obj_set_style_line_width(hLine, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
+        // lv_obj_set_style_line_dash_gap(hLine, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
+        // lv_obj_set_style_line_width(hLine, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
+        // lv_obj_set_style_line_rounded(hLine, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
 
         vLine = lv_obj_create(parent);
         lv_obj_set_style_bg_color(vLine, lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_line_dash_gap(vLine, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_line_width(vLine, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_line_rounded(vLine, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
 
         lv_obj_move_background(hLine);
         lv_obj_move_background(vLine);

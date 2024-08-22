@@ -31,8 +31,6 @@ extern "C" {
 void ui_Splash_screen_init(void);
 extern lv_obj_t *ui_Splash;
 extern lv_obj_t *ui_Image1;
-extern lv_obj_t *ui_Spinner1;
-extern lv_obj_t *ui_Label2;
 // SCREEN: ui_Dashboard
 void ui_Dashboard_screen_init(void);
 extern lv_obj_t *ui_Dashboard;
@@ -41,7 +39,7 @@ extern lv_obj_t *ui_pvContainer;
 extern lv_obj_t *ui_Container11;
 extern lv_obj_t *ui_pvLabel;
 extern lv_obj_t *ui_pvUnitLabel;
-extern lv_obj_t *ui_Container1;
+extern lv_obj_t *ui_pvStringsContainer;
 extern lv_obj_t *ui_Container13;
 extern lv_obj_t *ui_pv1Label;
 extern lv_obj_t *ui_pv1UnitLabel;
@@ -78,19 +76,30 @@ extern lv_obj_t *ui_selfUsePercentLabel;
 extern lv_obj_t *ui_selfUsePercentUnitLabel;
 extern lv_obj_t *ui_Image7;
 extern lv_obj_t *ui_inverterContainer;
-extern lv_obj_t *ui_Container4;
 extern lv_obj_t *ui_Image5;
+extern lv_obj_t *ui_Container31;
 extern lv_obj_t *ui_inverterTemperatureLabel;
+extern lv_obj_t *ui_inverterTemperatureUnitLabel;
+extern lv_obj_t *ui_Container26;
 extern lv_obj_t *ui_inverterPowerLabel;
-extern lv_obj_t *ui_Container3;
+extern lv_obj_t *ui_inverterPowerUnitLabel;
+extern lv_obj_t *ui_Container33;
+extern lv_obj_t *ui_Container29;
 extern lv_obj_t *ui_inverterPowerL1Label;
+extern lv_obj_t *ui_inverterPowerL1UnitLabel;
+extern lv_obj_t *ui_Container3;
 extern lv_obj_t *ui_inverterPowerL2Label;
+extern lv_obj_t *ui_inverterPowerL2UnitLabel;
+extern lv_obj_t *ui_Container28;
 extern lv_obj_t *ui_inverterPowerL3Label;
+extern lv_obj_t *ui_inverterPowerL3UnitLabel;
 extern lv_obj_t *ui_statusLabel;
 extern lv_obj_t *ui_shellyContainer;
 extern lv_obj_t *ui_Image2;
 extern lv_obj_t *ui_shellyCountLabel;
-extern lv_obj_t *ui_shellyPowerLabel1;
+extern lv_obj_t *ui_Container32;
+extern lv_obj_t *ui_shellyPowerLabel;
+extern lv_obj_t *ui_shellyPowerUnitLabel;
 extern lv_obj_t *ui_RightContainer;
 extern lv_obj_t *ui_TopRightContainer;
 extern lv_obj_t *ui_Container15;
@@ -105,7 +114,9 @@ extern lv_obj_t *ui_Container17;
 extern lv_obj_t *ui_Container8;
 extern lv_obj_t *ui_loadTodayLabel;
 extern lv_obj_t *ui_loadTodayUnitLabel;
+extern lv_obj_t *ui_Container30;
 extern lv_obj_t *ui_selfUseTodayLabel;
+extern lv_obj_t *ui_selfUseTodayUnitLabel;
 extern lv_obj_t *ui_Image13;
 extern lv_obj_t *ui_Container16;
 extern lv_obj_t *ui_Container6;
@@ -138,14 +149,10 @@ LV_IMG_DECLARE( ui_img_1337922523);   // assets/solar-plug.png
 LV_IMG_DECLARE( ui_img_performance_png);   // assets/performance.png
 
 
-LV_FONT_DECLARE( ui_font_RobotoMonoExtraSmall);
-LV_FONT_DECLARE( ui_font_RobotoMonoLarge);
-LV_FONT_DECLARE( ui_font_RobotoMonoMedium);
-LV_FONT_DECLARE( ui_font_RobotoMonoSmall);
-LV_FONT_DECLARE( ui_font_OpenSansLarge);
-LV_FONT_DECLARE( ui_font_OpenSansSmall);
-LV_FONT_DECLARE( ui_font_OpenSansMedium);
 LV_FONT_DECLARE( ui_font_OpenSansExtraSmall);
+LV_FONT_DECLARE( ui_font_OpenSansLarge);
+LV_FONT_DECLARE( ui_font_OpenSansMedium);
+LV_FONT_DECLARE( ui_font_OpenSansSmall);
 
 
 void ui_init(void);
