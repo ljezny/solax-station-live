@@ -1743,7 +1743,7 @@
                               {
                                 "nid": -526642013,
                                 "strtype": "LABEL/Text",
-                                "strval": "5600",
+                                "strval": "56",
                                 "InheritedType": 10
                               },
                               {
@@ -2136,7 +2136,7 @@
                           },
                           {
                             "nid": -1740102402,
-                            "flags": 50,
+                            "flags": 51,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -3059,7 +3059,7 @@
                           },
                           {
                             "nid": -853005183,
-                            "flags": 50,
+                            "flags": 51,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -3326,9 +3326,9 @@
                         "Flow": 1,
                         "Wrap": false,
                         "Reversed": false,
-                        "MainAlignment": 0,
-                        "CrossAlignment": 1,
-                        "TrackAlignment": 0,
+                        "MainAlignment": 1,
+                        "CrossAlignment": 2,
+                        "TrackAlignment": 1,
                         "LayoutType": 1,
                         "nid": 174873145,
                         "strtype": "OBJECT/Layout_type",
@@ -3352,7 +3352,7 @@
                       },
                       {
                         "nid": 1657291848,
-                        "flags": 50,
+                        "flags": 51,
                         "strtype": "OBJECT/Size",
                         "intarray": [
                           100,
@@ -5817,7 +5817,7 @@
                           },
                           {
                             "nid": -580454196,
-                            "flags": 50,
+                            "flags": 51,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -6994,8 +6994,8 @@
                         "Flow": 1,
                         "Wrap": false,
                         "Reversed": false,
-                        "MainAlignment": 1,
-                        "CrossAlignment": 1,
+                        "MainAlignment": 0,
+                        "CrossAlignment": 2,
                         "TrackAlignment": 0,
                         "LayoutType": 1,
                         "nid": 1738542042,
@@ -7020,7 +7020,7 @@
                       },
                       {
                         "nid": 1066861229,
-                        "flags": 49,
+                        "flags": 51,
                         "strtype": "OBJECT/Size",
                         "intarray": [
                           100,
@@ -32252,7 +32252,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
-    "backup_cnt": 471,
+    "backup_cnt": 472,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",
