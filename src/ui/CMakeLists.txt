@@ -18,6 +18,10 @@ SET(SOURCES ui_Splash.c
     fonts/ui_font_RobotoMonoExtraSmall.c
     fonts/ui_font_RobotoMonoLarge.c
     fonts/ui_font_RobotoMonoMedium.c
-    fonts/ui_font_RobotoMonoSmall.c)
+    fonts/ui_font_RobotoMonoSmall.c
+    fonts/ui_font_OpenSansLarge.c
+    fonts/ui_font_OpenSansSmall.c
+    fonts/ui_font_OpenSansMedium.c
+    fonts/ui_font_OpenSansExtraSmall.c)
 
 add_library(ui ${SOURCES})

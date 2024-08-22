@@ -39,6 +39,8 @@ public:
 
         hLine = lv_obj_create(parent);
         lv_obj_set_style_bg_color(hLine, lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
+        //lv_obj_set_style_line_dash_gap(hLine, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
+        //lv_obj_set_style_line_width(hLine, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
 
         vLine = lv_obj_create(parent);
         lv_obj_set_style_bg_color(vLine, lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
