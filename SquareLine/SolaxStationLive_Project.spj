@@ -21358,7 +21358,7 @@
                               {
                                 "nid": -218329954,
                                 "strtype": "LABEL/Long_mode",
-                                "strval": "WRAP",
+                                "strval": "SCROLL",
                                 "InheritedType": 3
                               },
                               {
@@ -22283,7 +22283,7 @@
                               {
                                 "nid": 2059973684,
                                 "strtype": "LABEL/Long_mode",
-                                "strval": "WRAP",
+                                "strval": "SCROLL",
                                 "InheritedType": 3
                               },
                               {
@@ -23785,7 +23785,7 @@
                               {
                                 "nid": 1248904956,
                                 "strtype": "LABEL/Long_mode",
-                                "strval": "WRAP",
+                                "strval": "SCROLL",
                                 "InheritedType": 3
                               },
                               {
@@ -24690,7 +24690,7 @@
                               {
                                 "nid": -1742825434,
                                 "strtype": "LABEL/Long_mode",
-                                "strval": "WRAP",
+                                "strval": "SCROLL",
                                 "InheritedType": 3
                               },
                               {
@@ -25896,25 +25896,7 @@
                       },
                       {
                         "part": "lv.PART.MAIN",
-                        "childs": [
-                          {
-                            "nid": -1184515940,
-                            "strtype": "_style/StyleState",
-                            "strval": "DEFAULT",
-                            "childs": [
-                              {
-                                "nid": 1734448540,
-                                "strtype": "_style/Padding_RowCol",
-                                "intarray": [
-                                  4,
-                                  0
-                                ],
-                                "InheritedType": 7
-                              }
-                            ],
-                            "InheritedType": 1
-                          }
-                        ],
+                        "childs": [],
                         "nid": 2141087226,
                         "strtype": "CONTAINER/Style_main",
                         "strval": "lv.PART.MAIN, Rectangle, Pad, Text",
@@ -26205,7 +26187,7 @@
                               {
                                 "nid": 41320786,
                                 "strtype": "LABEL/Long_mode",
-                                "strval": "DOT",
+                                "strval": "SCROLL",
                                 "InheritedType": 3
                               },
                               {
@@ -27129,7 +27111,7 @@
                               {
                                 "nid": -357087117,
                                 "strtype": "LABEL/Long_mode",
-                                "strval": "DOT",
+                                "strval": "SCROLL",
                                 "InheritedType": 3
                               },
                               {
@@ -28342,25 +28324,7 @@
                       },
                       {
                         "part": "lv.PART.MAIN",
-                        "childs": [
-                          {
-                            "nid": -1709174780,
-                            "strtype": "_style/StyleState",
-                            "strval": "DEFAULT",
-                            "childs": [
-                              {
-                                "nid": -1063847207,
-                                "strtype": "_style/Padding_RowCol",
-                                "intarray": [
-                                  4,
-                                  0
-                                ],
-                                "InheritedType": 7
-                              }
-                            ],
-                            "InheritedType": 1
-                          }
-                        ],
+                        "childs": [],
                         "nid": 1744742997,
                         "strtype": "CONTAINER/Style_main",
                         "strval": "lv.PART.MAIN, Rectangle, Pad, Text",
@@ -28651,7 +28615,7 @@
                               {
                                 "nid": 1028863373,
                                 "strtype": "LABEL/Long_mode",
-                                "strval": "WRAP",
+                                "strval": "SCROLL",
                                 "InheritedType": 3
                               },
                               {
@@ -29378,7 +29342,6 @@
                               },
                               {
                                 "nid": 1910196224,
-                                "flags": 1048576,
                                 "strtype": "OBJECT/Flags",
                                 "InheritedType": 1
                               },
@@ -29582,13 +29545,13 @@
                               {
                                 "nid": -694441260,
                                 "strtype": "LABEL/Long_mode",
-                                "strval": "WRAP",
+                                "strval": "SCROLL",
                                 "InheritedType": 3
                               },
                               {
                                 "nid": 173922414,
                                 "strtype": "LABEL/Text",
-                                "strval": "-11",
+                                "strval": "830",
                                 "InheritedType": 10
                               },
                               {
@@ -30004,7 +29967,6 @@
                           },
                           {
                             "nid": 1050913188,
-                            "flags": 1048576,
                             "strtype": "OBJECT/Flags",
                             "InheritedType": 1
                           },
@@ -30801,25 +30763,7 @@
                       },
                       {
                         "part": "lv.PART.MAIN",
-                        "childs": [
-                          {
-                            "nid": 677107697,
-                            "strtype": "_style/StyleState",
-                            "strval": "DEFAULT",
-                            "childs": [
-                              {
-                                "nid": -1230297325,
-                                "strtype": "_style/Padding_RowCol",
-                                "intarray": [
-                                  4,
-                                  0
-                                ],
-                                "InheritedType": 7
-                              }
-                            ],
-                            "InheritedType": 1
-                          }
-                        ],
+                        "childs": [],
                         "nid": 163115597,
                         "strtype": "CONTAINER/Style_main",
                         "strval": "lv.PART.MAIN, Rectangle, Pad, Text",
@@ -31121,8 +31065,8 @@
                             "nid": 1474568411,
                             "strtype": "_style/Padding",
                             "intarray": [
-                              12,
-                              12,
+                              0,
+                              0,
                               12,
                               12
                             ],
@@ -32621,8 +32565,8 @@
     "theme_dark": false,
     "theme_color1": 5,
     "theme_color2": 0,
-    "uiExportFolderPath": "/Users/ljezny/solax-station-live/src/ui",
-    "projectExportFolderPath": "/Users/ljezny/solax-station-live/src/ui",
+    "uiExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
+    "projectExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
     "backup_cnt": 504,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
