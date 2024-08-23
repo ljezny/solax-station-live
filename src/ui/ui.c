@@ -13,6 +13,8 @@
 void ui_Splash_screen_init(void);
 lv_obj_t *ui_Splash;
 lv_obj_t *ui_Image1;
+lv_obj_t *ui_fwVersionLabel;
+lv_obj_t *ui_ESPIdLabel;
 
 
 // SCREEN: ui_Dashboard
@@ -39,11 +41,11 @@ lv_obj_t *ui_Container24;
 lv_obj_t *ui_Container2;
 lv_obj_t *ui_batteryPowerLabel;
 lv_obj_t *ui_batteryPowerUnitLabel;
+lv_obj_t *ui_Container25;
+lv_obj_t *ui_Image10;
 lv_obj_t *ui_Container12;
 lv_obj_t *ui_batteryTemperatureLabel;
 lv_obj_t *ui_batteryTemperatureUnitLabel;
-lv_obj_t *ui_Container25;
-lv_obj_t *ui_Image10;
 lv_obj_t *ui_loadContainer;
 lv_obj_t *ui_Image8;
 lv_obj_t *ui_Container20;

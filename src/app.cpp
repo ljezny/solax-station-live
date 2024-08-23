@@ -46,25 +46,26 @@ InverterData_t createRandomMockData()
 {
     InverterData_t inverterData;
     inverterData.status = DONGLE_STATUS_OK;
-    inverterData.pv1Power = random(0, 5000);
-    inverterData.pv2Power = random(0, 5000);
-    inverterData.batteryPower = random(-3000, 3000);
-    inverterData.batteryTemperature = random(0, 50);
-    inverterData.inverterTemperature = random(0, 50);
+    inverterData.pv1Power = random(4000, 5000);
+    inverterData.pv2Power = random(3000, 4000);
+    inverterData.batteryPower = random(-300, 1000);
+    inverterData.batteryTemperature = random(20, 26);
+    inverterData.inverterTemperature = random(40, 52);
     inverterData.L1Power = random(0, 3000);
     inverterData.L2Power = random(0, 4000);
     inverterData.L3Power = random(0, 3000);
-    inverterData.inverterPower = random(0, 1000);
-    inverterData.loadPower = random(0, 1000);
-    inverterData.loadToday = random(0, 1000);
+    inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
+    inverterData.loadPower = random(200, 1200);
+    inverterData.loadToday = random(20, 60);
     inverterData.feedInPower = random(-1000, 1000);
-    inverterData.soc = random(0, 100);
-    inverterData.pvToday = random(0, 1000);
-    inverterData.pvTotal = random(0, 1000);
-    inverterData.batteryChargedToday = random(0, 1000);
-    inverterData.batteryDischargedToday = random(0, 1000);
-    inverterData.gridBuyToday = random(0, 1000);
-    inverterData.gridSellToday = random(0, 1000);
+    inverterData.soc = random(80, 85);
+    inverterData.pvToday = random(30, 50);
+    inverterData.pvTotal = random(1500, 2000);
+    inverterData.batteryChargedToday = random(20, 25);
+    inverterData.batteryDischargedToday = random(5, 15);
+    inverterData.gridBuyToday = random(5, 16);
+    inverterData.gridSellToday = random(6, 23);
+    inverterData.sn = "1234567890";
     return inverterData;
 }
 
@@ -156,8 +157,8 @@ void setup()
     lvgl_port_init(panel->getLcd(), panel->getTouch());
     ui_init();
     lv_scr_load_anim(ui_Splash, LV_SCR_LOAD_ANIM_FADE_IN, 500, 0, true);
-    //lv_label_set_text(ui_fwVersionLabel, String("v" + String(VERSION_NUMBER)).c_str());
-    //lv_label_set_text(ui_ESPIDLabel, softAP.getESPIdHex().c_str());
+    lv_label_set_text(ui_fwVersionLabel, String("v" + String(VERSION_NUMBER)).c_str());
+    lv_label_set_text(ui_ESPIdLabel, softAP.getESPIdHex().c_str());
 
     lv_timer_t *timer = lv_timer_create(timerCB, 3000, NULL);
     lv_log_register_print_cb([](const char *txt)

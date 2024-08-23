@@ -31,6 +31,8 @@ extern "C" {
 void ui_Splash_screen_init(void);
 extern lv_obj_t *ui_Splash;
 extern lv_obj_t *ui_Image1;
+extern lv_obj_t *ui_fwVersionLabel;
+extern lv_obj_t *ui_ESPIdLabel;
 // SCREEN: ui_Dashboard
 void ui_Dashboard_screen_init(void);
 extern lv_obj_t *ui_Dashboard;
@@ -55,11 +57,11 @@ extern lv_obj_t *ui_Container24;
 extern lv_obj_t *ui_Container2;
 extern lv_obj_t *ui_batteryPowerLabel;
 extern lv_obj_t *ui_batteryPowerUnitLabel;
+extern lv_obj_t *ui_Container25;
+extern lv_obj_t *ui_Image10;
 extern lv_obj_t *ui_Container12;
 extern lv_obj_t *ui_batteryTemperatureLabel;
 extern lv_obj_t *ui_batteryTemperatureUnitLabel;
-extern lv_obj_t *ui_Container25;
-extern lv_obj_t *ui_Image10;
 extern lv_obj_t *ui_loadContainer;
 extern lv_obj_t *ui_Image8;
 extern lv_obj_t *ui_Container20;

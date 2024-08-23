@@ -55,9 +55,9 @@
         "strtype": "THEME_COLOR",
         "strval": "gridColor",
         "intarray": [
-          131,
-          105,
-          83,
+          202,
+          182,
+          158,
           255
         ],
         "InheritedType": 0
