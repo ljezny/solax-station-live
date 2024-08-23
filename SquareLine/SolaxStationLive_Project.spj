@@ -1485,12 +1485,6 @@
                                 "strval": "DEFAULT",
                                 "childs": [
                                   {
-                                    "nid": 1241745204,
-                                    "strtype": "_style/Text_Align",
-                                    "strval": "CENTER",
-                                    "InheritedType": 3
-                                  },
-                                  {
                                     "nid": -1331255842,
                                     "strtype": "_style/Text_Font",
                                     "strval": "OpenSansLarge",
@@ -1799,12 +1793,6 @@
                                 "strval": "DEFAULT",
                                 "childs": [
                                   {
-                                    "nid": 675448839,
-                                    "strtype": "_style/Text_Align",
-                                    "strval": "CENTER",
-                                    "InheritedType": 3
-                                  },
-                                  {
                                     "nid": -995280131,
                                     "strtype": "_style/Text_Font",
                                     "strval": "OpenSansSmall",
@@ -1871,7 +1859,7 @@
                         "strtype": "OBJECT/Size",
                         "intarray": [
                           1,
-                          50
+                          20
                         ],
                         "InheritedType": 7
                       },
@@ -1883,7 +1871,6 @@
                       },
                       {
                         "nid": 793579132,
-                        "flags": 1048576,
                         "strtype": "OBJECT/Flags",
                         "InheritedType": 1
                       },
@@ -2021,7 +2008,6 @@
                       },
                       {
                         "nid": -898924487,
-                        "flags": 1048576,
                         "strtype": "OBJECT/States",
                         "InheritedType": 1
                       },
@@ -7952,8 +7938,8 @@
                             "flags": 34,
                             "strtype": "OBJECT/Position",
                             "intarray": [
-                              4,
-                              -12
+                              2,
+                              -10
                             ],
                             "InheritedType": 7
                           },
@@ -14407,8 +14393,8 @@
                         "flags": 34,
                         "strtype": "OBJECT/Position",
                         "intarray": [
-                          12,
-                          -6
+                          10,
+                          -4
                         ],
                         "InheritedType": 7
                       },
@@ -19292,8 +19278,7 @@
                     "InheritedType": 11
                   }
                 ],
-                "saved_objtypeKey": "CONTAINER",
-                "tree_closed": true
+                "saved_objtypeKey": "CONTAINER"
               },
               {
                 "guid": "GUID24100582-927441S1563227",
@@ -21542,10 +21527,10 @@
                               },
                               {
                                 "nid": 619771704,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
-                                  1,
+                                  2,
                                   1
                                 ],
                                 "InheritedType": 7
@@ -21788,7 +21773,7 @@
                                       {
                                         "nid": -300761149,
                                         "strtype": "_style/Text_Align",
-                                        "strval": "CENTER",
+                                        "strval": "RIGHT",
                                         "InheritedType": 3
                                       },
                                       {
@@ -21856,7 +21841,7 @@
                               },
                               {
                                 "nid": 1819486977,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
                                   1,
@@ -22102,13 +22087,13 @@
                                       {
                                         "nid": 177434095,
                                         "strtype": "_style/Text_Align",
-                                        "strval": "CENTER",
+                                        "strval": "LEFT",
                                         "InheritedType": 3
                                       },
                                       {
                                         "nid": -1559803613,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansSmall",
+                                        "strval": "OpenSansExtraSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -22168,10 +22153,10 @@
                           },
                           {
                             "nid": -883496526,
-                            "flags": 99,
+                            "flags": 50,
                             "strtype": "OBJECT/Size",
                             "intarray": [
-                              1,
+                              100,
                               1
                             ],
                             "InheritedType": 7
@@ -22467,10 +22452,10 @@
                               },
                               {
                                 "nid": -1084294245,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
-                                  1,
+                                  2,
                                   100
                                 ],
                                 "InheritedType": 7
@@ -22711,9 +22696,15 @@
                                     "strval": "DEFAULT",
                                     "childs": [
                                       {
+                                        "nid": 705196586,
+                                        "strtype": "_style/Text_Align",
+                                        "strval": "RIGHT",
+                                        "InheritedType": 3
+                                      },
+                                      {
                                         "nid": -376642031,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansMedium",
+                                        "strval": "OpenSansLarge",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -22775,7 +22766,7 @@
                               },
                               {
                                 "nid": -1116314520,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
                                   1,
@@ -23019,9 +23010,15 @@
                                     "strval": "DEFAULT",
                                     "childs": [
                                       {
+                                        "nid": -671976490,
+                                        "strtype": "_style/Text_Align",
+                                        "strval": "LEFT",
+                                        "InheritedType": 3
+                                      },
+                                      {
                                         "nid": 312442623,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansSmall",
+                                        "strval": "OpenSansExtraSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -23081,10 +23078,10 @@
                           },
                           {
                             "nid": 269793563,
-                            "flags": 99,
+                            "flags": 50,
                             "strtype": "OBJECT/Size",
                             "intarray": [
-                              1,
+                              100,
                               1
                             ],
                             "InheritedType": 7
@@ -23310,8 +23307,7 @@
                             "InheritedType": 11
                           }
                         ],
-                        "saved_objtypeKey": "CONTAINER",
-                        "tree_closed": true
+                        "saved_objtypeKey": "CONTAINER"
                       },
                       {
                         "guid": "GUID92552078-310222S6663214",
@@ -23902,8 +23898,7 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "CONTAINER",
-                    "tree_closed": true
+                    "saved_objtypeKey": "CONTAINER"
                   },
                   {
                     "guid": "GUID72909756-316769S6543214",
@@ -23959,10 +23954,10 @@
                               },
                               {
                                 "nid": 1094249574,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
-                                  1,
+                                  2,
                                   1
                                 ],
                                 "InheritedType": 7
@@ -24203,6 +24198,12 @@
                                     "strval": "DEFAULT",
                                     "childs": [
                                       {
+                                        "nid": -1252829199,
+                                        "strtype": "_style/Text_Align",
+                                        "strval": "RIGHT",
+                                        "InheritedType": 3
+                                      },
+                                      {
                                         "nid": 1284354731,
                                         "strtype": "_style/Text_Font",
                                         "strval": "OpenSansLarge",
@@ -24266,7 +24267,7 @@
                               },
                               {
                                 "nid": -1017895778,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
                                   1,
@@ -24510,9 +24511,15 @@
                                     "strval": "DEFAULT",
                                     "childs": [
                                       {
+                                        "nid": 67489440,
+                                        "strtype": "_style/Text_Align",
+                                        "strval": "LEFT",
+                                        "InheritedType": 3
+                                      },
+                                      {
                                         "nid": 809471197,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansSmall",
+                                        "strval": "OpenSansExtraSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -24852,10 +24859,10 @@
                               },
                               {
                                 "nid": -41252145,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
-                                  1,
+                                  2,
                                   1
                                 ],
                                 "InheritedType": 7
@@ -25109,9 +25116,15 @@
                                         "InheritedType": 7
                                       },
                                       {
+                                        "nid": 753804981,
+                                        "strtype": "_style/Text_Align",
+                                        "strval": "RIGHT",
+                                        "InheritedType": 3
+                                      },
+                                      {
                                         "nid": 841065576,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansMedium",
+                                        "strval": "OpenSansLarge",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -25172,7 +25185,7 @@
                               },
                               {
                                 "nid": 268585399,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
                                   1,
@@ -25416,9 +25429,15 @@
                                     "strval": "DEFAULT",
                                     "childs": [
                                       {
+                                        "nid": 894463136,
+                                        "strtype": "_style/Text_Align",
+                                        "strval": "LEFT",
+                                        "InheritedType": 3
+                                      },
+                                      {
                                         "nid": 1741621092,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansSmall",
+                                        "strval": "OpenSansExtraSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -25477,7 +25496,7 @@
                           },
                           {
                             "nid": 938789930,
-                            "flags": 97,
+                            "flags": 98,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -26355,10 +26374,10 @@
                               },
                               {
                                 "nid": -1473530175,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
-                                  1,
+                                  2,
                                   1
                                 ],
                                 "InheritedType": 7
@@ -26599,6 +26618,12 @@
                                     "strval": "DEFAULT",
                                     "childs": [
                                       {
+                                        "nid": -973025471,
+                                        "strtype": "_style/Text_Align",
+                                        "strval": "RIGHT",
+                                        "InheritedType": 3
+                                      },
+                                      {
                                         "nid": 1430609438,
                                         "strtype": "_style/Text_Font",
                                         "strval": "OpenSansLarge",
@@ -26662,7 +26687,7 @@
                               },
                               {
                                 "nid": -2098283432,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
                                   1,
@@ -26906,9 +26931,15 @@
                                     "strval": "DEFAULT",
                                     "childs": [
                                       {
+                                        "nid": -368187321,
+                                        "strtype": "_style/Text_Align",
+                                        "strval": "LEFT",
+                                        "InheritedType": 3
+                                      },
+                                      {
                                         "nid": 591637615,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansSmall",
+                                        "strval": "OpenSansExtraSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -26968,7 +26999,7 @@
                           },
                           {
                             "nid": -433842349,
-                            "flags": 97,
+                            "flags": 98,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -27267,10 +27298,10 @@
                               },
                               {
                                 "nid": -371155877,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
-                                  1,
+                                  2,
                                   1
                                 ],
                                 "InheritedType": 7
@@ -27511,9 +27542,15 @@
                                     "strval": "DEFAULT",
                                     "childs": [
                                       {
+                                        "nid": 1659537917,
+                                        "strtype": "_style/Text_Align",
+                                        "strval": "RIGHT",
+                                        "InheritedType": 3
+                                      },
+                                      {
                                         "nid": -1937223236,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansMedium",
+                                        "strval": "OpenSansLarge",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -27575,7 +27612,7 @@
                               },
                               {
                                 "nid": -1141464196,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
                                   1,
@@ -27819,9 +27856,15 @@
                                     "strval": "DEFAULT",
                                     "childs": [
                                       {
+                                        "nid": -427421674,
+                                        "strtype": "_style/Text_Align",
+                                        "strval": "LEFT",
+                                        "InheritedType": 3
+                                      },
+                                      {
                                         "nid": 1110904298,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansSmall",
+                                        "strval": "OpenSansExtraSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -27881,7 +27924,7 @@
                           },
                           {
                             "nid": -87531425,
-                            "flags": 97,
+                            "flags": 98,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -28777,10 +28820,10 @@
                               },
                               {
                                 "nid": 1621903412,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
-                                  1,
+                                  2,
                                   1
                                 ],
                                 "InheritedType": 7
@@ -29021,6 +29064,12 @@
                                     "strval": "DEFAULT",
                                     "childs": [
                                       {
+                                        "nid": 1775340414,
+                                        "strtype": "_style/Text_Align",
+                                        "strval": "RIGHT",
+                                        "InheritedType": 3
+                                      },
+                                      {
                                         "nid": 926025815,
                                         "strtype": "_style/Text_Font",
                                         "strval": "OpenSansLarge",
@@ -29036,7 +29085,8 @@
                                 "InheritedType": 11
                               }
                             ],
-                            "saved_objtypeKey": "LABEL"
+                            "saved_objtypeKey": "LABEL",
+                            "tree_closed": true
                           },
                           {
                             "guid": "GUID88074576-715768S118803221",
@@ -29084,7 +29134,7 @@
                               },
                               {
                                 "nid": 46439687,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
                                   1,
@@ -29328,9 +29378,15 @@
                                     "strval": "DEFAULT",
                                     "childs": [
                                       {
+                                        "nid": -782204212,
+                                        "strtype": "_style/Text_Align",
+                                        "strval": "LEFT",
+                                        "InheritedType": 3
+                                      },
+                                      {
                                         "nid": -1823673118,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansSmall",
+                                        "strval": "OpenSansExtraSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -29695,10 +29751,10 @@
                               },
                               {
                                 "nid": 1896084710,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
-                                  1,
+                                  2,
                                   1
                                 ],
                                 "InheritedType": 7
@@ -29939,9 +29995,15 @@
                                     "strval": "DEFAULT",
                                     "childs": [
                                       {
+                                        "nid": -287780825,
+                                        "strtype": "_style/Text_Align",
+                                        "strval": "RIGHT",
+                                        "InheritedType": 3
+                                      },
+                                      {
                                         "nid": 585400234,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansMedium",
+                                        "strval": "OpenSansLarge",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -30003,7 +30065,7 @@
                               },
                               {
                                 "nid": -1227438442,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
                                   1,
@@ -30247,9 +30309,15 @@
                                     "strval": "DEFAULT",
                                     "childs": [
                                       {
+                                        "nid": 810302665,
+                                        "strtype": "_style/Text_Align",
+                                        "strval": "LEFT",
+                                        "InheritedType": 3
+                                      },
+                                      {
                                         "nid": -1870339893,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansSmall",
+                                        "strval": "OpenSansExtraSmall",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -31155,8 +31223,7 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "CONTAINER",
-                    "tree_closed": true
+                    "saved_objtypeKey": "CONTAINER"
                   }
                 ],
                 "locked": false,
@@ -32940,7 +33007,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/Users/ljezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/ljezny/solax-station-live/src/ui",
-    "backup_cnt": 479,
+    "backup_cnt": 491,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",

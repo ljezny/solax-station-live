@@ -64,7 +64,7 @@ static void draw_event_cb(lv_event_t *e)
         else if (dsc->id == LV_CHART_AXIS_SECONDARY_Y)
         {
             lv_snprintf(dsc->text, dsc->text_length, "%d\nkW", dsc->value / 1000);
-        }
+        } 
         else if (dsc->id == LV_CHART_AXIS_PRIMARY_X)
         {
             lv_snprintf(dsc->text, dsc->text_length, "%dh", -24 + 6 * dsc->value);

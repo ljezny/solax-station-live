@@ -16,14 +16,18 @@ class BacklightResolver {
         }
 
         void resolve(InverterData_t inverterData) {
+            log_d("Resolving backlight");
             int pvPower = inverterData.pv1Power + inverterData.pv2Power;
             int brightness = 100;
             if(inverterData.status == DONGLE_STATUS_OK) {
-                if(pvPower > 4000) {
+                if(pvPower > 1000) {
+                    log_d("Setting brightness to 100");
                     brightness = 100;
-                } if(pvPower > 0) {
+                } else if(pvPower > 0) {
+                    log_d("Setting brightness to 80");
                     brightness = 80;
                 } else {
+                    log_d("Setting brightness to 20");
                     brightness = 20;
                 }
             }

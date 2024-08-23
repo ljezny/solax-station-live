@@ -46,8 +46,8 @@ InverterData_t createRandomMockData()
 {
     InverterData_t inverterData;
     inverterData.status = DONGLE_STATUS_OK;
-    inverterData.pv1Power = random(4000, 5000);
-    inverterData.pv2Power = random(3000, 4000);
+    inverterData.pv1Power = random(1000, 5000);
+    inverterData.pv2Power = random(1000, 4000);
     inverterData.batteryPower = random(-300, 1000);
     inverterData.batteryTemperature = random(20, 26);
     inverterData.inverterTemperature = random(40, 52);
@@ -76,6 +76,7 @@ void runReloadDataTask(void *pvParameters)
         int start = millis();
 #if DEMO
         inverterData = createRandomMockData();
+        solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
 #else
         log_d("Reloading data");
         if (discoveryResult.result)

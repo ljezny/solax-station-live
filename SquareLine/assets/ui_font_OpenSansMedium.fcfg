@@ -4,7 +4,7 @@
   "bin_path": "/assets/ui_font_OpenSansMedium.bin",
   "c_path": "/assets/ui_font_OpenSansMedium.c",
   "cfg_path": "/assets/ui_font_OpenSansMedium.fcfg",
-  "size": 22,
+  "size": 20,
   "bpp": 4,
   "letters": 0,
   "ranges": [
