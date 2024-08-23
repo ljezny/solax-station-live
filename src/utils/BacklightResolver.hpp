@@ -20,7 +20,7 @@ class BacklightResolver {
             int pvPower = inverterData.pv1Power + inverterData.pv2Power;
             int brightness = 100;
             if(inverterData.status == DONGLE_STATUS_OK) {
-                if(pvPower > 1000) {
+                if(pvPower > 2000) {
                     log_d("Setting brightness to 100");
                     brightness = 100;
                 } else if(pvPower > 0) {

@@ -15579,8 +15579,7 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "CONTAINER",
-                    "tree_closed": true
+                    "saved_objtypeKey": "CONTAINER"
                   },
                   {
                     "guid": "GUID9553738-226750S23235",
@@ -17419,8 +17418,7 @@
                             "InheritedType": 11
                           }
                         ],
-                        "saved_objtypeKey": "CONTAINER",
-                        "tree_closed": true
+                        "saved_objtypeKey": "CONTAINER"
                       },
                       {
                         "guid": "GUID22698893-212562S335273235",
@@ -18613,8 +18611,7 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "CONTAINER",
-                    "tree_closed": true
+                    "saved_objtypeKey": "CONTAINER"
                   },
                   {
                     "guid": "GUID32369538-750067S6293214",
@@ -31603,7 +31600,6 @@
                       },
                       {
                         "nid": -1922428601,
-                        "flags": 1048576,
                         "strtype": "OBJECT/Flags",
                         "InheritedType": 1
                       },
@@ -31658,7 +31654,7 @@
                       {
                         "nid": 289069461,
                         "strtype": "OBJECT/Overflow_visible",
-                        "strval": "False",
+                        "strval": "True",
                         "InheritedType": 2
                       },
                       {
@@ -31821,7 +31817,7 @@
                         "strtype": "CHART/Division_lines",
                         "intarray": [
                           5,
-                          0
+                          5
                         ],
                         "InheritedType": 7
                       },
@@ -31992,6 +31988,12 @@
                                 "nid": 1973710602,
                                 "strtype": "_style/Border width",
                                 "InheritedType": 6
+                              },
+                              {
+                                "nid": -688393846,
+                                "strtype": "_style/Line_Width",
+                                "integer": 1,
+                                "InheritedType": 6
                               }
                             ],
                             "InheritedType": 1
@@ -32083,7 +32085,7 @@
                               {
                                 "nid": 1439534553,
                                 "strtype": "_style/Text_Font",
-                                "strval": "OpenSansSmall",
+                                "strval": "OpenSansExtraSmall",
                                 "InheritedType": 3
                               }
                             ],
@@ -32096,7 +32098,8 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "CHART"
+                    "saved_objtypeKey": "CHART",
+                    "tree_closed": true
                   }
                 ],
                 "locked": false,
@@ -32158,7 +32161,6 @@
                   },
                   {
                     "nid": -1705320762,
-                    "flags": 1048576,
                     "strtype": "OBJECT/Flags",
                     "InheritedType": 1
                   },
@@ -32213,7 +32215,7 @@
                   {
                     "nid": 1327336873,
                     "strtype": "OBJECT/Overflow_visible",
-                    "strval": "False",
+                    "strval": "True",
                     "InheritedType": 2
                   },
                   {
@@ -32383,7 +32385,7 @@
                             "nid": 1767154577,
                             "strtype": "_style/Padding",
                             "intarray": [
-                              54,
+                              48,
                               42,
                               16,
                               24
@@ -33007,7 +33009,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/Users/ljezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/ljezny/solax-station-live/src/ui",
-    "backup_cnt": 491,
+    "backup_cnt": 499,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",
