@@ -21764,7 +21764,7 @@
                           },
                           {
                             "nid": -883496526,
-                            "flags": 50,
+                            "flags": 98,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -22689,7 +22689,7 @@
                           },
                           {
                             "nid": 269793563,
-                            "flags": 50,
+                            "flags": 98,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -30884,7 +30884,7 @@
                     "strtype": "OBJECT/Size",
                     "intarray": [
                       100,
-                      2
+                      3
                     ],
                     "InheritedType": 7
                   },
@@ -31763,7 +31763,7 @@
                     "strtype": "OBJECT/Size",
                     "intarray": [
                       100,
-                      4
+                      5
                     ],
                     "InheritedType": 7
                   },
@@ -32623,7 +32623,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/Users/ljezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/ljezny/solax-station-live/src/ui",
-    "backup_cnt": 502,
+    "backup_cnt": 504,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",

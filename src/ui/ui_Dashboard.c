@@ -695,7 +695,7 @@ lv_obj_set_style_pad_column(ui_RightContainer, 0, LV_PART_MAIN| LV_STATE_DEFAULT
 ui_TopRightContainer = lv_obj_create(ui_RightContainer);
 lv_obj_remove_style_all(ui_TopRightContainer);
 lv_obj_set_width( ui_TopRightContainer, lv_pct(100));
-lv_obj_set_flex_grow( ui_TopRightContainer, 2);
+lv_obj_set_flex_grow( ui_TopRightContainer, 3);
 lv_obj_set_align( ui_TopRightContainer, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_TopRightContainer,LV_FLEX_FLOW_ROW);
 lv_obj_set_flex_align(ui_TopRightContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
@@ -722,7 +722,7 @@ lv_obj_set_style_border_side(ui_Container15, LV_BORDER_SIDE_FULL, LV_PART_MAIN| 
 ui_Container27 = lv_obj_create(ui_Container15);
 lv_obj_remove_style_all(ui_Container27);
 lv_obj_set_width( ui_Container27, lv_pct(100));
-lv_obj_set_height( ui_Container27, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_flex_grow( ui_Container27, 1);
 lv_obj_set_align( ui_Container27, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container27,LV_FLEX_FLOW_ROW);
 lv_obj_set_flex_align(ui_Container27, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
@@ -749,7 +749,7 @@ lv_obj_set_style_text_font(ui_yieldTodayUnitLabel, &ui_font_OpenSansExtraSmall, 
 ui_Container5 = lv_obj_create(ui_Container15);
 lv_obj_remove_style_all(ui_Container5);
 lv_obj_set_width( ui_Container5, lv_pct(100));
-lv_obj_set_height( ui_Container5, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_flex_grow( ui_Container5, 1);
 lv_obj_set_align( ui_Container5, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container5,LV_FLEX_FLOW_ROW);
 lv_obj_set_flex_align(ui_Container5, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
@@ -1016,7 +1016,7 @@ lv_obj_clear_flag( ui_Image14, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 ui_TopBottomContainer = lv_obj_create(ui_RightContainer);
 lv_obj_remove_style_all(ui_TopBottomContainer);
 lv_obj_set_width( ui_TopBottomContainer, lv_pct(100));
-lv_obj_set_flex_grow( ui_TopBottomContainer, 4);
+lv_obj_set_flex_grow( ui_TopBottomContainer, 5);
 lv_obj_set_align( ui_TopBottomContainer, LV_ALIGN_CENTER );
 lv_obj_add_flag( ui_TopBottomContainer, LV_OBJ_FLAG_OVERFLOW_VISIBLE );   /// Flags
 lv_obj_clear_flag( ui_TopBottomContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
