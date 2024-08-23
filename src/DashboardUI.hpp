@@ -116,6 +116,7 @@ public:
         int l3PercentUsage = inverterData.L3Power > 0 ? (100 * inverterData.L3Power) / totalPhasePower : 0;
 
         lv_color_t black = lv_color_make(0, 0, 0);
+        lv_color_t white = lv_color_make(255, 255, 255);
         lv_color_t red = lv_color_make(192, 0, 0);
         lv_color_t orange = lv_color_make(192, 96, 0);
         lv_color_t green = lv_color_make(0, 128, 0);
@@ -156,7 +157,8 @@ public:
         lv_label_set_text(ui_feedInPowerLabel, format(POWER, abs(inverterData.feedInPower)).value.c_str());
         lv_label_set_text(ui_feedInPowerUnitLabel, format(POWER, abs(inverterData.feedInPower)).unit.c_str());
         lv_obj_set_style_bg_color(ui_gridContainer, (inverterData.feedInPower) < 0 ? lv_color_hex(_ui_theme_color_gridColor[0]) :  lv_color_white(), 0);
-        //lv_obj_set_style_text_color(ui_feedInPowerLabel, inverterData.feedInPower < 0 ? red : black, 0);
+        lv_obj_set_style_text_color(ui_feedInPowerLabel, inverterData.feedInPower < 0 ? white : black, 0);
+        lv_obj_set_style_text_color(ui_feedInPowerUnitLabel, inverterData.feedInPower < 0 ? white : black, 0);
         lv_label_set_text_fmt(ui_socLabel, "%d", inverterData.soc);
         lv_label_set_text(ui_batteryPowerLabel, format(POWER, abs(inverterData.batteryPower)).value.c_str());
         lv_obj_set_style_bg_color(ui_batteryContainer, (inverterData.batteryPower) < 0 ? lv_color_hex(_ui_theme_color_batteryColor[0]) :  lv_color_white(), 0);
@@ -295,6 +297,7 @@ private:
 
         int duration = 1400;
         int offsetY = 15;
+        int offsetX = 30;
         if (pvAnimator != NULL)
         {
             delete pvAnimator;
@@ -303,7 +306,7 @@ private:
         if ((inverterData.pv1Power + inverterData.pv2Power) > 0)
         {
             pvAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_pvColor, ((inverterData.pv1Power + inverterData.pv2Power) / 1000) + 1);
-            pvAnimator->run(ui_pvContainer, ui_inverterContainer, duration, 0, 0, -offsetY);
+            pvAnimator->run(ui_pvContainer, ui_inverterContainer, duration, 0, 0, -offsetX, -offsetY);
         }
 
         if (batteryAnimator != NULL)
@@ -314,12 +317,12 @@ private:
         if (inverterData.batteryPower > 0)
         {
             batteryAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_batteryColor, (inverterData.batteryPower / 1000) + 1);
-            batteryAnimator->run(ui_inverterContainer, ui_batteryContainer, duration, duration, 1, -offsetY);
+            batteryAnimator->run(ui_inverterContainer, ui_batteryContainer, duration, duration, 1, offsetX, -offsetY);
         }
         else if (inverterData.batteryPower < 0)
         {
             batteryAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_batteryColor, (abs(inverterData.batteryPower) / 1000) + 1);
-            batteryAnimator->run(ui_batteryContainer, ui_inverterContainer, duration, 0, 0, -offsetY);
+            batteryAnimator->run(ui_batteryContainer, ui_inverterContainer, duration, 0, 0, offsetX, -offsetY);
         }
 
         if (gridAnimator != NULL)
@@ -331,12 +334,12 @@ private:
         if (inverterData.feedInPower > 0)
         {
             gridAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_gridColor, (inverterData.feedInPower / 1000) + 1);
-            gridAnimator->run(ui_inverterContainer, ui_gridContainer, duration, duration, 1, offsetY);
+            gridAnimator->run(ui_inverterContainer, ui_gridContainer, duration, duration, 1, offsetX, offsetY);
         }
         else if (inverterData.feedInPower < 0)
         {
             gridAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_gridColor, (abs(inverterData.feedInPower) / 1000) + 1);
-            gridAnimator->run(ui_gridContainer, ui_inverterContainer, duration, 0, 0, offsetY);
+            gridAnimator->run(ui_gridContainer, ui_inverterContainer, duration, 0, 0, offsetX, offsetY);
         }
 
         if (loadAnimator != NULL)
@@ -347,7 +350,7 @@ private:
         if (inverterData.loadPower > 0)
         {
             loadAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_loadColor, (inverterData.loadPower / 1000) + 1);
-            loadAnimator->run(ui_inverterContainer, ui_loadContainer, duration, duration, 1, 20);
+            loadAnimator->run(ui_inverterContainer, ui_loadContainer, duration, duration, 1, -offsetX, offsetY);
         }
         if (shellyAnimator != NULL)
         {
@@ -357,7 +360,7 @@ private:
         if (shellyResult.totalPower > 0)
         { // TODO: check if shelly is on
             shellyAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_pvColor, (shellyResult.totalPower / 1000) + 1);
-            shellyAnimator->run(ui_loadContainer, ui_shellyContainer, duration, duration, 1, 20);
+            shellyAnimator->run(ui_loadContainer, ui_shellyContainer, duration, duration, 1, 0, 0);
         }
     }
 };

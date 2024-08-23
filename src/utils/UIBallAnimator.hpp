@@ -66,7 +66,7 @@ public:
         delete[] items;
     }
 
-    void run(lv_obj_t *start, lv_obj_t *destination, int duration, int delay, bool direction, int yOffset = 0)
+    void run(lv_obj_t *start, lv_obj_t *destination, int duration, int delay, bool direction, int xOffset = 0, int yOffset = 0)
     {
         int centerStartX = lv_obj_get_x(start) + (lv_obj_get_width(start) / 2);
         int centerStartY = lv_obj_get_y(start) + (lv_obj_get_height(start) / 2);
@@ -79,21 +79,21 @@ public:
         int yDelay = direction ? duration / 2 : 0;
         int ballDelay = duration / 10; //duration / ballsCount / 2;
         int lineWidth = 3;
-        lv_obj_set_pos(vLine, (direction == 0 ? centerStartX : centerDestinationX) - lineWidth / 2, (distanceY > 0 ? centerStartY : centerDestinationY) + yOffset - lineWidth / 2);
+        lv_obj_set_pos(vLine, (direction == 0 ? centerStartX : centerDestinationX) - lineWidth / 2 + xOffset, (distanceY > 0 ? centerStartY : centerDestinationY) + yOffset - lineWidth / 2);
         lv_obj_set_size(vLine, 3, abs(distanceY) + 3);
 
-        lv_obj_set_pos(hLine, (distanceX > 0 ? centerStartX : centerDestinationX) - lineWidth / 2, yOffset + (direction == 0 ? centerDestinationY : centerStartY) - lineWidth / 2);
+        lv_obj_set_pos(hLine, (distanceX > 0 ? centerStartX : centerDestinationX) - lineWidth / 2+ xOffset, yOffset + (direction == 0 ? centerDestinationY : centerStartY) - lineWidth / 2);
         lv_obj_set_size(hLine, abs(distanceX) + lineWidth, 3);
 
         for (int i = 0; i < ballsCount; i++)
         {
             int radius = BALLS_RADIUS;// - i * (BALLS_RADIUS / ballsCount);
-            lv_obj_set_pos(items[i].ball, centerStartX - radius / 2, centerStartY - radius / 2 + yOffset);
+            lv_obj_set_pos(items[i].ball, centerStartX - radius / 2 + xOffset, centerStartY - radius / 2 + yOffset);
             lv_anim_init(&items[i].posXAnimation);
             lv_anim_set_exec_cb(&items[i].posXAnimation, (lv_anim_exec_xcb_t)lv_obj_set_x);
             lv_anim_set_var(&items[i].posXAnimation, items[i].ball);
             lv_anim_set_time(&items[i].posXAnimation, duration / 2);
-            lv_anim_set_values(&items[i].posXAnimation, centerStartX - radius / 2, centerStartX + distanceX - radius / 2 );
+            lv_anim_set_values(&items[i].posXAnimation, centerStartX - radius / 2 + xOffset, centerStartX + distanceX - radius / 2 + xOffset);
             lv_anim_set_delay(&items[i].posXAnimation, delay + i * ballDelay + xDelay);
             lv_anim_start(&items[i].posXAnimation);
 

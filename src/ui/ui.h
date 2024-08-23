@@ -64,19 +64,24 @@ extern lv_obj_t *ui_batteryTemperatureLabel;
 extern lv_obj_t *ui_batteryTemperatureUnitLabel;
 extern lv_obj_t *ui_loadContainer;
 extern lv_obj_t *ui_Image8;
+extern lv_obj_t *ui_Container14;
+extern lv_obj_t *ui_shellyContainer;
+extern lv_obj_t *ui_shellyCountLabel;
+extern lv_obj_t *ui_Container32;
+extern lv_obj_t *ui_shellyPowerLabel;
+extern lv_obj_t *ui_shellyPowerUnitLabel;
 extern lv_obj_t *ui_Container20;
 extern lv_obj_t *ui_loadPowerLabel;
 extern lv_obj_t *ui_loadPowerUnitLabel;
 extern lv_obj_t *ui_gridContainer;
 extern lv_obj_t *ui_Image9;
+extern lv_obj_t *ui_Container4;
 extern lv_obj_t *ui_Container22;
 extern lv_obj_t *ui_feedInPowerLabel;
 extern lv_obj_t *ui_feedInPowerUnitLabel;
-extern lv_obj_t *ui_Container14;
 extern lv_obj_t *ui_Container21;
 extern lv_obj_t *ui_selfUsePercentLabel;
 extern lv_obj_t *ui_selfUsePercentUnitLabel;
-extern lv_obj_t *ui_Image7;
 extern lv_obj_t *ui_inverterContainer;
 extern lv_obj_t *ui_Image5;
 extern lv_obj_t *ui_Container31;
@@ -96,12 +101,6 @@ extern lv_obj_t *ui_Container28;
 extern lv_obj_t *ui_inverterPowerL3Label;
 extern lv_obj_t *ui_inverterPowerL3UnitLabel;
 extern lv_obj_t *ui_statusLabel;
-extern lv_obj_t *ui_shellyContainer;
-extern lv_obj_t *ui_Image2;
-extern lv_obj_t *ui_shellyCountLabel;
-extern lv_obj_t *ui_Container32;
-extern lv_obj_t *ui_shellyPowerLabel;
-extern lv_obj_t *ui_shellyPowerUnitLabel;
 extern lv_obj_t *ui_RightContainer;
 extern lv_obj_t *ui_TopRightContainer;
 extern lv_obj_t *ui_Container15;
@@ -145,9 +144,7 @@ LV_IMG_DECLARE( ui_img_1516017106);   // assets/solar-panel-4.png
 LV_IMG_DECLARE( ui_img_1279321064);   // assets/eco-battery.png
 LV_IMG_DECLARE( ui_img_564643105);   // assets/eco-house-3.png
 LV_IMG_DECLARE( ui_img_960241876);   // assets/power-plant.png
-LV_IMG_DECLARE( ui_img_leaf_png);   // assets/leaf.png
 LV_IMG_DECLARE( ui_img_1061873486);   // assets/solar-inverter.png
-LV_IMG_DECLARE( ui_img_1337922523);   // assets/solar-plug.png
 LV_IMG_DECLARE( ui_img_performance_png);   // assets/performance.png
 
 

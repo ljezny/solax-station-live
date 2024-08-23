@@ -14,10 +14,10 @@ const ui_theme_variable_t _ui_theme_alpha_pvColor[1] = {255};
 const ui_theme_variable_t _ui_theme_color_batteryColor[1] = {0x779ECB};
 const ui_theme_variable_t _ui_theme_alpha_batteryColor[1] = {255};
 
-const ui_theme_variable_t _ui_theme_color_inverterColor[1] = {0x41413E};
+const ui_theme_variable_t _ui_theme_color_inverterColor[1] = {0xD3D3D3};
 const ui_theme_variable_t _ui_theme_alpha_inverterColor[1] = {255};
 
-const ui_theme_variable_t _ui_theme_color_gridColor[1] = {0xCAB69E};
+const ui_theme_variable_t _ui_theme_color_gridColor[1] = {0xC25964};
 const ui_theme_variable_t _ui_theme_alpha_gridColor[1] = {255};
 uint8_t ui_theme_idx = UI_THEME_DEFAULT;
 
