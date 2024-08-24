@@ -104,51 +104,52 @@ public:
         WiFi.disconnect();
     }
 
+    
     void queryMDNS()
     {
         mdns_result_t *results = NULL;
-        
-        esp_err_t err = mdns_query_ptr("_http", "_tcp", 3000, 20, &results);
-
-        if (err) {
-            log_e("Query Failed");
-        }
-        if (!results) {
-            log_w("No results found!");
-        }
-
-        mdns_result_t *r = results;
-        while (r) {
-            String hostname = r->hostname;
-            for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
-            {
-                String prefix = supportedModels[i].prefix;
-                prefix.toLowerCase();
-                if (hostname.startsWith(prefix))
-                {
-                    log_d("Found Shelly: %s model: %s", hostname.c_str(), supportedModels[i].prefix.c_str());
-                    String idText = hostname.substring(prefix.length());
-                    unsigned long long shellyId = strtoull(idText.c_str(), NULL, 16);
-                    for (int j = 0; i < MAX_SHELLY_PAIRS; j++)
-                    {
-                        if (pairs[j].shellyId == 0 || pairs[j].shellyId == shellyId)
-                        {
-                            pairs[j].shellyId = shellyId;
-                            pairs[j].ip = r->addr->addr.u_addr.ip4.addr;
-                            pairs[j].model = supportedModels[i].model;
-                            log_d("Paired Shelly %s", String(shellyId, HEX).c_str());
-                            break;
-                        }
-                    }
-                    break;
-                }
+        uint8_t numResults = 0; 
+        if(mdnsSearch == NULL) {
+            mdnsSearch = mdns_query_async_new(NULL, "_http", "_tcp", MDNS_TYPE_PTR, 5000, 20, NULL);
+            if(mdnsSearch == NULL) {
+                log_e("Failed to start mDNS search");
+                return;
             }
-
-            r = r->next;
         }
+        if(mdns_query_async_get_results(mdnsSearch, 100, &results, &numResults)) {
+            mdns_result_t *r = results;
 
-        mdns_query_results_free(results);
-
+            while (r) {
+                String hostname = r->hostname;
+                for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
+                {
+                    String prefix = supportedModels[i].prefix;
+                    prefix.toLowerCase();
+                    if (hostname.startsWith(prefix))
+                    {
+                        log_d("Found Shelly: %s model: %s", hostname.c_str(), supportedModels[i].prefix.c_str());
+                        String idText = hostname.substring(prefix.length());
+                        unsigned long long shellyId = strtoull(idText.c_str(), NULL, 16);
+                        for (int j = 0; i < MAX_SHELLY_PAIRS; j++)
+                        {
+                            if (pairs[j].shellyId == 0 || pairs[j].shellyId == shellyId)
+                            {
+                                pairs[j].shellyId = shellyId;
+                                pairs[j].ip = r->addr->addr.u_addr.ip4.addr;
+                                pairs[j].model = supportedModels[i].model;
+                                log_d("Paired Shelly %s", String(shellyId, HEX).c_str());
+                                break;
+                            }
+                        }
+                        break;
+                    }
+                }
+                r = r->next;
+            }
+            mdns_query_async_delete(mdnsSearch);
+            mdnsSearch = NULL;
+            mdns_query_results_free(results);
+        }
     }
 
     ShellyResult_t getState()
@@ -247,6 +248,7 @@ public:
         return count;
     }
 private:
+    mdns_search_once_t *mdnsSearch = NULL;
     ShellyModel_t getModelFromSSID(String ssid)
     {
         for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)

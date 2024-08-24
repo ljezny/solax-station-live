@@ -83,18 +83,10 @@ class DongleDiscovery {
                 }
 
                 if(isGoodWeSSID(ssid)) {
-                    WiFi.begin(ssid);
-                    
-                    if(awaitWifiConnection()) {
-                        if(checkGoodWeConnection()) {
-                            discoveries[discoveryIndex].sn = parseDongleSN(ssid);
-                            discoveries[discoveryIndex].type = DONGLE_TYPE_GOODWE;
-                            discoveries[discoveryIndex].ssid = ssid;
-                            result = true;
-                        }
-                    }
-
-                    WiFi.disconnect();
+                    discoveries[discoveryIndex].sn = parseDongleSN(ssid);
+                    discoveries[discoveryIndex].type = DONGLE_TYPE_GOODWE;
+                    discoveries[discoveryIndex].ssid = ssid;
+                    result = true;                   
                 }
 
                 if(isShellySSID(ssid)) {
@@ -139,24 +131,13 @@ class DongleDiscovery {
         }
 
         bool checkSolaxInverterConnection() {
-            WiFiClient client;
-            int result = client.connect("5.8.8.8", 80, 5000);
-            client.stop();
-            return result == 1;
+            //check if IP starts with 5.8.8.X
+            return WiFi.localIP()[0] == 5 && WiFi.localIP()[1] == 8 && WiFi.localIP()[2] == 8;
         }
 
         bool checkSolaxWallboxConnection() {
-            WiFiClient client;
-            int result = client.connect("192.168.10.10", 80, 5000);
-            client.stop();
-            return result == 1;
-        }
-
-        bool checkGoodWeConnection() {
-            WiFiClient client;
-            int result = client.connect("10.10.100.253", 8899, 5000);
-            client.stop();
-            return result == 1;
+            //check if IP starts with 192.168.10.X
+            return WiFi.localIP()[0] == 192 && WiFi.localIP()[1] == 168 && WiFi.localIP()[2] == 10;
         }
 
         bool isSolaxDongleSSID(String ssid) {
