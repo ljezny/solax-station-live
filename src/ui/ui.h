@@ -41,6 +41,7 @@ extern lv_obj_t *ui_pvContainer;
 extern lv_obj_t *ui_Container11;
 extern lv_obj_t *ui_pvLabel;
 extern lv_obj_t *ui_pvUnitLabel;
+extern lv_obj_t *ui_Container1;
 extern lv_obj_t *ui_pvStringsContainer;
 extern lv_obj_t *ui_Container13;
 extern lv_obj_t *ui_pv1Label;

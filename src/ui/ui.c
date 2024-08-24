@@ -25,6 +25,7 @@ lv_obj_t *ui_pvContainer;
 lv_obj_t *ui_Container11;
 lv_obj_t *ui_pvLabel;
 lv_obj_t *ui_pvUnitLabel;
+lv_obj_t *ui_Container1;
 lv_obj_t *ui_pvStringsContainer;
 lv_obj_t *ui_Container13;
 lv_obj_t *ui_pv1Label;

@@ -16,6 +16,7 @@ public:
         WallboxData_t wallboxData;
         String url = "http://192.168.10.10";
         HTTPClient http;
+        http.setConnectTimeout(1000);
         if (http.begin(url))
         {
             int httpCode = http.POST("optType=ReadRealTimeData&pwd=" + sn);

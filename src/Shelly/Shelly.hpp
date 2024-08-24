@@ -104,11 +104,22 @@ public:
         WiFi.disconnect();
     }
 
-    void discoverParings()
+    void queryMDNS()
     {
-        for (int x = 0; x < MDNS.queryService("http", "tcp"); x++)
-        {
-            String hostname = MDNS.hostname(x);
+        mdns_result_t *results = NULL;
+        
+        esp_err_t err = mdns_query_ptr("_http", "_tcp", 3000, 20, &results);
+
+        if (err) {
+            log_e("Query Failed");
+        }
+        if (!results) {
+            log_w("No results found!");
+        }
+
+        mdns_result_t *r = results;
+        while (r) {
+            String hostname = r->hostname;
             for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
             {
                 String prefix = supportedModels[i].prefix;
@@ -123,7 +134,7 @@ public:
                         if (pairs[j].shellyId == 0 || pairs[j].shellyId == shellyId)
                         {
                             pairs[j].shellyId = shellyId;
-                            pairs[j].ip = MDNS.address(x);
+                            pairs[j].ip = r->addr->addr.u_addr.ip4.addr;
                             pairs[j].model = supportedModels[i].model;
                             log_d("Paired Shelly %s", String(shellyId, HEX).c_str());
                             break;
@@ -132,7 +143,12 @@ public:
                     break;
                 }
             }
+
+            r = r->next;
         }
+
+        mdns_query_results_free(results);
+
     }
 
     ShellyResult_t getState()
@@ -210,6 +226,19 @@ public:
         }
         return false;
     }
+
+    int getPairedCount()
+    {
+        int count = 0;
+        for (int i = 0; i < MAX_SHELLY_PAIRS; i++)
+        {
+            if (pairs[i].shellyId != 0)
+            {
+                count++;
+            }
+        }
+        return count;
+    }
 private:
     ShellyModel_t getModelFromSSID(String ssid)
     {
@@ -222,8 +251,6 @@ private:
         }
         return PLUG;
     }
-
-    
 
     bool setWiFiSTA_Gen1(String ssid, String password)
     {
@@ -296,6 +323,7 @@ private:
 
         String url = "http://" + ipAddress.toString() + "/status";
         HTTPClient http;
+        http.setConnectTimeout(1000);
         if (http.begin(url))
         {
             int httpCode = http.GET();

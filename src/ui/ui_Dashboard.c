@@ -83,7 +83,15 @@ lv_obj_set_align( ui_pvUnitLabel, LV_ALIGN_CENTER );
 lv_label_set_text(ui_pvUnitLabel,"W");
 lv_obj_set_style_text_font(ui_pvUnitLabel, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-ui_pvStringsContainer = lv_obj_create(ui_pvContainer);
+ui_Container1 = lv_obj_create(ui_pvContainer);
+lv_obj_remove_style_all(ui_Container1);
+lv_obj_set_width( ui_Container1, lv_pct(100));
+lv_obj_set_flex_grow( ui_Container1, 1);
+lv_obj_set_align( ui_Container1, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_Container1, LV_OBJ_FLAG_OVERFLOW_VISIBLE );   /// Flags
+lv_obj_clear_flag( ui_Container1, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+ui_pvStringsContainer = lv_obj_create(ui_Container1);
 lv_obj_remove_style_all(ui_pvStringsContainer);
 lv_obj_set_width( ui_pvStringsContainer, LV_SIZE_CONTENT);  /// 100
 lv_obj_set_height( ui_pvStringsContainer, LV_SIZE_CONTENT);   /// 1
@@ -1016,7 +1024,7 @@ lv_obj_clear_flag( ui_Image14, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 ui_TopBottomContainer = lv_obj_create(ui_RightContainer);
 lv_obj_remove_style_all(ui_TopBottomContainer);
 lv_obj_set_width( ui_TopBottomContainer, lv_pct(100));
-lv_obj_set_flex_grow( ui_TopBottomContainer, 5);
+lv_obj_set_flex_grow( ui_TopBottomContainer, 6);
 lv_obj_set_align( ui_TopBottomContainer, LV_ALIGN_CENTER );
 lv_obj_add_flag( ui_TopBottomContainer, LV_OBJ_FLAG_OVERFLOW_VISIBLE );   /// Flags
 lv_obj_clear_flag( ui_TopBottomContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags

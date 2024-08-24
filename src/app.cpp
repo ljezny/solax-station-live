@@ -69,56 +69,6 @@ InverterData_t createRandomMockData()
     return inverterData;
 }
 
-void runReloadDataTask(void *pvParameters)
-{
-    for (;;)
-    {
-        int start = millis();
-#if DEMO
-        inverterData = createRandomMockData();
-        solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
-#else
-        log_d("Reloading data");
-        if (discoveryResult.result)
-        {
-            //inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
-            int MAX_RETRIES = 5;
-            for(int i = 0; i < MAX_RETRIES; i++) {
-                InverterData_t d = dongleAPI.loadData(discoveryResult.sn);
-                if(d.status == DONGLE_STATUS_OK) {
-                    inverterData = d;
-                    break;
-                }
-                delay(100);
-            }
-            if (inverterData.status == DONGLE_STATUS_OK)
-            {
-                solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
-                shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
-            }
-        }
-#endif
-        vTaskDelay(constrain((3000 - (millis() - start)), 0, 3000) / portTICK_PERIOD_MS);
-    }
-}
-
-// void runShellyReloadTask(void *pvParameters)
-// {
-//     long lastActivateShellyAttempt = 0;
-//     for (;;)
-//     {
-//         log_d("Reloading Shelly data");
-//         shellyResult = shellyAPI.getState();
-//         if (lastActivateShellyAttempt == 0 || millis() - lastActivateShellyAttempt > 30000)
-//         {
-//             RequestedShellyState_t state = shellyRuleResolver.resolveShellyState();
-//             shellyAPI.updateState(state, 5 * 60);
-//             lastActivateShellyAttempt = millis();
-//         }
-//         vTaskDelay(4000 / portTICK_PERIOD_MS);
-//     }
-// }
-
 bool dashboardShown = false;
 
 void timerCB(struct _lv_timer_t *timer)
@@ -162,36 +112,17 @@ void setup()
     lv_label_set_text(ui_ESPIdLabel, softAP.getESPIdHex().c_str());
 
     lv_timer_t *timer = lv_timer_create(timerCB, 3000, NULL);
-    lv_log_register_print_cb([](const char *txt)
-                             { log_i("%s\n", txt); });
-
-    //xTaskCreate(runReloadDataTask, "ReloadDataTask", 32 * 1024, NULL, 1, NULL);
-    //xTaskCreate(runShellyReloadTask, "ShellyReloadTask", 32 * 1024, NULL, 1, NULL);
+    //lv_log_register_print_cb([](const char *txt)
+      //                       { log_i("%s\n", txt); });
 
     panel->getTouch()->attachInterruptCallback(onTouchInterruptCallback, NULL);
 
     softAP.start();
 }
 
-void discoverShellyPairings(bool force = false)
-{
-    static long lastAttempt = 0;
-    
-    if(force) {
-        lastAttempt = 0;
-    }   
-
-    if (lastAttempt == 0 || millis() - lastAttempt > 3000)
-    {
-        log_d("Discovering Shelly on local network");
-        shellyAPI.discoverParings();
-        lastAttempt = millis();
-    }
-}
-
-bool checkDongleDiscovery() {
+bool discoverDongles() {
     static long lastAttempt = 0;    
-    if (lastAttempt == 0 || millis() - lastAttempt > 10000)
+    if (lastAttempt == 0 || millis() - lastAttempt > 30000)
     {
         log_d("Discovering dongles");
         if(dongleDiscovery.discoverDongle()) {
@@ -222,7 +153,8 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult) {
 
 void loadSolaxWallboxData(DongleDiscoveryResult_t &discoveryResult) {
     static long lastAttempt = 0;
-    if (lastAttempt == 0 || millis() - lastAttempt > 30000)
+    int wallboxRefreshPeriod = wallboxData.status == DONGLE_STATUS_OK && wallboxData.isConnected? 30000 : 5 * 60 * 1000;
+    if (lastAttempt == 0 || millis() - lastAttempt > wallboxRefreshPeriod)
     {
         log_d("Loading Solax wallbox data");
         if(dongleDiscovery.connectToDongle(discoveryResult, "")) {
@@ -264,8 +196,6 @@ void pairShelly(DongleDiscoveryResult_t &discoveryResult) {
                 discoveryResult.type = DONGLE_TYPE_UNKNOWN;
                 discoveryResult.sn = "";
                 discoveryResult.ssid = "";
-
-                discoverShellyPairings(true);
             }
         }
         lastAttempt = millis();
@@ -277,6 +207,14 @@ void reloadShelly() {
     if (lastAttempt == 0 || millis() - lastAttempt > 5000)
     {
         log_d("Reloading Shelly data");
+        
+        if(softAP.getNumberOfConnectedDevices() != shellyAPI.getPairedCount()) {
+            log_d("Not all Shelly devices paired, querying mDNS");
+            shellyAPI.queryMDNS();
+        } else {
+            log_d("All Shelly devices paired");
+        }
+
         shellyResult = shellyAPI.getState();        
         RequestedShellyState_t state = shellyRuleResolver.resolveShellyState();
         shellyAPI.updateState(state, 5 * 60);
@@ -284,10 +222,7 @@ void reloadShelly() {
     }
 }
 
-void loop()
-{
-    checkDongleDiscovery();
-    
+void processDongles() {
     for(int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++) {
         if(dongleDiscovery.discoveries[i].type != DONGLE_TYPE_UNKNOWN) {
             switch (dongleDiscovery.discoveries[i].type)
@@ -309,8 +244,19 @@ void loop()
             }
         }
     }
-    
-    discoverShellyPairings();
+
+#if DEMO
+    inverterData = createRandomMockData();
+    solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
+#endif
+}
+
+void loop()
+{
+    discoverDongles();
+    processDongles();
+   
     reloadShelly();
+
     delay(100);
 }
