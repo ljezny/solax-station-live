@@ -208,7 +208,7 @@ void reloadShelly() {
     {
         log_d("Reloading Shelly data");
         
-        if(softAP.getNumberOfConnectedDevices() != shellyAPI.getPairedCount()) {
+        if(softAP.getNumberOfConnectedDevices() > shellyAPI.getPairedCount()) {
             log_d("Not all Shelly devices paired, querying mDNS");
             shellyAPI.queryMDNS();
         } else {

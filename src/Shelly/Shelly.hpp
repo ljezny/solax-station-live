@@ -174,7 +174,14 @@ public:
                     result.activeCount++;
                 }
                 pairs[i].lastState.totalPower += state.totalPower;
-                pairs[i].lastState.totalEnergy += state.totalEnergy;                
+                pairs[i].lastState.totalEnergy += state.totalEnergy;            
+
+                if((millis() - pairs[i].lastState.updated) > 1 * 60 * 1000) {
+                    log_w("Shelly %s state is outdated", String(pairs[i].shellyId, HEX).c_str());
+                    pairs[i].lastState = ShellyStateResult_t();
+                    pairs[i].ip = INADDR_NONE;
+                    pairs[i].shellyId = 0;                    
+                }
             }
         }
         return result;
@@ -332,7 +339,7 @@ private:
                 String payload = http.getString();
                 DynamicJsonDocument doc(8192);
                 deserializeJson(doc, payload);
-                result.updated = time(NULL); // doc["unixtime"].as<int>();
+                result.updated = millis(); // doc["unixtime"].as<int>();
                 result.isOn = doc["relays"][0]["ison"].as<bool>();
                 result.source = doc["relays"][0]["source"].as<String>();
                 result.totalPower = doc["meters"][0]["power"].as<float>();
@@ -358,7 +365,7 @@ private:
                 String payload = http.getString();
                 DynamicJsonDocument doc(8192);
                 deserializeJson(doc, payload);
-                result.updated = time(NULL);
+                result.updated = millis();
                 result.isOn = doc["output"].as<bool>();
                 result.totalPower = doc["apower"].as<float>();
                 result.source = doc["source"].as<String>();
