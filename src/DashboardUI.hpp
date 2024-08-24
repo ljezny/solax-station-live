@@ -120,6 +120,7 @@ public:
         lv_color_t red = lv_color_make(192, 0, 0);
         lv_color_t orange = lv_color_make(192, 96, 0);
         lv_color_t green = lv_color_make(0, 128, 0);
+        
 
         lv_label_set_text(ui_pvLabel, format(POWER, inverterData.pv1Power + inverterData.pv2Power).value.c_str());
         lv_label_set_text(ui_pvUnitLabel, format(POWER, inverterData.pv1Power + inverterData.pv2Power).unit.c_str());
@@ -137,6 +138,19 @@ public:
         }   
 
         lv_label_set_text_fmt(ui_inverterTemperatureLabel, "%d", inverterData.inverterTemperature);
+        lv_obj_set_style_text_color(ui_inverterTemperatureLabel, white, 0);
+        lv_obj_set_style_text_color(ui_inverterTemperatureUnitLabel, white, 0);
+        if(inverterData.inverterTemperature > 50)
+        {
+            lv_obj_set_style_text_color(ui_inverterTemperatureContainer, red, 0);
+        } else if (inverterData.inverterTemperature > 40)
+        {
+            lv_obj_set_style_text_color(ui_inverterTemperatureContainer, orange, 0);
+        } else
+        {
+            lv_obj_set_style_text_color(ui_inverterTemperatureContainer, green, 0);
+        }
+
         lv_label_set_text(ui_inverterPowerLabel, format(POWER, inverterData.inverterPower).value.c_str());
         lv_obj_set_style_bg_color(ui_pvContainer, (inverterData.pv1Power + inverterData.pv2Power) > 0 ? lv_color_hex(_ui_theme_color_pvColor[0]) :  lv_color_white(), 0);
         lv_label_set_text(ui_inverterPowerUnitLabel, format(POWER, inverterData.inverterPower).unit.c_str());
@@ -166,6 +180,21 @@ public:
         //lv_obj_set_style_text_color(ui_batteryPowerLabel, inverterData.batteryPower < 0 ? red : black, 0);
         //lv_obj_set_style_text_color(ui_batteryPowerUnitLabel, inverterData.batteryPower < 0 ? red : black, 0);
         lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d", inverterData.batteryTemperature);
+        lv_obj_set_style_text_color(ui_inverterTemperatureUnitLabel, white, 0);
+        lv_obj_set_style_text_color(ui_batteryTemperatureLabel, white, 0);
+        lv_obj_set_style_text_color(ui_batteryTemperatureUnitLabel, white, 0);
+        if(inverterData.batteryTemperature > 40)
+        {
+            lv_obj_set_style_text_color(ui_batteryTemperatureContainer, red, 0);
+        } else if (inverterData.batteryTemperature > 30)
+        {
+            lv_obj_set_style_text_color(ui_batteryTemperatureContainer, orange, 0);
+        } else
+        {
+            lv_obj_set_style_text_color(ui_batteryTemperatureContainer, green, 0);
+        }
+        
+
         lv_label_set_text(ui_selfUsePercentLabel, String(selfUsePowerPercent).c_str());
         if (selfUsePowerPercent > 50)
         {
