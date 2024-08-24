@@ -19,6 +19,12 @@
         "string_view": "cpp",
         "initializer_list": "cpp",
         "span": "cpp",
-        "new": "cpp"
+        "new": "cpp",
+        "compare": "cpp",
+        "functional": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp",
+        "algorithm": "cpp"
     }
 }

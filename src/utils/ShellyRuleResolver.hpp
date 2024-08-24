@@ -15,14 +15,14 @@ typedef struct PowerSample {
     int16_t batteryPower = 0;
     int16_t loadPower = 0;
     int32_t feedInPower = 0;
-};
+} PowerSample_t;
 
 #define MAX_POWER_SAMPLES 10
 
 class ShellyRuleResolver
 {
 private:
-    PowerSample powerSamples[MAX_POWER_SAMPLES];
+    PowerSample_t powerSamples[MAX_POWER_SAMPLES];
 
     bool hasValidSamples() {
         for (int i = 0; i < MAX_POWER_SAMPLES; i++) {
@@ -74,7 +74,7 @@ private:
     }
 public:
     void addPowerSample(int pvPower, int soc, int batteryPower, int loadPower, int feedInPower) {
-        PowerSample sample;
+        PowerSample_t sample;
         sample.timestamp = millis();
         sample.pvPower = pvPower;
         sample.soc = soc;

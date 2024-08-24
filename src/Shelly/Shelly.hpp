@@ -12,7 +12,6 @@
 #include "utils/ShellyRuleResolver.hpp"
  
 #define MAX_SHELLY_PAIRS 8
-#define RETRIES 3
 
 typedef enum
 {
@@ -42,6 +41,7 @@ const ShellyModelInfo_t supportedModels[SHELLY_SUPPORTED_MODEL_COUNT] = {
     {PLUS1PM, "Plus1PM-"}, //????
     {PRO3, "ShellyPro3-"},
     {PRO3, "Pro3-"}};
+
 typedef struct ShellyStateResult {
     int updated = 0;
     ShellyModel_t model = PLUG_S;
@@ -80,25 +80,6 @@ public:
             pairs[i].ip = INADDR_NONE;
             pairs[i].model = PLUG_S;
         }
-    }
-
-    String findShellyAP()
-    {
-        int found = WiFi.scanNetworks();
-        for (int i = 0; i < found; i++)
-        {
-            String ssid = WiFi.SSID(i);
-            log_d("Found network: %s", ssid.c_str());
-            for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
-            {
-                if (ssid.startsWith(supportedModels[i].prefix))
-                {
-                    log_d("Found Shelly AP: %s", ssid.c_str());
-                    return ssid;
-                }
-            }
-        }
-        return "";
     }
 
     void pairShelly(String shellySSId, String ssid, String password)
@@ -165,18 +146,19 @@ public:
                 result.pairedCount++;
 
                 ShellyStateResult_t state = getState(pairs[i]);
-                pairs[i].lastState = state;
                 if(state.updated != 0)
                 {
-                    if(state.isOn)
-                    {
-                        result.activeCount++;
-                    }
-                    result.totalPower += state.totalPower;
-                    result.totalEnergy += state.totalEnergy;
+                    pairs[i].lastState = state;
                 } else {
                     log_e("Failed to get state for Shelly %s", String(pairs[i].shellyId, HEX).c_str());
                 }
+
+                if(pairs[i].lastState.isOn)
+                {
+                    result.activeCount++;
+                }
+                pairs[i].lastState.totalPower += state.totalPower;
+                pairs[i].lastState.totalEnergy += state.totalEnergy;                
             }
         }
         return result;
@@ -212,20 +194,7 @@ public:
             }
         }
     }
-
-private:
-    ShellyModel_t getModelFromSSID(String ssid)
-    {
-        for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
-        {
-            if (ssid.startsWith(supportedModels[i].prefix))
-            {
-                return supportedModels[i].model;
-            }
-        }
-        return PLUG;
-    }
-
+    
     bool setWiFiSTA(String shellyAPSsid, String ssid, String password)
     {
         switch (getModelFromSSID(shellyAPSsid))
@@ -241,6 +210,20 @@ private:
         }
         return false;
     }
+private:
+    ShellyModel_t getModelFromSSID(String ssid)
+    {
+        for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
+        {
+            if (ssid.startsWith(supportedModels[i].prefix))
+            {
+                return supportedModels[i].model;
+            }
+        }
+        return PLUG;
+    }
+
+    
 
     bool setWiFiSTA_Gen1(String ssid, String password)
     {
@@ -311,33 +294,25 @@ private:
         ShellyStateResult_t result;
         result.updated = 0;
 
-        for(int i = 0; i < RETRIES; i++)
+        String url = "http://" + ipAddress.toString() + "/status";
+        HTTPClient http;
+        if (http.begin(url))
         {
-            String url = "http://" + ipAddress.toString() + "/status";
-            HTTPClient http;
-            if (http.begin(url))
+            int httpCode = http.GET();
+            if (httpCode == HTTP_CODE_OK)
             {
-                int httpCode = http.GET();
-                if (httpCode == HTTP_CODE_OK)
-                {
-                    String payload = http.getString();
-                    DynamicJsonDocument doc(8192);
-                    deserializeJson(doc, payload);
-                    result.updated = time(NULL); // doc["unixtime"].as<int>();
-                    result.isOn = doc["relays"][0]["ison"].as<bool>();
-                    result.source = doc["relays"][0]["source"].as<String>();
-                    result.totalPower = doc["meters"][0]["power"].as<float>();
-                    result.totalEnergy = doc["meters"][0]["total"].as<float>() / 60.0f;
-                }
+                String payload = http.getString();
+                DynamicJsonDocument doc(8192);
+                deserializeJson(doc, payload);
+                result.updated = time(NULL); // doc["unixtime"].as<int>();
+                result.isOn = doc["relays"][0]["ison"].as<bool>();
+                result.source = doc["relays"][0]["source"].as<String>();
+                result.totalPower = doc["meters"][0]["power"].as<float>();
+                result.totalEnergy = doc["meters"][0]["total"].as<float>() / 60.0f;
             }
-            http.end();
-
-            if(result.updated != 0) {
-                break;
-            }
-            delay(i * 1000);
         }
-        
+        http.end();
+
         return result;
     }
 
@@ -345,32 +320,24 @@ private:
     {
         ShellyStateResult_t result;
         result.updated = 0;
-        for(int i = 0; i < RETRIES; i++)
+        String url = "http://" + ipAddress.toString() + "/rpc/Switch.GetStatus?id=0";
+        HTTPClient http;
+        if (http.begin(url))
         {
-            String url = "http://" + ipAddress.toString() + "/rpc/Switch.GetStatus?id=0";
-            HTTPClient http;
-            if (http.begin(url))
+            int httpCode = http.GET();
+            if (httpCode == HTTP_CODE_OK)
             {
-                int httpCode = http.GET();
-                if (httpCode == HTTP_CODE_OK)
-                {
-                    String payload = http.getString();
-                    DynamicJsonDocument doc(8192);
-                    deserializeJson(doc, payload);
-                    result.updated = time(NULL);
-                    result.isOn = doc["output"].as<bool>();
-                    result.totalPower = doc["apower"].as<float>();
-                    result.source = doc["source"].as<String>();
-                    result.totalEnergy = doc["aenergy"]["total"].as<float>();
-                }
+                String payload = http.getString();
+                DynamicJsonDocument doc(8192);
+                deserializeJson(doc, payload);
+                result.updated = time(NULL);
+                result.isOn = doc["output"].as<bool>();
+                result.totalPower = doc["apower"].as<float>();
+                result.source = doc["source"].as<String>();
+                result.totalEnergy = doc["aenergy"]["total"].as<float>();
             }
-            http.end();
-
-            if(result.updated != 0) {
-                break;
-            }
-            delay(i * 1000);
         }
+        http.end();
        
         return result;
     }

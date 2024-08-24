@@ -7,6 +7,7 @@
 #include "Inverters/DongleDiscovery.hpp"
 #include "Inverters/Goodwe/GoodweDongleAPI.hpp"
 #include "Inverters/Solax/SolaxDongleAPI.hpp"
+#include "Inverters/Solax/SolaxWallboxDongleAPI.hpp"
 #include "Shelly/Shelly.hpp"
 #include "utils/UnitFormatter.hpp"
 #include "utils/SolarChartDataProvider.hpp"
@@ -18,14 +19,13 @@
 
 SET_LOOP_TASK_STACK_SIZE(48 * 1024);
 
-
-SolaxDongleAPI dongleAPI;
 DongleDiscovery dongleDiscovery;
 ShellyAPI shellyAPI;
 BacklightResolver backlightResolver;
 SoftAP softAP;
 
 InverterData_t inverterData;
+WallboxData_t wallboxData;
 DongleDiscoveryResult_t discoveryResult;
 ShellyResult_t shellyResult;
 SolarChartDataProvider solarChartDataProvider;
@@ -102,22 +102,22 @@ void runReloadDataTask(void *pvParameters)
     }
 }
 
-void runShellyReloadTask(void *pvParameters)
-{
-    long lastActivateShellyAttempt = 0;
-    for (;;)
-    {
-        log_d("Reloading Shelly data");
-        shellyResult = shellyAPI.getState();
-        if (lastActivateShellyAttempt == 0 || millis() - lastActivateShellyAttempt > 30000)
-        {
-            RequestedShellyState_t state = shellyRuleResolver.resolveShellyState();
-            shellyAPI.updateState(state, 5 * 60);
-            lastActivateShellyAttempt = millis();
-        }
-        vTaskDelay(4000 / portTICK_PERIOD_MS);
-    }
-}
+// void runShellyReloadTask(void *pvParameters)
+// {
+//     long lastActivateShellyAttempt = 0;
+//     for (;;)
+//     {
+//         log_d("Reloading Shelly data");
+//         shellyResult = shellyAPI.getState();
+//         if (lastActivateShellyAttempt == 0 || millis() - lastActivateShellyAttempt > 30000)
+//         {
+//             RequestedShellyState_t state = shellyRuleResolver.resolveShellyState();
+//             shellyAPI.updateState(state, 5 * 60);
+//             lastActivateShellyAttempt = millis();
+//         }
+//         vTaskDelay(4000 / portTICK_PERIOD_MS);
+//     }
+// }
 
 bool dashboardShown = false;
 
@@ -165,41 +165,22 @@ void setup()
     lv_log_register_print_cb([](const char *txt)
                              { log_i("%s\n", txt); });
 
-    xTaskCreate(runReloadDataTask, "ReloadDataTask", 32 * 1024, NULL, 1, NULL);
-    xTaskCreate(runShellyReloadTask, "ShellyReloadTask", 32 * 1024, NULL, 1, NULL);
+    //xTaskCreate(runReloadDataTask, "ReloadDataTask", 32 * 1024, NULL, 1, NULL);
+    //xTaskCreate(runShellyReloadTask, "ShellyReloadTask", 32 * 1024, NULL, 1, NULL);
 
     panel->getTouch()->attachInterruptCallback(onTouchInterruptCallback, NULL);
+
+    softAP.start();
 }
 
-void discoverDongle()
+void discoverShellyPairings(bool force = false)
 {
     static long lastAttempt = 0;
+    
+    if(force) {
+        lastAttempt = 0;
+    }   
 
-    if (lastAttempt == 0 || millis() - lastAttempt > 20000)
-    {
-        discoveryResult = dongleDiscovery.discoverDongle();
-        lastAttempt = millis();
-    } 
-}
-
-void checkNewShellyPairings()
-{
-    static long lastAttempt = 0;
-    if (lastAttempt == 0 || millis() - lastAttempt > 30000)
-    {
-        log_d("Checking for new Shelly pairings");
-        String shellyAPSSID = shellyAPI.findShellyAP();
-        if (shellyAPSSID.length() > 0)
-        {
-            shellyAPI.pairShelly(shellyAPSSID, softAP.getSSID(), softAP.getPassword()); 
-        }
-        lastAttempt = millis();
-    }
-}
-
-void discoverShellyPairings()
-{
-    static long lastAttempt = 0;
     if (lastAttempt == 0 || millis() - lastAttempt > 3000)
     {
         log_d("Discovering Shelly on local network");
@@ -208,20 +189,128 @@ void discoverShellyPairings()
     }
 }
 
-void checkSoftAP()
-{
-    static long lastAttempt = 0;
+bool checkDongleDiscovery() {
+    static long lastAttempt = 0;    
     if (lastAttempt == 0 || millis() - lastAttempt > 10000)
     {
-        softAP.ensureRunning();
+        log_d("Discovering dongles");
+        if(dongleDiscovery.discoverDongle()) {
+            lastAttempt = millis();
+            return true;
+        }
+    }
+    return false;
+}
+
+void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult) {
+    static long lastAttempt = 0;
+    if (lastAttempt == 0 || millis() - lastAttempt > 3000)
+    {
+        log_d("Loading Solax inverter data");
+        if(dongleDiscovery.connectToDongle(discoveryResult, "")) {
+            InverterData_t d = SolaxDongleAPI().loadData(discoveryResult.sn);
+            if (d.status == DONGLE_STATUS_OK)
+            {
+                inverterData = d;
+                solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
+                shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
+            }
+        }
+        lastAttempt = millis();
+    }
+} 
+
+void loadSolaxWallboxData(DongleDiscoveryResult_t &discoveryResult) {
+    static long lastAttempt = 0;
+    if (lastAttempt == 0 || millis() - lastAttempt > 30000)
+    {
+        log_d("Loading Solax wallbox data");
+        if(dongleDiscovery.connectToDongle(discoveryResult, "")) {
+            WallboxData_t d = SolaxWallboxDongleAPI().loadData(discoveryResult.sn);
+            if (d.status == DONGLE_STATUS_OK)
+            {
+                wallboxData = d;
+            }
+        }
+        lastAttempt = millis();
+    }
+}
+
+void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult) {
+    static long lastAttempt = 0;
+    if (lastAttempt == 0 || millis() - lastAttempt > 3000)
+    {
+        log_d("Loading Goodwe inverter data");
+        if(dongleDiscovery.connectToDongle(discoveryResult, "1245678")) {
+            InverterData_t d = GoodweDongleAPI().loadData(discoveryResult.sn);
+            if (d.status == DONGLE_STATUS_OK)
+            {
+                inverterData = d;
+                solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
+                shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
+            }
+        }
+        lastAttempt = millis();
+    }
+}
+
+void pairShelly(DongleDiscoveryResult_t &discoveryResult) {
+    static long lastAttempt = 0;
+    if (lastAttempt == 0 || millis() - lastAttempt > 30000)
+    {
+        log_d("Pairing Shelly");
+        if(dongleDiscovery.connectToDongle(discoveryResult, "")) {
+            if(shellyAPI.setWiFiSTA(discoveryResult.ssid, softAP.getSSID(), softAP.getPassword())) {
+                discoveryResult.type = DONGLE_TYPE_UNKNOWN;
+                discoveryResult.sn = "";
+                discoveryResult.ssid = "";
+
+                discoverShellyPairings(true);
+            }
+        }
+        lastAttempt = millis();
+    }
+}
+
+void reloadShelly() {
+    static long lastAttempt = 0;
+    if (lastAttempt == 0 || millis() - lastAttempt > 5000)
+    {
+        log_d("Reloading Shelly data");
+        shellyResult = shellyAPI.getState();        
+        RequestedShellyState_t state = shellyRuleResolver.resolveShellyState();
+        shellyAPI.updateState(state, 5 * 60);
         lastAttempt = millis();
     }
 }
 
 void loop()
 {
-    discoverDongle();
-    checkNewShellyPairings();
+    checkDongleDiscovery();
+    
+    for(int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++) {
+        if(dongleDiscovery.discoveries[i].type != DONGLE_TYPE_UNKNOWN) {
+            switch (dongleDiscovery.discoveries[i].type)
+            {
+            case DONGLE_TYPE_SOLAX_INVERTER:
+                loadSolaxInverterData(dongleDiscovery.discoveries[i]);
+                break;
+            case DONGLE_TYPE_SOLAX_WALLBOX:
+                loadSolaxWallboxData(dongleDiscovery.discoveries[i]);
+                break;
+            case DONGLE_TYPE_GOODWE:
+                loadGoodweInverterData(dongleDiscovery.discoveries[i]);
+                break;
+            case DONGLE_TYPE_SHELLY:
+                pairShelly(dongleDiscovery.discoveries[i]);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+    
     discoverShellyPairings();
-    checkSoftAP();
+    reloadShelly();
+    delay(100);
 }

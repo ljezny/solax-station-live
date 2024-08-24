@@ -35,3 +35,12 @@ typedef struct
     double pvToday = 0;
     uint32_t pvTotal = 0;
 } InverterData_t;
+
+typedef struct
+{
+    DongleStatus_t status = DONGLE_STATUS_UNKNOWN;
+    String sn;
+    bool isConnected = false;
+    bool isCharging = false;
+    int power = 0;
+} WallboxData_t;

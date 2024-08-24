@@ -18,17 +18,14 @@ public:
         return getESPIdHex();
     }
 
-    void ensureRunning()
+    void start()
     {
-        if (WiFi.softAPSSID().isEmpty())
+        log_d("Starting SoftAP");
+        WiFi.softAP(getSSID(), getPassword(), 1, 1, MAX_SHELLY_PAIRS);
+        if (!MDNS.begin(getSSID().c_str()))
         {
-            log_d("Starting SoftAP");
-            WiFi.softAP(getSSID(), getPassword(), 1, 1, MAX_SHELLY_PAIRS);
-            if (!MDNS.begin(getSSID().c_str()))
-            {
-                log_e("Error setting up MDNS responder!");
-            }
-        }
+            log_e("Error setting up MDNS responder!");
+        }        
     }
     
     String getESPIdHex()
@@ -37,7 +34,6 @@ public:
         snprintf(idHex, 23, "%llX", ESP.getEfuseMac());
         return idHex;
     }
-
 private:
     
 };
