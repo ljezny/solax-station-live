@@ -177,7 +177,7 @@ public:
                 pairs[i].lastState.totalPower += state.totalPower;
                 pairs[i].lastState.totalEnergy += state.totalEnergy;            
 
-                if((millis() - pairs[i].lastState.updated) > 1 * 60 * 1000) {
+                if((millis() - pairs[i].lastState.updated) > 5 * 60 * 1000) {
                     log_w("Shelly %s state is outdated", String(pairs[i].shellyId, HEX).c_str());
                     pairs[i].lastState = ShellyStateResult_t();
                     pairs[i].ip = INADDR_NONE;
