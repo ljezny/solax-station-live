@@ -181,7 +181,8 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult) {
     if (lastAttempt == 0 || millis() - lastAttempt > 3000)
     {
         log_d("Loading Goodwe inverter data");
-        if(dongleDiscovery.connectToDongle(discoveryResult, "1245678")) {
+        if(dongleDiscovery.connectToDongle(discoveryResult, "12345678")) {
+            log_d("GoodWe wifi connected.");
             InverterData_t d = GoodweDongleAPI().loadData(discoveryResult.sn);
             if (d.status == DONGLE_STATUS_OK)
             {

@@ -12,8 +12,7 @@ class GoodweDongleAPI
 public:
     InverterData_t loadData(String sn)
     {
-        InverterData_t inverterData;
-        return inverterData;
+        return readData();
     }
 
 private:
@@ -36,7 +35,7 @@ private:
 
     bool connect()
     {
-        return udp.begin(IPAddress(10, 10, 100, 253), 8899);
+        return udp.begin(WiFi.localIP(), 8899);
     }
 
     void disconnect()
@@ -117,8 +116,10 @@ private:
     InverterData_t readData()
     {
         InverterData_t inverterData;
+        log_d("Connecting to dongle...");
         if (connect())
         {
+            log_d("Connected.");
             int PACKET_SIZE = 259; // WHY?
             byte packetBuffer[PACKET_SIZE];
             
