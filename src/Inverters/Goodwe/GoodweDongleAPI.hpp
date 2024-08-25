@@ -135,11 +135,11 @@ private:
                         if (len == 7 + 2 * 125)
                         {
                             inverterData.status = DONGLE_STATUS_OK;
-                            inverterData.pv1Power = readUInt16(packetBuffer, 5) * 10;
-                            inverterData.pv2Power = readUInt16(packetBuffer, 9) * 10;
-                            inverterData.pv3Power = readUInt16(packetBuffer, 13) * 10;
-                            inverterData.pv4Power = readUInt16(packetBuffer, 17) * 10; 
-                            inverterData.feedInPower -= readInt16(packetBuffer, 25) + readInt16(packetBuffer, 30) + readInt16(packetBuffer, 35);
+                            inverterData.pv1Power = readUInt32(packetBuffer, 5);
+                            inverterData.pv2Power = readUInt32(packetBuffer, 9);
+                            inverterData.pv3Power = readUInt32(packetBuffer, 13);
+                            inverterData.pv4Power = readUInt32(packetBuffer, 17); 
+                            inverterData.feedInPower = readInt16(packetBuffer, 25) + readInt16(packetBuffer, 30) + readInt16(packetBuffer, 35);
                             inverterData.inverterPower = readInt16(packetBuffer, 38);
                             inverterData.batteryPower = readInt16(packetBuffer, 83); //TODO: maybe sign readuw(packetBuffer, 84);
                             // _ac = readsw(packetBuffer, 40);
@@ -147,15 +147,14 @@ private:
                             inverterData.L2Power = readInt16(packetBuffer, 66) + readInt16(packetBuffer, 56);
                             inverterData.L3Power = readInt16(packetBuffer, 68) + readInt16(packetBuffer, 62);
                             inverterData.loadPower = readInt16(packetBuffer, 72) + readInt16(packetBuffer, 70);
-                            inverterData.soc = readUInt16(packetBuffer, 85);
-                            inverterData.inverterTemperature = readInt16(packetBuffer, 75) * 10;
-                            inverterData.pvTotal = readUInt32(packetBuffer, 91) * 10;
-                            inverterData.pvToday = readUInt32(packetBuffer, 93) * 10;
-                            inverterData.loadToday = readUInt16(packetBuffer, 105) * 10;
-                            inverterData.batteryChargedToday = readUInt16(packetBuffer, 108) * 10;
-                            inverterData.batteryDischargedToday = readUInt16(packetBuffer, 111) * 10;
-                            inverterData.gridBuyToday = readUInt16(packetBuffer, 101) * 10;
-                            inverterData.gridSellToday = readUInt16(packetBuffer, 99) * 10;                            
+                            inverterData.inverterTemperature = readInt16(packetBuffer, 76) / 10;
+                            inverterData.pvTotal = readUInt32(packetBuffer, 91) / 10;
+                            inverterData.pvToday = readUInt32(packetBuffer, 93) / 10;
+                            inverterData.loadToday = readUInt16(packetBuffer, 105) / 10;
+                            inverterData.batteryChargedToday = readUInt16(packetBuffer, 108) / 10;
+                            inverterData.batteryDischargedToday = readUInt16(packetBuffer, 111) / 10;
+                            inverterData.gridBuyToday = readUInt16(packetBuffer, 101) / 10;
+                            inverterData.gridSellToday = readUInt16(packetBuffer, 99) / 10;                            
                         }
                     }
                 }
@@ -172,7 +171,7 @@ private:
                     {
                         if (len == 7 + 2 * 8)
                         {
-                            inverterData.batteryTemperature = readUInt16(packetBuffer, 3) * 10;
+                            inverterData.batteryTemperature = readUInt16(packetBuffer, 3) / 10;
                             inverterData.soc = readUInt16(packetBuffer, 7);
                         }
                     }
