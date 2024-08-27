@@ -153,7 +153,7 @@ private:
                                 - readInt16(packetBuffer, 66) - readInt16(packetBuffer, 56)
                                 - readInt16(packetBuffer, 68) - readInt16(packetBuffer, 62);
                             inverterData.loadPower = readInt16(packetBuffer, 72) + readInt16(packetBuffer, 70);
-                            inverterData.inverterTemperature = readInt16(packetBuffer, 76) / 10;
+                            inverterData.inverterTemperature = readInt16(packetBuffer, 74) / 10;
                             inverterData.pvTotal = readUInt32(packetBuffer, 91) / 10;
                             inverterData.pvToday = readUInt32(packetBuffer, 93) / 10;
                             inverterData.loadToday = readUInt16(packetBuffer, 105) / 10;
