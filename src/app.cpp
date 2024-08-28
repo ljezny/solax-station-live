@@ -167,19 +167,11 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult) {
     {
         log_d("Loading Solax inverter data");
         if(dongleDiscovery.connectToDongle(discoveryResult, "")) {
-            InverterData_t d;
-            for(int i = 0; i < 5; i++) {
-                d = SolaxDongleAPI().loadData(discoveryResult.sn);
-                if(d.status == DONGLE_STATUS_OK) {
-                    break;
-                }
-                delay(500);
-            }
+            InverterData_t d = SolaxDongleAPI().loadData(discoveryResult.sn);
             
-            inverterData = d;
-
-            if (inverterData.status == DONGLE_STATUS_OK)
+            if (d.status == DONGLE_STATUS_OK)
             {
+                inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
                 shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
             }
@@ -217,19 +209,11 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult) {
         if(dongleDiscovery.connectToDongle(discoveryResult, "12345678") || dongleDiscovery.connectToDongle(discoveryResult, "Live" + softAP.getPassword())) {
             log_d("GoodWe wifi connected.");
             
-            InverterData_t d;
-            for(int i = 0; i < 5; i++) {
-                d = GoodweDongleAPI().loadData(discoveryResult.sn);
-                if(d.status == DONGLE_STATUS_OK) {
-                    break;
-                }
-                delay(500);
-            }
-            
-            inverterData = d;
+            InverterData_t d = GoodweDongleAPI().loadData(discoveryResult.sn);
                   
-            if (inverterData.status == DONGLE_STATUS_OK)
+            if (d.status == DONGLE_STATUS_OK)
             {
+                inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
                 shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
             }
