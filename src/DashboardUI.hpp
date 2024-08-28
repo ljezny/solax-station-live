@@ -85,7 +85,7 @@ public:
     
     int getSelfUsePowerPercent(InverterData_t& inverterData)
     {
-        return inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0;
+        return constrain(inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0, 0, 100);
     }
 
     void update(InverterData_t& inverterData, InverterData_t& previousInverterData, ShellyResult_t& shellyResult, ShellyResult_t& previousShellyResult, SolarChartDataProvider& solarChartDataProvider, int wifiSignalPercent)
