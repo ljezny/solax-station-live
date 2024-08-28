@@ -81,7 +81,7 @@ public:
         lv_obj_add_event_cb(ui_Chart1, draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
     }
 
-    void update(InverterData_t& inverterData, ShellyResult_t& shellyResult, SolarChartDataProvider& solarChartDataProvider)
+    void update(InverterData_t& inverterData, ShellyResult_t& shellyResult, SolarChartDataProvider& solarChartDataProvider, int wifiSignalPercent)
     {
         updateFlowAnimations(inverterData, shellyResult);
         
@@ -267,7 +267,7 @@ public:
         {
             case DONGLE_STATUS_OK:
                 lv_obj_set_style_text_color(ui_statusLabel, lv_palette_main(LV_PALETTE_GREY), 0);
-                lv_label_set_text(ui_statusLabel, inverterData.sn.c_str());
+                lv_label_set_text_fmt(ui_statusLabel, "%s (%d%%)" inverterData.sn.c_str(), wifiSignalPercent);
                 break;
             case DONGLE_STATUS_CONNECTION_ERROR:
                 lv_label_set_text(ui_statusLabel, "Connection error");

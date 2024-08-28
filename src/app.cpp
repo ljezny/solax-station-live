@@ -69,6 +69,26 @@ InverterData_t createRandomMockData()
     return inverterData;
 }
 
+int wifiSignalPercent() {
+    if(WiFi.status() != WL_CONNECTED) {
+        return 0;
+    }
+
+    int rssi = WiFi.RSSI();
+    if (rssi <= -100)
+    {
+        return 0;
+    }
+    else if (rssi >= -50)
+    {
+        return 100;
+    }
+    else
+    {
+        return 2 * (rssi + 100);
+    }
+}
+
 bool dashboardShown = false;
 
 void timerCB(struct _lv_timer_t *timer)
@@ -81,7 +101,7 @@ void timerCB(struct _lv_timer_t *timer)
 
     if (dashboardShown)
     {
-        dashboardUI.update(inverterData, shellyResult, solarChartDataProvider);
+        dashboardUI.update(inverterData, shellyResult, solarChartDataProvider, wifiSignalPercent());
         backlightResolver.resolve(inverterData);
     }
     
