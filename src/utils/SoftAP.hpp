@@ -21,7 +21,7 @@ public:
     void start()
     {
         log_d("Starting SoftAP");
-        WiFi.softAP(getSSID(), getPassword(), 1, 1, MAX_SHELLY_PAIRS);
+        WiFi.softAP(getSSID(), getPassword(), 10, 1, MAX_SHELLY_PAIRS);
         
         if (mdns_init()) {
             log_e("Failed starting MDNS");            
