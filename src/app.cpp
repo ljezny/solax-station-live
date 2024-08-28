@@ -143,7 +143,7 @@ bool discoverDongles() {
 
 void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult) {
     static long lastAttempt = 0;
-    if (lastAttempt == 0 || millis() - lastAttempt > 3000)
+    if (lastAttempt == 0 || millis() - lastAttempt > 2000)
     {
         log_d("Loading Solax inverter data");
         if(dongleDiscovery.connectToDongle(discoveryResult, "")) {
@@ -178,7 +178,7 @@ void loadSolaxWallboxData(DongleDiscoveryResult_t &discoveryResult) {
 
 void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult) {
     static long lastAttempt = 0;
-    if (lastAttempt == 0 || millis() - lastAttempt > 3000)
+    if (lastAttempt == 0 || millis() - lastAttempt > 2000)
     {
         log_d("Loading Goodwe inverter data");
         if(dongleDiscovery.connectToDongle(discoveryResult, "12345678")) {

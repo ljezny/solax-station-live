@@ -1467,7 +1467,7 @@
                           {
                             "nid": -945958740,
                             "strtype": "LABEL/Text",
-                            "strval": "1134",
+                            "strval": "6534",
                             "InheritedType": 10
                           },
                           {
@@ -2366,7 +2366,7 @@
                                   {
                                     "nid": -526642013,
                                     "strtype": "LABEL/Text",
-                                    "strval": "56",
+                                    "strval": "3014",
                                     "InheritedType": 10
                                   },
                                   {
@@ -3006,8 +3006,7 @@
                                 "InheritedType": 11
                               }
                             ],
-                            "saved_objtypeKey": "CONTAINER",
-                            "tree_closed": true
+                            "saved_objtypeKey": "CONTAINER"
                           },
                           {
                             "guid": "GUID9253053-101806S8523235",
@@ -3284,7 +3283,7 @@
                                   {
                                     "nid": -1379264435,
                                     "strtype": "LABEL/Text",
-                                    "strval": "5600",
+                                    "strval": "3520",
                                     "InheritedType": 10
                                   },
                                   {
@@ -5071,10 +5070,12 @@
                           {
                             "nid": 1197501189,
                             "strtype": "_style/Bg_Color",
+                            "strval": "pvColor",
+                            "integer": -436202122,
                             "intarray": [
                               255,
-                              255,
-                              255,
+                              212,
+                              0,
                               255
                             ],
                             "InheritedType": 7
@@ -9036,10 +9037,12 @@
                           {
                             "nid": 60560665,
                             "strtype": "_style/Bg_Color",
+                            "strval": "batteryColor",
+                            "integer": -644687784,
                             "intarray": [
-                              255,
-                              255,
-                              255,
+                              119,
+                              158,
+                              203,
                               255
                             ],
                             "InheritedType": 7
@@ -9693,7 +9696,7 @@
                               {
                                 "nid": 1790102157,
                                 "strtype": "LABEL/Text",
-                                "strval": "3/5",
+                                "strval": "0 / 3",
                                 "InheritedType": 10
                               },
                               {
@@ -10003,7 +10006,7 @@
                                   {
                                     "nid": 1249807877,
                                     "strtype": "LABEL/Text",
-                                    "strval": "5600",
+                                    "strval": "0",
                                     "InheritedType": 10
                                   },
                                   {
@@ -10643,8 +10646,7 @@
                                 "InheritedType": 11
                               }
                             ],
-                            "saved_objtypeKey": "CONTAINER",
-                            "tree_closed": true
+                            "saved_objtypeKey": "CONTAINER"
                           }
                         ],
                         "locked": false,
@@ -10918,8 +10920,7 @@
                             "InheritedType": 11
                           }
                         ],
-                        "saved_objtypeKey": "CONTAINER",
-                        "tree_closed": true
+                        "saved_objtypeKey": "CONTAINER"
                       }
                     ],
                     "locked": false,
@@ -11471,7 +11472,7 @@
                           {
                             "nid": -678796526,
                             "strtype": "LABEL/Text",
-                            "strval": "3234",
+                            "strval": "624",
                             "InheritedType": 10
                           },
                           {
@@ -13292,7 +13293,7 @@
                           {
                             "nid": 1790801510,
                             "strtype": "LABEL/Text",
-                            "strval": "1234",
+                            "strval": "410",
                             "InheritedType": 10
                           },
                           {
@@ -14870,6 +14871,19 @@
                             "strval": "DEFAULT",
                             "childs": [
                               {
+                                "nid": -85469407,
+                                "strtype": "_style/Text_Color",
+                                "strval": "loadColor",
+                                "integer": 1646890208,
+                                "intarray": [
+                                  3,
+                                  173,
+                                  54,
+                                  255
+                                ],
+                                "InheritedType": 7
+                              },
+                              {
                                 "nid": 91475971,
                                 "strtype": "_style/Text_Font",
                                 "strval": "OpenSansSmall",
@@ -15180,8 +15194,7 @@
                     "InheritedType": 11
                   }
                 ],
-                "saved_objtypeKey": "CONTAINER",
-                "tree_closed": true
+                "saved_objtypeKey": "CONTAINER"
               },
               {
                 "guid": "GUID56762360-298563S4633214",
@@ -16709,7 +16722,7 @@
                           {
                             "nid": 585177742,
                             "strtype": "LABEL/Text",
-                            "strval": "1234",
+                            "strval": "1034",
                             "InheritedType": 10
                           },
                           {
@@ -17616,7 +17629,7 @@
                               {
                                 "nid": 421400223,
                                 "strtype": "LABEL/Text",
-                                "strval": "5600",
+                                "strval": "625",
                                 "InheritedType": 10
                               },
                               {
@@ -18256,8 +18269,7 @@
                             "InheritedType": 11
                           }
                         ],
-                        "saved_objtypeKey": "CONTAINER",
-                        "tree_closed": true
+                        "saved_objtypeKey": "CONTAINER"
                       },
                       {
                         "guid": "GUID49762494-210357S239093235",
@@ -18534,7 +18546,7 @@
                               {
                                 "nid": -1932625594,
                                 "strtype": "LABEL/Text",
-                                "strval": "56",
+                                "strval": "123",
                                 "InheritedType": 10
                               },
                               {
@@ -19451,7 +19463,7 @@
                               {
                                 "nid": -425517311,
                                 "strtype": "LABEL/Text",
-                                "strval": "5600",
+                                "strval": "315",
                                 "InheritedType": 10
                               },
                               {
@@ -20091,8 +20103,7 @@
                             "InheritedType": 11
                           }
                         ],
-                        "saved_objtypeKey": "CONTAINER",
-                        "tree_closed": true
+                        "saved_objtypeKey": "CONTAINER"
                       }
                     ],
                     "locked": false,
@@ -25317,6 +25328,19 @@
                                     "strval": "DEFAULT",
                                     "childs": [
                                       {
+                                        "nid": -912974721,
+                                        "strtype": "_style/Text_Color",
+                                        "strval": "loadColor",
+                                        "integer": 1646890208,
+                                        "intarray": [
+                                          3,
+                                          173,
+                                          54,
+                                          255
+                                        ],
+                                        "InheritedType": 7
+                                      },
+                                      {
                                         "nid": 894463136,
                                         "strtype": "_style/Text_Align",
                                         "strval": "LEFT",
@@ -25378,7 +25402,7 @@
                             "strtype": "OBJECT/Position",
                             "intarray": [
                               0,
-                              0
+                              -1
                             ],
                             "InheritedType": 7
                           },
@@ -26470,7 +26494,7 @@
                               {
                                 "nid": 840461954,
                                 "strtype": "LABEL/Text",
-                                "strval": "11",
+                                "strval": "9",
                                 "InheritedType": 10
                               },
                               {
@@ -27394,7 +27418,7 @@
                               {
                                 "nid": -1639887210,
                                 "strtype": "LABEL/Text",
-                                "strval": "-11",
+                                "strval": "3",
                                 "InheritedType": 10
                               },
                               {
@@ -28020,6 +28044,17 @@
                                     "intarray": [
                                       -6,
                                       0
+                                    ],
+                                    "InheritedType": 7
+                                  },
+                                  {
+                                    "nid": -2127320552,
+                                    "strtype": "_style/Text_Color",
+                                    "intarray": [
+                                      205,
+                                      0,
+                                      0,
+                                      255
                                     ],
                                     "InheritedType": 7
                                   }
@@ -28898,7 +28933,7 @@
                               {
                                 "nid": 1817517659,
                                 "strtype": "LABEL/Text",
-                                "strval": "11",
+                                "strval": "45",
                                 "InheritedType": 10
                               },
                               {
@@ -29828,7 +29863,7 @@
                               {
                                 "nid": 173922414,
                                 "strtype": "LABEL/Text",
-                                "strval": "830",
+                                "strval": "2",
                                 "InheritedType": 10
                               },
                               {
@@ -30453,6 +30488,17 @@
                                     "intarray": [
                                       -6,
                                       0
+                                    ],
+                                    "InheritedType": 7
+                                  },
+                                  {
+                                    "nid": -1084274696,
+                                    "strtype": "_style/Text_Color",
+                                    "intarray": [
+                                      205,
+                                      0,
+                                      0,
+                                      255
                                     ],
                                     "InheritedType": 7
                                   },
@@ -31790,14 +31836,13 @@
                       },
                       {
                         "nid": -1993603728,
-                        "flags": 1048576,
                         "strtype": "CHART/Chart_data",
                         "InheritedType": 1
                       },
                       {
                         "nid": 801067503,
                         "strtype": "CHART/ChartData",
-                        "strval": "[]",
+                        "strval": "[{\"Axis\":0,\"Color\":[46,181,255,255],\"Series\":[15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,16,18,19,21,22,24,25,27,29,32,35,38,42,45,50,54,59,63,68,72,75,78,81,84,86,88,90,91,92,93,94,94,95,95,96,96,96,96,96,95,95,94,94,93,92,91,90,89,88,87,85,83,81,79,77,75,72,69,66,63,60,57,54,51,48,45,43,41,39,37,35,33,31,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,5,5,5,5,15,15]},{\"Axis\":2,\"Color\":[251,230,40,255],\"Series\":[0,0,0,0,0,0,1,1,1,1,2,2,2,3,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,11,12,12,13,13,13,14,14,14,14,15,15,15,15,15,15,15,15,15,15,15,15,14,14,14,14,13,13,13,12,12,11,11,11,10,10,9,9,8,8,7,7,6,6,5,5,4,4,3,3,3,2,2,2,1,1,1,1,0,0,0,0,0,0]},{\"Axis\":2,\"Color\":[0,141,23,255],\"Series\":[1,0,1,1,1,1,2,1,1,1,1,1,1,0,0,1,1,1,1,1,2,1,1,1,0,1,0,1,1,1,1,3,2,2,3,2,3,2,2,3,4,4,4,4,3,4,4,5,2,1,2,1,1,2,2,2,1,2,2,2,2,2,2,2,3,3,2,3,3,2,3,3,4,5,3,4,4,3,4,2,3,3,3,2,2,2,3,2,1,2,1,2,1,1,0,0]}]",
                         "InheritedType": 12
                       },
                       {
@@ -32844,7 +32889,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
-    "backup_cnt": 677,
+    "backup_cnt": 681,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",
