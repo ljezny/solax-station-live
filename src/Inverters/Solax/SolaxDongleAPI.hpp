@@ -16,7 +16,7 @@ public:
         InverterData_t inverterData;
         String url = "http://5.8.8.8";
         HTTPClient http;
-        http.setConnectTimeout(1000);
+        http.setConnectTimeout(2000);
         if (http.begin(url))
         {
             int httpCode = http.POST("optType=ReadRealTimeData&pwd=" + sn);
