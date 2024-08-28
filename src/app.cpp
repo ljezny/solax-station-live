@@ -168,7 +168,7 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult) {
         log_d("Loading Solax inverter data");
         if(dongleDiscovery.connectToDongle(discoveryResult, "")) {
             InverterData_t d;
-            for(int i = 0; i < 3; i++) {
+            for(int i = 0; i < 5; i++) {
                 d = SolaxDongleAPI().loadData(discoveryResult.sn);
                 if(d.status == DONGLE_STATUS_OK) {
                     break;
@@ -218,7 +218,7 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult) {
             log_d("GoodWe wifi connected.");
             
             InverterData_t d;
-            for(int i = 0; i < 3; i++) {
+            for(int i = 0; i < 5; i++) {
                 d = GoodweDongleAPI().loadData(discoveryResult.sn);
                 if(d.status == DONGLE_STATUS_OK) {
                     break;
