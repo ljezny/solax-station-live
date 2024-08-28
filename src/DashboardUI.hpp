@@ -7,6 +7,7 @@
 #include "utils/UIBallAnimator.hpp"
 #include "Inverters/InverterResult.hpp"
 #include "Shelly/Shelly.hpp"
+#include "utils/UITextChangeAnimator.hpp"
 
 static void draw_event_cb(lv_event_t *e)
 {
@@ -80,14 +81,16 @@ public:
         lv_scr_load_anim(ui_Dashboard, LV_SCR_LOAD_ANIM_FADE_IN, 500, 0, true);
         lv_obj_add_event_cb(ui_Chart1, draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
     }
+    
+    int getSelfUsePowerPercent(InverterData_t& inverterData)
+    {
+        return inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0;
+    }
 
-    void update(InverterData_t& inverterData, ShellyResult_t& shellyResult, SolarChartDataProvider& solarChartDataProvider, int wifiSignalPercent)
+    void update(InverterData_t& inverterData, InverterData_t& previousInverterData, ShellyResult_t& shellyResult, ShellyResult_t& previousShellyResult, SolarChartDataProvider& solarChartDataProvider, int wifiSignalPercent)
     {
         updateFlowAnimations(inverterData, shellyResult);
         
-        int selfUsePowerPercent = inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0;
-        selfUsePowerPercent = constrain(selfUsePowerPercent, 0, 100);
-
         int selfUseEnergyTodayPercent = inverterData.loadToday > 0 ? ((inverterData.loadToday - inverterData.gridBuyToday) / inverterData.loadToday) * 100 : 0;
         selfUseEnergyTodayPercent = constrain(selfUseEnergyTodayPercent, 0, 100);
 
@@ -122,11 +125,14 @@ public:
         lv_color_t green = lv_color_make(0, 128, 0);
         
 
-        lv_label_set_text(ui_pvLabel, format(POWER, inverterData.pv1Power + inverterData.pv2Power).value.c_str());
+        //lv_label_set_text(ui_pvLabel, format(POWER, inverterData.pv1Power + inverterData.pv2Power).value.c_str());
+        pvPowerTextAnimator.animate(ui_pvLabel, previousInverterData.pv1Power + previousInverterData.pv2Power, inverterData.pv1Power + inverterData.pv2Power);
         lv_label_set_text(ui_pvUnitLabel, format(POWER, inverterData.pv1Power + inverterData.pv2Power).unit.c_str());
-        lv_label_set_text(ui_pv1Label, format(POWER, inverterData.pv1Power, 1.0f, true).value.c_str());
+        //lv_label_set_text(ui_pv1Label, format(POWER, inverterData.pv1Power, 1.0f, true).value.c_str());
+        pv1PowerTextAnimator.animate(ui_pv1Label, previousInverterData.pv1Power, inverterData.pv1Power);
         lv_label_set_text(ui_pv1UnitLabel, format(POWER, inverterData.pv1Power, 1.0f, true).unit.c_str());
-        lv_label_set_text(ui_pv2Label, format(POWER, inverterData.pv2Power, 1.0f, true).value.c_str());
+        //lv_label_set_text(ui_pv2Label, format(POWER, inverterData.pv2Power, 1.0f, true).value.c_str());
+        pv2PowerTextAnimator.animate(ui_pv2Label, previousInverterData.pv2Power, inverterData.pv2Power);
         lv_label_set_text(ui_pv2UnitLabel, format(POWER, inverterData.pv2Power, 1.0f, true).unit.c_str());
         if (inverterData.pv1Power == 0 || inverterData.pv2Power == 0)
         { // hide
@@ -151,30 +157,36 @@ public:
             lv_obj_set_style_text_color(ui_inverterTemperatureContainer, green, 0);
         }
 
-        lv_label_set_text(ui_inverterPowerLabel, format(POWER, inverterData.inverterPower).value.c_str());
+        //lv_label_set_text(ui_inverterPowerLabel, format(POWER, inverterData.inverterPower).value.c_str());
+        inverterPowerTextAnimator.animate(ui_inverterPowerLabel, previousInverterData.inverterPower, inverterData.inverterPower);
         lv_obj_set_style_bg_color(ui_pvContainer, (inverterData.pv1Power + inverterData.pv2Power) > 0 ? lv_color_hex(_ui_theme_color_pvColor[0]) :  lv_color_white(), 0);
         lv_label_set_text(ui_inverterPowerUnitLabel, format(POWER, inverterData.inverterPower).unit.c_str());
-        lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.L1Power).value.c_str());
+        //lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.L1Power).value.c_str());
+        inverterPowerL1TextAnimator.animate(ui_inverterPowerL1Label, previousInverterData.L1Power, inverterData.L1Power);
         lv_label_set_text(ui_inverterPowerL1UnitLabel, format(POWER, inverterData.L1Power).unit.c_str());
         lv_obj_set_style_text_color(ui_inverterPowerL1Label, l1PercentUsage > 50 ? red : black, 0);
         lv_obj_set_style_text_color(ui_inverterPowerL1UnitLabel, l1PercentUsage > 50 ? red : black, 0);
-        lv_label_set_text(ui_inverterPowerL2Label, format(POWER, inverterData.L2Power).value.c_str());
+        //lv_label_set_text(ui_inverterPowerL2Label, format(POWER, inverterData.L2Power).value.c_str());
+        inverterPowerL2TextAnimator.animate(ui_inverterPowerL2Label, previousInverterData.L2Power, inverterData.L2Power);
         lv_label_set_text(ui_inverterPowerL2UnitLabel, format(POWER, inverterData.L2Power).unit.c_str());        
         lv_obj_set_style_text_color(ui_inverterPowerL2Label, l2PercentUsage > 50 ? red : black, 0);
         lv_obj_set_style_text_color(ui_inverterPowerL2UnitLabel, l2PercentUsage > 50 ? red : black, 0);
-        lv_label_set_text(ui_inverterPowerL3Label, format(POWER, inverterData.L3Power).value.c_str());
+        //lv_label_set_text(ui_inverterPowerL3Label, format(POWER, inverterData.L3Power).value.c_str());
+        inverterPowerL3TextAnimator.animate(ui_inverterPowerL3Label, previousInverterData.L3Power, inverterData.L3Power);
         lv_label_set_text(ui_inverterPowerL3UnitLabel, format(POWER, inverterData.L3Power).unit.c_str());
         lv_obj_set_style_text_color(ui_inverterPowerL3Label, l3PercentUsage > 50 ? red : black, 0);
         lv_obj_set_style_text_color(ui_inverterPowerL3UnitLabel, l3PercentUsage > 50 ? red : black, 0);
-        lv_label_set_text(ui_loadPowerLabel, format(POWER, inverterData.loadPower).value.c_str());
+        loadPowerTextAnimator.animate(ui_loadPowerLabel, previousInverterData.loadPower, inverterData.loadPower);
         lv_label_set_text(ui_loadPowerUnitLabel, format(POWER, inverterData.loadPower).unit.c_str());
-        lv_label_set_text(ui_feedInPowerLabel, format(POWER, abs(inverterData.feedInPower)).value.c_str());
+        feedInPowerTextAnimator.animate(ui_feedInPowerLabel, abs(previousInverterData.feedInPower), abs(inverterData.feedInPower));
         lv_label_set_text(ui_feedInPowerUnitLabel, format(POWER, abs(inverterData.feedInPower)).unit.c_str());
         lv_obj_set_style_bg_color(ui_gridContainer, (inverterData.feedInPower) < 0 ? lv_color_hex(_ui_theme_color_gridColor[0]) :  lv_color_white(), 0);
         lv_obj_set_style_text_color(ui_feedInPowerLabel, inverterData.feedInPower < 0 ? white : black, 0);
         lv_obj_set_style_text_color(ui_feedInPowerUnitLabel, inverterData.feedInPower < 0 ? white : black, 0);
-        lv_label_set_text_fmt(ui_socLabel, "%d", inverterData.soc);
-        lv_label_set_text(ui_batteryPowerLabel, format(POWER, abs(inverterData.batteryPower)).value.c_str());
+        //lv_label_set_text_fmt(ui_socLabel, "%d", inverterData.soc);
+        batteryPercentTextAnimator.animate(ui_socLabel, previousInverterData.soc, inverterData.soc);
+        //lv_label_set_text(ui_batteryPowerLabel, format(POWER, abs(inverterData.batteryPower)).value.c_str());
+        batteryPowerTextAnimator.animate(ui_batteryPowerLabel, abs(previousInverterData.batteryPower), abs(inverterData.batteryPower));
         lv_obj_set_style_bg_color(ui_batteryContainer, (inverterData.batteryPower) < 0 ? lv_color_hex(_ui_theme_color_batteryColor[0]) :  lv_color_white(), 0);
         lv_label_set_text(ui_batteryPowerUnitLabel, format(POWER, abs(inverterData.batteryPower)).unit.c_str());
         //lv_obj_set_style_text_color(ui_batteryPowerLabel, inverterData.batteryPower < 0 ? red : black, 0);
@@ -194,14 +206,14 @@ public:
             lv_obj_set_style_text_color(ui_batteryTemperatureContainer, green, 0);
         }
         
-
-        lv_label_set_text(ui_selfUsePercentLabel, String(selfUsePowerPercent).c_str());
-        if (selfUsePowerPercent > 50)
+        //lv_label_set_text(ui_selfUsePercentLabel, String(selfUsePowerPercent).c_str());
+        selfUsePercentTextAnimator.animate(ui_selfUsePercentLabel, getSelfUsePowerPercent(previousInverterData), getSelfUsePowerPercent(inverterData));
+        if (getSelfUsePowerPercent(inverterData) > 50)
         {
             lv_obj_set_style_text_color(ui_selfUsePercentLabel, green, 0);
             lv_obj_set_style_text_color(ui_selfUsePercentUnitLabel, green, 0);
         }
-        else if (selfUsePowerPercent > 30)
+        else if (getSelfUsePowerPercent(inverterData) > 30)
         {
             lv_obj_set_style_text_color(ui_selfUsePercentLabel, orange, 0);
             lv_obj_set_style_text_color(ui_selfUsePercentUnitLabel, orange, 0);
@@ -255,7 +267,8 @@ public:
         {
             lv_obj_add_flag(ui_shellyContainer, LV_OBJ_FLAG_HIDDEN);
         }
-        lv_label_set_text(ui_shellyPowerLabel, format(POWER, shellyResult.totalPower).value.c_str());
+        //lv_label_set_text(ui_shellyPowerLabel, format(POWER, shellyResult.totalPower).value.c_str());
+        shellyPowerTextAnimator.animate(ui_shellyPowerLabel, previousShellyResult.totalPower, shellyResult.totalPower);
         lv_label_set_text(ui_shellyPowerUnitLabel, format(POWER, shellyResult.totalPower).unit.c_str());
         lv_label_set_text_fmt(ui_shellyCountLabel, "%d / %d", shellyResult.activeCount, shellyResult.pairedCount);
 
@@ -289,6 +302,19 @@ public:
         
     }
 private:
+    UITextChangeAnimator loadPowerTextAnimator = UITextChangeAnimator(POWER, 3000);
+    UITextChangeAnimator feedInPowerTextAnimator = UITextChangeAnimator(POWER, 3000);
+    UITextChangeAnimator batteryPowerTextAnimator = UITextChangeAnimator(POWER, 3000);
+    UITextChangeAnimator inverterPowerTextAnimator = UITextChangeAnimator(POWER, 3000);
+    UITextChangeAnimator inverterPowerL1TextAnimator = UITextChangeAnimator(POWER, 3000);
+    UITextChangeAnimator inverterPowerL2TextAnimator = UITextChangeAnimator(POWER, 3000);
+    UITextChangeAnimator inverterPowerL3TextAnimator = UITextChangeAnimator(POWER, 3000);
+    UITextChangeAnimator shellyPowerTextAnimator = UITextChangeAnimator(POWER, 3000);
+    UITextChangeAnimator pvPowerTextAnimator = UITextChangeAnimator(POWER, 3000);
+    UITextChangeAnimator pv1PowerTextAnimator = UITextChangeAnimator(POWER, 3000);
+    UITextChangeAnimator pv2PowerTextAnimator = UITextChangeAnimator(POWER, 3000);
+    UITextChangeAnimator batteryPercentTextAnimator = UITextChangeAnimator(PERCENT, 3000);
+    UITextChangeAnimator selfUsePercentTextAnimator = UITextChangeAnimator(PERCENT, 3000);
     void updateChart(SolarChartDataProvider& solarChartDataProvider)
     {
         while (lv_chart_get_series_next(ui_Chart1, NULL))

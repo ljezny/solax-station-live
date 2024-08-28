@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-typedef enum { POWER, ENERGY } Unit_t;
+typedef enum { POWER, ENERGY, PERCENT } Unit_t;
 typedef struct FormattedUnit
 {
     String unit;
@@ -47,6 +47,10 @@ FormattedUnit_t format(Unit_t unit, float value, float limitingFactor = 1.0f, bo
                 formattedUnit.value = String(value,0);
                 formattedUnit.unit = "Wh";
             }
+            break;
+        case PERCENT:
+            formattedUnit.value = String(value,0);
+            formattedUnit.unit = "%";
             break;
     }
     formattedUnit.value.replace(".", ",");

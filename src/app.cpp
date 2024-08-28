@@ -25,9 +25,11 @@ BacklightResolver backlightResolver;
 SoftAP softAP;
 
 InverterData_t inverterData;
+InverterData_t previousInverterData;
 WallboxData_t wallboxData;
 DongleDiscoveryResult_t discoveryResult;
 ShellyResult_t shellyResult;
+ShellyResult_t previousShellyResult;
 SolarChartDataProvider solarChartDataProvider;
 ShellyRuleResolver shellyRuleResolver;
 
@@ -101,7 +103,10 @@ void timerCB(struct _lv_timer_t *timer)
 
     if (dashboardShown)
     {
-        dashboardUI.update(inverterData, shellyResult, solarChartDataProvider, wifiSignalPercent());
+        previousShellyResult = shellyResult;
+        dashboardUI.update(inverterData, previousInverterData, shellyResult, previousShellyResult, solarChartDataProvider, wifiSignalPercent());
+        previousInverterData = inverterData;
+        previousShellyResult = shellyResult;
         backlightResolver.resolve(inverterData);
     }
     
