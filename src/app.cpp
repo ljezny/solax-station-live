@@ -173,6 +173,8 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult) {
                 inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
                 shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
+            } else if(millis() - inverterData.millis > 30000) {
+                inverterData = d; //present error
             }
         }
         lastAttempt = millis();
@@ -209,6 +211,8 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult) {
                 inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
                 shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
+            } else if(millis() - inverterData.millis > 30000) {
+                inverterData = d; //present error
             }
         }
         lastAttempt = millis();
@@ -253,7 +257,7 @@ void processDongles() {
                 loadSolaxInverterData(dongleDiscovery.discoveries[i]);
                 break;
             case DONGLE_TYPE_SOLAX_WALLBOX:
-                loadSolaxWallboxData(dongleDiscovery.discoveries[i]);
+                //loadSolaxWallboxData(dongleDiscovery.discoveries[i]);
                 break;
             case DONGLE_TYPE_GOODWE:
                 loadGoodweInverterData(dongleDiscovery.discoveries[i]);

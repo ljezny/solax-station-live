@@ -28,6 +28,7 @@ public:
                 if (err == DeserializationError::Ok)
                 {
                     inverterData.status = DONGLE_STATUS_OK;
+                    inverterData.millis = millis();
                     inverterData.pv1Power = doc["Data"][14].as<int>();
                     inverterData.pv2Power = doc["Data"][15].as<int>();
                     inverterData.batteryPower = read16BitSigned(doc["Data"][41].as<uint16_t>());
