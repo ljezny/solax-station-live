@@ -69,6 +69,26 @@ InverterData_t createRandomMockData()
     return inverterData;
 }
 
+int wifiSignalPercent() {
+    if(WiFi.status() != WL_CONNECTED) {
+        return 0;
+    }
+
+    int rssi = WiFi.RSSI();
+    if (rssi <= -100)
+    {
+        return 0;
+    }
+    else if (rssi >= -50)
+    {
+        return 100;
+    }
+    else
+    {
+        return 2 * (rssi + 100);
+    }
+}
+
 bool dashboardShown = false;
 
 void timerCB(struct _lv_timer_t *timer)
@@ -81,7 +101,7 @@ void timerCB(struct _lv_timer_t *timer)
 
     if (dashboardShown)
     {
-        dashboardUI.update(inverterData, shellyResult, solarChartDataProvider);
+        dashboardUI.update(inverterData, shellyResult, solarChartDataProvider, wifiSignalPercent());
         backlightResolver.resolve(inverterData);
     }
     
@@ -153,6 +173,8 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult) {
                 inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
                 shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
+            } else if(millis() - inverterData.millis > 30000) {
+                inverterData = d; //present error
             }
         }
         lastAttempt = millis();
@@ -189,6 +211,8 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult) {
                 inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
                 shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
+            } else if(millis() - inverterData.millis > 30000) {
+                inverterData = d; //present error
             }
         }
         lastAttempt = millis();
@@ -233,7 +257,7 @@ void processDongles() {
                 loadSolaxInverterData(dongleDiscovery.discoveries[i]);
                 break;
             case DONGLE_TYPE_SOLAX_WALLBOX:
-                loadSolaxWallboxData(dongleDiscovery.discoveries[i]);
+                //loadSolaxWallboxData(dongleDiscovery.discoveries[i]);
                 break;
             case DONGLE_TYPE_GOODWE:
                 loadGoodweInverterData(dongleDiscovery.discoveries[i]);

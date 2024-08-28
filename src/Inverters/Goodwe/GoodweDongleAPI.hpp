@@ -135,6 +135,7 @@ private:
                         if (len == 7 + 2 * 125)
                         {
                             inverterData.status = DONGLE_STATUS_OK;
+                            inverterData.millis = millis();
                             inverterData.pv1Power = readUInt32(packetBuffer, 5);
                             inverterData.pv2Power = readUInt32(packetBuffer, 9);
                             inverterData.pv3Power = readUInt32(packetBuffer, 13);

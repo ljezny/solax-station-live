@@ -12,6 +12,7 @@ typedef enum DongleStatus {
 typedef struct
 {
     DongleStatus_t status = DONGLE_STATUS_UNKNOWN;
+    long millis = 0;
     String sn;
     int pv1Power = 0;
     int pv2Power = 0;

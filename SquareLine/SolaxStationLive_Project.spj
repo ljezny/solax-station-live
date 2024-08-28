@@ -943,7 +943,7 @@
           }
         ],
         "isPage": true,
-        "editor_posx": 1700,
+        "editor_posx": 1750,
         "editor_posy": -1000,
         "locked": false,
         "properties": [
@@ -32889,7 +32889,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
-    "backup_cnt": 681,
+    "backup_cnt": 682,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",
