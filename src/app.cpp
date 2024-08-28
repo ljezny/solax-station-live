@@ -181,7 +181,7 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult) {
     if (lastAttempt == 0 || millis() - lastAttempt > 2000)
     {
         log_d("Loading Goodwe inverter data");
-        if(dongleDiscovery.connectToDongle(discoveryResult, "12345678")) {
+        if(dongleDiscovery.connectToDongle(discoveryResult, "12345678") || dongleDiscovery.connectToDongle(discoveryResult, "Live" + softAP.getPassword())) {
             log_d("GoodWe wifi connected.");
             InverterData_t d = GoodweDongleAPI().loadData(discoveryResult.sn);
             if (d.status == DONGLE_STATUS_OK)
