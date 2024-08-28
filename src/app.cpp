@@ -136,7 +136,7 @@ void setup()
     lv_label_set_text(ui_fwVersionLabel, String("v" + String(VERSION_NUMBER)).c_str());
     lv_label_set_text(ui_ESPIdLabel, softAP.getESPIdHex().c_str());
 
-    lv_timer_t *timer = lv_timer_create(timerCB, 3000, NULL);
+    lv_timer_t *timer = lv_timer_create(timerCB, dashboardUI.UI_REFRESH_PERIOD_MS, NULL);
     //lv_log_register_print_cb([](const char *txt)
       //                       { log_i("%s\n", txt); });
 
@@ -168,7 +168,7 @@ bool discoverDongles() {
 
 void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult) {
     static long lastAttempt = 0;
-    if (lastAttempt == 0 || millis() - lastAttempt > 2000)
+    if (lastAttempt == 0 || millis() - lastAttempt > 1000)
     {
         log_d("Loading Solax inverter data");
         if(dongleDiscovery.connectToDongle(discoveryResult, "")) {
@@ -208,7 +208,7 @@ void loadSolaxWallboxData(DongleDiscoveryResult_t &discoveryResult) {
 
 void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult) {
     static long lastAttempt = 0;
-    if (lastAttempt == 0 || millis() - lastAttempt > 2000)
+    if (lastAttempt == 0 || millis() - lastAttempt > 1000)
     {
         log_d("Loading Goodwe inverter data");
         if(dongleDiscovery.connectToDongle(discoveryResult, "12345678") || dongleDiscovery.connectToDongle(discoveryResult, "Live" + softAP.getPassword())) {
