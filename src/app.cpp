@@ -167,15 +167,24 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult) {
     {
         log_d("Loading Solax inverter data");
         if(dongleDiscovery.connectToDongle(discoveryResult, "")) {
-            InverterData_t d = SolaxDongleAPI().loadData(discoveryResult.sn);
-            if (d.status == DONGLE_STATUS_OK)
+            InverterData_t d;
+            for(int i = 0; i < 3; i++) {
+                d = SolaxDongleAPI().loadData(discoveryResult.sn);
+                if(d.status == DONGLE_STATUS_OK) {
+                    break;
+                }
+                delay(500);
+            }
+            
+            inverterData = d;
+
+            if (inverterData.status == DONGLE_STATUS_OK)
             {
-                inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
                 shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
-            } else if(millis() - inverterData.millis > 30000) {
-                inverterData = d; //present error
             }
+        } else {
+            inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
         }
         lastAttempt = millis();
     }
@@ -193,6 +202,8 @@ void loadSolaxWallboxData(DongleDiscoveryResult_t &discoveryResult) {
             {
                 wallboxData = d;
             }
+        }  else {
+            wallboxData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
         }
         lastAttempt = millis();
     }
@@ -205,15 +216,25 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult) {
         log_d("Loading Goodwe inverter data");
         if(dongleDiscovery.connectToDongle(discoveryResult, "12345678") || dongleDiscovery.connectToDongle(discoveryResult, "Live" + softAP.getPassword())) {
             log_d("GoodWe wifi connected.");
-            InverterData_t d = GoodweDongleAPI().loadData(discoveryResult.sn);
-            if (d.status == DONGLE_STATUS_OK)
+            
+            InverterData_t d;
+            for(int i = 0; i < 3; i++) {
+                d = GoodweDongleAPI().loadData(discoveryResult.sn);
+                if(d.status == DONGLE_STATUS_OK) {
+                    break;
+                }
+                delay(500);
+            }
+            
+            inverterData = d;
+                  
+            if (inverterData.status == DONGLE_STATUS_OK)
             {
-                inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
                 shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
-            } else if(millis() - inverterData.millis > 30000) {
-                inverterData = d; //present error
             }
+        } else {
+            inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
         }
         lastAttempt = millis();
     }

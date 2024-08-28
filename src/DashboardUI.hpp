@@ -267,7 +267,7 @@ public:
         {
             case DONGLE_STATUS_OK:
                 lv_obj_set_style_text_color(ui_statusLabel, lv_palette_main(LV_PALETTE_GREY), 0);
-                lv_label_set_text_fmt(ui_statusLabel, "%s (%d%%)" inverterData.sn.c_str(), wifiSignalPercent);
+                lv_label_set_text_fmt(ui_statusLabel, "%s %d%%", inverterData.sn.c_str(), wifiSignalPercent);
                 break;
             case DONGLE_STATUS_CONNECTION_ERROR:
                 lv_label_set_text(ui_statusLabel, "Connection error");
