@@ -419,15 +419,15 @@ private:
             loadAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_loadColor, (inverterData.loadPower / 1000) + 1);
             loadAnimator->run(ui_inverterContainer, ui_loadContainer, duration, duration, 1, -offsetX, offsetY);
         }
-        if (shellyAnimator != NULL)
-        {
-            delete shellyAnimator;
-            shellyAnimator = NULL;
-        }
-        if (shellyResult.totalPower > 0)
-        { // TODO: check if shelly is on
-            shellyAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_pvColor, (shellyResult.totalPower / 1000) + 1);
-            shellyAnimator->run(ui_loadContainer, ui_shellyContainer, duration, duration, 1, 0, 0);
-        }
+        // if (shellyAnimator != NULL)
+        // {
+        //     delete shellyAnimator;
+        //     shellyAnimator = NULL;
+        // }
+        // if (shellyResult.totalPower > 0)
+        // { // TODO: check if shelly is on
+        //     shellyAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_pvColor, (shellyResult.totalPower / 1000) + 1);
+        //     shellyAnimator->run(ui_loadContainer, ui_shellyContainer, duration, duration, 1, 0, 0);
+        // }
     }
 };

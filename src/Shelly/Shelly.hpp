@@ -174,8 +174,8 @@ public:
                 {
                     result.activeCount++;
                 }
-                pairs[i].lastState.totalPower += state.totalPower;
-                pairs[i].lastState.totalEnergy += state.totalEnergy;            
+                result.totalPower += state.totalPower;
+                result.totalEnergy += state.totalEnergy;            
 
                 if((millis() - pairs[i].lastState.updated) > 5 * 60 * 1000) {
                     log_w("Shelly %s state is outdated", String(pairs[i].shellyId, HEX).c_str());
