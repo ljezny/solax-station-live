@@ -14,7 +14,7 @@ struct UITextChangeAnimatorVariables {
 
 void animation_set_text(UITextChangeAnimatorVariables *variables, int32_t value) {
     int32_t v = value;
-    int32_t step = abs(variables->to - variables->from) / 10;
+    int32_t step = abs(variables->to - variables->from) / 20;
     if(v != variables->to && step > 0) {
         v = (v / step) * step;
     }
