@@ -303,7 +303,7 @@ public:
         
     }
 private:
-    int const UI_TEXT_CHANGE_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS / 2;
+    int const UI_TEXT_CHANGE_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS;
     UITextChangeAnimator loadPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
     UITextChangeAnimator feedInPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
     UITextChangeAnimator batteryPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
@@ -352,7 +352,7 @@ private:
         static UIBallAnimator *loadAnimator = NULL;
         static UIBallAnimator *shellyAnimator = NULL;
 
-        int duration = UI_REFRESH_PERIOD_MS;
+        int duration = UI_REFRESH_PERIOD_MS / 3;
         int offsetY = 15;
         int offsetX = 30;
         if (pvAnimator != NULL)
