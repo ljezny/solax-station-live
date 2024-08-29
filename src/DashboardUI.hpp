@@ -303,19 +303,20 @@ public:
         
     }
 private:
-    UITextChangeAnimator loadPowerTextAnimator = UITextChangeAnimator(POWER, UI_REFRESH_PERIOD_MS);
-    UITextChangeAnimator feedInPowerTextAnimator = UITextChangeAnimator(POWER, UI_REFRESH_PERIOD_MS);
-    UITextChangeAnimator batteryPowerTextAnimator = UITextChangeAnimator(POWER, UI_REFRESH_PERIOD_MS);
-    UITextChangeAnimator inverterPowerTextAnimator = UITextChangeAnimator(POWER, UI_REFRESH_PERIOD_MS);
-    UITextChangeAnimator inverterPowerL1TextAnimator = UITextChangeAnimator(POWER, UI_REFRESH_PERIOD_MS);
-    UITextChangeAnimator inverterPowerL2TextAnimator = UITextChangeAnimator(POWER, UI_REFRESH_PERIOD_MS);
-    UITextChangeAnimator inverterPowerL3TextAnimator = UITextChangeAnimator(POWER, UI_REFRESH_PERIOD_MS);
-    UITextChangeAnimator shellyPowerTextAnimator = UITextChangeAnimator(POWER, UI_REFRESH_PERIOD_MS);
-    UITextChangeAnimator pvPowerTextAnimator = UITextChangeAnimator(POWER, UI_REFRESH_PERIOD_MS);
-    UITextChangeAnimator pv1PowerTextAnimator = UITextChangeAnimator(POWER, UI_REFRESH_PERIOD_MS);
-    UITextChangeAnimator pv2PowerTextAnimator = UITextChangeAnimator(POWER, UI_REFRESH_PERIOD_MS);
-    UITextChangeAnimator batteryPercentTextAnimator = UITextChangeAnimator(PERCENT, UI_REFRESH_PERIOD_MS);
-    UITextChangeAnimator selfUsePercentTextAnimator = UITextChangeAnimator(PERCENT, UI_REFRESH_PERIOD_MS);
+    int const UI_TEXT_CHANGE_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS / 2;
+    UITextChangeAnimator loadPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
+    UITextChangeAnimator feedInPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
+    UITextChangeAnimator batteryPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
+    UITextChangeAnimator inverterPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
+    UITextChangeAnimator inverterPowerL1TextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
+    UITextChangeAnimator inverterPowerL2TextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
+    UITextChangeAnimator inverterPowerL3TextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
+    UITextChangeAnimator shellyPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
+    UITextChangeAnimator pvPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
+    UITextChangeAnimator pv1PowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
+    UITextChangeAnimator pv2PowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
+    UITextChangeAnimator batteryPercentTextAnimator = UITextChangeAnimator(PERCENT, UI_TEXT_CHANGE_ANIMATION_DURATION);
+    UITextChangeAnimator selfUsePercentTextAnimator = UITextChangeAnimator(PERCENT, UI_TEXT_CHANGE_ANIMATION_DURATION);
     void updateChart(SolarChartDataProvider& solarChartDataProvider)
     {
         while (lv_chart_get_series_next(ui_Chart1, NULL))
@@ -351,7 +352,7 @@ private:
         static UIBallAnimator *loadAnimator = NULL;
         static UIBallAnimator *shellyAnimator = NULL;
 
-        int duration = UI_REFRESH_PERIOD_MS / 2;
+        int duration = UI_REFRESH_PERIOD_MS;
         int offsetY = 15;
         int offsetX = 30;
         if (pvAnimator != NULL)
