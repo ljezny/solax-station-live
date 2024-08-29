@@ -8,6 +8,7 @@
 #include "Inverters/InverterResult.hpp"
 #include "Shelly/Shelly.hpp"
 #include "utils/UITextChangeAnimator.hpp"
+#include "utils/UIBackgroundAnimatior.hpp"
 
 static void draw_event_cb(lv_event_t *e)
 {
@@ -160,7 +161,8 @@ public:
 
         //lv_label_set_text(ui_inverterPowerLabel, format(POWER, inverterData.inverterPower).value.c_str());
         inverterPowerTextAnimator.animate(ui_inverterPowerLabel, previousInverterData.inverterPower, inverterData.inverterPower);
-        lv_obj_set_style_bg_color(ui_pvContainer, (inverterData.pv1Power + inverterData.pv2Power) > 0 ? lv_color_hex(_ui_theme_color_pvColor[0]) :  lv_color_white(), 0);
+        //lv_obj_set_style_bg_color(ui_pvContainer, (inverterData.pv1Power + inverterData.pv2Power) > 0 ? lv_color_hex(_ui_theme_color_pvColor[0]) :  lv_color_white(), 0);
+        pvBackgroundAnimator.animate(ui_pvContainer, (previousInverterData.pv1Power + previousInverterData.pv2Power) > 0, (inverterData.pv1Power + inverterData.pv2Power) > 0);
         lv_label_set_text(ui_inverterPowerUnitLabel, format(POWER, inverterData.inverterPower).unit.c_str());
         //lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.L1Power).value.c_str());
         inverterPowerL1TextAnimator.animate(ui_inverterPowerL1Label, previousInverterData.L1Power, inverterData.L1Power);
@@ -181,14 +183,17 @@ public:
         lv_label_set_text(ui_loadPowerUnitLabel, format(POWER, inverterData.loadPower).unit.c_str());
         feedInPowerTextAnimator.animate(ui_feedInPowerLabel, abs(previousInverterData.feedInPower), abs(inverterData.feedInPower));
         lv_label_set_text(ui_feedInPowerUnitLabel, format(POWER, abs(inverterData.feedInPower)).unit.c_str());
-        lv_obj_set_style_bg_color(ui_gridContainer, (inverterData.feedInPower) < 0 ? lv_color_hex(_ui_theme_color_gridColor[0]) :  lv_color_white(), 0);
+        //lv_obj_set_style_bg_color(ui_gridContainer, (inverterData.feedInPower) < 0 ? lv_color_hex(_ui_theme_color_gridColor[0]) :  lv_color_white(), 0);
+        gridBackgroundAnimator.animate(ui_gridContainer, (previousInverterData.feedInPower) < 0, (inverterData.feedInPower) < 0);
         lv_obj_set_style_text_color(ui_feedInPowerLabel, inverterData.feedInPower < 0 ? white : black, 0);
         lv_obj_set_style_text_color(ui_feedInPowerUnitLabel, inverterData.feedInPower < 0 ? white : black, 0);
         //lv_label_set_text_fmt(ui_socLabel, "%d", inverterData.soc);
         batteryPercentTextAnimator.animate(ui_socLabel, previousInverterData.soc, inverterData.soc);
         //lv_label_set_text(ui_batteryPowerLabel, format(POWER, abs(inverterData.batteryPower)).value.c_str());
         batteryPowerTextAnimator.animate(ui_batteryPowerLabel, abs(previousInverterData.batteryPower), abs(inverterData.batteryPower));
-        lv_obj_set_style_bg_color(ui_batteryContainer, (inverterData.batteryPower) < 0 ? lv_color_hex(_ui_theme_color_batteryColor[0]) :  lv_color_white(), 0);
+        batteryBackgroundAnimator.animate(ui_batteryContainer, (previousInverterData.batteryPower) < 0, (inverterData.batteryPower) < 0);
+        //lv_obj_set_style_bg_color(ui_batteryContainer, (inverterData.batteryPower) < 0 ? lv_color_hex(_ui_theme_color_batteryColor[0]) :  lv_color_white(), 0);
+
         lv_label_set_text(ui_batteryPowerUnitLabel, format(POWER, abs(inverterData.batteryPower)).unit.c_str());
         //lv_obj_set_style_text_color(ui_batteryPowerLabel, inverterData.batteryPower < 0 ? red : black, 0);
         //lv_obj_set_style_text_color(ui_batteryPowerUnitLabel, inverterData.batteryPower < 0 ? red : black, 0);
@@ -304,6 +309,7 @@ public:
     }
 private:
     int const UI_TEXT_CHANGE_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS;
+    int const UI_BACKGROUND_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS / 3;
     UITextChangeAnimator loadPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
     UITextChangeAnimator feedInPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
     UITextChangeAnimator batteryPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
@@ -317,6 +323,10 @@ private:
     UITextChangeAnimator pv2PowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
     UITextChangeAnimator batteryPercentTextAnimator = UITextChangeAnimator(PERCENT, UI_TEXT_CHANGE_ANIMATION_DURATION);
     UITextChangeAnimator selfUsePercentTextAnimator = UITextChangeAnimator(PERCENT, UI_TEXT_CHANGE_ANIMATION_DURATION);
+    UIBackgroundAnimator pvBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION, lv_color_hex(_ui_theme_color_pvColor[0]));
+    UIBackgroundAnimator batteryBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION, lv_color_hex(_ui_theme_color_batteryColor[0]));
+    UIBackgroundAnimator gridBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION, lv_color_hex(_ui_theme_color_gridColor[0]));
+
     void updateChart(SolarChartDataProvider& solarChartDataProvider)
     {
         while (lv_chart_get_series_next(ui_Chart1, NULL))
