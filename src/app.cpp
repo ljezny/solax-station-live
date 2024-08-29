@@ -48,16 +48,16 @@ InverterData_t createRandomMockData()
 {
     InverterData_t inverterData;
     inverterData.status = DONGLE_STATUS_OK;
-    inverterData.pv1Power = random(500, 5000);
-    inverterData.pv2Power = random(500, 4000);
-    inverterData.batteryPower = random(-300, 300);
+    inverterData.pv1Power = random(2000, 2500);
+    inverterData.pv2Power = random(3500, 4000);
+    inverterData.batteryPower = random(-50, 50);
     inverterData.batteryTemperature = random(20, 26);
     inverterData.inverterTemperature = random(40, 52);
-    inverterData.L1Power = random(0, 3000);
-    inverterData.L2Power = random(0, 4000);
-    inverterData.L3Power = random(0, 3000);
+    inverterData.L1Power = random(500, 600);
+    inverterData.L2Power = random(300, 400);
+    inverterData.L3Power = random(1000, 1200);
     inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
-    inverterData.loadPower = random(200, 1200);
+    inverterData.loadPower = random(800, 1200);
     inverterData.loadToday = random(20, 60);
     inverterData.feedInPower = random(-1000, 1000);
     inverterData.soc = random(80, 85);
