@@ -4,7 +4,7 @@
 #include <lvgl.h>
 #include "ui/ui.h"
 
-#define BALLS_RADIUS 12
+#define BALLS_RADIUS 16
 typedef struct UIBallAnimationItem
 {
     lv_obj_t *ball;
@@ -26,7 +26,7 @@ public:
             lv_obj_remove_style_all(items[i].ball);
 
             int radius = BALLS_RADIUS;// - i * (BALLS_RADIUS / ballsCount);
-            int opa = 255 - i * (128 / ballsCount);
+            int opa = 255;// - i * (128 / ballsCount);
             lv_obj_set_width(items[i].ball, radius);
             lv_obj_set_height(items[i].ball, radius);
             lv_obj_clear_flag(items[i].ball, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
@@ -77,7 +77,7 @@ public:
 
         int xDelay = direction ? 0 : duration / 2;
         int yDelay = direction ? duration / 2 : 0;
-        int ballDelay = duration / 10; //duration / ballsCount / 2;
+        int ballDelay = duration / 5; //duration / ballsCount / 2;
         int lineWidth = 3;
         lv_obj_set_pos(vLine, (direction == 0 ? centerStartX : centerDestinationX) - lineWidth / 2 + xOffset, (distanceY > 0 ? centerStartY : centerDestinationY) + yOffset - lineWidth / 2);
         lv_obj_set_size(vLine, 3, abs(distanceY) + 3);
