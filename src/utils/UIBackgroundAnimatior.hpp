@@ -32,8 +32,7 @@ class UIBackgroundAnimator {
         }
 
         void animate(lv_obj_t *obj, bool from, bool to) {
-            if(from == to) return;
-
+            
             variables.obj = obj;
             lv_anim_set_var(&anim, &variables);            
             lv_anim_set_values(&anim, from ? 255 : 0, to ? 255 : 0);

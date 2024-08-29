@@ -104,7 +104,7 @@ void timerCB(struct _lv_timer_t *timer)
     if (dashboardShown)
     {
         previousShellyResult = shellyResult;
-        dashboardUI.update(inverterData, previousInverterData, shellyResult, previousShellyResult, solarChartDataProvider, wifiSignalPercent());
+        dashboardUI.update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, shellyResult, previousShellyResult, solarChartDataProvider, wifiSignalPercent());
         previousInverterData = inverterData;
         previousShellyResult = shellyResult;
         backlightResolver.resolve(inverterData);

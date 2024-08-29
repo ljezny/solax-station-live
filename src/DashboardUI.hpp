@@ -91,8 +91,6 @@ public:
 
     void update(InverterData_t& inverterData, InverterData_t& previousInverterData, ShellyResult_t& shellyResult, ShellyResult_t& previousShellyResult, SolarChartDataProvider& solarChartDataProvider, int wifiSignalPercent)
     {
-        updateFlowAnimations(inverterData, shellyResult);
-        
         int selfUseEnergyTodayPercent = inverterData.loadToday > 0 ? ((inverterData.loadToday - inverterData.gridBuyToday) / inverterData.loadToday) * 100 : 0;
         selfUseEnergyTodayPercent = constrain(selfUseEnergyTodayPercent, 0, 100);
 
@@ -305,7 +303,7 @@ public:
                 break;
         }
         
-        
+        updateFlowAnimations(inverterData, shellyResult);
     }
 private:
     int const UI_TEXT_CHANGE_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS;
