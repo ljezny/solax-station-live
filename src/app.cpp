@@ -239,7 +239,8 @@ bool discoverDongles()
 void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
 {
     static long lastAttempt = 0;
-    if (lastAttempt == 0 || millis() - lastAttempt > 1000)
+    static int lastSuccessAttempt = 0;
+    if (lastAttempt == 0 || (millis() - lastAttempt > 1000) && (millis() - lastSuccessAttempt > 5000))
     {
         log_d("Loading Solax inverter data");
         if (dongleDiscovery.connectToDongle(discoveryResult, ""))
@@ -248,6 +249,7 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
 
             if (d.status == DONGLE_STATUS_OK)
             {
+                lastSuccessAttempt = millis();
                 inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
                 shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
