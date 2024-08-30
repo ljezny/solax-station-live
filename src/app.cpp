@@ -240,16 +240,17 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
 {
     static long lastAttempt = 0;
     static int lastSuccessAttempt = 0;
-    if (lastAttempt == 0 || (millis() - lastAttempt > 1000) && (millis() - lastSuccessAttempt > 5000))
+    if (lastAttempt == 0 || (millis() - lastAttempt > 1000) && (millis() - lastSuccessAttempt > 3000))
     {
         log_d("Loading Solax inverter data");
+        lastAttempt = millis();
         if (dongleDiscovery.connectToDongle(discoveryResult, ""))
         {
             InverterData_t d = SolaxDongleAPI().loadData(discoveryResult.sn);
 
             if (d.status == DONGLE_STATUS_OK)
             {
-                lastSuccessAttempt = millis();
+                lastSuccessAttempt = lastAttempt;
                 inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
                 shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
@@ -259,7 +260,6 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
         {
             inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
         }
-        lastAttempt = millis();
     }
 }
 

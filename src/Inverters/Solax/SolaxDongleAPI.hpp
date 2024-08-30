@@ -24,6 +24,7 @@ public:
             {
                 StaticJsonDocument<14*1024> doc;
                 String payload = http.getString();
+                log_d("Payload: %s", payload.c_str());
                 DeserializationError err = deserializeJson(doc, payload);
                 if (err == DeserializationError::Ok)
                 {

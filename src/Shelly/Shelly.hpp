@@ -339,6 +339,7 @@ private:
             if (httpCode == HTTP_CODE_OK)
             {
                 String payload = http.getString();
+                log_d("Shelly state: %s", payload.c_str());
                 DynamicJsonDocument doc(8192);
                 deserializeJson(doc, payload);
                 result.updated = millis(); // doc["unixtime"].as<int>();
@@ -365,6 +366,7 @@ private:
             if (httpCode == HTTP_CODE_OK)
             {
                 String payload = http.getString();
+                log_d("Shelly state: %s", payload.c_str());
                 DynamicJsonDocument doc(8192);
                 deserializeJson(doc, payload);
                 result.updated = millis();
