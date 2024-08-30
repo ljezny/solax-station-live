@@ -1,18 +1,15 @@
 #pragma once
 
-#include <ESP_Panel_Library.h>
 #include "Inverters/InverterResult.hpp"
-
-#define BACKLIGHT_TOUCH_TIMEOUT 5000
+#include "gfx_conf.h"
+#define BACKLIGHT_TOUCH_TIMEOUT 15000
 
 class BacklightResolver {
     private:
-        ESP_PanelBacklight *backlight;
         long lastTouchTime = 0;
     public:
-        void setup(ESP_PanelBacklight *backlight) {
-            this->backlight = backlight;
-            backlight->setBrightness(100);
+        void setup() {
+            tft.setBrightness(255);
         }
 
         void resolve(InverterData_t inverterData) {
@@ -21,26 +18,33 @@ class BacklightResolver {
             int brightness = 100;
             if(inverterData.status == DONGLE_STATUS_OK) {
                 if(pvPower > 2000) {
-                    log_d("Setting brightness to 100");
-                    brightness = 100;
+                    log_d("Setting brightness to 100%");
+                    brightness = 255;
                 } else if(pvPower > 0) {
-                    log_d("Setting brightness to 80");
-                    brightness = 80;
+                    log_d("Setting brightness to 80%");
+                    brightness = 192;
                 } else {
-                    log_d("Setting brightness to 20");
-                    brightness = 20;
+                    log_d("Setting brightness to 20%");
+                    brightness = 32;
                 }
             }
 
             if((millis() - this->lastTouchTime) > BACKLIGHT_TOUCH_TIMEOUT) {
-                this->backlight->setBrightness(brightness);
+               setBacklightAnimated(brightness);
             } else {
-                this->backlight->setBrightness(100);
+               setBacklightAnimated(255);
             }
         }
 
         void touch() {
             this->lastTouchTime = millis();
-            this->backlight->setBrightness(100);
+            setBacklightAnimated(255);
+        }
+
+        void setBacklightAnimated(int brightness) {
+            for(int i = tft.getBrightness(); i != brightness; i += (brightness > tft.getBrightness()) ? 1 : -1) {
+                tft.setBrightness(i);
+                delay(5);
+            }
         }
 };
