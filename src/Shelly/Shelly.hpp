@@ -116,7 +116,7 @@ public:
                 return;
             }
         }
-        if(mdns_query_async_get_results(mdnsSearch, 100, &results)) {
+        if(mdns_query_async_get_results(mdnsSearch, 100, &results, &numResults)) {
             mdns_result_t *r = results;
 
             while (r) {
