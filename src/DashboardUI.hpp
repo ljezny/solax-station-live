@@ -79,7 +79,8 @@ public:
     const int UI_REFRESH_PERIOD_MS = 5000;
     void show()
     {
-        lv_scr_load_anim(ui_Dashboard, LV_SCR_LOAD_ANIM_FADE_IN, 500, 0, true);
+        lv_scr_load(ui_Dashboard);
+        
         lv_obj_add_event_cb(ui_Chart1, draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
     }
     

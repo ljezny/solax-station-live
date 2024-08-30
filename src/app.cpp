@@ -189,7 +189,7 @@ void setup()
     disp_drv.hor_res = screenWidth;
     disp_drv.ver_res = screenHeight;
     disp_drv.flush_cb = my_disp_flush;
-    disp_drv.full_refresh = 0;
+    disp_drv.full_refresh = 1;
     disp_drv.draw_buf = &draw_buf;
     lv_disp_drv_register(&disp_drv);
 
@@ -205,13 +205,10 @@ void setup()
     lv_label_set_text(ui_fwVersionLabel, String("v" + String(VERSION_NUMBER)).c_str());
     lv_label_set_text(ui_ESPIdLabel, softAP.getESPIdHex().c_str());
 
+    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 0);
     lv_timer_t *timer = lv_timer_create(timerCB, dashboardUI.UI_REFRESH_PERIOD_MS, NULL);
-    // lv_log_register_print_cb([](const char *txt)
-    //                        { log_i("%s\n", txt); });
 
     softAP.start();
-
-    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 0);
 }   
 
 bool discoverDongles()
