@@ -18,7 +18,11 @@ void animation_set_text(UITextChangeAnimatorVariables *variables, int32_t value)
     if(v != variables->to && step > 0) {
         v = (v / step) * step;
     }
-    lv_label_set_text(variables->label, format(variables->unit, v).value.c_str());
+    String text = format(variables->unit, v).value;
+    if(!strcmp(lv_label_get_text(variables->label), text.c_str())) {
+        return;
+    }
+    lv_label_set_text(variables->label, text.c_str());
 }
 
 class UITextChangeAnimator {

@@ -11,6 +11,10 @@ struct UIBackgroundAnimatorVariables {
 
 void animation_set_bg_color(UIBackgroundAnimatorVariables *variables, int32_t value) {
     lv_color_t c = lv_color_mix(variables->color, lv_color_white(), value);
+    lv_color_t old = lv_obj_get_style_bg_color(variables->obj, 0);
+    if(old.full == c.full) {
+        return;
+    }
     lv_obj_set_style_bg_color(variables->obj, c, 0);
 }
 
