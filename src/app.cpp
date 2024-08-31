@@ -9,7 +9,6 @@
 #include "Inverters/DongleDiscovery.hpp"
 #include "Inverters/Goodwe/GoodweDongleAPI.hpp"
 #include "Inverters/Solax/SolaxDongleAPI.hpp"
-#include "Inverters/Solax/SolaxWallboxDongleAPI.hpp"
 #include "Shelly/Shelly.hpp"
 #include "utils/UnitFormatter.hpp"
 #include "utils/SolarChartDataProvider.hpp"
@@ -239,8 +238,7 @@ bool discoverDongles()
 void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
 {
     static long lastAttempt = 0;
-    static int lastSuccessAttempt = 0;
-    if (lastAttempt == 0 || (millis() - lastAttempt > 1000) && (millis() - lastSuccessAttempt > 3000))
+    if (lastAttempt == 0 || (millis() - lastAttempt > 5000))
     {
         log_d("Loading Solax inverter data");
         lastAttempt = millis();
@@ -250,10 +248,12 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
 
             if (d.status == DONGLE_STATUS_OK)
             {
-                lastSuccessAttempt = lastAttempt;
                 inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
                 shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
+            } else if(d.status == DONGLE_STATUS_UNSUPPORTED_DONGLE) {
+                log_d("Unsupported dongle");
+                discoveryResult.type = DONGLE_TYPE_IGNORE;                
             }
         }
         else
@@ -263,28 +263,28 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
     }
 }
 
-void loadSolaxWallboxData(DongleDiscoveryResult_t &discoveryResult)
-{
-    static long lastAttempt = 0;
-    int wallboxRefreshPeriod = wallboxData.status == DONGLE_STATUS_OK && wallboxData.isConnected ? 30000 : 5 * 60 * 1000;
-    if (lastAttempt == 0 || millis() - lastAttempt > wallboxRefreshPeriod)
-    {
-        log_d("Loading Solax wallbox data");
-        if (dongleDiscovery.connectToDongle(discoveryResult, ""))
-        {
-            WallboxData_t d = SolaxWallboxDongleAPI().loadData(discoveryResult.sn);
-            if (d.status == DONGLE_STATUS_OK)
-            {
-                wallboxData = d;
-            }
-        }
-        else
-        {
-            wallboxData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
-        }
-        lastAttempt = millis();
-    }
-}
+// void loadSolaxWallboxData(DongleDiscoveryResult_t &discoveryResult)
+// {
+//     static long lastAttempt = 0;
+//     int wallboxRefreshPeriod = wallboxData.status == DONGLE_STATUS_OK && wallboxData.isConnected ? 30000 : 5 * 60 * 1000;
+//     if (lastAttempt == 0 || millis() - lastAttempt > wallboxRefreshPeriod)
+//     {
+//         log_d("Loading Solax wallbox data");
+//         if (dongleDiscovery.connectToDongle(discoveryResult, ""))
+//         {
+//             WallboxData_t d = SolaxWallboxDongleAPI().loadData(discoveryResult.sn);
+//             if (d.status == DONGLE_STATUS_OK)
+//             {
+//                 wallboxData = d;
+//             }
+//         }
+//         else
+//         {
+//             wallboxData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
+//         }
+//         lastAttempt = millis();
+//     }
+// }
 
 void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult)
 {
@@ -354,11 +354,8 @@ void processDongles()
         {
             switch (dongleDiscovery.discoveries[i].type)
             {
-            case DONGLE_TYPE_SOLAX_INVERTER:
+            case DONGLE_TYPE_SOLAX:
                 loadSolaxInverterData(dongleDiscovery.discoveries[i]);
-                break;
-            case DONGLE_TYPE_SOLAX_WALLBOX:
-                // loadSolaxWallboxData(dongleDiscovery.discoveries[i]);
                 break;
             case DONGLE_TYPE_GOODWE:
                 loadGoodweInverterData(dongleDiscovery.discoveries[i]);

@@ -62,24 +62,9 @@ class DongleDiscovery {
                 }
 
                 if(isSolaxDongleSSID(ssid)) {
-                    WiFi.begin(ssid);
-                    
-                    if(awaitWifiConnection()) {
-                        delay(1000);
-                        if(checkSolaxInverterConnection()) {
-                            discoveries[discoveryIndex].sn = parseDongleSN(ssid);
-                            discoveries[discoveryIndex].type = DONGLE_TYPE_SOLAX_INVERTER;
-                            discoveries[discoveryIndex].ssid = ssid;
-                            result = true;                      
-                        } else if(checkSolaxWallboxConnection()) {
-                            discoveries[discoveryIndex].sn = parseDongleSN(ssid);
-                            discoveries[discoveryIndex].type = DONGLE_TYPE_SOLAX_WALLBOX;  
-                            discoveries[discoveryIndex].ssid = ssid;                          
-                            result = true;
-                        }
-                    }
-
-                    WiFi.disconnect();
+                    discoveries[discoveryIndex].sn = parseDongleSN(ssid);
+                    discoveries[discoveryIndex].type = DONGLE_TYPE_SOLAX;
+                    discoveries[discoveryIndex].ssid = ssid;
                 }
 
                 if(isGoodWeSSID(ssid)) {

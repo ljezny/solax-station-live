@@ -7,6 +7,7 @@ typedef enum DongleStatus {
     DONGLE_STATUS_HTTP_ERROR = -2,
     DONGLE_STATUS_JSON_ERROR = -3,
     DONGLE_STATUS_WIFI_DISCONNECTED = -4,
+    DONGLE_STATUS_UNSUPPORTED_DONGLE = -5,
 } DongleStatus_t;
 
 typedef struct
