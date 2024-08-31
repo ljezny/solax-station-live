@@ -15,7 +15,6 @@ public:
     {
         InverterData_t inverterData;
         HTTPClient http;
-        http.setConnectTimeout(2000);
         if (http.begin(getUrl()))
         {
             int httpCode = http.POST("optType=ReadRealTimeData&pwd=" + sn);
