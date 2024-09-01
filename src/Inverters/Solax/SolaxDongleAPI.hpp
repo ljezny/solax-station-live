@@ -73,12 +73,15 @@ public:
             {
                 inverterData.status = DONGLE_STATUS_HTTP_ERROR;
             }
-            http.end();
+            
         }
         else
         {
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
         }
+        
+        http.end();
+
         return inverterData;
     }
 
