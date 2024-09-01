@@ -92,12 +92,14 @@ class DongleDiscovery {
                 return false;
             }
 
-            if(WiFi.SSID() == discovery.ssid) {
+            if(WiFi.SSID() == discovery.ssid && WiFi.status() == WL_CONNECTED) {
+                log_d("Already connected to %s", discovery.ssid.c_str());
                 return true;
             } else {
+                log_d("Disconnecting from %s", WiFi.SSID().c_str());
                 WiFi.disconnect();
             }
-
+            log_d("Connecting to %s", discovery.ssid.c_str());
             WiFi.begin(discovery.ssid, password);
 
             return awaitWifiConnection();
