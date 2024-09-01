@@ -104,6 +104,15 @@ class DongleDiscovery {
 
             return awaitWifiConnection();
         }
+
+        bool hasAnyKnownDongles() {
+            for(int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++) {
+                if(discoveries[i].type != DONGLE_TYPE_UNKNOWN && discoveries[i].type != DONGLE_TYPE_IGNORE) {
+                    return true;
+                }
+            }
+            return false;
+        }
     private:
         bool awaitWifiConnection() {
             int retries = 100;

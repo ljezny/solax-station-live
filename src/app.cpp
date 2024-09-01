@@ -214,15 +214,7 @@ bool discoverDongles()
 {
     static long lastAttempt = 0;
     bool hasDongles = false;
-    for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
-    {
-        if (dongleDiscovery.discoveries[i].type != DONGLE_TYPE_UNKNOWN)
-        {
-            hasDongles = true;
-            break;
-        }
-    }
-    int period = hasDongles ? 30000 : 5000;
+    int period = dongleDiscovery.hasAnyKnownDongles() ? 30000 : 5000;
     if (lastAttempt == 0 || millis() - lastAttempt > period)
     {
         log_d("Discovering dongles");
@@ -238,6 +230,7 @@ bool discoverDongles()
 void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
 {
     static long lastAttempt = 0;
+    static int failures = 0;
     if (lastAttempt == 0 || (millis() - lastAttempt > 5000))
     {
         log_d("Loading Solax inverter data");
@@ -248,12 +241,24 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
 
             if (d.status == DONGLE_STATUS_OK)
             {
+                failures = 0;
                 inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
                 shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
             } else if(d.status == DONGLE_STATUS_UNSUPPORTED_DONGLE) {
                 log_d("Unsupported dongle");
                 discoveryResult.type = DONGLE_TYPE_IGNORE;                
+            } else {
+                failures++;
+                log_d("Failed to load data from Solax dongle. Failures: %d", failures);
+                if(failures > 10) {
+                    //needs to rediscover dongle and reconnecting
+                    log_d("Forgetting and disconnecting dongle due to too many failures");
+                    discoveryResult.type = DONGLE_TYPE_UNKNOWN;
+                    discoveryResult.sn = "";
+                    discoveryResult.ssid = "";
+                    WiFi.disconnect();
+                }
             }
         }
         else
