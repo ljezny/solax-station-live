@@ -8185,7 +8185,7 @@
                           {
                             "nid": 196508311,
                             "strtype": "OBJECT/Name",
-                            "strval": "Container12",
+                            "strval": "batteryTemperatureContainer",
                             "InheritedType": 10
                           },
                           {
@@ -16131,7 +16131,7 @@
                       {
                         "nid": -325908020,
                         "strtype": "OBJECT/Name",
-                        "strval": "Container31",
+                        "strval": "inverterTemperatureContainer",
                         "InheritedType": 10
                       },
                       {
@@ -16443,8 +16443,7 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "CONTAINER",
-                    "tree_closed": true
+                    "saved_objtypeKey": "CONTAINER"
                   },
                   {
                     "guid": "GUID17507172-201507S471523235",
@@ -32889,7 +32888,7 @@
     "theme_color2": 0,
     "uiExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/ljezny/Projects/solax-station-live/src/ui",
-    "backup_cnt": 682,
+    "backup_cnt": 684,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",
