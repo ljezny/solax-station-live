@@ -161,7 +161,8 @@ private:
                             inverterData.batteryChargedToday = readUInt16(packetBuffer, 108) / 10;
                             inverterData.batteryDischargedToday = readUInt16(packetBuffer, 111) / 10;
                             inverterData.gridBuyToday = readUInt16(packetBuffer, 102) / 10;
-                            inverterData.gridSellToday = readUInt16(packetBuffer, 99) / 10;                            
+                            inverterData.gridSellToday = readUInt16(packetBuffer, 99) / 10;       
+                            inverterData.sn = sn;                     
                         }
                     }
                 }
