@@ -208,6 +208,8 @@ void setup()
     xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 1);
     lv_timer_t *timer = lv_timer_create(timerCB, dashboardUI.UI_REFRESH_PERIOD_MS, NULL);
 
+    WiFi.persistent(false);
+    WiFi.setSleep(false);
     softAP.start();
 }   
 

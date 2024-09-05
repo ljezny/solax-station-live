@@ -123,6 +123,9 @@ class DongleDiscovery {
                     delay(100);
                 }
             }
+            WiFi.disconnect();
+            log_d("Failed to connect to WiFi");
+
             return false;
         }
 
