@@ -18,6 +18,10 @@ public:
 private:
     WiFiUDP udp;
 
+    double gridBuyTotal = 0;
+    double gridSellTotal = 0;
+    int day = -1;
+
     uint16_t readUInt16(byte *buf, byte reg)
     {
         return (buf[5 + reg * 2] << 8 | buf[6 + reg * 2]);
@@ -162,7 +166,21 @@ private:
                             inverterData.batteryDischargedToday = readUInt16(packetBuffer, 111) / 10.0;
                             inverterData.gridBuyToday = readUInt16(packetBuffer, 102) / 10.0;
                             inverterData.gridSellToday = readUInt16(packetBuffer, 99) / 10.0 - inverterData.loadToday;       
+                            inverterData.gridBuyTotal = readUInt32(packetBuffer, 200) / 10.0;
+                            inverterData.gridSellTotal = readUInt32(packetBuffer, 95) / 10.0;
                             inverterData.sn = sn;                     
+
+                            //this is a hack - Goodwe returns incorrect day values for grid sell/buy
+                            //so count it manually from total values
+                            int day = (readUInt16(packetBuffer, 1) >> 8) & 0xFF;
+                            log_d("Day: %d", day);
+                            if(this->day != day) {
+                                this->day = day;
+                                gridBuyTotal = inverterData.gridBuyTotal;
+                                gridSellTotal = inverterData.gridSellTotal;
+                            }
+                            inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
+                            inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
                         }
                     }
                 }

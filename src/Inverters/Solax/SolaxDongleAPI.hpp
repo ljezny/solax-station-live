@@ -45,6 +45,8 @@ public:
                         inverterData.feedInPower = read16BitSigned(doc["Data"][34].as<uint16_t>());
                         inverterData.gridSellToday = doc["Data"][90].as<uint16_t>() / 100.0; 
                         inverterData.gridBuyToday = doc["Data"][92].as<uint16_t>() / 100.0;
+                        inverterData.gridSellTotal = ((doc["Data"][87].as<uint32_t>() << 16) + doc["Data"][86].as<uint16_t>()) / 100.0; 
+                        inverterData.gridBuyTotal = ((doc["Data"][89].as<uint32_t>() << 16) + doc["Data"][88].as<uint16_t>()) / 100.0; 
                         inverterData.batteryChargedToday = doc["Data"][79].as<uint16_t>() / 10.0;
                         inverterData.batteryDischargedToday = doc["Data"][78].as<uint16_t>() / 10.0;
                         inverterData.loadToday = inverterData.pvToday + inverterData.gridBuyToday;

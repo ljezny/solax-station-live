@@ -231,13 +231,14 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
 {
     static long lastAttempt = 0;
     static int failures = 0;
+    static SolaxDongleAPI solaxDongleAPI = SolaxDongleAPI();
     if (lastAttempt == 0 || (millis() - lastAttempt > 5000))
     {
         log_d("Loading Solax inverter data");
         lastAttempt = millis();
         if (dongleDiscovery.connectToDongle(discoveryResult, ""))
         {
-            InverterData_t d = SolaxDongleAPI().loadData(discoveryResult.sn);
+            InverterData_t d = solaxDongleAPI.loadData(discoveryResult.sn);
 
             if (d.status == DONGLE_STATUS_OK)
             {
@@ -268,32 +269,10 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
     }
 }
 
-// void loadSolaxWallboxData(DongleDiscoveryResult_t &discoveryResult)
-// {
-//     static long lastAttempt = 0;
-//     int wallboxRefreshPeriod = wallboxData.status == DONGLE_STATUS_OK && wallboxData.isConnected ? 30000 : 5 * 60 * 1000;
-//     if (lastAttempt == 0 || millis() - lastAttempt > wallboxRefreshPeriod)
-//     {
-//         log_d("Loading Solax wallbox data");
-//         if (dongleDiscovery.connectToDongle(discoveryResult, ""))
-//         {
-//             WallboxData_t d = SolaxWallboxDongleAPI().loadData(discoveryResult.sn);
-//             if (d.status == DONGLE_STATUS_OK)
-//             {
-//                 wallboxData = d;
-//             }
-//         }
-//         else
-//         {
-//             wallboxData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
-//         }
-//         lastAttempt = millis();
-//     }
-// }
-
 void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult)
 {
     static long lastAttempt = 0;
+    static GoodweDongleAPI goodweDongleAPI = GoodweDongleAPI();
     if (lastAttempt == 0 || millis() - lastAttempt > 1000)
     {
         log_d("Loading Goodwe inverter data");
@@ -301,7 +280,7 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult)
         {
             log_d("GoodWe wifi connected.");
 
-            InverterData_t d = GoodweDongleAPI().loadData(discoveryResult.sn);
+            InverterData_t d = goodweDongleAPI.loadData(discoveryResult.sn);
 
             if (d.status == DONGLE_STATUS_OK)
             {

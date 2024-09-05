@@ -25,6 +25,8 @@ typedef struct
     double batteryDischargedToday = 0;
     double gridBuyToday = 0;
     double gridSellToday = 0;
+    double gridBuyTotal = 0;
+    double gridSellTotal = 0;
     int L1Power = 0;
     int L2Power = 0;
     int L3Power = 0;
