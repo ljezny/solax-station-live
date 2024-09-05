@@ -12,7 +12,7 @@ class GoodweDongleAPI
 public:
     InverterData_t loadData(String sn)
     {
-        return readData();
+        return readData(sn);
     }
 
 private:
@@ -113,7 +113,7 @@ private:
         return false;
     }
 
-    InverterData_t readData()
+    InverterData_t readData(String sn)
     {
         InverterData_t inverterData;
         log_d("Connecting to dongle...");
@@ -155,13 +155,14 @@ private:
                                 - readInt16(packetBuffer, 68) - readInt16(packetBuffer, 62);
                             inverterData.loadPower = readInt16(packetBuffer, 72) + readInt16(packetBuffer, 70);
                             inverterData.inverterTemperature = readInt16(packetBuffer, 74) / 10;
-                            inverterData.pvTotal = readUInt32(packetBuffer, 91) / 10;
-                            inverterData.pvToday = readUInt32(packetBuffer, 93) / 10;
-                            inverterData.loadToday = readUInt16(packetBuffer, 105) / 10;
-                            inverterData.batteryChargedToday = readUInt16(packetBuffer, 108) / 10;
-                            inverterData.batteryDischargedToday = readUInt16(packetBuffer, 111) / 10;
-                            inverterData.gridBuyToday = readUInt16(packetBuffer, 102) / 10;
-                            inverterData.gridSellToday = readUInt16(packetBuffer, 99) / 10;                            
+                            inverterData.pvTotal = readUInt32(packetBuffer, 91) / 10.0;
+                            inverterData.pvToday = readUInt32(packetBuffer, 93) / 10.0;
+                            inverterData.loadToday = readUInt16(packetBuffer, 105) / 10.0;
+                            inverterData.batteryChargedToday = readUInt16(packetBuffer, 108) / 10.0;
+                            inverterData.batteryDischargedToday = readUInt16(packetBuffer, 111) / 10.0;
+                            inverterData.gridBuyToday = readUInt16(packetBuffer, 102) / 10.0;
+                            inverterData.gridSellToday = readUInt16(packetBuffer, 99) / 10.0 - inverterData.loadToday;       
+                            inverterData.sn = sn;                     
                         }
                     }
                 }
