@@ -49,7 +49,7 @@ public:
                         inverterData.gridBuyTotal = ((doc["Data"][89].as<uint32_t>() << 16) + doc["Data"][88].as<uint16_t>()) / 100.0; 
                         inverterData.batteryChargedToday = doc["Data"][79].as<uint16_t>() / 10.0;
                         inverterData.batteryDischargedToday = doc["Data"][78].as<uint16_t>() / 10.0;
-                        inverterData.loadToday = inverterData.pvToday + inverterData.gridBuyToday;
+                        inverterData.loadToday = inverterData.pvToday + inverterData.gridBuyToday - inverterData.gridSellToday;
                         inverterData.sn = sn;
                     } if(doc["type"].as<int>() == 16) { //X3-MIC/PRO-G2 https://github.com/simatec/ioBroker.solax/blob/master/lib/inverterData.js
                         inverterData.status = DONGLE_STATUS_OK;
