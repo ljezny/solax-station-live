@@ -299,7 +299,7 @@ public:
         lv_label_set_text(ui_shellyPowerUnitLabel, format(POWER, shellyResult.totalPower).unit.c_str());
         lv_label_set_text_fmt(ui_shellyCountLabel, "%d / %d", shellyResult.activeCount, shellyResult.pairedCount);
 
-        updateChart(solarChartDataProvider);
+        updateChart(inverterData, solarChartDataProvider);
 
         lv_obj_set_style_text_color(ui_statusLabel, lv_palette_main(LV_PALETTE_DEEP_ORANGE), 0);
         
@@ -348,7 +348,7 @@ private:
     UIBackgroundAnimator batteryBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION, lv_color_hex(_ui_theme_color_batteryColor[0]));
     UIBackgroundAnimator gridBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION, lv_color_hex(_ui_theme_color_gridColor[0]));
 
-    void updateChart(SolarChartDataProvider& solarChartDataProvider)
+    void updateChart(InverterData_t& inverterData, SolarChartDataProvider& solarChartDataProvider)
     {
         while (lv_chart_get_series_next(ui_Chart1, NULL))
         {
@@ -361,14 +361,16 @@ private:
 
         uint32_t i;
 
-        float maxPower = 10000.0f;
+        float maxPower = 5000.0f;
         for (i = 0; i < CHART_SAMPLES_PER_DAY; i++)
         {
             SolarChartDataItem_t item = solarChartDataProvider.getData()[CHART_SAMPLES_PER_DAY - i - 1];
 
             lv_chart_set_next_value(ui_Chart1, pvPowerSeries, item.pvPower);
             lv_chart_set_next_value(ui_Chart1, acPowerSeries, item.loadPower);
-            lv_chart_set_next_value(ui_Chart1, socSeries, item.soc);
+            if(inverterData.hasBattery) {
+                lv_chart_set_next_value(ui_Chart1, socSeries, item.soc);
+            }
 
             maxPower = max(maxPower, max(item.pvPower, item.loadPower));
         }
