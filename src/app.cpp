@@ -274,6 +274,7 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult)
 {
     static long lastAttempt = 0;
     static GoodweDongleAPI goodweDongleAPI = GoodweDongleAPI();
+    static int failures = 0;
     if (lastAttempt == 0 || millis() - lastAttempt > 1000)
     {
         log_d("Loading Goodwe inverter data");
@@ -285,9 +286,21 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult)
 
             if (d.status == DONGLE_STATUS_OK)
             {
+                failures = 0;
                 inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
                 shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
+            } else {
+                failures++;
+                log_d("Failed to load data from Goodwe dongle. Failures: %d", failures);
+                if(failures > 10) {
+                    //needs to rediscover dongle and reconnecting
+                    log_d("Forgetting and disconnecting dongle due to too many failures");
+                    discoveryResult.type = DONGLE_TYPE_UNKNOWN;
+                    discoveryResult.sn = "";
+                    discoveryResult.ssid = "";
+                    WiFi.disconnect();
+                }
             }
         }
         else
