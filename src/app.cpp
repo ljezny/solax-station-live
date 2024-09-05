@@ -205,7 +205,7 @@ void setup()
     lv_label_set_text(ui_fwVersionLabel, String("v" + String(VERSION_NUMBER)).c_str());
     lv_label_set_text(ui_ESPIdLabel, softAP.getESPIdHex().c_str());
 
-    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 0);
+    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 1);
     lv_timer_t *timer = lv_timer_create(timerCB, dashboardUI.UI_REFRESH_PERIOD_MS, NULL);
 
     softAP.start();
