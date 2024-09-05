@@ -38,6 +38,7 @@ typedef struct
     int batteryTemperature = 0;
     double pvToday = 0;
     uint32_t pvTotal = 0;
+    bool hasBattery = true;
 } InverterData_t;
 
 typedef struct

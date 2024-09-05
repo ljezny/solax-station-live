@@ -161,6 +161,12 @@ public:
             lv_obj_set_style_text_color(ui_inverterTemperatureUnitLabel, white, 0);
         }
 
+        if(inverterData.inverterTemperature == 0) {
+            lv_obj_add_flag(ui_inverterTemperatureContainer, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_clear_flag(ui_inverterTemperatureContainer, LV_OBJ_FLAG_HIDDEN);
+        }
+
         //lv_label_set_text(ui_inverterPowerLabel, format(POWER, inverterData.inverterPower).value.c_str());
         inverterPowerTextAnimator.animate(ui_inverterPowerLabel, previousInverterData.inverterPower, inverterData.inverterPower);
         //lv_obj_set_style_bg_color(ui_pvContainer, (inverterData.pv1Power + inverterData.pv2Power) > 0 ? lv_color_hex(_ui_theme_color_pvColor[0]) :  lv_color_white(), 0);
@@ -269,6 +275,15 @@ public:
         {
             lv_obj_set_style_text_color(ui_selfUseTodayLabel, red, 0);
             lv_obj_set_style_text_color(ui_selfUseTodayUnitLabel, red, 0);
+        }
+
+        if(inverterData.hasBattery)
+        {
+            lv_obj_clear_flag(ui_batteryContainer, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_batteryStatsContainer, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(ui_batteryContainer, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_batteryStatsContainer, LV_OBJ_FLAG_HIDDEN);
         }
 
         if (shellyResult.pairedCount > 0)

@@ -65,6 +65,8 @@ public:
                         inverterData.pvTotal = doc["Data"][22].as<uint16_t>() / 10.0;
                         inverterData.feedInPower = read16BitSigned(doc["Data"][74].as<uint16_t>());
                         inverterData.gridSellToday = doc["Data"][74].as<uint16_t>() / 100.0; 
+                        inverterData.gridBuyToday = doc["Data"][76].as<uint16_t>() / 100.0;
+                        inverterData.hasBattery = false;
                         inverterData.sn = sn;
                     } else if(doc["type"].as<int>() == 1) { //wallbox
                         //wallboxData.power = doc["Data"][11].as<int>();

@@ -104,6 +104,7 @@ InverterData_t createRandomMockData()
     inverterData.gridBuyToday = random(5, 16);
     inverterData.gridSellToday = random(6, 23);
     inverterData.sn = "1234567890";
+    inverterData.hasBattery = false;
     return inverterData;
 }
 

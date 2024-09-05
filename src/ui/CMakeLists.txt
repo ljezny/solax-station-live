@@ -5,7 +5,6 @@ SET(SOURCES ui_Splash.c
     ui.c
     ui_comp_hook.c
     ui_helpers.c
-    ui_events.c
     ui_img_logo_png.c
     ui_img_1516017106.c
     ui_img_1279321064.c

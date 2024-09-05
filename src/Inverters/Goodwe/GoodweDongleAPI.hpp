@@ -186,19 +186,22 @@ private:
                 }
             }
 
-            sendBMSInfoRequestPacket();
-            if (awaitPacket(3000))
-            {
-                int len = udp.read(packetBuffer, PACKET_SIZE);
-                if (len > 0)
+            for(int i = 0; i < 3; i++) { //it is UDP so retries are needed
+                sendBMSInfoRequestPacket();
+                if (awaitPacket(3000))
                 {
-                    unsigned c = crc16(packetBuffer + 2, len - 2, 0x8005, 0xFFFF, 0, true, true);
-                    if (c == 0)
+                    int len = udp.read(packetBuffer, PACKET_SIZE);
+                    if (len > 0)
                     {
-                        if (len == 7 + 2 * 8)
+                        unsigned c = crc16(packetBuffer + 2, len - 2, 0x8005, 0xFFFF, 0, true, true);
+                        if (c == 0)
                         {
-                            inverterData.batteryTemperature = readUInt16(packetBuffer, 3) / 10;
-                            inverterData.soc = readUInt16(packetBuffer, 7);
+                            if (len == 7 + 2 * 8)
+                            {
+                                inverterData.batteryTemperature = readUInt16(packetBuffer, 3) / 10;
+                                inverterData.soc = readUInt16(packetBuffer, 7);
+                                break;
+                            }
                         }
                     }
                 }
