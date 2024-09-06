@@ -256,6 +256,7 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
                 failures++;
                 log_d("Failed to load data from Solax dongle. Failures: %d", failures);
                 if(failures > 10) {
+                    failures = 0;
                     //needs to rediscover dongle and reconnecting
                     log_d("Forgetting and disconnecting dongle due to too many failures");
                     discoveryResult.type = DONGLE_TYPE_UNKNOWN;
@@ -300,6 +301,7 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult)
                 failures++;
                 log_d("Failed to load data from Goodwe dongle. Failures: %d", failures);
                 if(failures > 10) {
+                    failures = 0;
                     //needs to rediscover dongle and reconnecting
                     log_d("Forgetting and disconnecting dongle due to too many failures");
                     discoveryResult.type = DONGLE_TYPE_UNKNOWN;
