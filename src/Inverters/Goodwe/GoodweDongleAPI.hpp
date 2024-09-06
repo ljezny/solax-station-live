@@ -175,10 +175,13 @@ private:
                             int day = (readUInt16(packetBuffer, 1) >> 8) & 0xFF;
                             log_d("Day: %d", day);
                             if(this->day != day) {
+                                log_d("Day changed, resetting counters");
                                 this->day = day;
                                 gridBuyTotal = inverterData.gridBuyTotal;
                                 gridSellTotal = inverterData.gridSellTotal;
                             }
+                            log_d("Grid buy total: %f", gridBuyTotal);
+                            log_d("Grid sell total: %f", gridSellTotal);
                             inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
                             inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
                         }
@@ -208,6 +211,8 @@ private:
             }
         }
         disconnect();
+
+        logInverterData(inverterData);
         return inverterData;
     }
 };

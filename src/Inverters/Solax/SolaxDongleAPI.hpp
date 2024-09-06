@@ -51,6 +51,7 @@ public:
                         inverterData.batteryDischargedToday = doc["Data"][78].as<uint16_t>() / 10.0;
                         inverterData.loadToday = inverterData.pvToday + inverterData.gridBuyToday - inverterData.gridSellToday;
                         inverterData.sn = sn;
+                        logInverterData(inverterData);
                     } else if(doc["type"].as<int>() == 16) { //X3-MIC/PRO-G2 https://github.com/simatec/ioBroker.solax/blob/master/lib/inverterData.js
                         inverterData.status = DONGLE_STATUS_OK;
                         inverterData.millis = millis();
@@ -68,6 +69,7 @@ public:
                         inverterData.gridBuyToday = doc["Data"][76].as<uint16_t>() / 100.0;
                         inverterData.hasBattery = false;
                         inverterData.sn = sn;
+                        logInverterData(inverterData);
                     } else if(doc["type"].as<int>() == 1) { //wallbox
                         //wallboxData.power = doc["Data"][11].as<int>();
                         inverterData.status = DONGLE_STATUS_UNSUPPORTED_DONGLE;
