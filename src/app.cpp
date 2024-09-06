@@ -268,6 +268,10 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
         else
         {
             inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
+            log_d("Solax wifi not connected.");
+            discoveryResult.type = DONGLE_TYPE_UNKNOWN;
+            discoveryResult.sn = "";
+            discoveryResult.ssid = "";            
         }
     }
 }
@@ -308,6 +312,10 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult)
         else
         {
             inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
+            log_d("GoodWe wifi not connected.");
+            discoveryResult.type = DONGLE_TYPE_UNKNOWN;
+            discoveryResult.sn = "";
+            discoveryResult.ssid = "";
         }
         lastAttempt = millis();
     }
