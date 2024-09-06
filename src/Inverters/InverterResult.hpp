@@ -33,6 +33,7 @@ typedef struct
     int inverterPower = 0;
     int16_t loadPower = 0;
     float loadToday = 0;
+    float loadTotal = 0;
     int32_t feedInPower = 0;
     int inverterTemperature = 0;
     int batteryTemperature = 0;

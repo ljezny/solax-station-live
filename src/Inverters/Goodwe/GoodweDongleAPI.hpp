@@ -20,6 +20,7 @@ private:
 
     double gridBuyTotal = 0;
     double gridSellTotal = 0;
+    double loadTotal = 0;
     int day = -1;
 
     uint16_t readUInt16(byte *buf, byte reg)
@@ -162,11 +163,12 @@ private:
                             inverterData.pvTotal = readUInt32(packetBuffer, 91) / 10.0;
                             inverterData.pvToday = readUInt32(packetBuffer, 93) / 10.0;
                             inverterData.loadToday = readUInt16(packetBuffer, 105) / 10.0;
+                            inverterData.loadTotal = readUInt32(packetBuffer, 103) / 10.0;
                             inverterData.batteryChargedToday = readUInt16(packetBuffer, 108) / 10.0;
                             inverterData.batteryDischargedToday = readUInt16(packetBuffer, 111) / 10.0;
                             inverterData.gridBuyToday = readUInt16(packetBuffer, 102) / 10.0;
                             inverterData.gridSellToday = readUInt16(packetBuffer, 99) / 10.0 - inverterData.loadToday;       
-                            inverterData.gridBuyTotal = readUInt32(packetBuffer, 200) / 10.0;
+                            inverterData.gridBuyTotal = readUInt32(packetBuffer, 100) / 10.0;
                             inverterData.gridSellTotal = readUInt32(packetBuffer, 95) / 10.0;
                             inverterData.sn = sn;                     
 
@@ -179,11 +181,12 @@ private:
                                 this->day = day;
                                 gridBuyTotal = inverterData.gridBuyTotal;
                                 gridSellTotal = inverterData.gridSellTotal;
+                                loadTotal = inverterData.loadTotal;
                             }
                             log_d("Grid buy total: %f", gridBuyTotal);
                             log_d("Grid sell total: %f", gridSellTotal);
                             inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
-                            inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
+                            inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal - (inverterData.loadTotal - loadTotal);
                         }
                     }
                 }
