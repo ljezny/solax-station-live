@@ -217,8 +217,7 @@ bool discoverDongles()
 {
     static long lastAttempt = 0;
     bool hasDongles = false;
-    int period = dongleDiscovery.hasAnyKnownDongles() ? 30000 : 5000;
-    if (lastAttempt == 0 || millis() - lastAttempt > period)
+    if (lastAttempt == 0 || millis() - lastAttempt > 30000)
     {
         log_d("Discovering dongles");
         if (dongleDiscovery.discoverDongle())
