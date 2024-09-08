@@ -108,7 +108,6 @@ public:
     void queryMDNS()
     {
         mdns_result_t *results = NULL;
-        uint8_t numResults = 0; 
         if(mdnsSearch == NULL) {
             mdnsSearch = mdns_query_async_new(NULL, "_http", "_tcp", MDNS_TYPE_PTR, 5000, 20, NULL);
             if(mdnsSearch == NULL) {
@@ -116,7 +115,7 @@ public:
                 return;
             }
         }
-        if(mdns_query_async_get_results(mdnsSearch, 100, &results, &numResults)) {
+        if(mdns_query_async_get_results(mdnsSearch, 100, &results)) {
             mdns_result_t *r = results;
 
             while (r) {

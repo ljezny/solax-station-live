@@ -187,7 +187,9 @@ private:
                                 //inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal - (inverterData.loadTotal - loadTotal);
                                 
                                 inverterData.gridBuyToday = inverterData.pvToday + inverterData.batteryDischargedToday - inverterData.batteryChargedToday - inverterData.gridSellToday - inverterData.loadToday;
-
+                                if(inverterData.gridBuyToday < 0) { //negative result correction
+                                    inverterData.gridBuyToday = 0; 
+                                }
                                 break;
                             }
                             else
@@ -205,8 +207,6 @@ private:
                         log_d("No data received");
                     }
                 }
-
-                udp.clear();
             }
 
             for (int i = 0; i < 3; i++)
@@ -229,7 +229,6 @@ private:
                         }
                     }
                 }
-                udp.clear();
             }
         }
         disconnect();
