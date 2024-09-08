@@ -238,12 +238,21 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
     {
         log_d("Loading Solax inverter data");
         lastAttempt = millis();
+     
+        if(!dongleDiscovery.bondedDongleSN.isEmpty()) {
+            if(!dongleDiscovery.bondedDongleSN.equals(discoveryResult.sn)) {
+                log_d("Dongle is not bonded, skipping...");
+                return;
+            }
+        }
+
         if (dongleDiscovery.connectToDongle(discoveryResult, ""))
         {
             InverterData_t d = solaxDongleAPI.loadData(discoveryResult.sn);
 
             if (d.status == DONGLE_STATUS_OK)
             {
+                dongleDiscovery.bondedDongleSN = d.sn;
                 failures = 0;
                 inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
@@ -284,6 +293,15 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult)
     if (lastAttempt == 0 || millis() - lastAttempt > 5000)
     {
         log_d("Loading Goodwe inverter data");
+        lastAttempt = millis();
+
+        if(!dongleDiscovery.bondedDongleSN.isEmpty()) {
+            if(!dongleDiscovery.bondedDongleSN.equals(discoveryResult.sn)) {
+                log_d("Dongle is not bonded, skipping...");
+                return;
+            }
+        }
+        
         if (dongleDiscovery.connectToDongle(discoveryResult, "12345678") || dongleDiscovery.connectToDongle(discoveryResult, "Live" + softAP.getPassword()))
         {
             log_d("GoodWe wifi connected.");
@@ -292,6 +310,7 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult)
 
             if (d.status == DONGLE_STATUS_OK)
             {
+                dongleDiscovery.bondedDongleSN = d.sn;
                 failures = 0;
                 inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
@@ -318,7 +337,6 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult)
             discoveryResult.sn = "";
             discoveryResult.ssid = "";
         }
-        lastAttempt = millis();
     }
 }
 
