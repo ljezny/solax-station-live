@@ -241,7 +241,8 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
      
         if(!dongleDiscovery.bondedDongleSN.isEmpty()) {
             if(!dongleDiscovery.bondedDongleSN.equals(discoveryResult.sn)) {
-                log_d("Dongle is not bonded, skipping...");
+                log_d("Dongle is not bonded, skipping & ignorring...");
+                discoveryResult.type = DONGLE_TYPE_IGNORE;  
                 return;
             }
         }
@@ -297,7 +298,8 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult)
 
         if(!dongleDiscovery.bondedDongleSN.isEmpty()) {
             if(!dongleDiscovery.bondedDongleSN.equals(discoveryResult.sn)) {
-                log_d("Dongle is not bonded, skipping...");
+                log_d("Dongle is not bonded, skipping & ignorring...");
+                discoveryResult.type = DONGLE_TYPE_IGNORE;
                 return;
             }
         }
