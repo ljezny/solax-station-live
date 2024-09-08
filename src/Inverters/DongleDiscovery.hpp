@@ -12,8 +12,6 @@ class DongleDiscovery {
     public:
         DongleDiscoveryResult_t discoveries[DONGLE_DISCOVERY_MAX_RESULTS];
     
-        String bondedDongleSN;
-    
         bool discoverDongle() {
             bool result = false;
 

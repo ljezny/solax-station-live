@@ -239,10 +239,10 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
         log_d("Loading Solax inverter data");
         lastAttempt = millis();
      
-        if(!dongleDiscovery.bondedDongleSN.isEmpty()) {
-            if(!dongleDiscovery.bondedDongleSN.equals(discoveryResult.sn)) {
+        if(inverterData.status == DONGLE_STATUS_OK) {
+            if(!inverterData.sn.equals(discoveryResult.sn)) {
                 log_d("Dongle is not bonded, skipping & ignorring...");
-                discoveryResult.type = DONGLE_TYPE_IGNORE;  
+                discoveryResult.type = DONGLE_TYPE_IGNORE;
                 return;
             }
         }
@@ -253,7 +253,6 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
 
             if (d.status == DONGLE_STATUS_OK)
             {
-                dongleDiscovery.bondedDongleSN = d.sn;
                 failures = 0;
                 inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
@@ -296,8 +295,8 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult)
         log_d("Loading Goodwe inverter data");
         lastAttempt = millis();
 
-        if(!dongleDiscovery.bondedDongleSN.isEmpty()) {
-            if(!dongleDiscovery.bondedDongleSN.equals(discoveryResult.sn)) {
+        if(inverterData.status == DONGLE_STATUS_OK) {
+            if(!inverterData.sn.equals(discoveryResult.sn)) {
                 log_d("Dongle is not bonded, skipping & ignorring...");
                 discoveryResult.type = DONGLE_TYPE_IGNORE;
                 return;
@@ -312,7 +311,6 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult)
 
             if (d.status == DONGLE_STATUS_OK)
             {
-                dongleDiscovery.bondedDongleSN = d.sn;
                 failures = 0;
                 inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
