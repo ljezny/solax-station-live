@@ -43,6 +43,19 @@ ShellyRuleResolver shellyRuleResolver;
 
 DashboardUI dashboardUI;
 
+#include <WifiUdp.h>
+#include <ArduinoMDNS.h>
+
+WiFiUDP udp;
+MDNS mdns(udp);
+
+void serviceFound(const char* type, MDNSServiceProtocol proto,
+                  const char* name, IPAddress ip, unsigned short port,
+                  const char* txtContent) {
+                    //log_d("service found: type: %s, name:%s, ip:%s", type, name, ip.toString().c_str());
+                    log_d("Service found.");
+                  }
+
 /* Display flushing */
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
@@ -211,13 +224,18 @@ void setup()
     WiFi.persistent(false);
     WiFi.setSleep(false);
     softAP.start();
+
+    mdns.begin(WiFi.softAPIP(), "arduino");
+    mdns.addServiceRecord("_http", 80, MDNSServiceTCP);
+    mdns.setServiceFoundCallback(serviceFound);
 }   
 
 bool discoverDongles()
 {
     static long lastAttempt = 0;
     bool hasDongles = false;
-    if (lastAttempt == 0 || millis() - lastAttempt > 30000)
+    
+    if (lastAttempt == 0 || millis() - lastAttempt > 5000)
     {
         log_d("Discovering dongles");
         if (dongleDiscovery.discoverDongle())
@@ -407,5 +425,13 @@ void loop()
     discoverDongles();
     processDongles();
 
-    reloadShelly();
+    //reloadShelly();
+
+    if (!mdns.isDiscoveringService()) {
+    
+      mdns.startDiscoveringService("_http",
+                                    MDNSServiceTCP,
+                                    5000);
+    }  
+    mdns.run();
 }

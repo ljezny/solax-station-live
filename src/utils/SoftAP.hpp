@@ -1,7 +1,6 @@
 #pragma once
 #include <Arduino.h>
 #include "Shelly/Shelly.hpp"
-#include <mdns.h>
 
 #define SOFT_AP_SSID_PREFIX String("SolarStationLive-")
 
@@ -21,15 +20,15 @@ public:
     void start()
     {
         log_d("Starting SoftAP");
-        WiFi.softAP(getSSID(), getPassword(), 10, 1, MAX_SHELLY_PAIRS);
+        WiFi.softAP(getSSID(), getPassword(), 10, 0, MAX_SHELLY_PAIRS);
         
-        if (mdns_init()) {
-            log_e("Failed starting MDNS");            
-        }
+        // if (mdns_init()) {
+        //     log_e("Failed starting MDNS");            
+        // }
 
-        if (mdns_hostname_set(getSSID().c_str())) {
-            log_e("Failed setting MDNS hostname");            
-        }
+        // if (mdns_hostname_set(getSSID().c_str())) {
+        //     log_e("Failed setting MDNS hostname");            
+        // }
     }
     
     int getNumberOfConnectedDevices()

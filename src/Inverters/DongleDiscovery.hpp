@@ -88,6 +88,7 @@ class DongleDiscovery {
         }
 
         bool connectToDongle(DongleDiscoveryResult_t& discovery, String password) {
+            return false;
             if(discovery.type == DONGLE_TYPE_UNKNOWN) {
                 return false;
             }
