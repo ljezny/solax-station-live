@@ -249,6 +249,7 @@ public:
     }
 private:
     mdns_search_once_t *mdnsSearch = NULL;
+    HTTPClient http;
     ShellyModel_t getModelFromSSID(String ssid)
     {
         for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
@@ -263,7 +264,6 @@ private:
 
     bool setWiFiSTA_Gen1(String ssid, String password)
     {
-        HTTPClient http;
         bool result = false;
         String url = "http://192.168.33.1/settings/sta?enabled=true&ssid=" + urlencode(ssid) + "&key=" + urlencode(password);
         if (http.begin(url))
@@ -290,7 +290,7 @@ private:
         String requestBody;
         serializeJson(doc, requestBody);
         bool result = false;
-        HTTPClient http;
+        
         String url = "http://192.168.33.1/rpc";
 
         if (http.begin(url))
@@ -331,8 +331,7 @@ private:
         result.updated = 0;
 
         String url = "http://" + ipAddress.toString() + "/status";
-        HTTPClient http;
-        http.setConnectTimeout(1000);
+        
         if (http.begin(url))
         {
             int httpCode = http.GET();
@@ -359,7 +358,7 @@ private:
         ShellyStateResult_t result;
         result.updated = 0;
         String url = "http://" + ipAddress.toString() + "/rpc/Switch.GetStatus?id=0";
-        HTTPClient http;
+        
         if (http.begin(url))
         {
             int httpCode = http.GET();
@@ -414,7 +413,7 @@ private:
         {
             url += "&timer=" + String(timeoutSec);
         }
-        HTTPClient http;
+        
         if (http.begin(url))
         {
             int httpCode = http.GET();
@@ -436,7 +435,7 @@ private:
         {
             url += "&timer=" + String(timeoutSec);
         }
-        HTTPClient http;
+        
         if (http.begin(url))
         {
             int httpCode = http.GET();

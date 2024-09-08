@@ -14,7 +14,6 @@ public:
     InverterData_t loadData(String sn)
     {
         InverterData_t inverterData;
-        HTTPClient http;
         if (http.begin(getUrl()))
         {
             int httpCode = http.POST("optType=ReadRealTimeData&pwd=" + sn);
@@ -124,6 +123,7 @@ public:
     }
     
 private:
+    HTTPClient http;
     int16_t read16BitSigned(uint16_t a)
     {
         if (a < 32768)
