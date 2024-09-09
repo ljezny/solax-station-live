@@ -8,7 +8,7 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
 #include "../utils/urlencoder.hpp"
-#include <ESPmDNS.h>
+#include <mdns.h>
 #include "utils/ShellyRuleResolver.hpp"
 
 #define MAX_SHELLY_PAIRS 8
