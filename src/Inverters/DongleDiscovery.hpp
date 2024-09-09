@@ -20,7 +20,11 @@ class DongleDiscovery {
                 log_d("WiFi scan failed, reseting");
                 WiFi.scanNetworks(true);
                 return false;
+            } else if(found == WIFI_SCAN_RUNNING) {
+                log_d("WiFi scan still running");
+                return false;
             }
+
             for(int i = 0; i < found; i++) {
                 log_d("Found network: %s", WiFi.SSID(i).c_str());
                 String ssid = WiFi.SSID(i);
