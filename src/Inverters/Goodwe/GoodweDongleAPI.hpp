@@ -190,6 +190,9 @@ private:
                                 if(inverterData.gridBuyToday < 0) { //negative result correction
                                     inverterData.gridBuyToday = 0; 
                                 }
+                                if(inverterData.gridSellToday < 0) { //negative result correction
+                                    inverterData.gridSellToday = 0; 
+                                }
                                 break;
                             }
                             else
