@@ -10,6 +10,7 @@
 #include "../utils/urlencoder.hpp"
 #include <mdns.h>
 #include "utils/ShellyRuleResolver.hpp"
+#include <StreamUtils.h>
 
 #define MAX_SHELLY_PAIRS 8
 
@@ -59,7 +60,6 @@ typedef struct ShellyPair
     ShellyModel_t model = PLUG_S;
     ShellyStateResult_t lastState;
 } ShellyPair_t;
-
 typedef struct ShellyResult
 {
     int pairedCount = 0;
@@ -362,10 +362,10 @@ private:
             int httpCode = http.GET();
             if (httpCode == HTTP_CODE_OK)
             {
-                String payload = http.getString();
-                log_d("Shelly state: %s", payload.c_str());
                 DynamicJsonDocument doc(8192);
-                deserializeJson(doc, payload);
+                ReadBufferingStream httpStream(http.getStream(), 1024);
+                LoggingStream loggingStream(httpStream, Serial);
+                DeserializationError err = deserializeJson(doc, loggingStream);
                 result.updated = millis(); // doc["unixtime"].as<int>();
                 result.isOn = doc["relays"][0]["ison"].as<bool>();
                 result.source = doc["relays"][0]["source"].as<String>();
@@ -389,10 +389,10 @@ private:
             int httpCode = http.GET();
             if (httpCode == HTTP_CODE_OK)
             {
-                String payload = http.getString();
-                log_d("Shelly state: %s", payload.c_str());
                 DynamicJsonDocument doc(8192);
-                deserializeJson(doc, payload);
+                ReadBufferingStream httpStream(http.getStream(), 1024);
+                LoggingStream loggingStream(httpStream, Serial);
+                DeserializationError err = deserializeJson(doc, loggingStream);
                 result.updated = millis();
                 result.isOn = doc["output"].as<bool>();
                 result.totalPower = doc["apower"].as<float>();
