@@ -13,7 +13,7 @@
 #include "utils/UnitFormatter.hpp"
 #include "utils/SolarChartDataProvider.hpp"
 #include "utils/BacklightResolver.hpp"
-#include <mat.h>
+#include <math.h>
 #include "DashboardUI.hpp"
 #include "utils/SoftAP.hpp"
 #include "utils/ShellyRuleResolver.hpp"
