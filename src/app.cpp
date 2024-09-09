@@ -376,7 +376,7 @@ void processDongles()
 {
     for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
     {
-        if (dongleDiscovery.discoveries[i].type != DONGLE_TYPE_UNKNOWN)
+        if (dongleDiscovery.discoveries[i].type != DONGLE_TYPE_UNKNOWN && dongleDiscovery.discoveries[i].type != DONGLE_TYPE_IGNORE)
         {
             switch (dongleDiscovery.discoveries[i].type)
             {
