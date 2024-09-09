@@ -103,7 +103,7 @@ class DongleDiscovery {
                 WiFi.disconnect();
             }
             log_d("Connecting to %s", discovery.ssid.c_str());
-            WiFi.begin(discovery.ssid, password);
+            WiFi.begin(discovery.ssid.c_str(), password.c_str());
 
             return awaitWifiConnection();
         }

@@ -20,16 +20,9 @@ public:
 
     void start()
     {
-        
-
-        // if (mdns_hostname_set(getSSID().c_str()) != ESP_OK) {
-        //     log_e("Failed setting MDNS hostname");            
-        // }
-        // delay(1000);
-
         log_d("Starting SoftAP");
         
-        WiFi.softAP(getSSID(), getPassword(), 10, 1, MAX_SHELLY_PAIRS);
+        WiFi.softAP(getSSID().c_str(), getPassword().c_str(), 10, 1, MAX_SHELLY_PAIRS);
     }
     
     int getNumberOfConnectedDevices()

@@ -10,7 +10,7 @@
 #include "../utils/urlencoder.hpp"
 #include <ESPmDNS.h>
 #include "utils/ShellyRuleResolver.hpp"
- 
+
 #define MAX_SHELLY_PAIRS 8
 
 typedef enum
@@ -42,7 +42,8 @@ const ShellyModelInfo_t supportedModels[SHELLY_SUPPORTED_MODEL_COUNT] = {
     {PRO3, "ShellyPro3-"},
     {PRO3, "Pro3-"}};
 
-typedef struct ShellyStateResult {
+typedef struct ShellyStateResult
+{
     int updated = 0;
     ShellyModel_t model = PLUG_S;
     bool isOn = false;
@@ -59,7 +60,6 @@ typedef struct ShellyPair
     ShellyStateResult_t lastState;
 } ShellyPair_t;
 
-
 typedef struct ShellyResult
 {
     int pairedCount = 0;
@@ -73,8 +73,9 @@ class ShellyAPI
 public:
     ShellyPair_t pairs[MAX_SHELLY_PAIRS] = {};
 
-    ShellyAPI() {
-        for(int i = 0; i < MAX_SHELLY_PAIRS; i++)
+    ShellyAPI()
+    {
+        for (int i = 0; i < MAX_SHELLY_PAIRS; i++)
         {
             pairs[i].shellyId = 0;
             pairs[i].ip = INADDR_NONE;
@@ -84,7 +85,7 @@ public:
 
     void pairShelly(String shellySSId, String ssid, String password)
     {
-        WiFi.begin(shellySSId);
+        WiFi.begin(shellySSId.c_str());
 
         int retries = 100;
         for (int r = 0; r < retries; r++)
@@ -104,23 +105,30 @@ public:
         WiFi.disconnect();
     }
 
-    
     void queryMDNS()
     {
         mdns_result_t *results = NULL;
 
-        if (mdns_init() != ESP_OK) {
-            log_e("Failed starting MDNS");            
+        if (mdnsSearch == NULL)
+        {
+            if (mdns_init() != ESP_OK)
+            {
+                log_e("Failed starting MDNS");
+            }
+            mdnsSearch = mdns_query_async_new(NULL, "_http", "_tcp", MDNS_TYPE_PTR, 5000, 20, NULL);
+            if (mdnsSearch == NULL)
+            {
+                log_e("Failed to start mDNS search");
+                return;
+            }
         }
-        esp_err_t r = mdns_query_ptr("_http", "_tcp", 3000, 10, &results);
-        if(r != ESP_OK) {
-            log_e("Failed querying MDNS");
-            log_e("Error: %d", r);
-        }
-        if(r == ESP_OK) {
+        uint8_t numResult = 0;
+        if (mdns_query_async_get_results(mdnsSearch, 100, &results, &numResult))
+        {
             mdns_result_t *r = results;
 
-            while (r) {
+            while (r)
+            {
                 String hostname = r->hostname;
                 for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
                 {
@@ -148,78 +156,91 @@ public:
                 r = r->next;
             }
             mdns_query_results_free(results);
-        }
+            mdns_query_async_delete(mdnsSearch);
+            mdnsSearch = NULL;
 
-        mdns_free();
+            mdns_free();
+        }
     }
 
     ShellyResult_t getState()
     {
         ShellyResult_t result;
-        for(int i = 0; i < MAX_SHELLY_PAIRS; i++)
+        for (int i = 0; i < MAX_SHELLY_PAIRS; i++)
         {
-            if(pairs[i].shellyId != 0 && pairs[i].ip != INADDR_NONE)
+            if (pairs[i].shellyId != 0 && pairs[i].ip != INADDR_NONE)
             {
                 log_d("Getting state for Shelly %s", String(pairs[i].shellyId, HEX).c_str());
                 result.pairedCount++;
 
                 ShellyStateResult_t state = getState(pairs[i]);
-                if(state.updated != 0)
+                if (state.updated != 0)
                 {
                     pairs[i].lastState = state;
-                } else {
+                }
+                else
+                {
                     log_e("Failed to get state for Shelly %s", String(pairs[i].shellyId, HEX).c_str());
                 }
 
-                if(pairs[i].lastState.isOn)
+                if (pairs[i].lastState.isOn)
                 {
                     result.activeCount++;
                 }
                 result.totalPower += state.totalPower;
-                result.totalEnergy += state.totalEnergy;            
+                result.totalEnergy += state.totalEnergy;
 
-                if((millis() - pairs[i].lastState.updated) > 5 * 60 * 1000) {
+                if ((millis() - pairs[i].lastState.updated) > 5 * 60 * 1000)
+                {
                     log_w("Shelly %s state is outdated", String(pairs[i].shellyId, HEX).c_str());
                     pairs[i].lastState = ShellyStateResult_t();
                     pairs[i].ip = INADDR_NONE;
-                    pairs[i].shellyId = 0;                    
+                    pairs[i].shellyId = 0;
                 }
             }
         }
         return result;
     }
 
-    void updateState(RequestedShellyState_t requestedState, int timeoutSec) {
+    void updateState(RequestedShellyState_t requestedState, int timeoutSec)
+    {
         bool newActivated = false;
-        for(int i = 0; i < MAX_SHELLY_PAIRS; i++)
+        for (int i = 0; i < MAX_SHELLY_PAIRS; i++)
         {
-            if(pairs[i].shellyId != 0 && pairs[i].ip != INADDR_NONE)
+            if (pairs[i].shellyId != 0 && pairs[i].ip != INADDR_NONE)
             {
                 ShellyStateResult_t state = pairs[i].lastState;
-                if(state.updated != 0) {
+                if (state.updated != 0)
+                {
                     bool canBeControlled = (state.isOn && (state.source == NULL || String("http").equals(state.source) || String("init").equals(state.source))) || !state.isOn;
-                    if(canBeControlled)
+                    if (canBeControlled)
                     {
-                        if(state.isOn) { //prolong timeout
-                            if(requestedState >= SHELLY_KEEP_CURRENT_STATE) {
+                        if (state.isOn)
+                        { // prolong timeout
+                            if (requestedState >= SHELLY_KEEP_CURRENT_STATE)
+                            {
                                 log_d("Prolonging timeout for Shelly %s", String(pairs[i].shellyId, HEX).c_str());
                                 setState(pairs[i], true, timeoutSec);
                             }
-                        } else {
-                            if(!newActivated) {
-                                if(requestedState == SHELLY_ACTIVATE) {
+                        }
+                        else
+                        {
+                            if (!newActivated)
+                            {
+                                if (requestedState == SHELLY_ACTIVATE)
+                                {
                                     log_d("Activating Shelly %s", String(pairs[i].shellyId, HEX).c_str());
-                                    setState(pairs[i], true, timeoutSec);                                
+                                    setState(pairs[i], true, timeoutSec);
                                 }
                                 newActivated = true;
                             }
                         }
                     }
-                }                
+                }
             }
         }
     }
-    
+
     bool setWiFiSTA(String shellyAPSsid, String ssid, String password)
     {
         switch (getModelFromSSID(shellyAPSsid))
@@ -248,6 +269,7 @@ public:
         }
         return count;
     }
+
 private:
     mdns_search_once_t *mdnsSearch = NULL;
     HTTPClient http;
@@ -291,7 +313,7 @@ private:
         String requestBody;
         serializeJson(doc, requestBody);
         bool result = false;
-        
+
         String url = "http://192.168.33.1/rpc";
 
         if (http.begin(url))
@@ -332,7 +354,7 @@ private:
         result.updated = 0;
 
         String url = "http://" + ipAddress.toString() + "/status";
-        
+
         if (http.begin(url))
         {
             int httpCode = http.GET();
@@ -359,7 +381,7 @@ private:
         ShellyStateResult_t result;
         result.updated = 0;
         String url = "http://" + ipAddress.toString() + "/rpc/Switch.GetStatus?id=0";
-        
+
         if (http.begin(url))
         {
             int httpCode = http.GET();
@@ -377,7 +399,7 @@ private:
             }
         }
         http.end();
-       
+
         return result;
     }
 
@@ -388,7 +410,7 @@ private:
         {
         case PLUG:
             result = setState_Gen1(shellyPair.ip, on, timeoutSec);
-            break;  
+            break;
         case PLUG_S:
             result = setState_Gen1(shellyPair.ip, on, timeoutSec);
             break;
@@ -414,7 +436,7 @@ private:
         {
             url += "&timer=" + String(timeoutSec);
         }
-        
+
         if (http.begin(url))
         {
             int httpCode = http.GET();
@@ -436,7 +458,7 @@ private:
         {
             url += "&timer=" + String(timeoutSec);
         }
-        
+
         if (http.begin(url))
         {
             int httpCode = http.GET();

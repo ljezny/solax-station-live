@@ -349,9 +349,7 @@ void pairShelly(DongleDiscoveryResult_t &discoveryResult)
         {
             if (shellyAPI.setWiFiSTA(discoveryResult.ssid, softAP.getSSID(), softAP.getPassword()))
             {
-                discoveryResult.type = DONGLE_TYPE_UNKNOWN;
-                discoveryResult.sn = "";
-                discoveryResult.ssid = "";
+                discoveryResult.type = DONGLE_TYPE_IGNORE;
             }
         }
         lastAttempt = millis();
@@ -360,14 +358,13 @@ void pairShelly(DongleDiscoveryResult_t &discoveryResult)
 
 void reloadShelly()
 {
+    if(shellyAPI.getPairedCount() != softAP.getNumberOfConnectedDevices()) {
+        shellyAPI.queryMDNS();
+    }
     static long lastAttempt = 0;
     if (lastAttempt == 0 || millis() - lastAttempt > 5000)
     {
         log_d("Reloading Shelly data");
-        if(shellyAPI.getPairedCount() != softAP.getNumberOfConnectedDevices()) {
-            log_d("Shelly paired count does not match connected devices count, querying MDNS");
-            shellyAPI.queryMDNS();
-        }
         shellyResult = shellyAPI.getState();
         RequestedShellyState_t state = shellyRuleResolver.resolveShellyState();
         shellyAPI.updateState(state, 5 * 60);
@@ -410,4 +407,6 @@ void loop()
     processDongles();
 
     reloadShelly();
+
+    
 }
