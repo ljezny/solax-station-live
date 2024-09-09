@@ -39,9 +39,9 @@ public:
                         inverterData.batteryPower = read16BitSigned(doc["Data"][41].as<uint16_t>());
                         inverterData.batteryTemperature = doc["Data"][105].as<uint8_t>();
                         inverterData.inverterTemperature = doc["Data"][54].as<uint8_t>();
-                        inverterData.L1Power = doc["Data"][6].as<int>();
-                        inverterData.L2Power = doc["Data"][7].as<int>();
-                        inverterData.L3Power = doc["Data"][8].as<int>();
+                        inverterData.L1Power = ((int16_t) doc["Data"][6].as<uint16_t>());
+                        inverterData.L2Power = ((int16_t) doc["Data"][7].as<uint16_t>());
+                        inverterData.L3Power = ((int16_t) doc["Data"][8].as<uint16_t>());
                         inverterData.inverterPower = doc["Data"][9].as<int>();
                         inverterData.loadPower = read16BitSigned(doc["Data"][47].as<uint16_t>());
                         inverterData.soc = doc["Data"][103].as<int>();
