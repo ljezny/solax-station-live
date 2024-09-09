@@ -20,14 +20,12 @@ public:
 
     void start()
     {
-        if (mdns_init() != ESP_OK) {
-            log_e("Failed starting MDNS");            
-        }
+        
 
-        if (mdns_hostname_set(getSSID().c_str()) != ESP_OK) {
-            log_e("Failed setting MDNS hostname");            
-        }
-        delay(1000);
+        // if (mdns_hostname_set(getSSID().c_str()) != ESP_OK) {
+        //     log_e("Failed setting MDNS hostname");            
+        // }
+        // delay(1000);
 
         log_d("Starting SoftAP");
         

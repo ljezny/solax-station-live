@@ -21,7 +21,6 @@ class DongleDiscovery {
                 WiFi.scanNetworks(true);
                 return false;
             } else if(found == WIFI_SCAN_RUNNING) {
-                log_d("WiFi scan still running");
                 return false;
             }
 

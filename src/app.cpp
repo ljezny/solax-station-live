@@ -219,7 +219,6 @@ bool discoverDongles()
     bool hasDongles = false;
     if (lastAttempt == 0 || millis() - lastAttempt > 30000)
     {
-        log_d("Discovering dongles");
         if (dongleDiscovery.discoverDongle())
         {
             lastAttempt = millis();
@@ -365,7 +364,9 @@ void reloadShelly()
     if (lastAttempt == 0 || millis() - lastAttempt > 5000)
     {
         log_d("Reloading Shelly data");
-        shellyAPI.queryMDNS();
+        if(shellyAPI.getPairedCount() != softAP.getNumberOfConnectedDevices()) {
+            shellyAPI.queryMDNS();
+        }
         shellyResult = shellyAPI.getState();
         RequestedShellyState_t state = shellyRuleResolver.resolveShellyState();
         shellyAPI.updateState(state, 5 * 60);

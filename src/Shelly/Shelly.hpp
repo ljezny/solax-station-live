@@ -108,14 +108,16 @@ public:
     void queryMDNS()
     {
         mdns_result_t *results = NULL;
-        if(mdnsSearch == NULL) {
-            mdnsSearch = mdns_query_async_new(NULL, "_http", "_tcp", MDNS_TYPE_PTR, 5000, 20, NULL);
-            if(mdnsSearch == NULL) {
-                log_e("Failed to start mDNS search");
-                return;
-            }
+
+        if (mdns_init() != ESP_OK) {
+            log_e("Failed starting MDNS");            
         }
-        if(mdns_query_async_get_results(mdnsSearch, 100, &results)) {
+        esp_err_t r = mdns_query_ptr("_http", "_tcp", 3000, 10, &results);
+        if(r != ESP_OK) {
+            log_e("Failed querying MDNS");
+            log_e("Error: %d", r);
+        }
+        if(r == ESP_OK) {
             mdns_result_t *r = results;
 
             while (r) {
@@ -145,10 +147,10 @@ public:
                 }
                 r = r->next;
             }
-            mdns_query_async_delete(mdnsSearch);
-            mdnsSearch = NULL;
             mdns_query_results_free(results);
         }
+
+        mdns_free();
     }
 
     ShellyResult_t getState()
