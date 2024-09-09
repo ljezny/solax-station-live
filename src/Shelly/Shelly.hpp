@@ -75,6 +75,8 @@ public:
 
     ShellyAPI()
     {
+        http.setConnectTimeout(2000);
+        http.setTimeout(2000);
         for (int i = 0; i < MAX_SHELLY_PAIRS; i++)
         {
             pairs[i].shellyId = 0;

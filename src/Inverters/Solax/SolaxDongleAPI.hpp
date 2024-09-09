@@ -5,7 +5,7 @@
 #include <WiFi.h>
 #include <WiFiMulti.h>
 #include <HTTPClient.h>
-
+#include <StreamUtils.h>
 #include "Inverters/InverterResult.hpp"
 
 class SolaxDongleAPI
@@ -20,9 +20,9 @@ public:
             if (httpCode == HTTP_CODE_OK)
             {
                 StaticJsonDocument<14*1024> doc;
-                String payload = http.getString();
-                log_d("Payload: %s", payload.c_str());
-                DeserializationError err = deserializeJson(doc, payload);
+                ReadBufferingStream httpStream(http.getStream(), 1024);
+                LoggingStream loggingStream(httpStream, Serial);
+                DeserializationError err = deserializeJson(doc, loggingStream);
                 if (err == DeserializationError::Ok)
                 {
                     if(doc["type"].as<int>() == 14) {
