@@ -14,15 +14,21 @@ public:
     InverterData_t loadData(String sn)
     {
         InverterData_t inverterData;
-        if (http.begin(getUrl()))
-        {
+        String url = getUrl();
+        log_d("Loading Solax inverter data from %s", url.c_str());
+        if (http.begin(url))
+        {   
+            log_d("Connected to Solax dongle");
             int httpCode = http.POST("optType=ReadRealTimeData&pwd=" + sn);
+            log_d("HTTP POST code: %d", httpCode);
             if (httpCode == HTTP_CODE_OK)
             {
                 StaticJsonDocument<14*1024> doc;
+                log_d("Parsing JSON");
                 ReadBufferingStream httpStream(http.getStream(), 1024);
                 LoggingStream loggingStream(httpStream, Serial);
                 DeserializationError err = deserializeJson(doc, loggingStream);
+                log_d("Deserialization error: %s", err.c_str());
                 if (err == DeserializationError::Ok)
                 {
                     if(doc["type"].as<int>() == 14) {
