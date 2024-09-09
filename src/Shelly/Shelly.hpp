@@ -117,7 +117,7 @@ public:
             {
                 log_e("Failed starting MDNS");
             }
-            mdnsSearch = mdns_query_async_new(NULL, "_http", "_tcp", MDNS_TYPE_PTR, 5000, 20, NULL);
+            mdnsSearch = mdns_query_async_new(NULL, "_http", "_tcp", MDNS_TYPE_PTR, 3000, 20, NULL);
             if (mdnsSearch == NULL)
             {
                 log_e("Failed to start mDNS search");
@@ -125,7 +125,7 @@ public:
             }
         }
         uint8_t numResult = 0;
-        if (mdns_query_async_get_results(mdnsSearch, 100, &results, &numResult))
+        if (mdns_query_async_get_results(mdnsSearch, 300, &results, &numResult))
         {
             mdns_result_t *r = results;
 
@@ -305,7 +305,8 @@ private:
 
     bool setWiFiSTA_Gen2(String ssid, String password)
     {
-        StaticJsonDocument<200> doc;
+        String url = "http://192.168.33.1/rpc";
+        StaticJsonDocument<1024> doc;
         doc["id"] = 1;
         doc["method"] = "WiFi.SetConfig";
         doc["params"]["config"]["sta"]["ssid"] = ssid;
@@ -316,11 +317,10 @@ private:
         serializeJson(doc, requestBody);
         bool result = false;
 
-        String url = "http://192.168.33.1/rpc";
-
         if (http.begin(url))
         {
             int httpCode = http.POST(requestBody);
+            log_d("HTTP POST %s", requestBody.c_str());
             if (httpCode == HTTP_CODE_OK)
             {
                 result = true;
