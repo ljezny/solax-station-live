@@ -117,7 +117,7 @@ public:
             {
                 log_e("Failed starting MDNS");
             }
-            mdnsSearch = mdns_query_async_new(NULL, "_http", "_tcp", MDNS_TYPE_PTR, 3000, 20, NULL);
+            mdnsSearch = mdns_query_async_new(NULL, "_http", "_tcp", MDNS_TYPE_PTR, 30000, 20, NULL);
             if (mdnsSearch == NULL)
             {
                 log_e("Failed to start mDNS search");
@@ -125,13 +125,15 @@ public:
             }
         }
         uint8_t numResult = 0;
-        if (mdns_query_async_get_results(mdnsSearch, 300, &results, &numResult))
+        if (mdns_query_async_get_results(mdnsSearch, 100, &results, &numResult))
         {
             mdns_result_t *r = results;
 
             while (r)
             {
                 String hostname = r->hostname;
+                log_d("Found service: %s", hostname.c_str());
+                hostname.toLowerCase();
                 for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
                 {
                     String prefix = supportedModels[i].prefix;
