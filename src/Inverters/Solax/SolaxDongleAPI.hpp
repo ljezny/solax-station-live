@@ -5,18 +5,20 @@
 #include <WiFi.h>
 #include <WiFiMulti.h>
 #include <HTTPClient.h>
+#include <WiFiClient.h>
 #include <StreamUtils.h>
 #include "Inverters/InverterResult.hpp"
 
 class SolaxDongleAPI
 {
 public:
+    
     InverterData_t loadData(String sn)
     {
         InverterData_t inverterData;
         String url = getUrl();
         log_d("Loading Solax inverter data from %s", url.c_str());
-        if (http.begin(url))
+        if (http.begin(client, url))
         {   
             log_d("Connected to Solax dongle");
             int httpCode = http.POST("optType=ReadRealTimeData&pwd=" + sn);
@@ -129,6 +131,7 @@ public:
     }
     
 private:
+    WiFiClient client;
     HTTPClient http;
     int16_t read16BitSigned(uint16_t a)
     {
