@@ -233,7 +233,7 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
     static long lastAttempt = 0;
     static int failures = 0;
     static SolaxDongleAPI solaxDongleAPI;
-    if (lastAttempt == 0 || (millis() - lastAttempt > 5000))
+    if (lastAttempt == 0 || (millis() - lastAttempt > 3000))
     {
         log_d("Loading Solax inverter data");
         lastAttempt = millis();

@@ -13,7 +13,7 @@ class SolaxDongleAPI
 {
 public:
     SolaxDongleAPI() {
-        client.setTimeout(5000);        
+        client.setTimeout(2000);
     }
 
     InverterData_t loadData(String sn) {
