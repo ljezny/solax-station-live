@@ -12,96 +12,107 @@
 class SolaxDongleAPI
 {
 public:
-    
-    InverterData_t loadData(String sn)
-    {
+    SolaxDongleAPI() {
+        client.setTimeout(5000);        
+    }
+
+    InverterData_t loadData(String sn) {
         InverterData_t inverterData;
-        String url = getUrl();
-        log_d("Loading Solax inverter data from %s", url.c_str());
-        if (http.begin(client, url))
-        {   
-            log_d("Connected to Solax dongle");
-            int httpCode = http.POST("optType=ReadRealTimeData&pwd=" + sn);
-            log_d("HTTP POST code: %d", httpCode);
-            if (httpCode == HTTP_CODE_OK)
-            {
+        
+        if(client.connect(getIp(), 80)) {
+            String body = "optType=ReadRealTimeData&pwd=" + sn;
+            client.println("POST / HTTP/1.1");
+            client.println("Host: " + getIp().toString());
+            client.println("Content-Type: application/x-www-form-urlencoded");
+            client.println("Accept: */*");
+            client.println("Content-Length: " + String(body.length()));
+            client.println();
+            client.print(body);
+            
+            String headerLine = client.readStringUntil('\n');
+            log_d("Response code: %s", headerLine.c_str());
+            if(headerLine.startsWith("HTTP/1.1 200 OK")) {
+                while(!headerLine.isEmpty()) {
+                    headerLine = client.readStringUntil('\n');
+                    headerLine.trim();
+                    log_d("Header: %s", headerLine.c_str());                                        
+                }   
                 StaticJsonDocument<14*1024> doc;
                 log_d("Parsing JSON");
-                ReadBufferingStream httpStream(http.getStream(), 1024);
-                LoggingStream loggingStream(httpStream, Serial);
+                ReadBufferingStream bufferingStream(client, 1024);
+                LoggingStream loggingStream(bufferingStream, Serial);
                 DeserializationError err = deserializeJson(doc, loggingStream);
-                log_d("Deserialization error: %s", err.c_str());
                 if (err == DeserializationError::Ok)
-                {
-                    if(doc["type"].as<int>() == 14) {
-                        inverterData.status = DONGLE_STATUS_OK;
-                        inverterData.millis = millis();
-                        inverterData.pv1Power = doc["Data"][14].as<int>();
-                        inverterData.pv2Power = doc["Data"][15].as<int>();
-                        inverterData.batteryPower = read16BitSigned(doc["Data"][41].as<uint16_t>());
-                        inverterData.batteryTemperature = doc["Data"][105].as<uint8_t>();
-                        inverterData.inverterTemperature = doc["Data"][54].as<uint8_t>();
-                        inverterData.L1Power = ((int16_t) doc["Data"][6].as<uint16_t>());
-                        inverterData.L2Power = ((int16_t) doc["Data"][7].as<uint16_t>());
-                        inverterData.L3Power = ((int16_t) doc["Data"][8].as<uint16_t>());
-                        inverterData.inverterPower = doc["Data"][9].as<int>();
-                        inverterData.loadPower = read16BitSigned(doc["Data"][47].as<uint16_t>());
-                        inverterData.soc = doc["Data"][103].as<int>();
-                        inverterData.pvToday = doc["Data"][70].as<uint16_t>() / 10.0;
-                        inverterData.pvTotal = ((doc["Data"][69].as<uint32_t>() << 16) + doc["Data"][68].as<uint16_t>()) / 10.0;
-                        inverterData.feedInPower = read16BitSigned(doc["Data"][34].as<uint16_t>());
-                        inverterData.gridSellToday = doc["Data"][90].as<uint16_t>() / 100.0; 
-                        inverterData.gridBuyToday = doc["Data"][92].as<uint16_t>() / 100.0;
-                        inverterData.gridSellTotal = ((doc["Data"][87].as<uint32_t>() << 16) + doc["Data"][86].as<uint16_t>()) / 100.0; 
-                        inverterData.gridBuyTotal = ((doc["Data"][89].as<uint32_t>() << 16) + doc["Data"][88].as<uint16_t>()) / 100.0; 
-                        inverterData.batteryChargedToday = doc["Data"][79].as<uint16_t>() / 10.0;
-                        inverterData.batteryDischargedToday = doc["Data"][78].as<uint16_t>() / 10.0;
-                        inverterData.loadToday = inverterData.pvToday + inverterData.gridBuyToday - inverterData.gridSellToday;
-                        inverterData.sn = sn;
-                        logInverterData(inverterData);
-                    } else if(doc["type"].as<int>() == 16) { //X3-MIC/PRO-G2 https://github.com/simatec/ioBroker.solax/blob/master/lib/inverterData.js
-                        inverterData.status = DONGLE_STATUS_OK;
-                        inverterData.millis = millis();
-                        inverterData.pv1Power = doc["Data"][15].as<int>();
-                        inverterData.pv2Power = doc["Data"][16].as<int>() 
-                                                + doc["Data"][17].as<int>();
-                        inverterData.L1Power = doc["Data"][6].as<int>();
-                        inverterData.L2Power = doc["Data"][7].as<int>();
-                        inverterData.L3Power = doc["Data"][8].as<int>();
-                        inverterData.inverterPower = doc["Data"][78].as<int>();
-                        inverterData.pvToday = doc["Data"][24].as<uint16_t>() / 10.0;
-                        inverterData.pvTotal = doc["Data"][22].as<uint16_t>() / 10.0;
-                        inverterData.feedInPower = read16BitSigned(doc["Data"][74].as<uint16_t>());
-                        inverterData.gridSellToday = doc["Data"][74].as<uint16_t>() / 100.0; 
-                        inverterData.gridBuyToday = doc["Data"][76].as<uint16_t>() / 100.0;
-                        inverterData.hasBattery = false;
-                        inverterData.sn = sn;
-                        logInverterData(inverterData);
-                    } else if(doc["type"].as<int>() == 1) { //wallbox
-                        //wallboxData.power = doc["Data"][11].as<int>();
-                        inverterData.status = DONGLE_STATUS_UNSUPPORTED_DONGLE;
-                    } else {
-                        inverterData.status = DONGLE_STATUS_UNSUPPORTED_DONGLE;
-                    }                    
-                }
-                else
-                {
-                    inverterData.status = DONGLE_STATUS_JSON_ERROR;
-                }
+                    {
+                        if(doc["type"].as<int>() == 14) {
+                            inverterData.status = DONGLE_STATUS_OK;
+                            inverterData.millis = millis();
+                            inverterData.pv1Power = doc["Data"][14].as<int>();
+                            inverterData.pv2Power = doc["Data"][15].as<int>();
+                            inverterData.batteryPower = read16BitSigned(doc["Data"][41].as<uint16_t>());
+                            inverterData.batteryTemperature = doc["Data"][105].as<uint8_t>();
+                            inverterData.inverterTemperature = doc["Data"][54].as<uint8_t>();
+                            inverterData.L1Power = ((int16_t) doc["Data"][6].as<uint16_t>());
+                            inverterData.L2Power = ((int16_t) doc["Data"][7].as<uint16_t>());
+                            inverterData.L3Power = ((int16_t) doc["Data"][8].as<uint16_t>());
+                            inverterData.inverterPower = doc["Data"][9].as<int>();
+                            inverterData.loadPower = read16BitSigned(doc["Data"][47].as<uint16_t>());
+                            inverterData.soc = doc["Data"][103].as<int>();
+                            inverterData.pvToday = doc["Data"][70].as<uint16_t>() / 10.0;
+                            inverterData.pvTotal = ((doc["Data"][69].as<uint32_t>() << 16) + doc["Data"][68].as<uint16_t>()) / 10.0;
+                            inverterData.feedInPower = read16BitSigned(doc["Data"][34].as<uint16_t>());
+                            inverterData.gridSellToday = doc["Data"][90].as<uint16_t>() / 100.0; 
+                            inverterData.gridBuyToday = doc["Data"][92].as<uint16_t>() / 100.0;
+                            inverterData.gridSellTotal = ((doc["Data"][87].as<uint32_t>() << 16) + doc["Data"][86].as<uint16_t>()) / 100.0; 
+                            inverterData.gridBuyTotal = ((doc["Data"][89].as<uint32_t>() << 16) + doc["Data"][88].as<uint16_t>()) / 100.0; 
+                            inverterData.batteryChargedToday = doc["Data"][79].as<uint16_t>() / 10.0;
+                            inverterData.batteryDischargedToday = doc["Data"][78].as<uint16_t>() / 10.0;
+                            inverterData.loadToday = inverterData.pvToday + inverterData.gridBuyToday - inverterData.gridSellToday;
+                            inverterData.sn = sn;
+                            logInverterData(inverterData);
+                        } else if(doc["type"].as<int>() == 16) { //X3-MIC/PRO-G2 https://github.com/simatec/ioBroker.solax/blob/master/lib/inverterData.js
+                            inverterData.status = DONGLE_STATUS_OK;
+                            inverterData.millis = millis();
+                            inverterData.pv1Power = doc["Data"][15].as<int>();
+                            inverterData.pv2Power = doc["Data"][16].as<int>() 
+                                                    + doc["Data"][17].as<int>();
+                            inverterData.L1Power = doc["Data"][6].as<int>();
+                            inverterData.L2Power = doc["Data"][7].as<int>();
+                            inverterData.L3Power = doc["Data"][8].as<int>();
+                            inverterData.inverterPower = doc["Data"][78].as<int>();
+                            inverterData.pvToday = doc["Data"][24].as<uint16_t>() / 10.0;
+                            inverterData.pvTotal = doc["Data"][22].as<uint16_t>() / 10.0;
+                            inverterData.feedInPower = read16BitSigned(doc["Data"][74].as<uint16_t>());
+                            inverterData.gridSellToday = doc["Data"][74].as<uint16_t>() / 100.0; 
+                            inverterData.gridBuyToday = doc["Data"][76].as<uint16_t>() / 100.0;
+                            inverterData.hasBattery = false;
+                            inverterData.sn = sn;
+                            logInverterData(inverterData);
+                        } else if(doc["type"].as<int>() == 1) { //wallbox
+                            //wallboxData.power = doc["Data"][11].as<int>();
+                            inverterData.status = DONGLE_STATUS_UNSUPPORTED_DONGLE;
+                        } else {
+                            inverterData.status = DONGLE_STATUS_UNSUPPORTED_DONGLE;
+                        }                    
+                    }
+                    else
+                    {
+                        inverterData.status = DONGLE_STATUS_JSON_ERROR;
+                        log_d("JSON error");
+                    }
             }
             else
             {
                 inverterData.status = DONGLE_STATUS_HTTP_ERROR;
+                log_d("HTTP error");
             }
-            
         }
         else
         {
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            log_d("Failed to connect to Solax dongle");
         }
-        
-        http.end();
-
+        client.stop();
         return inverterData;
     }
 
@@ -129,10 +140,17 @@ public:
             return "http://5.8.8.8";
         }
     }
+
+    IPAddress getIp() {
+        if(WiFi.localIP()[0] == 192) {
+            return IPAddress(192, 168, 10, 10);
+        } else {
+            return IPAddress(5, 8, 8, 8);
+        }
+    }
     
 private:
     WiFiClient client;
-    HTTPClient http;
     int16_t read16BitSigned(uint16_t a)
     {
         if (a < 32768)

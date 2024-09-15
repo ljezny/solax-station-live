@@ -6,6 +6,7 @@
 #include <WiFi.h>
 #include <Preferences.h>
 #include <HTTPClient.h>
+#include <WiFiClient.h>
 #include <ArduinoJson.h>
 #include "../utils/urlencoder.hpp"
 #include <mdns.h>
@@ -277,6 +278,7 @@ public:
 private:
     mdns_search_once_t *mdnsSearch = NULL;
     HTTPClient http;
+    WiFiClient client;
     ShellyModel_t getModelFromSSID(String ssid)
     {
         for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
@@ -357,26 +359,45 @@ private:
         ShellyStateResult_t result;
         result.updated = 0;
 
-        String url = "http://" + ipAddress.toString() + "/status";
-
-        if (http.begin(url))
+        if (client.connect(ipAddress, 80))
         {
-            int httpCode = http.GET();
-            if (httpCode == HTTP_CODE_OK)
-            {
-                DynamicJsonDocument doc(8192);
-                ReadBufferingStream httpStream(http.getStream(), 1024);
-                LoggingStream loggingStream(httpStream, Serial);
-                DeserializationError err = deserializeJson(doc, loggingStream);
-                result.updated = millis(); // doc["unixtime"].as<int>();
-                result.isOn = doc["relays"][0]["ison"].as<bool>();
-                result.source = doc["relays"][0]["source"].as<String>();
-                result.totalPower = doc["meters"][0]["power"].as<float>();
-                result.totalEnergy = doc["meters"][0]["total"].as<float>() / 60.0f;
-            }
-        }
-        http.end();
+            client.print("GET ");
+            client.print("/status");
+            client.println(" HTTP/1.1");
+            client.print("Host: ");
+            client.println(ipAddress.toString());
+            client.println("Connection: close");
+            client.println();
+            delay(100);
+            
+            String headerLine = client.readStringUntil('\n');
+            log_d("Response code: %s", headerLine.c_str());
+            if(headerLine.startsWith("HTTP/1.1 200 OK")) {
+                while(!headerLine.isEmpty()) {
+                    headerLine = client.readStringUntil('\n');
+                    headerLine.trim();
+                    log_d("Header: %s", headerLine.c_str());                                        
+                }   
 
+                DynamicJsonDocument doc(8192);
+                ReadBufferingStream bufferingStream(client, 1024);
+                LoggingStream loggingStream(bufferingStream, Serial);
+                DeserializationError err = deserializeJson(doc, loggingStream);
+                if (err)
+                {
+                    log_e("Failed to parse JSON");
+                }
+                else
+                {
+                    result.updated = millis();
+                    result.isOn = doc["ison"].as<bool>();
+                    result.source = doc["source"].as<String>();
+                    result.totalPower = doc["power"].as<int>();
+                    result.totalEnergy = doc["total"].as<int>();
+                }
+            }                       
+        }
+        client.stop(); 
         return result;
     }
 
