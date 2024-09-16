@@ -358,7 +358,7 @@ void pairShelly(DongleDiscoveryResult_t &discoveryResult)
 
 void reloadShelly()
 {
-    if(shellyAPI.getPairedCount() != softAP.getNumberOfConnectedDevices()) {
+    if(shellyAPI.getPairedCount() < softAP.getNumberOfConnectedDevices()) {
         log_d("Connected devices: %d, paired devices: %d", softAP.getNumberOfConnectedDevices(), shellyAPI.getPairedCount());
         shellyAPI.queryMDNS();
     }
@@ -408,6 +408,4 @@ void loop()
     processDongles();
 
     reloadShelly();
-
-    
 }
