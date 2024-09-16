@@ -9,17 +9,18 @@
 #include <StreamUtils.h>
 #include "Inverters/InverterResult.hpp"
 
+#define SOLAX_DONGLE_TIMEOUT_MS 5000
 class SolaxDongleAPI
 {
 public:
     SolaxDongleAPI() {
-        client.setTimeout(2000);
+        client.setTimeout(SOLAX_DONGLE_TIMEOUT_MS);
     }
 
     InverterData_t loadData(String sn) {
         InverterData_t inverterData;
         
-        if(client.connect(getIp(), 80, 2000)) {
+        if(client.connect(getIp(), 80, SOLAX_DONGLE_TIMEOUT_MS)) {
             String body = "optType=ReadRealTimeData&pwd=" + sn;
             client.println("POST / HTTP/1.1");
             client.println("Host: " + getIp().toString());
@@ -28,7 +29,7 @@ public:
             client.println("Content-Length: " + String(body.length()));
             client.println();
             client.print(body);
-            
+            log_d("Request sent");
             unsigned long lastDataTime = millis();
             while(client.connected()) {
                 size_t len = client.available();
@@ -112,7 +113,7 @@ public:
                     }
                     break;
                 } else {
-                    if((millis() - lastDataTime) > 2000) {
+                    if((millis() - lastDataTime) > SOLAX_DONGLE_TIMEOUT_MS) {
                         inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                         log_d("Connection error");
                         break;
