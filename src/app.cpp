@@ -262,7 +262,7 @@ void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
             } else {
                 failures++;
                 log_d("Failed to load data from Solax dongle. Failures: %d", failures);
-                if(failures > 3) {
+                if(failures > 10) {
                     failures = 0;
                     //needs to rediscover dongle and reconnecting
                     log_d("Forgetting and disconnecting dongle due to too many failures");
