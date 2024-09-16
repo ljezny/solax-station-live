@@ -114,9 +114,9 @@ public:
             outPower += inverterData.feedInPower;
         }
         int totalPhasePower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
-        int l1PercentUsage = inverterData.L1Power > 0 ? (100 * inverterData.L1Power) / totalPhasePower : 0;
-        int l2PercentUsage = inverterData.L2Power > 0 ? (100 * inverterData.L2Power) / totalPhasePower : 0;
-        int l3PercentUsage = inverterData.L3Power > 0 ? (100 * inverterData.L3Power) / totalPhasePower : 0;
+        int l1PercentUsage = totalPhasePower > 0 ? (100 * inverterData.L1Power) / totalPhasePower : 0;
+        int l2PercentUsage = totalPhasePower > 0 ? (100 * inverterData.L2Power) / totalPhasePower : 0;
+        int l3PercentUsage = totalPhasePower > 0 ? (100 * inverterData.L3Power) / totalPhasePower : 0;
 
         lv_color_t black = lv_color_make(0, 0, 0);
         lv_color_t white = lv_color_make(255, 255, 255);
