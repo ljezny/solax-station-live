@@ -121,6 +121,7 @@ public:
                     delay(10);
                 }
             }            
+            log_d("Closing connection");
         }
         else
         {
