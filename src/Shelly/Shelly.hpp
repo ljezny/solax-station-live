@@ -406,26 +406,46 @@ private:
     {
         ShellyStateResult_t result;
         result.updated = 0;
-        String url = "http://" + ipAddress.toString() + "/rpc/Switch.GetStatus?id=0";
 
-        if (http.begin(url))
+        if (client.connect(ipAddress, 80))
         {
-            int httpCode = http.GET();
-            if (httpCode == HTTP_CODE_OK)
-            {
-                DynamicJsonDocument doc(8192);
-                ReadBufferingStream httpStream(http.getStream(), 1024);
-                LoggingStream loggingStream(httpStream, Serial);
-                DeserializationError err = deserializeJson(doc, loggingStream);
-                result.updated = millis();
-                result.isOn = doc["output"].as<bool>();
-                result.totalPower = doc["apower"].as<float>();
-                result.source = doc["source"].as<String>();
-                result.totalEnergy = doc["aenergy"]["total"].as<float>();
-            }
-        }
-        http.end();
+            client.print("GET ");
+            client.print("/rpc/Switch.GetStatus?id=0");
+            client.println(" HTTP/1.1");
+            client.print("Host: ");
+            client.println(ipAddress.toString());
+            client.println("Connection: close");
+            client.println();
+            delay(100);
+            
+            String headerLine = client.readStringUntil('\n');
+            log_d("Response code: %s", headerLine.c_str());
+            if(headerLine.startsWith("HTTP/1.1 200 OK")) {
+                while(!headerLine.isEmpty()) {
+                    headerLine = client.readStringUntil('\n');
+                    headerLine.trim();
+                    log_d("Header: %s", headerLine.c_str());                                        
+                }   
 
+                DynamicJsonDocument doc(8192);
+                ReadBufferingStream bufferingStream(client, 1024);
+                LoggingStream loggingStream(bufferingStream, Serial);
+                DeserializationError err = deserializeJson(doc, loggingStream);
+                if (err)
+                {
+                    log_e("Failed to parse JSON");
+                }
+                else
+                {
+                    result.updated = millis();
+                    result.isOn = doc["output"].as<bool>();
+                    result.totalPower = doc["apower"].as<float>();
+                    result.source = doc["source"].as<String>();
+                    result.totalEnergy = doc["aenergy"]["total"].as<float>();
+                }
+            }                       
+        }
+        client.stop(); 
         return result;
     }
 
