@@ -24,8 +24,6 @@ public:
             String body = "optType=ReadRealTimeData&pwd=" + sn;
             client.println("POST / HTTP/1.1");
             client.println("Host: " + getIp().toString());
-            client.println("Content-Type: application/x-www-form-urlencoded");
-            client.println("Accept: */*");
             client.println("Content-Length: " + String(body.length()));
             client.println();
             client.print(body);
