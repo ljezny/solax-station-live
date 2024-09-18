@@ -25,7 +25,7 @@ class BacklightResolver {
                     brightness = 192;
                 } else {
                     log_d("Setting brightness to 20%");
-                    brightness = 32;
+                    brightness = 16;
                 }
             }
 
