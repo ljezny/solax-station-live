@@ -407,6 +407,7 @@ void resetWifi()
     static long lastAttempt = 0;
     if (lastAttempt == 0 || millis() - lastAttempt > 300000) //every 5 minutes
     {
+        lastAttempt = millis();
         if(WiFi.status() == WL_CONNECTED) {
             log_d("Wifi connected, skipping reset");
             return;
@@ -415,7 +416,6 @@ void resetWifi()
         WiFi.mode(WIFI_OFF);
         delay(1000);
         softAP.start();
-        lastAttempt = millis();
     }
 }
 
@@ -423,8 +423,6 @@ void loop()
 {
     discoverDongles();
     processDongles();
-
     reloadShelly();
-
     resetWifi();
 }
