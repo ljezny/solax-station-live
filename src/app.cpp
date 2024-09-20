@@ -25,7 +25,7 @@ static lv_color_t disp_draw_buf1[screenWidth * screenHeight / 10];
 static lv_color_t disp_draw_buf2[screenWidth * screenHeight / 10];
 static lv_disp_drv_t disp_drv;
 
-SET_LOOP_TASK_STACK_SIZE(48 * 1024);
+SET_LOOP_TASK_STACK_SIZE(64 * 1024);
 
 DongleDiscovery dongleDiscovery;
 ShellyAPI shellyAPI;
@@ -208,6 +208,7 @@ void setup()
     xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 1);
     lv_timer_t *timer = lv_timer_create(timerCB, dashboardUI.UI_REFRESH_PERIOD_MS, NULL);
 
+    WiFi.setTxPower(WIFI_POWER_8_5dBm); // 8.5 dBm
     WiFi.persistent(false);
     WiFi.setSleep(false);
     softAP.start();

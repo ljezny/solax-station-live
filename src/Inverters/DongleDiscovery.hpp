@@ -102,6 +102,10 @@ class DongleDiscovery {
                 log_d("Disconnecting from %s", WiFi.SSID().c_str());
                 WiFi.disconnect();
             }
+           
+            WiFi.persistent(false);
+            WiFi.mode(WIFI_STA);
+
             log_d("Connecting to %s", discovery.ssid.c_str());
             WiFi.begin(discovery.ssid.c_str(), password.c_str());
 
