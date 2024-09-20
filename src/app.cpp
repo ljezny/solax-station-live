@@ -406,7 +406,7 @@ void processDongles()
 void resetWifi()
 {
     static long lastAttempt = 0;
-    if (lastAttempt == 0 || millis() - lastAttempt > 300000) //every 5 minutes
+    if (millis() - lastAttempt > 300000) //every 5 minutes
     {
         lastAttempt = millis();
         if(WiFi.status() == WL_CONNECTED) {
@@ -415,7 +415,7 @@ void resetWifi()
         }
         log_d("Resetting wifi");
         WiFi.mode(WIFI_OFF);
-        delay(1000);
+        delay(5000);
         softAP.start();
     }
 }
