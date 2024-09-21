@@ -14,6 +14,10 @@ class DongleDiscovery {
     
         bool discoverDongle() {
             bool result = false;
+            
+            if(WiFi.getMode() == WIFI_OFF) {
+                return false;
+            }
 
             int found = WiFi.scanComplete();
             if(found == WIFI_SCAN_FAILED) {
@@ -104,7 +108,6 @@ class DongleDiscovery {
             }
            
             WiFi.persistent(false);
-            WiFi.mode(WIFI_STA);
 
             log_d("Connecting to %s", discovery.ssid.c_str());
             WiFi.begin(discovery.ssid.c_str(), password.c_str());

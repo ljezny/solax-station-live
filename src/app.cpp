@@ -25,7 +25,7 @@ static lv_color_t disp_draw_buf1[screenWidth * screenHeight / 10];
 static lv_color_t disp_draw_buf2[screenWidth * screenHeight / 10];
 static lv_disp_drv_t disp_drv;
 
-SET_LOOP_TASK_STACK_SIZE(64 * 1024);
+SET_LOOP_TASK_STACK_SIZE(18 * 1024); //use freeStack
 
 DongleDiscovery dongleDiscovery;
 ShellyAPI shellyAPI;
@@ -403,20 +403,37 @@ void processDongles()
 #endif
 }
 
+void logMemory()
+{
+    log_d("Free heap: %d", ESP.getFreeHeap());
+    log_d("Min free heap: %d", ESP.getMinFreeHeap());
+    log_d("Free stack: %d", uxTaskGetStackHighWaterMark(NULL));
+}
+
+
 void resetWifi()
 {
     static long lastAttempt = 0;
     if (millis() - lastAttempt > 300000) //every 5 minutes
     {
         lastAttempt = millis();
+        logMemory();
         if(WiFi.status() == WL_CONNECTED) {
             log_d("Wifi connected, skipping reset");
             return;
         }
+        
+        if(WiFi.scanComplete() == WIFI_SCAN_RUNNING) {
+            log_d("Wifi Scan is running, skipping reset");
+            return;
+        }
+
         log_d("Resetting wifi");
         WiFi.mode(WIFI_OFF);
+        logMemory();
         delay(5000);
         softAP.start();
+        logMemory();
     }
 }
 
