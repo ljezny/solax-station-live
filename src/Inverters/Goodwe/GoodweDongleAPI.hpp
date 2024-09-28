@@ -186,7 +186,7 @@ private:
                                 //inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
                                 //inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal - (inverterData.loadTotal - loadTotal);
                                 
-                                inverterData.gridBuyToday = inverterData.pvToday + inverterData.batteryDischargedToday - inverterData.batteryChargedToday - inverterData.gridSellToday - inverterData.loadToday;
+                                inverterData.gridBuyToday = -(inverterData.pvToday + inverterData.batteryDischargedToday - inverterData.batteryChargedToday - inverterData.gridSellToday - inverterData.loadToday);
                                 if(inverterData.gridBuyToday < 0) { //negative result correction
                                     inverterData.gridBuyToday = 0; 
                                 }
