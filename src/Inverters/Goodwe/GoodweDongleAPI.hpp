@@ -164,7 +164,7 @@ private:
                                 inverterData.batteryChargedToday = readUInt16(packetBuffer, 108) / 10.0;
                                 inverterData.batteryDischargedToday = readUInt16(packetBuffer, 111) / 10.0;
                                 inverterData.gridBuyToday = readUInt16(packetBuffer, 102) / 10.0;
-                                inverterData.gridSellToday = readUInt16(packetBuffer, 99) / 10.0 - inverterData.loadToday;
+                                inverterData.gridSellToday = readUInt16(packetBuffer, 99) / 10.0;// - inverterData.loadToday;
                                 inverterData.gridBuyTotal = readUInt32(packetBuffer, 100) / 10.0;
                                 inverterData.gridSellTotal = readUInt32(packetBuffer, 95) / 10.0;
                                 inverterData.sn = sn;
@@ -186,19 +186,19 @@ private:
                                 //inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
                                 //inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal - (inverterData.loadTotal - loadTotal);
                                 
-                                inverterData.gridBuyToday = inverterData.pvToday + inverterData.batteryDischargedToday - inverterData.batteryChargedToday - inverterData.gridSellToday - inverterData.loadToday;
-                                if(inverterData.gridBuyToday < 0) { //negative result correction
-                                    inverterData.gridBuyToday = 0; 
-                                }
-                                if(inverterData.gridSellToday < 0) { //negative result correction
-                                    inverterData.gridSellToday = 0; 
-                                }
+                                // inverterData.gridBuyToday = inverterData.pvToday + inverterData.batteryDischargedToday - inverterData.batteryChargedToday - inverterData.gridSellToday - inverterData.loadToday;
+                                // if(inverterData.gridBuyToday < 0) { //negative result correction
+                                //     inverterData.gridBuyToday = 0; 
+                                // }
+                                // if(inverterData.gridSellToday < 0) { //negative result correction
+                                //     inverterData.gridSellToday = 0; 
+                                // }
                                 break;
                             }
                             else
                             {
                                 log_d("Invalid packet size: %d", len);
-                            }
+                            }   
                         }
                         else
                         {
