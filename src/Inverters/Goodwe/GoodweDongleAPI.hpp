@@ -20,7 +20,6 @@ private:
 
     double gridBuyTotal = 0;
     double gridSellTotal = 0;
-    double loadTotal = 0;
     int day = -1;
 
     uint16_t readUInt16(byte *buf, byte reg)
@@ -38,6 +37,12 @@ private:
         return readUInt16(buf, reg) << 16 | readUInt16(buf, reg + 1);
     }
 
+    float readIEEE754(byte *buf, byte reg)
+    {
+        uint32_t v = readUInt32(buf, reg);
+        return *(float *)&v;
+    }
+
     bool connect()
     {
         return udp.begin(WiFi.localIP(), 8899);
@@ -48,7 +53,7 @@ private:
         udp.stop();
     }
 
-    bool sendRunningDataRequestPacket()
+    bool sendDataRequest(uint16_t addr, uint8_t len)
     {
         if (!udp.beginPacket(IPAddress(10, 10, 100, 253), 8899))
         {
@@ -57,8 +62,6 @@ private:
         }
 
         byte d[] = {0xF7, 0x03, 0, 0, 0, 0, 0, 0};
-        uint16_t addr = 35100;
-        uint8_t len = 125;
         d[2] = addr >> 8;
         d[3] = addr & 0xff;
         d[5] = len;
@@ -76,32 +79,19 @@ private:
         return true;
     }
 
+    bool sendRunningDataRequestPacket()
+    {
+        return sendDataRequest(35100, 125);
+    }
+
     bool sendBMSInfoRequestPacket()
     {
-        if (!udp.beginPacket(IPAddress(10, 10, 100, 253), 8899))
-        {
-            log_d("Failed to begin packet");
-            return false;
-        }
+        return sendDataRequest(37000, 8);
+    }
 
-        byte d[] = {0xF7, 0x03, 0, 0, 0, 0, 0, 0};
-        uint16_t addr = 37000;
-        uint8_t len = 8;
-        d[2] = addr >> 8;
-        d[3] = addr & 0xff;
-        d[5] = len;
-        unsigned c = crc16(d, 6, 0x8005, 0xFFFF, 0, true, true);
-        d[6] = c;
-        d[7] = c >> 8;
-        udp.write(d, sizeof(d));
-
-        if (!udp.endPacket())
-        {
-            log_d("Failed to send packet");
-            return false;
-        }
-
-        return true;
+    bool sendSmartMeterRequestPacket()
+    {
+        return sendDataRequest(36000, 44);
     }
 
     bool awaitPacket(int timeout)
@@ -163,35 +153,19 @@ private:
                                 inverterData.loadTotal = readUInt32(packetBuffer, 103) / 10.0;
                                 inverterData.batteryChargedToday = readUInt16(packetBuffer, 108) / 10.0;
                                 inverterData.batteryDischargedToday = readUInt16(packetBuffer, 111) / 10.0;
-                                inverterData.gridBuyToday = readUInt16(packetBuffer, 102) / 10.0;
-                                inverterData.gridSellToday = readUInt16(packetBuffer, 99) / 10.0 - inverterData.loadToday;
-                                inverterData.gridBuyTotal = readUInt32(packetBuffer, 100) / 10.0;
-                                inverterData.gridSellTotal = readUInt32(packetBuffer, 95) / 10.0;
                                 inverterData.sn = sn;
                                 logInverterData(inverterData);
+
                                 // this is a hack - Goodwe returns incorrect day values for grid sell/buy
                                 // so count it manually from total values
-                                // int day = (readUInt16(packetBuffer, 1) >> 8) & 0xFF;
-                                // log_d("Day: %d", day);
-                                // if (this->day != day)
-                                // {
-                                //     log_d("Day changed, resetting counters");
-                                //     this->day = day;
-                                //     gridBuyTotal = inverterData.gridBuyTotal;
-                                //     gridSellTotal = inverterData.gridSellTotal;
-                                //     loadTotal = inverterData.loadTotal;
-                                // }
-                                // log_d("Grid buy total: %f", gridBuyTotal);
-                                // log_d("Grid sell total: %f", gridSellTotal);
-                                //inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
-                                //inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal - (inverterData.loadTotal - loadTotal);
-                                
-                                inverterData.gridBuyToday = inverterData.pvToday + inverterData.batteryDischargedToday - inverterData.batteryChargedToday - inverterData.gridSellToday - inverterData.loadToday;
-                                if(inverterData.gridBuyToday < 0) { //negative result correction
-                                    inverterData.gridBuyToday = 0; 
-                                }
-                                if(inverterData.gridSellToday < 0) { //negative result correction
-                                    inverterData.gridSellToday = 0; 
+                                int day = (readUInt16(packetBuffer, 1) >> 8) & 0xFF;
+                                log_d("Day: %d", day);
+                                if (this->day != day)
+                                {
+                                    log_d("Day changed, resetting counters");
+                                    this->day = day;
+                                    gridBuyTotal = 0;
+                                    gridSellTotal = 0;
                                 }
                                 break;
                             }
@@ -208,6 +182,36 @@ private:
                     else
                     {
                         log_d("No data received");
+                    }
+                }
+            }
+
+            for (int i = 0; i < 3; i++)
+            { // it is UDP so retries are needed
+                sendSmartMeterRequestPacket();
+                if (awaitPacket(3000))
+                {
+                    int len = udp.read(packetBuffer, PACKET_SIZE);
+                    if (len > 0)
+                    {
+                        unsigned c = crc16(packetBuffer + 2, len - 2, 0x8005, 0xFFFF, 0, true, true);
+                        if (c == 0)
+                        {
+                            if (len == 7 + 2 * 44)
+                            {
+                                inverterData.gridSellTotal = readIEEE754(packetBuffer, 15);
+                                inverterData.gridBuyTotal = readIEEE754(packetBuffer, 15);
+                                if(gridBuyTotal == 0) {
+                                    gridBuyTotal = inverterData.gridBuyTotal;
+                                }
+                                if(gridSellTotal == 0) {
+                                    gridSellTotal = inverterData.gridSellTotal;
+                                }
+                                inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
+                                inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
+                                break;
+                            }
+                        }
                     }
                 }
             }
