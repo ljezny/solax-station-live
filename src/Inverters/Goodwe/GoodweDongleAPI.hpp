@@ -199,8 +199,10 @@ private:
                         {
                             if (len == 7 + 2 * 44)
                             {
-                                inverterData.gridSellTotal = readIEEE754(packetBuffer, 15);
-                                inverterData.gridBuyTotal = readIEEE754(packetBuffer, 15);
+                                inverterData.gridSellTotal = readIEEE754(packetBuffer, 15) / 1000.0f;
+                                inverterData.gridBuyTotal = readIEEE754(packetBuffer, 17) / 1000.0f;
+                                log_d("Grid sell total: %f", inverterData.gridSellTotal);
+                                log_d("Grid buy total: %f", inverterData.gridBuyTotal);
                                 if(gridBuyTotal == 0) {
                                     gridBuyTotal = inverterData.gridBuyTotal;
                                 }
