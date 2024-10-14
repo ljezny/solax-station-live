@@ -391,10 +391,10 @@ private:
                 else
                 {
                     result.updated = millis();
-                    result.isOn = doc["ison"].as<bool>();
-                    result.source = doc["source"].as<String>();
-                    result.totalPower = doc["power"].as<int>();
-                    result.totalEnergy = doc["total"].as<int>();
+                    result.isOn = doc["relays"][0]["ison"].as<bool>();
+                    result.source = doc["relays"][0]["source"].as<String>();
+                    result.totalPower = doc["meters"][0]["power"].as<int>();
+                    result.totalEnergy = doc["meters"][0]["total"].as<int>();
                 }
             }                       
         }
