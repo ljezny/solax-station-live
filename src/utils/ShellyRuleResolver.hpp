@@ -90,7 +90,9 @@ public:
     RequestedShellyState_t resolveShellyState()
     {
         int powerTreshold = 1500;
-
+        bool hasBattery = getSOC() != 0 && getMedianBatteryPower() != 0;
+        log_d("SOC: %d, Median battery power: %d, Median feed in power: %d, Median PV power: %d, Median load power: %d", getSOC(), getMedianBatteryPower(), getMedianFeedInPower(), getMedianPVPower(), getMedianLoadPower());
+       
         if (!hasValidSamples())
         {
             return SHELLY_DEACTIVATE;
@@ -105,8 +107,8 @@ public:
             log_d("Grid power, deactivating");
             return SHELLY_DEACTIVATE;
         }
-
-        if(getSOC() < 80) {
+        
+        if(hasBattery && getSOC() < 80) {
             log_d("Battery under limit empty, deactivating");
             return SHELLY_DEACTIVATE;
         }
