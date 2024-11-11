@@ -145,8 +145,9 @@ public:
                         log_d("Found Shelly: %s model: %s", hostname.c_str(), supportedModels[i].prefix.c_str());
                         String idText = hostname.substring(prefix.length());
                         unsigned long long shellyId = strtoull(idText.c_str(), NULL, 16);
-                        for (int j = 0; i < MAX_SHELLY_PAIRS; j++)
+                        for (int j = 0; j < MAX_SHELLY_PAIRS; j++)
                         {
+                            log_d("Checking Shelly %s", String(pairs[j].shellyId, HEX).c_str());
                             if (pairs[j].shellyId == 0 || pairs[j].shellyId == shellyId)
                             {
                                 pairs[j].shellyId = shellyId;
