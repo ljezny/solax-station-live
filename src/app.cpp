@@ -19,6 +19,7 @@
 #include "utils/ShellyRuleResolver.hpp"
 
 #include "gfx_conf.h"
+#include "Touch/Touch.hpp"
 
 static lv_disp_draw_buf_t draw_buf;
 static lv_color_t disp_draw_buf1[screenWidth * screenHeight / 10];
@@ -31,6 +32,7 @@ DongleDiscovery dongleDiscovery;
 ShellyAPI shellyAPI;
 BacklightResolver backlightResolver;
 SoftAP softAP;
+Touch touch;
 
 InverterData_t inverterData;
 InverterData_t previousInverterData;
@@ -56,25 +58,15 @@ void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color
 
 void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
 {
-    uint16_t touchX, touchY;
-    bool touched = tft.getTouch(&touchX, &touchY);
-    if (!touched)
+    if (!touch.hasTouch())
     {
         data->state = LV_INDEV_STATE_REL;
     }
     else
     {
         data->state = LV_INDEV_STATE_PR;
-
-        /*Set the coordinates*/
-        data->point.x = touchX;
-        data->point.y = touchY;
-
-        Serial.print("Data x ");
-        Serial.println(touchX);
-
-        Serial.print("Data y ");
-        Serial.println(touchY);
+        data->point.x = touch.touchX;
+        data->point.y = touch.touchY;
 
         backlightResolver.touch();
     }
@@ -166,12 +158,15 @@ void setup()
 
     pinMode(38, OUTPUT);
     digitalWrite(38, LOW);
-    pinMode(17, OUTPUT);
-    digitalWrite(17, LOW);
-    pinMode(18, OUTPUT);
-    digitalWrite(18, LOW);
-    pinMode(42, OUTPUT);
-    digitalWrite(42, LOW);
+    
+    Wire.begin(19, 20);
+
+    // pinMode(17, OUTPUT);
+    // digitalWrite(17, LOW);
+    // pinMode(18, OUTPUT);
+    // digitalWrite(18, LOW);
+    // pinMode(42, OUTPUT);
+    // digitalWrite(42, LOW);
 
     // Display Prepare
     tft.begin();
@@ -181,6 +176,9 @@ void setup()
 
     lv_init();
     delay(100);
+
+    //touch setup
+    touch.init();
 
     lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight / 10);
     /* Initialize the display */
@@ -444,3 +442,4 @@ void loop()
     reloadShelly();
     resetWifi();
 }
+

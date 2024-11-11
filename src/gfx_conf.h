@@ -20,7 +20,6 @@ public:
     lgfx::Bus_RGB _bus_instance;
     lgfx::Panel_RGB _panel_instance;
     lgfx::Light_PWM _light_instance;
-    lgfx::Touch_GT911 _touch_instance;
     LGFX(void)
     {
         {
@@ -86,25 +85,6 @@ public:
             cfg.pin_bl = GPIO_NUM_2;
             _light_instance.config(cfg);
             _panel_instance.light(&_light_instance);
-        }
-
-        {
-            auto cfg = _touch_instance.config();
-            cfg.x_min      = 0;
-            cfg.x_max      = 799;
-            cfg.y_min      = 0;
-            cfg.y_max      = 479;
-            cfg.pin_int    = -1;
-            cfg.pin_rst    = -1;
-            cfg.bus_shared = true;
-            cfg.offset_rotation = 0;
-            cfg.i2c_port   = I2C_NUM_1;
-            cfg.pin_sda    = GPIO_NUM_19;
-            cfg.pin_scl    = GPIO_NUM_20;
-            cfg.freq       = 400000;
-            cfg.i2c_addr   = 0x14;
-            _touch_instance.config(cfg);
-            _panel_instance.setTouch(&_touch_instance);
         }
         setPanel(&_panel_instance);
     }
