@@ -131,11 +131,6 @@ public:
             return SHELLY_ACTIVATE;
         }
 
-        if(getMedianFeedInPower() == 0 && getMedianBatteryPower() == 0 && abs(getMedianPVPower() - getMedianLoadPower()) < 500) {
-            log_d("No feedin, no battery power, load equals PV power, activating");
-            return SHELLY_ACTIVATE;
-        }
-
         return SHELLY_KEEP_CURRENT_STATE;
     }
 };
