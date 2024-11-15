@@ -89,7 +89,9 @@ public:
     
     RequestedShellyState_t resolveShellyState()
     {
-        int powerTreshold = 1500;
+        int enablePowerTreshold = 1500;
+        int disablePowerTreshold = 500;
+
         bool hasBattery = getSOC() != 0 && getMedianBatteryPower() != 0;
         log_d("SOC: %d, Median battery power: %d, Median feed in power: %d, Median PV power: %d, Median load power: %d", getSOC(), getMedianBatteryPower(), getMedianFeedInPower(), getMedianPVPower(), getMedianLoadPower());
        
@@ -98,12 +100,12 @@ public:
             return SHELLY_DEACTIVATE;
         }
 
-        if(getMedianBatteryPower() < -powerTreshold) {
+        if(getMedianBatteryPower() < -disablePowerTreshold) {
             log_d("Battery discharging, deactivating");
             return SHELLY_DEACTIVATE;
         }
 
-        if(getMedianFeedInPower() < -powerTreshold) {
+        if(getMedianFeedInPower() < -disablePowerTreshold) {
             log_d("Grid power, deactivating");
             return SHELLY_DEACTIVATE;
         }
@@ -119,13 +121,13 @@ public:
             return SHELLY_ACTIVATE;
         }
 
-        if (getSOC() > 90 && getMedianBatteryPower() > powerTreshold)
+        if (getSOC() > 90 && getMedianBatteryPower() > enablePowerTreshold)
         {
             log_d("Battery almost full and charging, activating");
             return SHELLY_ACTIVATE;
         }
 
-        if (getMedianFeedInPower() > powerTreshold)
+        if (getMedianFeedInPower() > enablePowerTreshold)
         {
             log_d("Feeding in power, activating");
             return SHELLY_ACTIVATE;
