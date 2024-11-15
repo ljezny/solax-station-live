@@ -2,7 +2,6 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
-#include <WiFiUdp.h>
 #include <CRC.h>
 #include <CRC16.h>
 #include "Inverters/InverterResult.hpp"
@@ -16,7 +15,7 @@ public:
     }
 
 private:
-    WiFiUDP udp;
+    WiFiClient client;
 
     double gridBuyTotal = 0;
     double gridSellTotal = 0;
@@ -45,22 +44,20 @@ private:
 
     bool connect()
     {
-        return udp.begin(WiFi.localIP(), 8899);
-    }
-
-    void disconnect()
-    {
-        udp.stop();
-    }
-
-    bool sendDataRequest(uint16_t addr, uint8_t len)
-    {
-        if (!udp.beginPacket(IPAddress(10, 10, 100, 254), 8899))
+        if (!client.connect(IPAddress(10, 10, 100, 254), 8899))
         {
             log_d("Failed to begin packet");
             return false;
         }
+    }
 
+    void disconnect()
+    {
+        client.stop();
+    }
+
+    bool sendDataRequest(uint16_t addr, uint8_t len)
+    {
         byte d[] = {0x1, 0x03, 0, 0, 0, 0, 0, 0};
         d[2] = addr >> 8;
         d[3] = addr & 0xff;
@@ -73,14 +70,14 @@ private:
         {
             log_d("%02X ", d[i]);
         }
-        udp.write(d, sizeof(d));
-        
+        client.write(d, sizeof(d));
+        client.flush();
 
-        if (!udp.endPacket())
-        {
-            log_d("Failed to send packet");
-            return false;
-        }
+        // if (!udp.endPacket())
+        // {
+        //     log_d("Failed to send packet");
+        //     return false;
+        // }
 
         return true;
     }
@@ -92,16 +89,17 @@ private:
 
     bool awaitPacket(int timeout)
     {
-        unsigned long start = millis();
-        while (millis() - start < timeout)
-        {
-            int packetSize = udp.parsePacket();
-            if (packetSize)
-            {
-                return true;
-            }
-        }
-        return false;
+        return client.available() > 0;
+        // unsigned long start = millis();
+        // while (millis() - start < timeout)
+        // {
+        //     int packetSize = udp.parsePacket();
+        //     if (packetSize)
+        //     {
+        //         return true;
+        //     }
+        // }
+        // return false;
     }
 
     InverterData_t readData(String sn)
@@ -119,7 +117,7 @@ private:
                 sendRunningDataRequestPacket();
                 if (awaitPacket(3000))
                 {
-                    int len = udp.read(packetBuffer, PACKET_SIZE);
+                    int len = client.read(packetBuffer, PACKET_SIZE);
                     if (len > 0)
                     {
                         unsigned c = crc16(packetBuffer + 2, len - 2, 0x8005, 0xFFFF, 0, true, true);
