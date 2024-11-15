@@ -68,7 +68,13 @@ private:
         unsigned c = crc16(d, 6, 0x8005, 0xFFFF, 0, true, true);
         d[6] = c;
         d[7] = c >> 8;
+        log_d("Sending packet: ");
+        for (int i = 0; i < sizeof(d); i++)
+        {
+            log_d("%02X ", d[i]);
+        }
         udp.write(d, sizeof(d));
+        
 
         if (!udp.endPacket())
         {
