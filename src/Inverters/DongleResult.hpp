@@ -7,6 +7,7 @@ typedef enum {
     DONGLE_TYPE_IGNORE, //known dongle, but not supported (keep in list, but don't try to connect)
     DONGLE_TYPE_SOLAX,
     DONGLE_TYPE_GOODWE,
+    DONGLE_TYPE_SOFAR,
     DONGLE_TYPE_SHELLY,
 } DongleType_t;
 

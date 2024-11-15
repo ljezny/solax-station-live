@@ -9,6 +9,7 @@
 #include "Inverters/DongleDiscovery.hpp"
 #include "Inverters/Goodwe/GoodweDongleAPI.hpp"
 #include "Inverters/Solax/SolaxDongleAPI.hpp"
+#include "Inverters/SofarSolar/SofarSolarDongleAPI.hpp"
 #include "Shelly/Shelly.hpp"
 #include "utils/UnitFormatter.hpp"
 #include "utils/SolarChartDataProvider.hpp"
@@ -338,6 +339,61 @@ void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult)
     }
 }
 
+void loadSofarInverterData(DongleDiscoveryResult_t &discoveryResult)
+{
+    static long lastAttempt = 0;
+    static SofarSolarDongleAPI sofarSolarDongleAPI = SofarSolarDongleAPI();
+    static int failures = 0;
+    if (lastAttempt == 0 || millis() - lastAttempt > 5000)
+    {
+        log_d("Loading Sofar inverter data");
+        lastAttempt = millis();
+
+        if(inverterData.status == DONGLE_STATUS_OK) {
+            if(!inverterData.sn.equals(discoveryResult.sn)) {
+                log_d("Dongle is not bonded, skipping & ignorring...");
+                discoveryResult.type = DONGLE_TYPE_IGNORE;
+                return;
+            }
+        }
+        
+        if (dongleDiscovery.connectToDongle(discoveryResult, "734015b7")) //TODO: provide password by user
+        {
+            log_d("Sofar wifi connected.");
+
+            InverterData_t d = sofarSolarDongleAPI.loadData(discoveryResult.sn);
+
+            if (d.status == DONGLE_STATUS_OK)
+            {
+                failures = 0;
+                inverterData = d;
+                solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
+                shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
+            } else {
+                failures++;
+                log_d("Failed to load data from Sofar dongle. Failures: %d", failures);
+                if(failures > 3) {
+                    failures = 0;
+                    //needs to rediscover dongle and reconnecting
+                    log_d("Forgetting and disconnecting dongle due to too many failures");
+                    discoveryResult.type = DONGLE_TYPE_UNKNOWN;
+                    discoveryResult.sn = "";
+                    discoveryResult.ssid = "";
+                    WiFi.disconnect();
+                }
+            }
+        }
+        else
+        {
+            inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
+            log_d("Sofar wifi not connected.");
+            discoveryResult.type = DONGLE_TYPE_UNKNOWN;
+            discoveryResult.sn = "";
+            discoveryResult.ssid = "";
+        }
+    }
+}
+
 void pairShelly(DongleDiscoveryResult_t &discoveryResult)
 {
     static long lastAttempt = 0;
@@ -385,6 +441,9 @@ void processDongles()
                 break;
             case DONGLE_TYPE_GOODWE:
                 loadGoodweInverterData(dongleDiscovery.discoveries[i]);
+                break;
+            case DONGLE_TYPE_SOFAR:
+                loadSofarInverterData(dongleDiscovery.discoveries[i]);
                 break;
             case DONGLE_TYPE_SHELLY:
                 pairShelly(dongleDiscovery.discoveries[i]);

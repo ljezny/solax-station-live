@@ -81,6 +81,13 @@ class DongleDiscovery {
                     result = true;                   
                 }
 
+                if(isSofarSolarSID(ssid)) {
+                    discoveries[discoveryIndex].sn = parseDongleSN(ssid);
+                    discoveries[discoveryIndex].type = DONGLE_TYPE_SOFAR;
+                    discoveries[discoveryIndex].ssid = ssid;
+                    result = true;                   
+                }
+
                 if(isShellySSID(ssid)) {
                     discoveries[discoveryIndex].type = DONGLE_TYPE_SHELLY;
                     discoveries[discoveryIndex].sn = parseDongleSN(ssid);   
@@ -157,6 +164,10 @@ class DongleDiscovery {
             return ssid.startsWith("Solar-WiFi");
         }
 
+        bool isSofarSolarSID(String ssid) {
+            return ssid.startsWith("AP_");
+        }
+
         bool isShellySSID(String ssid) {
             return ssid.startsWith("shellyplug-s-") 
             || ssid.startsWith("shellyplug-") 
@@ -174,6 +185,7 @@ class DongleDiscovery {
             String sn = ssid;
             sn.replace("Wifi_", "");
             sn.replace("Solar-WiFi", "");
+            sn.replace("AP_", "");
             sn.replace("shellyplug-s-", "");
             sn.replace("shellyplug-", "");
             sn.replace("ShellyPlusPlugS-", "");
