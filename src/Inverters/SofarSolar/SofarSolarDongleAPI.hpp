@@ -75,7 +75,6 @@ private:
             0x02 /*Frame type*/,
             0x00 /*Sensor type*/,
             0x00 /*Sensor type*/,
-            0x00 /*Sensor type*/,
             0x00 /*Total Working Time*/,
             0x00 /*Total Working Time*/,
             0x00 /*Total Working Time*/,
@@ -152,7 +151,7 @@ private:
 
     bool sendRunningDataRequestPacket(uint32_t sn)
     {
-        return sendReadDataRequest(sequenceNumber, 0x0200 , 0x44, sn);
+        return sendReadDataRequest(sequenceNumber, 0x03, 0x05, sn);
     }
 
     bool awaitPacket(int timeout)
@@ -173,7 +172,7 @@ private:
     {
         InverterData_t inverterData;
         log_d("Connecting to dongle...");
-        uint32_t sn = dongleSN.toInt();
+        uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
         log_d("SN: %d", sn);
         if (connect())
         {
