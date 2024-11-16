@@ -190,6 +190,12 @@ private:
                     int len = client.read(packetBuffer, PACKET_SIZE);
                     if (len > 0)
                     {
+                        log_d("Received packet: ");
+                        for (int i = 0; i < len; i++)
+                        {
+                            log_d("%02X ", packetBuffer[i]);
+                        }
+                        
                         inverterData.status = DONGLE_STATUS_OK;
                         inverterData.millis = millis();
                         //inverterData.pv1Power = readUInt32(packetBuffer, 0x14);
