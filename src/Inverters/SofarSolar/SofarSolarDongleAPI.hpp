@@ -49,6 +49,7 @@ private:
             log_d("Failed to begin packet");
             return false;
         }
+        return true;
     }
 
     void disconnect()
@@ -56,35 +57,104 @@ private:
         client.stop();
     }
 
-    bool sendDataRequest(uint16_t addr, uint8_t len)
+    bool sendReadDataRequest(uint16_t requestNo, uint16_t addr, uint8_t len, uint32_t sn)
     {
-        byte d[] = {0x1, 0x03, 0, 0, 0, 0, 0, 0};
-        d[2] = addr >> 8;
-        d[3] = addr & 0xff;
-        d[5] = len;
-        unsigned c = crc16(d, 6, 0x8005, 0xFFFF, 0, true, true);
-        d[6] = c;
-        d[7] = c >> 8;
-        log_d("Sending packet: ");
-        for (int i = 0; i < sizeof(d); i++)
-        {
-            log_d("%02X ", d[i]);
-        }
-        client.write(d, sizeof(d));
-        client.flush();
+        byte solarmanv5Header[] = {
+            0xA5 /*Start of packet*/,
+            0x00 /*Packet length*/,
+            0x00 /*Packet length*/,
+            0x45 /*Packet type, request*/,
+            0x10 /*Packet type, request*/,
+            requestNo & 0xff /*Request number*/,
+            requestNo >> 8 /*Request number*/,
+            sn & 0xff /*Serial number*/,
+            (sn >> 8) & 0xff /*Serial number*/,
+            (sn >> 16) & 0xff /*Serial number*/,
+            (sn >> 24) & 0xff /*Serial number*/,
+        };
 
-        // if (!udp.endPacket())
-        // {
-        //     log_d("Failed to send packet");
-        //     return false;
-        // }
+        byte solarmanv5Payload[] = {
+            0x02 /*Frame type*/,
+            0x00 /*Sensor type*/,
+            0x00 /*Sensor type*/,
+            0x00 /*Sensor type*/,
+            0x00 /*Total Working Time*/,
+            0x00 /*Total Working Time*/,
+            0x00 /*Total Working Time*/,
+            0x00 /*Total Working Time*/,
+            0x00 /*Power on Time*/,
+            0x00 /*Power on Time*/,
+            0x00 /*Power on Time*/,
+            0x00 /*Power on Time*/,
+            0x00 /*Offset time*/,
+            0x00 /*Offset time*/,
+            0x00 /*Offset time*/,
+            0x00 /*Offset time*/,
+        };
+
+        byte modbusRTURequest[] = {0x1, 0x03, 0, 0, 0, 0, 0, 0};
+        modbusRTURequest[2] = addr >> 8;
+        modbusRTURequest[3] = addr & 0xff;
+        modbusRTURequest[5] = len;
+        unsigned c = crc16(modbusRTURequest, 6, 0x8005, 0xFFFF, 0, true, true);
+        modbusRTURequest[6] = c;
+        modbusRTURequest[7] = c >> 8;
+        
+        byte solarmanv5Trailer[] = {
+            0x00 /*cheksum*/,
+            0x15,
+        };
+
+        //compute length
+        uint16_t packetLength = sizeof(solarmanv5Payload) + sizeof(modbusRTURequest);
+        solarmanv5Header[1] = packetLength & 0xff;
+        solarmanv5Header[2] = packetLength >> 8;
+        
+        int checksum = 0;
+        for (int i = 1; i < sizeof(solarmanv5Header); i++)
+        {
+            checksum += solarmanv5Header[i] & 0xff;
+        }
+        for (int i = 0; i < sizeof(solarmanv5Payload); i++)
+        {
+            checksum += solarmanv5Payload[i] & 0xff;
+        }
+        for (int i = 0; i < sizeof(modbusRTURequest); i++)
+        {
+            checksum += modbusRTURequest[i] & 0xff;
+        }
+        solarmanv5Trailer[0] = checksum & 0xff;
+
+        log_d("Sending solarmanv5 request: ");
+        for (int i = 0; i < sizeof(solarmanv5Header); i++)
+        {
+            log_d("%02X ", solarmanv5Header[i]);
+        }
+        for (int i = 0; i < sizeof(solarmanv5Payload); i++)
+        {
+            log_d("%02X ", solarmanv5Payload[i]);
+        }
+        for (int i = 0; i < sizeof(modbusRTURequest); i++)
+        {
+            log_d("%02X ", modbusRTURequest[i]);
+        }
+        for (int i = 0; i < sizeof(solarmanv5Trailer); i++)
+        {
+            log_d("%02X ", solarmanv5Trailer[i]);
+        }   
+
+        client.write(solarmanv5Header, sizeof(solarmanv5Header));
+        client.write(solarmanv5Payload, sizeof(solarmanv5Payload));
+        client.write(modbusRTURequest, sizeof(modbusRTURequest));
+        client.write(solarmanv5Trailer, sizeof(solarmanv5Trailer));
+        client.flush();
 
         return true;
     }
 
     bool sendRunningDataRequestPacket()
     {
-        return sendDataRequest(0x0200 , 69);
+        return sendReadDataRequest(0x0200 , 69);
     }
 
     bool awaitPacket(int timeout)
