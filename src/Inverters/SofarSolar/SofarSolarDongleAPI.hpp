@@ -61,8 +61,8 @@ private:
             0xA5 /*Start of packet*/,
             0x00 /*Packet length*/,
             0x00 /*Packet length*/,
-            0x45 /*Packet type, request*/,
             0x10 /*Packet type, request*/,
+            0x45 /*Packet type, request*/,
             sequenceNumber & 0xff /*Request number*/,
             sequenceNumber >> 8 /*Request number*/,
             sn & 0xff /*Serial number*/,
@@ -152,7 +152,7 @@ private:
 
     bool sendRunningDataRequestPacket(uint32_t sn)
     {
-        return sendReadDataRequest(sequenceNumber, 0x0 , 0x0F, sn);
+        return sendReadDataRequest(sequenceNumber, 0x0200 , 0x44, sn);
     }
 
     bool awaitPacket(int timeout)
@@ -173,7 +173,7 @@ private:
     {
         InverterData_t inverterData;
         log_d("Connecting to dongle...");
-        uint16_t sn = strtoul(dongleSN.c_str(), NULL, 10);
+        uint32_t sn = dongleSN.toInt();
         log_d("SN: %d", sn);
         if (connect())
         {
