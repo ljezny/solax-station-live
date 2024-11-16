@@ -17,7 +17,7 @@ public:
 private:
     WiFiClient client;
 
-    uint16_t sequenceNumber = 0;
+    uint8_t sequenceNumber = 0;
 
     uint16_t readUInt16(byte *buf, byte reg)
     {
@@ -55,7 +55,7 @@ private:
         client.stop();
     }
 
-    bool sendReadDataRequest(uint16_t sequenceNumber, uint16_t addr, uint8_t len, uint32_t sn)
+    bool sendReadDataRequest(uint8_t sequenceNumber, uint16_t addr, uint8_t len, uint32_t sn)
     {
         byte solarmanv5Header[] = {
             0xA5 /*Start of packet*/,
@@ -64,7 +64,7 @@ private:
             0x10 /*Packet type, request*/,
             0x45 /*Packet type, request*/,
             sequenceNumber & 0xff /*Request number*/,
-            sequenceNumber >> 8 /*Request number*/,
+            0 /*Request number*/,
             sn & 0xff /*Serial number*/,
             (sn >> 8) & 0xff /*Serial number*/,
             (sn >> 16) & 0xff /*Serial number*/,
