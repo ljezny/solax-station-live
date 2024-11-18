@@ -310,16 +310,16 @@ private:
             sendReadDataRequest(sequenceNumber, 0x684, 0x698 - 0x684 + 2, sn);
             if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
             {
-                inverterData.pvToday = readUInt32(packetBuffer, 0x684 - 0x684) / 100;
-                inverterData.pvTotal = readUInt32(packetBuffer, 0x686 - 0x684) / 10;
-                inverterData.loadToday = readUInt32(packetBuffer, 0x688 - 0x684) / 100;
-                inverterData.loadTotal = readUInt32(packetBuffer, 0x68A - 0x684) / 10;
-                inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x694 - 0x684) / 100;
-                inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x698 - 0x684) / 100;
-                inverterData.gridBuyToday = readUInt32(packetBuffer, 0x68C - 0x684) / 100;
-                inverterData.gridBuyTotal = readUInt32(packetBuffer, 0x68E - 0x684) / 10;
-                inverterData.gridSellToday = readUInt32(packetBuffer, 0x690 - 0x684) / 100;
-                inverterData.gridSellTotal = readUInt32(packetBuffer, 0x692 - 0x684) / 10;
+                inverterData.pvToday = readUInt32(packetBuffer, 0x684 - 0x684) / 100.0f;
+                inverterData.pvTotal = readUInt32(packetBuffer, 0x686 - 0x684) / 10.0f;
+                inverterData.loadToday = readUInt32(packetBuffer, 0x688 - 0x684) / 100.0f;
+                inverterData.loadTotal = readUInt32(packetBuffer, 0x68A - 0x684) / 10.0f;
+                inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x694 - 0x684) / 100.0f;
+                inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x698 - 0x684) / 100.0f;
+                inverterData.gridBuyToday = readUInt32(packetBuffer, 0x68C - 0x684) / 100.0f;
+                inverterData.gridBuyTotal = readUInt32(packetBuffer, 0x68E - 0x684) / 10.0f;
+                inverterData.gridSellToday = readUInt32(packetBuffer, 0x690 - 0x684) / 100.0f;
+                inverterData.gridSellTotal = readUInt32(packetBuffer, 0x692 - 0x684) / 10.0f;
             }
             else
             {
