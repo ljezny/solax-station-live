@@ -112,10 +112,10 @@ private:
         request[sizeof(request) - 2] = checksum & 0xff;
 
         log_d("Sending solarmanv5 request: ");
-        for (int i = 0; i < sizeof(request); i++)
-        {
-            log_d("%02X ", request[i]);
-        }
+        // for (int i = 0; i < sizeof(request); i++)
+        // {
+        //     log_d("%02X ", request[i]);
+        // }
 
         client.write(request, sizeof(request));
         return true;
@@ -200,10 +200,10 @@ private:
             return -1;
         }
 
-        for (int i = 0; i < MODBUS_RTU_FRAME_LENGTH; i++)
-        {
-            log_d("%02X ", packetBuffer[i]);
-        }
+        // for (int i = 0; i < MODBUS_RTU_FRAME_LENGTH; i++)
+        // {
+        //     log_d("%02X ", packetBuffer[i]);
+        // }
 
         byte trailerBuffer[2];
         if (client.read(trailerBuffer, 2) != 2)
