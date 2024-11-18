@@ -306,19 +306,20 @@ private:
             }
 
             // //stats
-            sendReadDataRequest(sequenceNumber, 0x0680, 0x06BF - 0x0680 + 1, sn);
+            // 0x0680 - 0x06BF
+            sendReadDataRequest(sequenceNumber, 0x684, 0x698 - 0x684 + 2, sn);
             if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
             {
-                inverterData.pvToday = readUInt32(packetBuffer, 0x684 - 0x0680) / 100;
-                inverterData.pvTotal = readUInt32(packetBuffer, 0x686 - 0x0680) / 10;
-                inverterData.loadToday = readUInt32(packetBuffer, 0x688 - 0x0680) / 100;
-                inverterData.loadTotal = readUInt32(packetBuffer, 0x68A - 0x0680) / 10;
-                inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x694 - 0x0680) / 100;
-                inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x698 - 0x0680) / 100;
-                inverterData.gridBuyToday = readUInt32(packetBuffer, 0x68C - 0x0680) / 100;
-                inverterData.gridBuyTotal = readUInt32(packetBuffer, 0x68E - 0x0680) / 10;
-                inverterData.gridSellToday = readUInt32(packetBuffer, 0x690 - 0x0680) / 100;
-                inverterData.gridSellTotal = readUInt32(packetBuffer, 0x692 - 0x0680) / 10;
+                inverterData.pvToday = readUInt32(packetBuffer, 0x684 - 0x684) / 100;
+                inverterData.pvTotal = readUInt32(packetBuffer, 0x686 - 0x684) / 10;
+                inverterData.loadToday = readUInt32(packetBuffer, 0x688 - 0x684) / 100;
+                inverterData.loadTotal = readUInt32(packetBuffer, 0x68A - 0x684) / 10;
+                inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x694 - 0x684) / 100;
+                inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x698 - 0x684) / 100;
+                inverterData.gridBuyToday = readUInt32(packetBuffer, 0x68C - 0x684) / 100;
+                inverterData.gridBuyTotal = readUInt32(packetBuffer, 0x68E - 0x684) / 10;
+                inverterData.gridSellToday = readUInt32(packetBuffer, 0x690 - 0x684) / 100;
+                inverterData.gridSellTotal = readUInt32(packetBuffer, 0x692 - 0x684) / 10;
             }
             else
             {
