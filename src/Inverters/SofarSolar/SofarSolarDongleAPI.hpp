@@ -57,6 +57,8 @@ private:
 
     bool sendReadDataRequest(uint8_t sequenceNumber, uint16_t addr, uint8_t len, uint32_t sn)
     {
+        sequenceNumber++;
+
         byte modbusRTURequest[] = {0x1, 0x03, 0, 0, 0, 0, 0, 0};
         modbusRTURequest[2] = addr >> 8;
         modbusRTURequest[3] = addr & 0xff;
@@ -76,7 +78,7 @@ private:
             sn & 0xff /*Serial number*/,
             (sn >> 8) & 0xff /*Serial number*/,
             (sn >> 16) & 0xff /*Serial number*/,
-            (sn >> 24) & 0xff /*Serial number*/,0x02 /*Frame type*/,
+            (sn >> 24) & 0xff /*Serial number*/, 0x02 /*Frame type*/,
             0x00 /*Sensor type*/,
             0x00 /*Sensor type*/,
             0x00 /*Total Working Time*/,
@@ -100,9 +102,8 @@ private:
             modbusRTURequest[6],
             modbusRTURequest[7],
             0,
-            0x15
-        };
-        
+            0x15};
+
         int checksum = 0;
         for (int i = 1; i < sizeof(request) - 2; i++)
         {
@@ -115,14 +116,9 @@ private:
         {
             log_d("%02X ", request[i]);
         }
-        
+
         client.write(request, sizeof(request));
         return true;
-    }
-
-    bool sendRunningDataRequestPacket(uint32_t sn)
-    {
-        return sendReadDataRequest(sequenceNumber, 0x0668, 1, sn);
     }
 
     bool awaitPacket(int timeout)
@@ -140,6 +136,85 @@ private:
         return false;
     }
 
+    int readModbusRTUResponse(byte *packetBuffer, size_t bufferLength)
+    {
+        if (!awaitPacket(3000))
+        {
+            log_d("Response timeout");
+            return -1;
+        }
+        if (client.read(packetBuffer, 1) != 1)
+        {
+            log_d("Unable to read client.");
+            return -1;
+        }
+        if (packetBuffer[0] != 0xA5)
+        {
+            log_d("Invalid header");
+            return -1;
+        }
+        if (client.read(packetBuffer, 2) != 2)
+        {
+            log_d("Unable to read client.");
+            return -1;
+        }
+        uint16_t length = packetBuffer[0] | (packetBuffer[1] << 8);
+        if (length > bufferLength)
+        {
+            log_d("Buffer too small");
+            return -1;
+        }
+
+        log_d("Payload length: %d", length);
+        if (client.read(packetBuffer, 8) != 8)
+        { // read rest of header
+            log_d("Unable to read client.");
+            return -1;
+        }
+
+        if (packetBuffer[0] != 0x10 || packetBuffer[1] != 0x15)
+        {
+            log_d("Invalid response");
+            return -1;
+        }
+
+        int PAYLOAD_HEADER = 14;
+
+        if (client.read(packetBuffer, PAYLOAD_HEADER) != PAYLOAD_HEADER)
+        { // payload header
+            log_d("Unable to read client.");
+            return -1;
+        }
+
+        if (packetBuffer[0] != 0x02 || packetBuffer[1] != 0x01)
+        {
+
+            log_d("Invalid sensor in response");
+            return -1;
+        }
+
+        int MODBUS_RTU_FRAME_LENGTH = length - PAYLOAD_HEADER;
+        if (client.read(packetBuffer, MODBUS_RTU_FRAME_LENGTH) != MODBUS_RTU_FRAME_LENGTH)
+        { // modbus rtu packet
+            log_d("Unable to read client.");
+            return -1;
+        }
+
+        for (int i = 0; i < MODBUS_RTU_FRAME_LENGTH; i++)
+        {
+            log_d("%02X ", packetBuffer[i]);
+        }
+
+        byte trailerBuffer[2];
+        if (client.read(trailerBuffer, 2) != 2)
+        {
+            // read trailer
+            log_d("Unable to read client.");
+        }
+
+        return MODBUS_RTU_FRAME_LENGTH;
+    }
+
     InverterData_t readData(String dongleSN)
     {
         InverterData_t inverterData;
@@ -150,103 +225,94 @@ private:
         {
             log_d("Connected.");
             byte packetBuffer[1024];
-            
-            sequenceNumber++;
-            sendRunningDataRequestPacket(sn);
 
-            if(!awaitPacket(3000)) {
-                log_d("Response timeout");
-                disconnect();
-                return inverterData;
-            }
-            if(client.read(packetBuffer, 1) != 1) {
-                log_d("Unable to read client.");
-                disconnect();
-                return inverterData;
-            }
-            if(packetBuffer[0] != 0xA5) {
-                log_d("Invalid header");
-                disconnect();
-                return inverterData;
-            }
-            if(client.read(packetBuffer, 2) != 2) {
-                log_d("Unable to read client.");
-                disconnect();
-                return inverterData;
-            }
-            uint16_t length = packetBuffer[0] | (packetBuffer[1] << 8);
-            log_d("Payload length: %d", length);
-            if(client.read(packetBuffer, 8) != 8) { //read rest of header
-                log_d("Unable to read client.");
-                disconnect();
-                return inverterData;
-            }
-
-            if(packetBuffer[0] != 0x10 || packetBuffer[1] != 0x15) {
-                log_d("Invalid response");
-                disconnect();
-                return inverterData;
-            }
-            
-            int PAYLOAD_HEADER = 14;
-
-            if(client.read(packetBuffer, PAYLOAD_HEADER) != PAYLOAD_HEADER) { //payload header
-                log_d("Unable to read client.");
-                disconnect();
-                return inverterData;
-            }
-            
-            if(packetBuffer[0] != 0x02 || packetBuffer[1] != 0x01) {
-
-                log_d("Invalid sensor in response");
-                disconnect();
-                return inverterData;
-            }
-
-            int MODBUS_RTU_FRAME_LENGTH = length - PAYLOAD_HEADER;
-            if(client.read(packetBuffer, MODBUS_RTU_FRAME_LENGTH) != MODBUS_RTU_FRAME_LENGTH ) { //modbus rtu packet
-                log_d("Unable to read client.");
-                disconnect();
-                return inverterData;
-            }
-
-            for (int i = 0; i < MODBUS_RTU_FRAME_LENGTH; i++)
-            {
-                log_d("%02X ", packetBuffer[i]);
-            } 
-
-            inverterData.status = DONGLE_STATUS_OK;
-            inverterData.millis = millis();
-            inverterData.soc = readUInt16(packetBuffer, 0);
-            //inverterData.pv1Power = readUInt32(packetBuffer, 0x0) * 10;
-            //inverterData.pv2Power = readUInt32(packetBuffer, 0x1);
-            //inverterData.pv3Power = readUInt32(packetBuffer, 0x2);
-
-            if(client.read(packetBuffer, 2) != 2) { //read trailer
-                log_d("Unable to read client.");
-                disconnect();
-                return inverterData;
-            }
-            
-            // inverterData.inverterPower = readInt16(packetBuffer, 38);
-            // inverterData.batteryPower -= readInt16(packetBuffer, 83); // TODO: maybe sign readuw(packetBuffer, 84);
-            // // _ac = readsw(packetBuffer, 40);
-            // inverterData.L1Power = readInt16(packetBuffer, 25); // - readInt16(packetBuffer, 64) + readInt16(packetBuffer, 50);
-            // inverterData.L2Power = readInt16(packetBuffer, 30); // - readInt16(packetBuffer, 66) + readInt16(packetBuffer, 56);
-            // inverterData.L3Power = readInt16(packetBuffer, 35); // - readInt16(packetBuffer, 68) + readInt16(packetBuffer, 62);
-            // inverterData.feedInPower =
-            //     readInt16(packetBuffer, 25) + readInt16(packetBuffer, 30) + readInt16(packetBuffer, 35) - readInt16(packetBuffer, 64) - readInt16(packetBuffer, 50) - readInt16(packetBuffer, 66) - readInt16(packetBuffer, 56) - readInt16(packetBuffer, 68) - readInt16(packetBuffer, 62);
-            // inverterData.loadPower = readInt16(packetBuffer, 72) + readInt16(packetBuffer, 70);
-            // inverterData.inverterTemperature = readInt16(packetBuffer, 74) / 10;
-            // inverterData.pvTotal = readUInt32(packetBuffer, 91) / 10.0;
-            // inverterData.pvToday = readUInt32(packetBuffer, 93) / 10.0;
-            // inverterData.loadToday = readUInt16(packetBuffer, 105) / 10.0;
-            // inverterData.loadTotal = readUInt32(packetBuffer, 103) / 10.0;
-            // inverterData.batteryChargedToday = readUInt16(packetBuffer, 108) / 10.0;
-            // inverterData.batteryDischargedToday = readUInt16(packetBuffer, 111) / 10.0;
             inverterData.sn = sn;
-            logInverterData(inverterData);            
+
+            // pv input
+            sendReadDataRequest(sequenceNumber, 0x0580, 0x05FF - 0x0580, sn);
+            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) == -1)
+            {
+                inverterData.status = DONGLE_STATUS_OK;
+                inverterData.millis = millis();
+                inverterData.pv1Power = readUInt32(packetBuffer, 0x586 - 0x0580) * 10;
+                inverterData.pv2Power = readUInt32(packetBuffer, 0x589 - 0x0580) * 10;
+                inverterData.pv3Power = readUInt32(packetBuffer, 0x58B - 0x0580) * 10;
+                inverterData.pv4Power = readUInt32(packetBuffer, 0x58F - 0x0580) * 10;
+        
+                 // inverterData.feedInPower =
+                //     readInt16(packetBuffer, 25) + readInt16(packetBuffer, 30) + readInt16(packetBuffer, 35) - readInt16(packetBuffer, 64) - readInt16(packetBuffer, 50) - readInt16(packetBuffer, 66) - readInt16(packetBuffer, 56) - readInt16(packetBuffer, 68) - readInt16(packetBuffer, 62);
+                // inverterData.loadPower = readInt16(packetBuffer, 72) + readInt16(packetBuffer, 70);
+             }
+            else
+            {
+                disconnect();
+                return inverterData;
+            }
+
+            // battery input
+            sendReadDataRequest(sequenceNumber, 0x0600, 0x067F - 0x0600, sn);
+            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) == -1)
+            {
+                inverterData.soc = readUInt16(packetBuffer, 0x668 - 0x0600);
+                inverterData.batteryPower = readInt16(packetBuffer, 0x667 - 0x600) * 100;
+                inverterData.batteryTemperature = readInt16(packetBuffer, 0x607 - 0x600);
+            }
+            else
+            {
+                disconnect();
+                return inverterData;
+            }
+
+            //module info
+            sendReadDataRequest(sequenceNumber, 0x404, 0x44F - 0x404, sn);
+            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) == -1)
+            {
+                inverterData.inverterTemperature = readInt16(packetBuffer, 0x418 - 0x404);
+            }
+            else
+            {
+                disconnect();
+                return inverterData;
+            }
+
+            //on grid input
+            sendReadDataRequest(sequenceNumber, 0x484, 0x4BC - 0x484, sn);
+            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) == -1)
+            {
+                inverterData.inverterPower = readInt16(packetBuffer, 0x485 - 0x484) * 10;
+                inverterData.L1Power = readInt16(packetBuffer, 0x48F - 0x484) * 10;
+                inverterData.L2Power = readInt16(packetBuffer, 0x49A - 0x484) * 10;
+                inverterData.L3Power = readInt16(packetBuffer, 0x4A5 - 0x484) * 10;
+            }
+            else
+            {
+                disconnect();
+                return inverterData;
+            }
+
+            //stats
+            sendReadDataRequest(sequenceNumber, 0x0680, 0x06BF - 0x0680, sn);
+            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) == -1)
+            {
+                inverterData.pvToday = readUInt32(packetBuffer, 0x684 - 0x0680) / 100;
+                inverterData.pvTotal = readUInt32(packetBuffer, 0x686 - 0x0680) / 10;
+                inverterData.loadToday = readUInt32(packetBuffer, 0x688 - 0x0680) / 100;
+                inverterData.loadTotal = readUInt32(packetBuffer, 0x68A - 0x0680) / 10;
+                inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x694 - 0x0680) / 100;
+                inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x698 - 0x0680) / 100;
+                inverterData.gridBuyToday = readUInt32(packetBuffer, 0x68C - 0x0680) / 100;
+                inverterData.gridBuyTotal = readUInt32(packetBuffer, 0x68E - 0x0680) / 10;
+                inverterData.gridSellToday = readUInt32(packetBuffer, 0x690 - 0x0680) / 100;
+                inverterData.gridSellTotal = readUInt32(packetBuffer, 0x692 - 0x0680) / 10;
+            }
+            else
+            {
+                disconnect();
+                return inverterData;
+            }
         }
+        logInverterData(inverterData);
+
         disconnect();
         return inverterData;
     }
