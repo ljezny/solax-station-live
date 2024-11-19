@@ -295,6 +295,8 @@ private:
             if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
             {
                 inverterData.inverterPower = readInt16(packetBuffer, 0x485 - 0x484) * 10;
+                inverterData.loadPower = readInt16(packetBuffer, 0x04AF - 0x484) * 10;
+                inverterData.feedInPower = readInt16(packetBuffer, 0x0488 - 0x484) * 10;
                 inverterData.L1Power = readInt16(packetBuffer, 0x48F - 0x484) * 10;
                 inverterData.L2Power = readInt16(packetBuffer, 0x49A - 0x484) * 10;
                 inverterData.L3Power = readInt16(packetBuffer, 0x4A5 - 0x484) * 10;
