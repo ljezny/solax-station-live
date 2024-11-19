@@ -112,10 +112,10 @@ private:
         request[sizeof(request) - 2] = checksum & 0xff;
 
         log_d("Sending solarmanv5 request: ");
-        for (int i = 0; i < sizeof(request); i++)
-        {
-            log_d("%02X ", request[i]);
-        }
+        // for (int i = 0; i < sizeof(request); i++)
+        // {
+        //     log_d("%02X ", request[i]);
+        // }
 
         client.write(request, sizeof(request));
         return true;
@@ -200,10 +200,10 @@ private:
             return -1;
         }
 
-        for (int i = 0; i < MODBUS_RTU_FRAME_LENGTH; i++)
-        {
-            log_d("%02X ", packetBuffer[i]);
-        }
+        // for (int i = 0; i < MODBUS_RTU_FRAME_LENGTH; i++)
+        // {
+        //     log_d("%02X ", packetBuffer[i]);
+        // }
 
         byte trailerBuffer[2];
         if (client.read(trailerBuffer, 2) != 2)
@@ -231,15 +231,15 @@ private:
             // pv input
             // 0x0580 - 0x05FF
             //but we need only few
-            sendReadDataRequest(sequenceNumber, 0x586, 0x58F - 0x586, sn);
+            sendReadDataRequest(sequenceNumber, 0x586, 0x58F - 0x586 + 1, sn);
             if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
             {
                 inverterData.status = DONGLE_STATUS_OK;
                 inverterData.millis = millis();
-                inverterData.pv1Power = readUInt32(packetBuffer, 0x586 - 0x586) * 10;
-                inverterData.pv2Power = readUInt32(packetBuffer, 0x589 - 0x586) * 10;
-                inverterData.pv3Power = readUInt32(packetBuffer, 0x58B - 0x586) * 10;
-                inverterData.pv4Power = readUInt32(packetBuffer, 0x58F - 0x586) * 10;
+                inverterData.pv1Power = readUInt16(packetBuffer, 0x586 - 0x586) * 10;
+                inverterData.pv2Power = readUInt16(packetBuffer, 0x589 - 0x586) * 10;
+                inverterData.pv3Power = readUInt16(packetBuffer, 0x58B - 0x586) * 10;
+                inverterData.pv4Power = readUInt16(packetBuffer, 0x58F - 0x586) * 10;
         
                  // inverterData.feedInPower =
                 //     readInt16(packetBuffer, 25) + readInt16(packetBuffer, 30) + readInt16(packetBuffer, 35) - readInt16(packetBuffer, 64) - readInt16(packetBuffer, 50) - readInt16(packetBuffer, 66) - readInt16(packetBuffer, 56) - readInt16(packetBuffer, 68) - readInt16(packetBuffer, 62);
@@ -251,67 +251,81 @@ private:
                 return inverterData;
             }
 
-            // battery input
-            // sendReadDataRequest(sequenceNumber, 0x0600, 0x067F - 0x0600, sn);
-            // if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) == -1)
-            // {
-            //     inverterData.soc = readUInt16(packetBuffer, 0x668 - 0x0600);
-            //     inverterData.batteryPower = readInt16(packetBuffer, 0x667 - 0x600) * 100;
-            //     inverterData.batteryTemperature = readInt16(packetBuffer, 0x607 - 0x600);
-            // }
-            // else
-            // {
-            //     disconnect();
-            //     return inverterData;
-            // }
+            //battery input
+            //0x0600 - 0x067F
+            sendReadDataRequest(sequenceNumber, 0x667, 2, sn);
+            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+            {
+                inverterData.batteryPower = readInt16(packetBuffer, 0) * 100;
+                inverterData.soc = readUInt16(packetBuffer, 1);
+            }
+            else
+            {
+                disconnect();
+                return inverterData;
+            }
 
-            // //module info
-            // sendReadDataRequest(sequenceNumber, 0x404, 0x44F - 0x404, sn);
-            // if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) == -1)
-            // {
-            //     inverterData.inverterTemperature = readInt16(packetBuffer, 0x418 - 0x404);
-            // }
-            // else
-            // {
-            //     disconnect();
-            //     return inverterData;
-            // }
+            sendReadDataRequest(sequenceNumber, 0x607, 0x607 - 0x607 + 1, sn);
+            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+            {
+                inverterData.batteryTemperature = readInt16(packetBuffer, 0x607 - 0x607);
+            }
+            else
+            {
+                disconnect();
+                return inverterData;
+            }
 
-            // //on grid input
-            // sendReadDataRequest(sequenceNumber, 0x484, 0x4BC - 0x484, sn);
-            // if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) == -1)
-            // {
-            //     inverterData.inverterPower = readInt16(packetBuffer, 0x485 - 0x484) * 10;
-            //     inverterData.L1Power = readInt16(packetBuffer, 0x48F - 0x484) * 10;
-            //     inverterData.L2Power = readInt16(packetBuffer, 0x49A - 0x484) * 10;
-            //     inverterData.L3Power = readInt16(packetBuffer, 0x4A5 - 0x484) * 10;
-            // }
-            // else
-            // {
-            //     disconnect();
-            //     return inverterData;
-            // }
+            //module info
+            //0x404 - 0x44F
+            sendReadDataRequest(sequenceNumber, 0x418, 0x418 - 0x418 + 1, sn);
+            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+            {
+                inverterData.inverterTemperature = readInt16(packetBuffer, 0x418 - 0x418);
+            }
+            else
+            {
+                disconnect();
+                return inverterData;
+            }
+
+            //on grid input
+            //0x484 - 0x4BC
+            sendReadDataRequest(sequenceNumber, 0x484, 0x4BC - 0x484 + 1, sn);
+            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+            {
+                inverterData.inverterPower = readInt16(packetBuffer, 0x485 - 0x484) * 10;
+                inverterData.L1Power = readInt16(packetBuffer, 0x48F - 0x484) * 10;
+                inverterData.L2Power = readInt16(packetBuffer, 0x49A - 0x484) * 10;
+                inverterData.L3Power = readInt16(packetBuffer, 0x4A5 - 0x484) * 10;
+            }
+            else
+            {
+                disconnect();
+                return inverterData;
+            }
 
             // //stats
-            // sendReadDataRequest(sequenceNumber, 0x0680, 0x06BF - 0x0680, sn);
-            // if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) == -1)
-            // {
-            //     inverterData.pvToday = readUInt32(packetBuffer, 0x684 - 0x0680) / 100;
-            //     inverterData.pvTotal = readUInt32(packetBuffer, 0x686 - 0x0680) / 10;
-            //     inverterData.loadToday = readUInt32(packetBuffer, 0x688 - 0x0680) / 100;
-            //     inverterData.loadTotal = readUInt32(packetBuffer, 0x68A - 0x0680) / 10;
-            //     inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x694 - 0x0680) / 100;
-            //     inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x698 - 0x0680) / 100;
-            //     inverterData.gridBuyToday = readUInt32(packetBuffer, 0x68C - 0x0680) / 100;
-            //     inverterData.gridBuyTotal = readUInt32(packetBuffer, 0x68E - 0x0680) / 10;
-            //     inverterData.gridSellToday = readUInt32(packetBuffer, 0x690 - 0x0680) / 100;
-            //     inverterData.gridSellTotal = readUInt32(packetBuffer, 0x692 - 0x0680) / 10;
-            // }
-            // else
-            // {
-            //     disconnect();
-            //     return inverterData;
-            // }
+            // 0x0680 - 0x06BF
+            sendReadDataRequest(sequenceNumber, 0x684, 0x698 - 0x684 + 2, sn);
+            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+            {
+                inverterData.pvToday = readUInt32(packetBuffer, 0x684 - 0x684) / 100.0f;
+                inverterData.pvTotal = readUInt32(packetBuffer, 0x686 - 0x684) / 10.0f;
+                inverterData.loadToday = readUInt32(packetBuffer, 0x688 - 0x684) / 100.0f;
+                inverterData.loadTotal = readUInt32(packetBuffer, 0x68A - 0x684) / 10.0f;
+                inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x694 - 0x684) / 100.0f;
+                inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x698 - 0x684) / 100.0f;
+                inverterData.gridBuyToday = readUInt32(packetBuffer, 0x68C - 0x684) / 100.0f;
+                inverterData.gridBuyTotal = readUInt32(packetBuffer, 0x68E - 0x684) / 10.0f;
+                inverterData.gridSellToday = readUInt32(packetBuffer, 0x690 - 0x684) / 100.0f;
+                inverterData.gridSellTotal = readUInt32(packetBuffer, 0x692 - 0x684) / 10.0f;
+            }
+            else
+            {
+                disconnect();
+                return inverterData;
+            }
         }
         logInverterData(inverterData);
 
