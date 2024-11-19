@@ -88,6 +88,11 @@ public:
             discoveries[discoveryIndex].password = "";
             discoveries[discoveryIndex].requiresPassword = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
             discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i));
+            
+            if(type == DONGLE_TYPE_GOODWE) {
+                discoveries[discoveryIndex].password = "12345678";
+            }
+
             result = true;
         }
 
