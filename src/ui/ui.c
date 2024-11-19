@@ -15,6 +15,7 @@ lv_obj_t *ui_Splash;
 lv_obj_t *ui_Image1;
 lv_obj_t *ui_fwVersionLabel;
 lv_obj_t *ui_ESPIdLabel;
+lv_obj_t *ui_splashLabel;
 // CUSTOM VARIABLES
 
 

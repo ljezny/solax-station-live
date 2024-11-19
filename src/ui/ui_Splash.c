@@ -48,5 +48,14 @@ lv_obj_set_style_pad_right(ui_ESPIdLabel, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_top(ui_ESPIdLabel, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_bottom(ui_ESPIdLabel, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
 
+ui_splashLabel = lv_label_create(ui_Splash);
+lv_obj_set_width( ui_splashLabel, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( ui_splashLabel, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_x( ui_splashLabel, -100 );
+lv_obj_set_y( ui_splashLabel, 137 );
+lv_obj_set_align( ui_splashLabel, LV_ALIGN_CENTER );
+lv_label_set_text(ui_splashLabel,"...");
+lv_obj_set_style_text_font(ui_splashLabel, &ui_font_OpenSansMedium, LV_PART_MAIN| LV_STATE_DEFAULT);
+
 
 }

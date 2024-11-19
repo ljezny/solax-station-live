@@ -35,10 +35,12 @@ public:
             options += dongleDiscovery.getDongleTypeName(dongleDiscovery.discoveries[i].type);
             options += " - ";
             options += dongleDiscovery.discoveries[i].sn;
+            options += " (";
+            options += dongleDiscovery.discoveries[i].signalPercent;
+            options += "%)";
             options += "\n";
         }
         lv_roller_set_options(ui_wifiDongleRoller, options.c_str(), LV_ROLLER_MODE_NORMAL);
-        
     }
 
     void onCompleteClick()

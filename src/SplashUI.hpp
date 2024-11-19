@@ -17,4 +17,9 @@ public:
         lv_label_set_text(ui_fwVersionLabel, fwVersion.c_str());
         lv_label_set_text(ui_ESPIdLabel, espId.c_str());
     }
+
+    void updateText(String text)
+    {
+        lv_label_set_text(ui_splashLabel, text.c_str());
+    }
 };

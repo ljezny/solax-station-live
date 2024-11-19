@@ -23,6 +23,7 @@ extern lv_obj_t *ui_Splash;
 extern lv_obj_t *ui_Image1;
 extern lv_obj_t *ui_fwVersionLabel;
 extern lv_obj_t *ui_ESPIdLabel;
+extern lv_obj_t *ui_splashLabel;
 // CUSTOM VARIABLES
 
 // SCREEN: ui_Dashboard

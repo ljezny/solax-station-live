@@ -396,7 +396,8 @@ void onEntering(state_t newState)
     case STATE_DASHBOARD:
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         dashboardUI.show();
-        if(inverterData.status == DONGLE_STATUS_OK) {
+        if (inverterData.status == DONGLE_STATUS_OK)
+        {
             dashboardUI.update(inverterData, inverterData, shellyResult, shellyResult, solarChartDataProvider, wifiSignalPercent());
             previousShellyResult = shellyResult;
             previousInverterData = inverterData;
@@ -444,14 +445,29 @@ void updateState()
         splashUI.update(softAP.getESPIdHex(), String(VERSION_NUMBER));
         xSemaphoreGive(lvgl_mutex);
 
-        dongleDiscovery.discoverDongle();
-        dongleDiscovery.trySelectPreferedInverterWifiDongleIndex();
+        if (dongleDiscovery.preferedInverterWifiDongleIndex == -1) {
+            xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+            splashUI.updateText("Discovering dongles...");
+            xSemaphoreGive(lvgl_mutex);
+
+            dongleDiscovery.discoverDongle();
+            dongleDiscovery.trySelectPreferedInverterWifiDongleIndex();
+        }
 
         if (dongleDiscovery.preferedInverterWifiDongleIndex != -1)
         {
             DongleDiscoveryResult_t &discoveryResult = dongleDiscovery.discoveries[dongleDiscovery.preferedInverterWifiDongleIndex];
+
+            xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+            splashUI.updateText("Connecting... " + discoveryResult.ssid);
+            xSemaphoreGive(lvgl_mutex);
+
             if (dongleDiscovery.connectToDongle(discoveryResult))
             {
+                xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+                splashUI.updateText("Loading data... ");
+                xSemaphoreGive(lvgl_mutex);
+
                 inverterData = loadInverterData(dongleDiscovery.discoveries[dongleDiscovery.preferedInverterWifiDongleIndex]);
                 if (inverterData.status == DONGLE_STATUS_OK)
                 {
@@ -459,11 +475,21 @@ void updateState()
                 }
                 else
                 {
+                    xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+                    splashUI.updateText("Failed to load data :-(");
+                    xSemaphoreGive(lvgl_mutex);
+                    delay(2000);
+
                     moveToState(STATE_WIFI_SETUP);
                 }
             }
             else
             {
+                xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+                splashUI.updateText("Failed to connect :-(");
+                xSemaphoreGive(lvgl_mutex);
+                delay(2000);
+
                 moveToState(STATE_WIFI_SETUP);
             }
         }
@@ -487,7 +513,7 @@ void updateState()
 
             previousShellyResult = shellyResult;
             previousInverterData = inverterData;
-            
+
             backlightResolver.resolve(inverterData);
         }
 
@@ -497,7 +523,8 @@ void updateState()
         reloadShelly();
         resetWifi();
 
-        if(dongleDiscovery.preferedInverterWifiDongleIndex == -1) {
+        if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
+        {
             moveToState(STATE_WIFI_SETUP);
         }
 
