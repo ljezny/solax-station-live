@@ -34,8 +34,15 @@ public:
                 log_d("Empty SSID");
                 continue;
             }
-            int discoveryIndex = -1;
+            DongleType_t type = getTypeFromSSID(ssid);
+            
+            if(type == DONGLE_TYPE_UNKNOWN) {
+                log_d("Unknown dongle type");
+                continue;
+            }
 
+            int discoveryIndex = -1;
+            
             // find if existing in sparse array
             for (int j = 0; j < DONGLE_DISCOVERY_MAX_RESULTS; j++)
             {
@@ -71,61 +78,22 @@ public:
             if (discoveries[discoveryIndex].type != DONGLE_TYPE_UNKNOWN)
             {
                 log_d("Already discovered this dongle");
+                discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i)); //update signal strength
                 continue;
             }
 
-            if (isSolaxDongleSSID(ssid))
-            {
-                discoveries[discoveryIndex].sn = parseDongleSN(ssid);
-                discoveries[discoveryIndex].type = DONGLE_TYPE_SOLAX;
-                discoveries[discoveryIndex].ssid = ssid;
-                discoveries[discoveryIndex].password = "";
-                discoveries[discoveryIndex].requiresPassword = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
-                discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i));
-                result = true;
-            }
-
-            if (isGoodWeSSID(ssid))
-            {
-                discoveries[discoveryIndex].sn = parseDongleSN(ssid);
-                discoveries[discoveryIndex].type = DONGLE_TYPE_GOODWE;
-                discoveries[discoveryIndex].ssid = ssid;
-                discoveries[discoveryIndex].requiresPassword = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
-                discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i));
-                if (discoveries[discoveryIndex].requiresPassword)
-                {
-                    discoveries[discoveryIndex].password = "12345678";
-                }
-                result = true;
-            }
-
-            if (isSofarSolarSID(ssid))
-            {
-                discoveries[discoveryIndex].sn = parseDongleSN(ssid);
-                discoveries[discoveryIndex].type = DONGLE_TYPE_SOFAR;
-                discoveries[discoveryIndex].ssid = ssid;
-                discoveries[discoveryIndex].requiresPassword = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
-                discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i));
-                if (discoveries[discoveryIndex].requiresPassword)
-                {
-                    discoveries[discoveryIndex].password = "734015b7";
-                }
-                result = true;
-            }
-
-            if (isShellySSID(ssid))
-            {
-                discoveries[discoveryIndex].type = DONGLE_TYPE_SHELLY;
-                discoveries[discoveryIndex].sn = parseDongleSN(ssid);
-                discoveries[discoveryIndex].ssid = ssid;
-                discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i));
-                result = true;
-            }
+            discoveries[discoveryIndex].sn = parseDongleSN(ssid);
+            discoveries[discoveryIndex].type = type;
+            discoveries[discoveryIndex].ssid = ssid;
+            discoveries[discoveryIndex].password = "";
+            discoveries[discoveryIndex].requiresPassword = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
+            discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i));
+            result = true;
         }
 
         return true;
     }
-
+    
     bool connectToDongle(DongleDiscoveryResult_t &discovery)
     {
         if (discovery.type == DONGLE_TYPE_UNKNOWN)
@@ -152,16 +120,44 @@ public:
         return awaitWifiConnection();
     }
 
-    bool hasAnyKnownDongles()
+    void trySelectPreferedInverterWifiDongleIndex()
     {
+        if(preferedInverterWifiDongleIndex != -1) {
+            return;
+        }
+        
+        //select first found inverter dongle, but only when there is only one
+        int preferred = -1;
         for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
         {
-            if (discoveries[i].type != DONGLE_TYPE_UNKNOWN && discoveries[i].type != DONGLE_TYPE_IGNORE)
+            if (discoveries[i].type == DONGLE_TYPE_SOLAX || discoveries[i].type == DONGLE_TYPE_GOODWE || discoveries[i].type == DONGLE_TYPE_SOFAR)
             {
-                return true;
+                if(preferred == -1) {
+                    preferred = i;
+                } else {
+                    preferred = -1;
+                    break;
+                }
             }
         }
-        return false;
+        this->preferedInverterWifiDongleIndex = preferred;        
+    }
+
+    String getDongleTypeName(DongleType_t type)
+    {
+        switch (type)
+        {
+        case DONGLE_TYPE_SOLAX:
+            return "Solax";
+        case DONGLE_TYPE_GOODWE:
+            return "GoodWe";
+        case DONGLE_TYPE_SOFAR:
+            return "Sofar";
+        case DONGLE_TYPE_SHELLY:
+            return "Shelly";
+        default:
+            return "Unknown";
+        }
     }
 
 private:
@@ -234,6 +230,22 @@ private:
         sn.replace("ShellyPro3-", "");
         sn.replace("Pro3-", "");
         return sn;
+    }
+
+    DongleType_t getTypeFromSSID(String ssid) {
+        if (isSolaxDongleSSID(ssid)) {
+            return DONGLE_TYPE_SOLAX;
+        }
+        if (isGoodWeSSID(ssid)) {
+            return DONGLE_TYPE_GOODWE;
+        }
+        if (isSofarSolarSID(ssid)) {
+            return DONGLE_TYPE_SOFAR;
+        }
+        if (isShellySSID(ssid)) {
+            return DONGLE_TYPE_SHELLY;
+        }
+        return DONGLE_TYPE_UNKNOWN;
     }
 
     int wifiSignalPercent(int rssi)

@@ -25,6 +25,7 @@
         "tuple": "cpp",
         "type_traits": "cpp",
         "utility": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "wifisetupui.hpp": "c"
     }
 }

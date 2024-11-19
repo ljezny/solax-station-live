@@ -142,6 +142,9 @@ extern lv_obj_t *ui_wifiDongleRoller;
 extern lv_obj_t *ui_Container15;
 extern lv_obj_t *ui_Label2;
 extern lv_obj_t *ui_wifiPassword;
+extern lv_obj_t *ui_Container17;
+extern lv_obj_t *ui_wifiSetupCompleteButton;
+extern lv_obj_t *ui_Label3;
 extern lv_obj_t *ui_Keyboard2;
 // CUSTOM VARIABLES
 

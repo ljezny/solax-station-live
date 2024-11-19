@@ -136,6 +136,9 @@ lv_obj_t *ui_wifiDongleRoller;
 lv_obj_t *ui_Container15;
 lv_obj_t *ui_Label2;
 lv_obj_t *ui_wifiPassword;
+lv_obj_t *ui_Container17;
+lv_obj_t *ui_wifiSetupCompleteButton;
+lv_obj_t *ui_Label3;
 lv_obj_t *ui_Keyboard2;
 // CUSTOM VARIABLES
 
