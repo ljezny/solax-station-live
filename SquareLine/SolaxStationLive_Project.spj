@@ -466,7 +466,7 @@
           }
         ],
         "isPage": true,
-        "editor_posx": 1750,
+        "editor_posx": 1000,
         "editor_posy": -1000,
         "dont_export": false,
         "locked": false,
@@ -15367,7 +15367,7 @@
           }
         ],
         "isPage": true,
-        "editor_posx": 1000,
+        "editor_posx": 1450,
         "editor_posy": -1600,
         "dont_export": false,
         "locked": false,
@@ -16584,7 +16584,7 @@
           }
         ],
         "isPage": true,
-        "editor_posx": 2750,
+        "editor_posx": 2000,
         "editor_posy": -1000,
         "dont_export": false,
         "locked": false,
@@ -16737,12 +16737,12 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 688,
+    "backup_cnt": 689,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",
     "imageexport": "SOURCE",
-    "lvgl_include_path": "",
+    "lvgl_include_path": "lvgl.h",
     "drive_stdio": "-",
     "drive_stdio_path": "",
     "drive_posix": "-",
@@ -16753,7 +16753,7 @@
     "drive_fatfs_path": "",
     "naming": "Name",
     "naming_force_lowercase": false,
-    "nidcnt": 1000004,
+    "nidcnt": 1000008,
     "BitDepth": 16,
     "Name": "SolaxStationLive_Project"
   }
