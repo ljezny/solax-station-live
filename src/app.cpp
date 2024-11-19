@@ -21,13 +21,15 @@
 
 #include "gfx_conf.h"
 #include "Touch/Touch.hpp"
+#include <mutex>
 
+SemaphoreHandle_t lvgl_mutex = xSemaphoreCreateMutex();
 static lv_disp_draw_buf_t draw_buf;
 static lv_color_t disp_draw_buf1[screenWidth * screenHeight / 10];
 static lv_color_t disp_draw_buf2[screenWidth * screenHeight / 10];
 static lv_disp_drv_t disp_drv;
 
-SET_LOOP_TASK_STACK_SIZE(18 * 1024); //use freeStack
+SET_LOOP_TASK_STACK_SIZE(18 * 1024); // use freeStack
 
 DongleDiscovery dongleDiscovery;
 ShellyAPI shellyAPI;
@@ -135,31 +137,38 @@ void timerCB(struct _lv_timer_t *timer)
 
     if (dashboardShown)
     {
-        previousShellyResult = shellyResult;
         dashboardUI.update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, shellyResult, previousShellyResult, solarChartDataProvider, wifiSignalPercent());
+        previousShellyResult = shellyResult;
         previousInverterData = inverterData;
         previousShellyResult = shellyResult;
         backlightResolver.resolve(inverterData);
     }
 }
 
-void lvglTimerTask(void *param) {
-    for(;;) {
+void lvglTimerTask(void *param)
+{
+    for (;;)
+    {
+        xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         lv_timer_handler();
+        xSemaphoreGive(lvgl_mutex);
         vTaskDelay(5);
     }
 }
 
-
-void setup()
+void setupWiFi()
 {
-    Serial.begin(115200);
+    WiFi.setTxPower(WIFI_POWER_8_5dBm); // 8.5 dBm
+    WiFi.persistent(false);
+    WiFi.setSleep(false);
+    softAP.start();
+}
 
-    Serial.println("Initialize panel device");
-
+void setupLVGL()
+{
     pinMode(38, OUTPUT);
     digitalWrite(38, LOW);
-    
+
     Wire.begin(19, 20);
 
     // pinMode(17, OUTPUT);
@@ -178,7 +187,7 @@ void setup()
     lv_init();
     delay(100);
 
-    //touch setup
+    // touch setup
     touch.init();
 
     lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight / 10);
@@ -204,14 +213,16 @@ void setup()
     lv_label_set_text(ui_fwVersionLabel, String("v" + String(VERSION_NUMBER)).c_str());
     lv_label_set_text(ui_ESPIdLabel, softAP.getESPIdHex().c_str());
 
-    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 1);
-    lv_timer_t *timer = lv_timer_create(timerCB, dashboardUI.UI_REFRESH_PERIOD_MS, NULL);
+    // xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 1);
+    // lv_timer_t *timer = lv_timer_create(timerCB, dashboardUI.UI_REFRESH_PERIOD_MS, NULL);
+}
 
-    WiFi.setTxPower(WIFI_POWER_8_5dBm); // 8.5 dBm
-    WiFi.persistent(false);
-    WiFi.setSleep(false);
-    softAP.start();
-}   
+void setup()
+{
+    Serial.begin(115200);
+    setupLVGL();
+    setupWiFi();
+}
 
 bool discoverDongles()
 {
@@ -228,140 +239,54 @@ bool discoverDongles()
     return false;
 }
 
-void loadSolaxInverterData(DongleDiscoveryResult_t &discoveryResult)
+InverterData_t loadInverterData(DongleDiscoveryResult_t &discoveryResult)
 {
-    static long lastAttempt = 0;
-    static int failures = 0;
-    static SolaxDongleAPI solaxDongleAPI;
-    if (lastAttempt == 0 || (millis() - lastAttempt > 3000))
-    {
-        log_d("Loading Solax inverter data");
-        lastAttempt = millis();
-     
-        if(inverterData.status == DONGLE_STATUS_OK) {
-            if(!inverterData.sn.equals(discoveryResult.sn)) {
-                log_d("Dongle is not bonded, skipping & ignorring...");
-                discoveryResult.type = DONGLE_TYPE_IGNORE;
-                return;
-            }
-        }
-
-        if (dongleDiscovery.connectToDongle(discoveryResult, ""))
-        {
-            InverterData_t d = solaxDongleAPI.loadData(discoveryResult.sn);
-
-            if (d.status == DONGLE_STATUS_OK)
-            {
-                failures = 0;
-                inverterData = d;
-                solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
-                shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
-            } else if(d.status == DONGLE_STATUS_UNSUPPORTED_DONGLE) {
-                log_d("Unsupported dongle");
-                discoveryResult.type = DONGLE_TYPE_IGNORE;                
-            } else {
-                failures++;
-                log_d("Failed to load data from Solax dongle. Failures: %d", failures);
-                if(failures > 10) {
-                    failures = 0;
-                    //needs to rediscover dongle and reconnecting
-                    log_d("Forgetting and disconnecting dongle due to too many failures");
-                    discoveryResult.type = DONGLE_TYPE_UNKNOWN;
-                    discoveryResult.sn = "";
-                    discoveryResult.ssid = "";
-                    WiFi.disconnect();
-                }
-            }
-        }
-        else
-        {
-            inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
-            log_d("Solax wifi not connected.");
-            discoveryResult.type = DONGLE_TYPE_UNKNOWN;
-            discoveryResult.sn = "";
-            discoveryResult.ssid = "";            
-        }
-    }
-}
-
-void loadGoodweInverterData(DongleDiscoveryResult_t &discoveryResult)
-{
-    static long lastAttempt = 0;
+    static SolaxDongleAPI solaxDongleAPI = SolaxDongleAPI();
     static GoodweDongleAPI goodweDongleAPI = GoodweDongleAPI();
-    static int failures = 0;
-    if (lastAttempt == 0 || millis() - lastAttempt > 5000)
+    static SofarSolarDongleAPI sofarSolarDongleAPI = SofarSolarDongleAPI();
+
+    InverterData_t d;
+    switch (discoveryResult.type)
     {
-        log_d("Loading Goodwe inverter data");
-        lastAttempt = millis();
-
-        if(inverterData.status == DONGLE_STATUS_OK) {
-            if(!inverterData.sn.equals(discoveryResult.sn)) {
-                log_d("Dongle is not bonded, skipping & ignorring...");
-                discoveryResult.type = DONGLE_TYPE_IGNORE;
-                return;
-            }
-        }
-        
-        if (dongleDiscovery.connectToDongle(discoveryResult, "12345678") || dongleDiscovery.connectToDongle(discoveryResult, "Live" + softAP.getPassword()))
-        {
-            log_d("GoodWe wifi connected.");
-
-            InverterData_t d = goodweDongleAPI.loadData(discoveryResult.sn);
-
-            if (d.status == DONGLE_STATUS_OK)
-            {
-                failures = 0;
-                inverterData = d;
-                solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
-                shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
-            } else {
-                failures++;
-                log_d("Failed to load data from Goodwe dongle. Failures: %d", failures);
-                if(failures > 3) {
-                    failures = 0;
-                    //needs to rediscover dongle and reconnecting
-                    log_d("Forgetting and disconnecting dongle due to too many failures");
-                    discoveryResult.type = DONGLE_TYPE_UNKNOWN;
-                    discoveryResult.sn = "";
-                    discoveryResult.ssid = "";
-                    WiFi.disconnect();
-                }
-            }
-        }
-        else
-        {
-            inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
-            log_d("GoodWe wifi not connected.");
-            discoveryResult.type = DONGLE_TYPE_UNKNOWN;
-            discoveryResult.sn = "";
-            discoveryResult.ssid = "";
-        }
+    case DONGLE_TYPE_SOLAX:
+        d = solaxDongleAPI.loadData(discoveryResult.sn);
+        break;
+    case DONGLE_TYPE_GOODWE:
+        d = goodweDongleAPI.loadData(discoveryResult.sn);
+        break;
+    case DONGLE_TYPE_SOFAR:
+        d = sofarSolarDongleAPI.loadData(discoveryResult.sn);
+        break;
     }
+
+    return d;
 }
 
-void loadSofarInverterData(DongleDiscoveryResult_t &discoveryResult)
+void reloadInverterData(DongleDiscoveryResult_t &discoveryResult)
 {
     static long lastAttempt = 0;
-    static SofarSolarDongleAPI sofarSolarDongleAPI = SofarSolarDongleAPI();
+
     static int failures = 0;
     if (lastAttempt == 0 || millis() - lastAttempt > 5000)
     {
-        log_d("Loading Sofar inverter data");
+        log_d("Loading inverter data");
         lastAttempt = millis();
 
-        if(inverterData.status == DONGLE_STATUS_OK) {
-            if(!inverterData.sn.equals(discoveryResult.sn)) {
+        if (inverterData.status == DONGLE_STATUS_OK)
+        {
+            if (!inverterData.sn.equals(discoveryResult.sn))
+            {
                 log_d("Dongle is not bonded, skipping & ignorring...");
                 discoveryResult.type = DONGLE_TYPE_IGNORE;
                 return;
             }
         }
-        
-        if (dongleDiscovery.connectToDongle(discoveryResult, "734015b7")) //TODO: provide password by user
-        {
-            log_d("Sofar wifi connected.");
 
-            InverterData_t d = sofarSolarDongleAPI.loadData(discoveryResult.sn);
+        if (dongleDiscovery.connectToDongle(discoveryResult))
+        {
+            log_d("Dongle wifi connected.");
+
+            InverterData_t d = loadInverterData(discoveryResult);
 
             if (d.status == DONGLE_STATUS_OK)
             {
@@ -369,12 +294,15 @@ void loadSofarInverterData(DongleDiscoveryResult_t &discoveryResult)
                 inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
                 shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
-            } else {
+            }
+            else
+            {
                 failures++;
-                log_d("Failed to load data from Sofar dongle. Failures: %d", failures);
-                if(failures > 3) {
+                log_d("Failed to load data from  dongle. Failures: %d", failures);
+                if (failures > 3)
+                {
                     failures = 0;
-                    //needs to rediscover dongle and reconnecting
+                    // needs to rediscover dongle and reconnecting
                     log_d("Forgetting and disconnecting dongle due to too many failures");
                     discoveryResult.type = DONGLE_TYPE_UNKNOWN;
                     discoveryResult.sn = "";
@@ -386,7 +314,7 @@ void loadSofarInverterData(DongleDiscoveryResult_t &discoveryResult)
         else
         {
             inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
-            log_d("Sofar wifi not connected.");
+            log_d("Wifi not connected.");
             discoveryResult.type = DONGLE_TYPE_UNKNOWN;
             discoveryResult.sn = "";
             discoveryResult.ssid = "";
@@ -400,7 +328,7 @@ void pairShelly(DongleDiscoveryResult_t &discoveryResult)
     if (lastAttempt == 0 || millis() - lastAttempt > 30000)
     {
         log_d("Pairing Shelly");
-        if (dongleDiscovery.connectToDongle(discoveryResult, ""))
+        if (dongleDiscovery.connectToDongle(discoveryResult))
         {
             if (shellyAPI.setWiFiSTA(discoveryResult.ssid, softAP.getSSID(), softAP.getPassword()))
             {
@@ -413,7 +341,8 @@ void pairShelly(DongleDiscoveryResult_t &discoveryResult)
 
 void reloadShelly()
 {
-    if(shellyAPI.getPairedCount() < softAP.getNumberOfConnectedDevices()) {
+    if (shellyAPI.getPairedCount() < softAP.getNumberOfConnectedDevices())
+    {
         log_d("Connected devices: %d, paired devices: %d", softAP.getNumberOfConnectedDevices(), shellyAPI.getPairedCount());
         shellyAPI.queryMDNS();
     }
@@ -437,13 +366,9 @@ void processDongles()
             switch (dongleDiscovery.discoveries[i].type)
             {
             case DONGLE_TYPE_SOLAX:
-                loadSolaxInverterData(dongleDiscovery.discoveries[i]);
-                break;
             case DONGLE_TYPE_GOODWE:
-                loadGoodweInverterData(dongleDiscovery.discoveries[i]);
-                break;
             case DONGLE_TYPE_SOFAR:
-                loadSofarInverterData(dongleDiscovery.discoveries[i]);
+                reloadInverterData(dongleDiscovery.discoveries[i]);
                 break;
             case DONGLE_TYPE_SHELLY:
                 pairShelly(dongleDiscovery.discoveries[i]);
@@ -467,20 +392,21 @@ void logMemory()
     log_d("Free stack: %d", uxTaskGetStackHighWaterMark(NULL));
 }
 
-
 void resetWifi()
 {
     static long lastAttempt = 0;
-    if (millis() - lastAttempt > 300000) //every 5 minutes
+    if (millis() - lastAttempt > 300000) // every 5 minutes
     {
         lastAttempt = millis();
         logMemory();
-        if(WiFi.status() == WL_CONNECTED) {
+        if (WiFi.status() == WL_CONNECTED)
+        {
             log_d("Wifi connected, skipping reset");
             return;
         }
-        
-        if(WiFi.scanComplete() == WIFI_SCAN_RUNNING) {
+
+        if (WiFi.scanComplete() == WIFI_SCAN_RUNNING)
+        {
             log_d("Wifi Scan is running, skipping reset");
             return;
         }
@@ -501,4 +427,3 @@ void loop()
     reloadShelly();
     resetWifi();
 }
-

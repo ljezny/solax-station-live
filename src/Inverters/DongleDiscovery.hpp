@@ -72,12 +72,19 @@ class DongleDiscovery {
                     discoveries[discoveryIndex].sn = parseDongleSN(ssid);
                     discoveries[discoveryIndex].type = DONGLE_TYPE_SOLAX;
                     discoveries[discoveryIndex].ssid = ssid;
+                    discoveries[discoveryIndex].password = "";
+                    discoveries[discoveryIndex].requiresPassword = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
+                    result = true;
                 }
 
                 if(isGoodWeSSID(ssid)) {
                     discoveries[discoveryIndex].sn = parseDongleSN(ssid);
                     discoveries[discoveryIndex].type = DONGLE_TYPE_GOODWE;
                     discoveries[discoveryIndex].ssid = ssid;
+                    discoveries[discoveryIndex].requiresPassword = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
+                    if(discoveries[discoveryIndex].requiresPassword) {
+                        discoveries[discoveryIndex].password = "12345678";
+                    }
                     result = true;                   
                 }
 
@@ -85,6 +92,10 @@ class DongleDiscovery {
                     discoveries[discoveryIndex].sn = parseDongleSN(ssid);
                     discoveries[discoveryIndex].type = DONGLE_TYPE_SOFAR;
                     discoveries[discoveryIndex].ssid = ssid;
+                    discoveries[discoveryIndex].requiresPassword = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
+                    if(discoveries[discoveryIndex].requiresPassword) {
+                        discoveries[discoveryIndex].password = "734015b7";
+                    }
                     result = true;                   
                 }
 
@@ -101,7 +112,7 @@ class DongleDiscovery {
             return true;
         }
 
-        bool connectToDongle(DongleDiscoveryResult_t& discovery, String password) {
+        bool connectToDongle(DongleDiscoveryResult_t& discovery) {
             if(discovery.type == DONGLE_TYPE_UNKNOWN) {
                 return false;
             }
@@ -117,8 +128,8 @@ class DongleDiscovery {
             WiFi.persistent(false);
 
             log_d("Connecting to %s", discovery.ssid.c_str());
-            WiFi.begin(discovery.ssid.c_str(), password.c_str());
-
+            WiFi.begin(discovery.ssid.c_str(), discovery.password.c_str());
+            
             return awaitWifiConnection();
         }
 
