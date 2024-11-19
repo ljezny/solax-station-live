@@ -232,7 +232,7 @@ private:
             // 0x0580 - 0x05FF
             //but we need only few
             sendReadDataRequest(sequenceNumber, 0x586, 0x58F - 0x586, sn);
-            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) == -1)
+            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
             {
                 inverterData.status = DONGLE_STATUS_OK;
                 inverterData.millis = millis();
