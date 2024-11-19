@@ -16,6 +16,8 @@
 #include "utils/BacklightResolver.hpp"
 #include <mat.h>
 #include "DashboardUI.hpp"
+#include "SplashUI.hpp"
+#include "WiFiSetupUI.hpp"
 #include "utils/SoftAP.hpp"
 #include "utils/ShellyRuleResolver.hpp"
 
@@ -40,13 +42,24 @@ Touch touch;
 InverterData_t inverterData;
 InverterData_t previousInverterData;
 WallboxData_t wallboxData;
-DongleDiscoveryResult_t discoveryResult;
 ShellyResult_t shellyResult;
 ShellyResult_t previousShellyResult;
 SolarChartDataProvider solarChartDataProvider;
 ShellyRuleResolver shellyRuleResolver;
 
+SplashUI splashUI;
+WiFiSetupUI wifiSetupUI;
 DashboardUI dashboardUI;
+
+typedef enum
+{
+    BOOT,
+    STATE_SPLASH,
+    STATE_WIFI_SETUP,
+    STATE_DASHBOARD
+} state_t;
+state_t state;
+state_t previousState;
 
 /* Display flushing */
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
@@ -125,26 +138,6 @@ int wifiSignalPercent()
     }
 }
 
-bool dashboardShown = false;
-
-void timerCB(struct _lv_timer_t *timer)
-{
-    if (!dashboardShown && inverterData.status == DONGLE_STATUS_OK)
-    {
-        dashboardUI.show();
-        dashboardShown = true;
-    }
-
-    if (dashboardShown)
-    {
-        dashboardUI.update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, shellyResult, previousShellyResult, solarChartDataProvider, wifiSignalPercent());
-        previousShellyResult = shellyResult;
-        previousInverterData = inverterData;
-        previousShellyResult = shellyResult;
-        backlightResolver.resolve(inverterData);
-    }
-}
-
 void lvglTimerTask(void *param)
 {
     for (;;)
@@ -170,13 +163,6 @@ void setupLVGL()
     digitalWrite(38, LOW);
 
     Wire.begin(19, 20);
-
-    // pinMode(17, OUTPUT);
-    // digitalWrite(17, LOW);
-    // pinMode(18, OUTPUT);
-    // digitalWrite(18, LOW);
-    // pinMode(42, OUTPUT);
-    // digitalWrite(42, LOW);
 
     // Display Prepare
     tft.begin();
@@ -209,12 +195,8 @@ void setupLVGL()
     lv_indev_drv_register(&indev_drv);
 
     ui_init();
-    lv_scr_load(ui_Splash);
-    lv_label_set_text(ui_fwVersionLabel, String("v" + String(VERSION_NUMBER)).c_str());
-    lv_label_set_text(ui_ESPIdLabel, softAP.getESPIdHex().c_str());
 
-    // xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 1);
-    // lv_timer_t *timer = lv_timer_create(timerCB, dashboardUI.UI_REFRESH_PERIOD_MS, NULL);
+    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 1);
 }
 
 void setup()
@@ -224,7 +206,7 @@ void setup()
     setupWiFi();
 }
 
-bool discoverDongles()
+bool discoverDonglesTask()
 {
     static long lastAttempt = 0;
     bool hasDongles = false;
@@ -262,7 +244,7 @@ InverterData_t loadInverterData(DongleDiscoveryResult_t &discoveryResult)
     return d;
 }
 
-void reloadInverterData(DongleDiscoveryResult_t &discoveryResult)
+void loadInverterDataTask()
 {
     static long lastAttempt = 0;
 
@@ -271,6 +253,19 @@ void reloadInverterData(DongleDiscoveryResult_t &discoveryResult)
     {
         log_d("Loading inverter data");
         lastAttempt = millis();
+
+#if DEMO
+        inverterData = createRandomMockData();
+        solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
+        return;
+#endif
+
+        if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
+        {
+            return;
+        }
+
+        DongleDiscoveryResult_t &discoveryResult = dongleDiscovery.discoveries[dongleDiscovery.preferedInverterWifiDongleIndex];
 
         if (inverterData.status == DONGLE_STATUS_OK)
         {
@@ -322,19 +317,26 @@ void reloadInverterData(DongleDiscoveryResult_t &discoveryResult)
     }
 }
 
-void pairShelly(DongleDiscoveryResult_t &discoveryResult)
+void pairShellyTask()
 {
     static long lastAttempt = 0;
     if (lastAttempt == 0 || millis() - lastAttempt > 30000)
     {
         log_d("Pairing Shelly");
-        if (dongleDiscovery.connectToDongle(discoveryResult))
+        for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
         {
-            if (shellyAPI.setWiFiSTA(discoveryResult.ssid, softAP.getSSID(), softAP.getPassword()))
+            if (dongleDiscovery.discoveries[i].type == DONGLE_TYPE_SHELLY)
             {
-                discoveryResult.type = DONGLE_TYPE_IGNORE;
+                if (dongleDiscovery.connectToDongle(dongleDiscovery.discoveries[i]))
+                {
+                    if (shellyAPI.setWiFiSTA(dongleDiscovery.discoveries[i].ssid, softAP.getSSID(), softAP.getPassword()))
+                    {
+                        dongleDiscovery.discoveries[i].type = DONGLE_TYPE_IGNORE;
+                    }
+                }
             }
         }
+
         lastAttempt = millis();
     }
 }
@@ -355,34 +357,6 @@ void reloadShelly()
         shellyAPI.updateState(state, 5 * 60);
         lastAttempt = millis();
     }
-}
-
-void processDongles()
-{
-    for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
-    {
-        if (dongleDiscovery.discoveries[i].type != DONGLE_TYPE_UNKNOWN && dongleDiscovery.discoveries[i].type != DONGLE_TYPE_IGNORE)
-        {
-            switch (dongleDiscovery.discoveries[i].type)
-            {
-            case DONGLE_TYPE_SOLAX:
-            case DONGLE_TYPE_GOODWE:
-            case DONGLE_TYPE_SOFAR:
-                reloadInverterData(dongleDiscovery.discoveries[i]);
-                break;
-            case DONGLE_TYPE_SHELLY:
-                pairShelly(dongleDiscovery.discoveries[i]);
-                break;
-            default:
-                break;
-            }
-        }
-    }
-
-#if DEMO
-    inverterData = createRandomMockData();
-    solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
-#endif
 }
 
 void logMemory()
@@ -420,10 +394,98 @@ void resetWifi()
     }
 }
 
+void onEntering(state_t newState)
+{
+    log_d("Entering state %d", newState);
+    switch (newState)
+    {
+    case BOOT:
+        break;
+    case STATE_SPLASH:
+        xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+        splashUI.show();
+        xSemaphoreGive(lvgl_mutex);
+        break;
+    case STATE_WIFI_SETUP:
+        xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+        wifiSetupUI.show();
+        xSemaphoreGive(lvgl_mutex);
+        break;
+    case STATE_DASHBOARD:
+        xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+        dashboardUI.show();
+        xSemaphoreGive(lvgl_mutex);
+        break;
+    }
+    logMemory();
+}
+
+void onLeaving(state_t oldState)
+{
+    log_d("Leaving state %d", oldState);
+    switch (oldState)
+    {
+    case BOOT:
+        break;
+    case STATE_SPLASH:
+        break;
+    case STATE_WIFI_SETUP:
+        break;
+    case STATE_DASHBOARD:
+        break;
+    }
+    logMemory();
+}
+
+void moveToState(state_t newState)
+{
+    onLeaving(state);
+    previousState = state;
+    state = newState;
+    onEntering(state);
+}
+
+void updateState()
+{
+    switch (state)
+    {
+    case BOOT:
+        moveToState(STATE_SPLASH);
+        break;
+    case STATE_SPLASH:
+        xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+        splashUI.update(softAP.getESPIdHex(), String(VERSION_NUMBER));
+        xSemaphoreGive(lvgl_mutex);
+
+        dongleDiscovery.discoverDongle();
+
+        moveToState(STATE_WIFI_SETUP);
+        break;
+    case STATE_WIFI_SETUP:
+        xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+        wifiSetupUI.update(dongleDiscovery);
+        xSemaphoreGive(lvgl_mutex);
+        break;
+    case STATE_DASHBOARD:
+
+        discoverDonglesTask();
+        loadInverterDataTask();
+        pairShellyTask();
+        reloadShelly();
+        resetWifi();
+
+        xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+        dashboardUI.update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, shellyResult, previousShellyResult, solarChartDataProvider, wifiSignalPercent());
+        xSemaphoreGive(lvgl_mutex);
+
+        previousShellyResult = shellyResult;
+        previousInverterData = inverterData;
+        backlightResolver.resolve(inverterData);
+        break;
+    }
+}
+
 void loop()
 {
-    discoverDongles();
-    processDongles();
-    reloadShelly();
-    resetWifi();
+    updateState();
 }

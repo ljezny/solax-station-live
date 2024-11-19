@@ -17,4 +17,5 @@ typedef struct {
     String sn = "";
     String password = "";
     bool requiresPassword = false;
+    int signalPercent = 0;
 } DongleDiscoveryResult_t;
