@@ -47,7 +47,9 @@ public:
                         DeserializationError err = deserializeJson(doc, loggingStream);
                         if (err == DeserializationError::Ok)
                             {
-                                if(doc["type"].as<int>() == 14) {
+                                if((doc["type"].as<int>() == 14) //X1-Hybrid 
+                                || (doc["type"].as<int>() == 25)) //X1-Hybrid 3.0
+                                { 
                                     inverterData.status = DONGLE_STATUS_OK;
                                     inverterData.millis = millis();
                                     inverterData.pv1Power = doc["Data"][14].as<int>();
