@@ -6,6 +6,8 @@
 #include <CRC16.h>
 #include "Inverters/InverterResult.hpp"
 
+#define READ_TIMEOUT 5000
+
 class SofarSolarDongleAPI
 {
 public:
@@ -138,7 +140,7 @@ private:
 
     int readModbusRTUResponse(byte *packetBuffer, size_t bufferLength)
     {
-        if (!awaitPacket(3000))
+        if (!awaitPacket(READ_TIMEOUT))
         {
             log_d("Response timeout");
             return -1;
