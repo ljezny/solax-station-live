@@ -15,4 +15,6 @@ typedef struct {
     DongleType_t type = DONGLE_TYPE_UNKNOWN;
     String ssid = "";
     String sn = "";
+    String password = "";
+    bool requiresPassword = false;
 } DongleDiscoveryResult_t;
