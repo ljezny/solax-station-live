@@ -69,7 +69,7 @@ public:
                                 inverterData.inverterPower = ((int16_t)doc["Data"][9].as<uint16_t>());
                                 inverterData.loadPower = read16BitSigned(doc["Data"][47].as<uint16_t>());
                                 inverterData.soc = doc["Data"][103].as<int>();
-                                inverterData.pvToday = max(doc["Data"][70].as<uint16_t>() / 10.0 - doc["Data"][78].as<uint16_t>() / 10.0); // yield is PV + battery
+                                inverterData.pvToday = doc["Data"][70].as<uint16_t>() / 10.0 - doc["Data"][78].as<uint16_t>() / 10.0; // yield is PV + battery
                                 inverterData.pvTotal = ((doc["Data"][69].as<uint32_t>() << 16) + doc["Data"][68].as<uint16_t>()) / 10.0;
                                 inverterData.feedInPower = read16BitSigned(doc["Data"][34].as<uint16_t>());
                                 inverterData.gridSellToday = doc["Data"][90].as<uint16_t>() / 100.0;
@@ -82,7 +82,7 @@ public:
                                 inverterData.sn = sn;
                                 logInverterData(inverterData);
                             }
-                            if (doc["type"].as<int>() == 25) // X3-Ultra
+                            if (doc["type"].as<int>() == 25) // X3-Ultra https://github.com/squishykid/solax/blob/master/solax/inverters/x3_ultra.py
                             {
                                 inverterData.status = DONGLE_STATUS_OK;
                                 inverterData.millis = millis();
