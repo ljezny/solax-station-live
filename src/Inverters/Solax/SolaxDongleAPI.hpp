@@ -81,8 +81,7 @@ public:
                                 inverterData.loadToday = inverterData.pvToday + inverterData.gridBuyToday - inverterData.gridSellToday;
                                 inverterData.sn = sn;
                                 logInverterData(inverterData);
-                            }
-                            if (doc["type"].as<int>() == 25) // X3-Ultra https://github.com/squishykid/solax/blob/master/solax/inverters/x3_ultra.py
+                            } else if (doc["type"].as<int>() == 25) // X3-Ultra https://github.com/squishykid/solax/blob/master/solax/inverters/x3_ultra.py
                             {
                                 inverterData.status = DONGLE_STATUS_OK;
                                 inverterData.millis = millis();
