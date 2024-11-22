@@ -93,12 +93,12 @@ public:
                                 inverterData.L1Power = ((int16_t)doc["Data"][6].as<uint16_t>());
                                 inverterData.L2Power = ((int16_t)doc["Data"][7].as<uint16_t>());
                                 inverterData.L3Power = ((int16_t)doc["Data"][8].as<uint16_t>());
-                                inverterData.inverterPower = ((int16_t)doc["Data"][159].as<uint16_t>()) / 100;
-                                inverterData.loadPower = read16BitSigned(doc["Data"][47].as<uint16_t>());
+                                inverterData.inverterPower = ((int16_t)doc["Data"][9].as<uint16_t>());
+                                inverterData.loadPower = doc["Data"][47].as<uint16_t>();
                                 inverterData.soc = doc["Data"][158].as<int>();
                                 inverterData.pvToday = doc["Data"][70].as<uint16_t>() / 10.0; // yield is PV + battery
                                 inverterData.pvTotal = ((doc["Data"][59].as<uint32_t>() << 16) + doc["Data"][58].as<uint16_t>()) / 10.0;
-                                inverterData.feedInPower = read16BitSigned(doc["Data"][34].as<uint16_t>());
+                                inverterData.feedInPower = ((doc["Data"][35].as<uint32_t>() << 16) + doc["Data"][34].as<uint16_t>());
                                 inverterData.gridSellToday = doc["Data"][90].as<uint16_t>() / 100.0;
                                 inverterData.gridBuyToday = doc["Data"][92].as<uint16_t>() / 100.0;
                                 inverterData.gridSellTotal = ((doc["Data"][87].as<uint32_t>() << 16) + doc["Data"][86].as<uint16_t>()) / 100.0;
