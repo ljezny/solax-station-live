@@ -135,7 +135,8 @@ public:
         int preferred = -1;
         for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
         {
-            if (discoveries[i].type == DONGLE_TYPE_SOLAX || discoveries[i].type == DONGLE_TYPE_GOODWE || discoveries[i].type == DONGLE_TYPE_SOFAR)
+            
+            if (!discoveries[i].requiresPassword || (discoveries[i].requiresPassword && !discoveries[i].password.isEmpty()))
             {
                 if(preferred == -1) {
                     preferred = i;
