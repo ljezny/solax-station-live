@@ -93,7 +93,7 @@ public:
                                 inverterData.L1Power = ((int16_t)doc["Data"][6].as<uint16_t>());
                                 inverterData.L2Power = ((int16_t)doc["Data"][7].as<uint16_t>());
                                 inverterData.L3Power = ((int16_t)doc["Data"][8].as<uint16_t>());
-                                inverterData.inverterPower = ((int16_t)doc["Data"][9].as<uint16_t>());
+                                inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
                                 inverterData.soc = doc["Data"][158].as<int>();
                                 inverterData.pvToday = doc["Data"][70].as<uint16_t>() / 10.0; // yield is PV + battery
                                 inverterData.pvTotal = ((doc["Data"][59].as<uint32_t>() << 16) + doc["Data"][58].as<uint16_t>()) / 10.0;
