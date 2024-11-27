@@ -284,7 +284,7 @@ void loadInverterDataTask()
             {
                 failures++;
                 log_d("Failed to load data from  dongle. Failures: %d", failures);
-                if (failures > 3)
+                if (failures > 60)
                 {
                     failures = 0;
 
