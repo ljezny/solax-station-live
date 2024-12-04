@@ -287,14 +287,11 @@ void loadInverterDataTask()
                 if (failures > 60)
                 {
                     failures = 0;
-
                     WiFi.disconnect();
                 }
             }
-        }
-        else
-        {
-            dongleDiscovery.preferedInverterWifiDongleIndex = -1;
+        } else {
+            inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
         }
     }
 }
