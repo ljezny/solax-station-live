@@ -3,10 +3,14 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <Preferences.h>    
 
 #include "DongleResult.hpp"
+#include "utils/SoftAP.hpp"
 
 #define DONGLE_DISCOVERY_MAX_RESULTS 10
+
+#define DONGLE_DISCOVERY_PREFERENCES_KEY "dongleDiscovery"
 
 class DongleDiscovery
 {
@@ -89,8 +93,12 @@ public:
             discoveries[discoveryIndex].requiresPassword = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
             discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i));
             
-            if(type == DONGLE_TYPE_GOODWE) {
-                discoveries[discoveryIndex].password = "12345678";
+            if(discoveries[discoveryIndex].requiresPassword) {
+                discoveries[discoveryIndex].password = loadDonglePassword(ssid);
+
+                if(discoveries[discoveryIndex].type == DONGLE_TYPE_GOODWE && discoveries[discoveryIndex].password.isEmpty()) {
+                    discoveries[discoveryIndex].password = "12345678";
+                }
             }
 
             result = true;
@@ -121,8 +129,29 @@ public:
 
         log_d("Connecting to %s", discovery.ssid.c_str());
         WiFi.begin(discovery.ssid.c_str(), discovery.password.c_str());
+        
+        bool connectionResult = awaitWifiConnection();
 
-        return awaitWifiConnection();
+        if(connectionResult) {
+            log_d("Connected to %s", discovery.ssid.c_str());
+
+            saveDonglePassword(discovery.ssid, discovery.password);
+        } else {
+            log_d("Failed to connect to %s", discovery.ssid.c_str());
+
+            clearDonglePassword(discovery.ssid);
+            
+            WiFi.begin(discovery.ssid.c_str(), SoftAP::getPassword().c_str());
+            
+            connectionResult = awaitWifiConnection();
+            
+            if(connectionResult) {
+                log_d("Connected to %s with default password", discovery.ssid.c_str());
+                saveDonglePassword(discovery.ssid, SoftAP::getPassword());
+            }
+        }
+
+        return connectionResult;
     }
 
     void trySelectPreferedInverterWifiDongleIndex()
@@ -268,5 +297,27 @@ private:
         {
             return 2 * (rssi + 100);
         }
+    }
+
+    void saveDonglePassword(String ssid, String password) {
+        Preferences preferences;
+        preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, false);
+        preferences.putString(ssid.c_str(), password);
+        preferences.end();
+    }
+
+    String loadDonglePassword(String ssid) {
+        Preferences preferences;
+        preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, true);
+        String password = preferences.getString(ssid.c_str(), "");
+        preferences.end();
+        return password;
+    }
+
+    void clearDonglePassword(String ssid) {
+        Preferences preferences;
+        preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, false);
+        preferences.remove(ssid.c_str());
+        preferences.end();
     }
 };

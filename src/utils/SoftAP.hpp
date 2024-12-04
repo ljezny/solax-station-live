@@ -12,8 +12,8 @@ public:
     {
         return SOFT_AP_SSID_PREFIX + getESPIdHex();
     }
-    
-    String getPassword()
+
+    static String getPassword()
     {
         return getESPIdHex();
     }
@@ -21,21 +21,21 @@ public:
     void start()
     {
         log_d("Starting SoftAP");
-        
+
         WiFi.softAP(getSSID().c_str(), getPassword().c_str(), 10, 1, MAX_SHELLY_PAIRS);
     }
-    
+
     int getNumberOfConnectedDevices()
     {
         return WiFi.softAPgetStationNum();
     }
 
-    String getESPIdHex()
+    static String getESPIdHex()
     {
         char idHex[23];
         snprintf(idHex, 23, "%llX", ESP.getEfuseMac());
         return idHex;
     }
+
 private:
-    
 };
