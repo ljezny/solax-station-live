@@ -4,8 +4,7 @@
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include <WiFiMulti.h>
-#include <HTTPClient.h>
-#include <WiFiClient.h>
+#include <NetworkClient.h>
 #include <StreamUtils.h>
 #include "Inverters/InverterResult.hpp"
 
@@ -24,12 +23,15 @@ public:
 
         if (client.connect(getIp(), 80, SOLAX_DONGLE_TIMEOUT_MS))
         {
+            String request = "";
             String body = "optType=ReadRealTimeData&pwd=" + sn;
-            client.println("POST / HTTP/1.1");
-            client.println("Host: " + getIp().toString());
-            client.println("Content-Length: " + String(body.length()));
-            client.println();
-            client.print(body);
+            request += "POST / HTTP/1.1\r\n";
+            request += "Host: " + getIp().toString() + "\r\n";
+            request += "Content-Length: " + String(body.length()) + "\r\n";
+            request += "\r\n";
+            request += body;
+            log_d("Request: %s", request.c_str());
+            client.write(request.c_str(), request.length());
             log_d("Request sent");
             unsigned long lastDataTime = millis();
             while (client.connected())
@@ -215,7 +217,7 @@ public:
     }
 
 private:
-    WiFiClient client;
+    NetworkClient client;
     int16_t read16BitSigned(uint16_t a)
     {
         if (a < 32768)
