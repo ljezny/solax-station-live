@@ -41,6 +41,8 @@ public:
             options += "\n";
         }
         lv_roller_set_options(ui_wifiDongleRoller, options.c_str(), LV_ROLLER_MODE_NORMAL);
+        lv_roller_set_selected(ui_wifiDongleRoller, 0, LV_ANIM_OFF);
+        lv_textarea_set_text(ui_wifiPassword, dongleDiscovery.discoveries[0].password.c_str());
     }
 
     void onCompleteClick()

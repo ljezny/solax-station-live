@@ -164,12 +164,13 @@ public:
         int preferred = -1;
         for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
         {
-            
             if (!discoveries[i].requiresPassword || (discoveries[i].requiresPassword && !discoveries[i].password.isEmpty()))
             {
+                log_d("Prefered dongle: %s", discoveries[i].ssid.c_str());
                 if(preferred == -1) {
                     preferred = i;
                 } else {
+                    log_d("Multiple dongles found, no prefered one");
                     preferred = -1;
                     break;
                 }
