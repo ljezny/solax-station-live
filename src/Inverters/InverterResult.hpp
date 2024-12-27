@@ -20,7 +20,9 @@ typedef struct
     int pv3Power = 0;
     int pv4Power = 0;
     int soc = 0;
+    bool socApproximated = false;
     int16_t batteryPower = 0;
+    float batteryVoltage = 0.0f;
     double batteryChargedToday = 0;
     double batteryDischargedToday = 0;
     double gridBuyToday = 0;

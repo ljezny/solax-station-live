@@ -7,6 +7,7 @@
 #include <NetworkClient.h>
 #include <StreamUtils.h>
 #include "Inverters/InverterResult.hpp"
+#include <float.h>
 
 #define SOLAX_DONGLE_TIMEOUT_MS 5000
 class SolaxDongleAPI
@@ -15,6 +16,26 @@ public:
     SolaxDongleAPI()
     {
         client.setTimeout(SOLAX_DONGLE_TIMEOUT_MS);
+    }
+
+    float voltageToPercent(float voltage, float minVoltage, float maxVoltage)
+    {
+        // Check for valid voltage range
+        if (voltage < minVoltage)
+        {
+            return 0.0f; // Below minimum voltage, 0% charge
+        }
+        else if (voltage > maxVoltage)
+        {
+            return 100.0f; // Above maximum voltage, 100% charge
+        }
+        else if (maxVoltage - minVoltage < 0.1)
+        {                // division by zero
+            return 0.0f; // Above maximum voltage, 100% charge
+        }
+
+        float percent = ((voltage - minVoltage) / (maxVoltage - minVoltage)) * 100.0f;
+        return percent;
     }
 
     InverterData_t loadData(String sn)
@@ -63,6 +84,7 @@ public:
                                 inverterData.pv1Power = doc["Data"][14].as<int>();
                                 inverterData.pv2Power = doc["Data"][15].as<int>();
                                 inverterData.batteryPower = read16BitSigned(doc["Data"][41].as<uint16_t>());
+                                inverterData.batteryVoltage = doc["Data"][39].as<int>() / 100.0;
                                 inverterData.batteryTemperature = doc["Data"][105].as<uint8_t>();
                                 inverterData.inverterTemperature = doc["Data"][54].as<uint8_t>();
                                 inverterData.L1Power = ((int16_t)doc["Data"][6].as<uint16_t>());
@@ -71,6 +93,16 @@ public:
                                 inverterData.inverterPower = ((int16_t)doc["Data"][9].as<uint16_t>());
                                 inverterData.loadPower = read16BitSigned(doc["Data"][47].as<uint16_t>());
                                 inverterData.soc = doc["Data"][103].as<int>();
+                                if (inverterData.soc == 0)
+                                { // use battery voltage approximation
+                                    minimumBatteryVoltage = min(minimumBatteryVoltage, inverterData.batteryVoltage);
+                                    log_d("Minimum battery voltage: %f", minimumBatteryVoltage);
+                                    maximumBatteryVoltage = max(maximumBatteryVoltage, inverterData.batteryVoltage);
+                                    log_d("Maximum battery voltage: %f", maximumBatteryVoltage);
+                                    inverterData.soc = voltageToPercent(inverterData.batteryVoltage, minimumBatteryVoltage, maximumBatteryVoltage);
+                                    log_d("Battery voltage: %f, SOC: %d", inverterData.batteryVoltage, inverterData.soc);
+                                    inverterData.socApproximated = true;
+                                }
                                 inverterData.pvToday = doc["Data"][70].as<uint16_t>() / 10.0 - doc["Data"][78].as<uint16_t>() / 10.0; // yield is PV + battery
                                 inverterData.pvTotal = ((doc["Data"][69].as<uint32_t>() << 16) + doc["Data"][68].as<uint16_t>()) / 10.0;
                                 inverterData.feedInPower = read16BitSigned(doc["Data"][34].as<uint16_t>());
@@ -83,7 +115,8 @@ public:
                                 inverterData.loadToday = inverterData.pvToday + inverterData.gridBuyToday - inverterData.gridSellToday;
                                 inverterData.sn = sn;
                                 logInverterData(inverterData);
-                            } else if (doc["type"].as<int>() == 25) // X3-Ultra https://github.com/squishykid/solax/blob/master/solax/inverters/x3_ultra.py
+                            }
+                            else if (doc["type"].as<int>() == 25) // X3-Ultra https://github.com/squishykid/solax/blob/master/solax/inverters/x3_ultra.py
                             {
                                 inverterData.status = DONGLE_STATUS_OK;
                                 inverterData.millis = millis();
@@ -218,6 +251,10 @@ public:
 
 private:
     NetworkClient client;
+
+    float minimumBatteryVoltage = FLT_MAX;
+    float maximumBatteryVoltage = FLT_MIN;
+
     int16_t read16BitSigned(uint16_t a)
     {
         if (a < 32768)

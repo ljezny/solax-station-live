@@ -199,8 +199,12 @@ public:
         gridBackgroundAnimator.animate(ui_gridContainer, (previousInverterData.feedInPower) < 0, (inverterData.feedInPower) < 0);
         lv_obj_set_style_text_color(ui_feedInPowerLabel, inverterData.feedInPower < 0 ? white : black, 0);
         lv_obj_set_style_text_color(ui_feedInPowerUnitLabel, inverterData.feedInPower < 0 ? white : black, 0);
-        // lv_label_set_text_fmt(ui_socLabel, "%d", inverterData.soc);
-        batteryPercentTextAnimator.animate(ui_socLabel, previousInverterData.soc, inverterData.soc);
+        lv_label_set_text_fmt(ui_socLabel, (inverterData.socApproximated ? "~%d" : "%d"), inverterData.soc);
+
+        // batteryPercentTextAnimator.animate(ui_socLabel, previousInverterData.soc, inverterData.soc);
+        // batteryPercentTextAnimator.animate(ui_socLabel, previousInverterData.soc, inverterData.soc);
+        //  lv_label_set_text(ui_socLabel1, "%");
+
         // lv_label_set_text(ui_batteryPowerLabel, format(POWER, abs(inverterData.batteryPower)).value.c_str());
         batteryPowerTextAnimator.animate(ui_batteryPowerLabel, abs(previousInverterData.batteryPower), abs(inverterData.batteryPower));
         batteryBackgroundAnimator.animate(ui_batteryContainer, (previousInverterData.batteryPower) < 0, (inverterData.batteryPower) < 0);
