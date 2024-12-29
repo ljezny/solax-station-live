@@ -93,7 +93,7 @@ public:
                                 inverterData.inverterPower = ((int16_t)doc["Data"][9].as<uint16_t>());
                                 inverterData.loadPower = read16BitSigned(doc["Data"][47].as<uint16_t>());
                                 inverterData.soc = doc["Data"][103].as<int>();
-                                if (inverterData.soc == 0)
+                                if (inverterData.soc == 0 && inverterData.batteryVoltage > 0.0)
                                 { // use battery voltage approximation
                                     minimumBatteryVoltage = min(minimumBatteryVoltage, inverterData.batteryVoltage);
                                     log_d("Minimum battery voltage: %f", minimumBatteryVoltage);
