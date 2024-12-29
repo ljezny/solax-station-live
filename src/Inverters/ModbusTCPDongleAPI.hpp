@@ -74,9 +74,12 @@ protected:
         memset(RX_BUFFER, 0, RX_BUFFER_SIZE);
         
         int len = client.read(RX_BUFFER, 2);
-        if (RX_BUFFER[0] != sequenceNumber >> 8 || RX_BUFFER[1] != sequenceNumber & 0xff)
+        uint16_t sequenceNumberReceived = RX_BUFFER[0] << 8 | RX_BUFFER[1];
+        if (sequenceNumberReceived != sequenceNumber)
         {
-            log_d("Expected sequence number %d, but got %d", sequenceNumber, RX_BUFFER[0] << 8 | RX_BUFFER[1]);
+            log_d("Expected sequence number %d, but got %d", sequenceNumber, sequenceNumberReceived);
+            client.read(RX_BUFFER, RX_BUFFER_SIZE); // clear buffer
+            memset(RX_BUFFER, 0, RX_BUFFER_SIZE);
             return false;
         }
 
