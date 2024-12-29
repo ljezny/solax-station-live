@@ -37,7 +37,7 @@ protected:
         unsigned c = crc16(d, 6, 0x8005, 0xFFFF, 0, true, true);
         d[6] = c;
         d[7] = c >> 8;
-        client.write(d, sizeof(d));
+        return client.write(d, sizeof(d)) == sizeof(d);
     }
 
     bool awaitResponse(int timeout)
@@ -64,11 +64,6 @@ protected:
         memset(RX_BUFFER, 0, RX_BUFFER_SIZE);
 
         int len = client.read(RX_BUFFER, RX_BUFFER_SIZE);
-        if (RX_BUFFER[0] != 0xA5)
-        {
-            log_d("Invalid header");
-            return false;
-        }
         unsigned c = crc16(RX_BUFFER + 2, len - 2, 0x8005, 0xFFFF, 0, true, true);
         if (c != 0)
         {
