@@ -37,6 +37,19 @@ public:
             }
         }
 
+        if(sendReadRequest(842, 2)) {
+            if(readResponse()) {
+                inverterData.batteryPower = readInt16(842 - 842);
+                inverterData.soc = readUInt16(843 - 842);
+            }
+        }
+
+        if(sendReadRequest(820, 3)) {
+            if(readResponse()) {
+                inverterData.feedInPower = readInt16(820 - 820) + readInt16(821 - 820) + readInt16(822 - 820);
+            }
+        }
+
         logInverterData(inverterData);
         disconnect();
 
