@@ -163,6 +163,22 @@ public:
                                 inverterData.sn = sn;
                                 logInverterData(inverterData);
                             }
+                            else if (doc["type"].as<int>() == 4)
+                            { // X1 boost https://github.com/simatec/ioBroker.solax/blob/master/lib/inverterData.js
+                                inverterData.status = DONGLE_STATUS_OK;
+                                inverterData.millis = millis();
+                                inverterData.pv1Power = doc["Data"][7].as<int>();
+                                inverterData.pv2Power = doc["Data"][8].as<int>();
+                                inverterData.inverterPower = doc["Data"][2].as<int>();
+                                inverterData.pvToday = doc["Data"][11].as<uint16_t>() / 10.0;
+                                inverterData.pvTotal = doc["Data"][12].as<uint16_t>() / 10.0;
+                                inverterData.feedInPower = read16BitSigned(doc["Data"][48].as<uint16_t>());                                
+                                inverterData.gridSellTotal = doc["Data"][50].as<uint16_t>() / 100.0;
+                                inverterData.loadTotal = doc["Data"][52].as<uint16_t>() / 100.0;
+                                inverterData.hasBattery = false;
+                                inverterData.sn = sn;
+                                logInverterData(inverterData);
+                            }
                             else if (doc["type"].as<int>() == 1)
                             { // wallbox
                                 // wallboxData.power = doc["Data"][11].as<int>();
