@@ -143,6 +143,11 @@ protected:
     {
         return readUInt16(reg) << 16 | readUInt16(reg + 1);
     }
+    
+    int32_t readInt32(byte reg)
+    {
+        return readInt16(reg) << 16 | readInt16(reg + 1);
+    }
 
     float readIEEE754(byte reg)
     {

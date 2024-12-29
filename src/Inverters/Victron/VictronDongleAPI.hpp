@@ -44,6 +44,15 @@ public:
             }
         }
 
+        if(sendReadRequest(868, 16)) {
+            if(readResponse()) {
+                inverterData.inverterPower = readInt32(870 - 868);
+                inverterData.L1Power = readInt32(878 - 868);
+                inverterData.L2Power = readInt32(880 - 868);
+                inverterData.L3Power = readInt32(882 - 868);
+            }
+        }
+
         logInverterData(inverterData);
         disconnect();
 
