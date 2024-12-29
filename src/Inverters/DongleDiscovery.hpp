@@ -326,11 +326,23 @@ private:
         }
     }
 
+    String hashString(String str)
+    {
+        uint64_t hash = 0;
+        for (int i = 0; i < str.length(); i++)
+        {
+            hash = (hash << 5) + hash + str[i];
+        }
+        String result = String(hash, HEX);
+        log_d("Data: %s, Hash: %s", str.c_str(), result.c_str());
+        return result;
+    }
+
     void saveDonglePassword(String ssid, String password)
     {
         Preferences preferences;
         preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, false);
-        preferences.putString(ssid.c_str(), password);
+        preferences.putString(hashString(ssid).c_str(), password);
         preferences.end();
     }
 
@@ -338,7 +350,7 @@ private:
     {
         Preferences preferences;
         preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, true);
-        String password = preferences.getString(ssid.c_str(), "");
+        String password = preferences.getString(hashString(ssid).c_str(), "");
         preferences.end();
         return password;
     }
@@ -347,7 +359,7 @@ private:
     {
         Preferences preferences;
         preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, false);
-        preferences.remove(ssid.c_str());
+        preferences.remove(hashString(ssid).c_str());
         preferences.end();
     }
 };
