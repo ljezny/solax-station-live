@@ -19,18 +19,19 @@ public:
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             return inverterData;
         }
+        
+        inverterData.millis = millis();
 
         if(sendReadRequest(801, 6)) {
            if(readResponse()) {
                 inverterData.status = DONGLE_STATUS_OK;
-                inverterData.sn = responseToHexString();
+                inverterData.sn = macAddressToString();
                 log_d("SN: %s", inverterData.sn.c_str());
            }
         }
 
         if(sendReadRequest(842, 2)) {
             if(readResponse()) {
-                inverterData.status = DONGLE_STATUS_OK;
                 inverterData.batteryPower = readInt16(842 - 842);
                 inverterData.soc = readUInt16(843 - 842);
             }
@@ -43,11 +44,11 @@ public:
     }
 
     private:
-        String responseToHexString() {
-            String hexString = "";
-            for (int i = 0; i < RX_BUFFER_SIZE; i++) {
-                hexString += String(RX_BUFFER[i], HEX);
+        String macAddressToString() {
+            String mac = "";
+            for (int i = 0; i < 6; i++) {
+                mac += String(RX_BUFFER[i], HEX);                
             }
-            return hexString;
-        }
+            return mac;
+        }        
 };
