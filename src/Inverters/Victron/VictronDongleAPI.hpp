@@ -23,14 +23,7 @@ public:
         if(sendReadRequest(801, 6)) {
            if(readResponse()) {
                 inverterData.status = DONGLE_STATUS_OK;
-                char buffer[7] = {0};
-                buffer[0] = RX_BUFFER[5 + 0];
-                buffer[1] = RX_BUFFER[5 + 1];
-                buffer[2] = RX_BUFFER[5 + 2];
-                buffer[3] = RX_BUFFER[5 + 3];
-                buffer[4] = RX_BUFFER[5 + 4];
-                buffer[5] = RX_BUFFER[5 + 5];
-                inverterData.sn = String(buffer);
+                inverterData.sn = responseToHexString();
                 log_d("SN: %s", inverterData.sn.c_str());
            }
         }
@@ -39,7 +32,7 @@ public:
             if(readResponse()) {
                 inverterData.status = DONGLE_STATUS_OK;
                 inverterData.batteryPower = readInt16(842 - 842);
-                inverterData.soc = (((uint32_t) readUInt16(843 - 842)) * 100) / 65535;
+                inverterData.soc = readUInt16(843 - 842);
             }
         }
 
@@ -48,4 +41,13 @@ public:
 
         return inverterData;
     }
+
+    private:
+        String responseToHexString() {
+            String hexString = "";
+            for (int i = 0; i < RX_BUFFER_SIZE; i++) {
+                hexString += String(RX_BUFFER[i], HEX);
+            }
+            return hexString;
+        }
 };
