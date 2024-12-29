@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include <Preferences.h>    
+#include <Preferences.h>
 
 #include "DongleResult.hpp"
 #include "utils/SoftAP.hpp"
@@ -39,14 +39,15 @@ public:
                 continue;
             }
             DongleType_t type = getTypeFromSSID(ssid);
-            
-            if(type == DONGLE_TYPE_UNKNOWN) {
+
+            if (type == DONGLE_TYPE_UNKNOWN)
+            {
                 log_d("Unknown dongle type");
                 continue;
             }
 
             int discoveryIndex = -1;
-            
+
             // find if existing in sparse array
             for (int j = 0; j < DONGLE_DISCOVERY_MAX_RESULTS; j++)
             {
@@ -82,7 +83,7 @@ public:
             if (discoveries[discoveryIndex].type != DONGLE_TYPE_UNKNOWN)
             {
                 log_d("Already discovered this dongle");
-                discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i)); //update signal strength
+                discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i)); // update signal strength
                 continue;
             }
 
@@ -92,17 +93,20 @@ public:
             discoveries[discoveryIndex].password = "";
             discoveries[discoveryIndex].requiresPassword = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
             discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i));
-            
-            if(discoveries[discoveryIndex].requiresPassword) {
+
+            if (discoveries[discoveryIndex].requiresPassword)
+            {
                 discoveries[discoveryIndex].password = loadDonglePassword(ssid);
 
-                if(discoveries[discoveryIndex].type == DONGLE_TYPE_GOODWE && discoveries[discoveryIndex].password.isEmpty()) {
+                if (discoveries[discoveryIndex].type == DONGLE_TYPE_GOODWE && discoveries[discoveryIndex].password.isEmpty())
+                {
                     discoveries[discoveryIndex].password = "12345678";
                 }
             }
 
-            //Dalibor Farny - Victron
-            if(discoveries[discoveryIndex].ssid == "venus-HQ22034YWXC-159") {
+            // Dalibor Farny - Victron
+            if (discoveries[discoveryIndex].ssid == "venus-HQ22034YWXC-159")
+            {
                 discoveries[discoveryIndex].password = "uarnb5xs";
             }
 
@@ -111,7 +115,7 @@ public:
 
         return true;
     }
-    
+
     bool connectToDongle(DongleDiscoveryResult_t &discovery)
     {
         if (discovery.type == DONGLE_TYPE_UNKNOWN)
@@ -134,23 +138,27 @@ public:
 
         log_d("Connecting to %s", discovery.ssid.c_str());
         WiFi.begin(discovery.ssid.c_str(), discovery.password.c_str());
-        
+
         bool connectionResult = awaitWifiConnection();
 
-        if(connectionResult) {
+        if (connectionResult)
+        {
             log_d("Connected to %s", discovery.ssid.c_str());
 
             saveDonglePassword(discovery.ssid, discovery.password);
-        } else {
+        }
+        else
+        {
             log_d("Failed to connect to %s", discovery.ssid.c_str());
 
             clearDonglePassword(discovery.ssid);
-            
+
             WiFi.begin(discovery.ssid.c_str(), SoftAP::getPassword().c_str());
-            
+
             connectionResult = awaitWifiConnection();
-            
-            if(connectionResult) {
+
+            if (connectionResult)
+            {
                 log_d("Connected to %s with default password", discovery.ssid.c_str());
                 saveDonglePassword(discovery.ssid, SoftAP::getPassword());
             }
@@ -161,27 +169,35 @@ public:
 
     void trySelectPreferedInverterWifiDongleIndex()
     {
-        if(preferedInverterWifiDongleIndex != -1) {
+        if (preferedInverterWifiDongleIndex != -1)
+        {
             return;
         }
-        
-        //select first found inverter dongle, but only when there is only one
+
+        // select first found inverter dongle, but only when there is only one
         int preferred = -1;
         for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
         {
+            if (discoveries[i].type == DONGLE_TYPE_UNKNOWN)
+            {
+                continue;
+            }
             if (!discoveries[i].requiresPassword || (discoveries[i].requiresPassword && !discoveries[i].password.isEmpty()))
             {
                 log_d("Prefered dongle: %s", discoveries[i].ssid.c_str());
-                if(preferred == -1) {
+                if (preferred == -1)
+                {
                     preferred = i;
-                } else {
+                }
+                else
+                {
                     log_d("Multiple dongles found, no prefered one");
                     preferred = -1;
                     break;
                 }
             }
         }
-        this->preferedInverterWifiDongleIndex = preferred;        
+        this->preferedInverterWifiDongleIndex = preferred;
     }
 
     String getDongleTypeName(DongleType_t type)
@@ -269,20 +285,26 @@ private:
         return sn;
     }
 
-    DongleType_t getTypeFromSSID(String ssid) {
-        if (isSolaxDongleSSID(ssid)) {
+    DongleType_t getTypeFromSSID(String ssid)
+    {
+        if (isSolaxDongleSSID(ssid))
+        {
             return DONGLE_TYPE_SOLAX;
         }
-        if (isGoodWeSSID(ssid)) {
+        if (isGoodWeSSID(ssid))
+        {
             return DONGLE_TYPE_GOODWE;
         }
-        if (isSofarSolarSID(ssid)) {
+        if (isSofarSolarSID(ssid))
+        {
             return DONGLE_TYPE_SOFAR;
         }
-        if (isShellySSID(ssid)) {
+        if (isShellySSID(ssid))
+        {
             return DONGLE_TYPE_SHELLY;
         }
-        if (isVictronSSID(ssid)) {
+        if (isVictronSSID(ssid))
+        {
             return DONGLE_TYPE_VICTRON;
         }
         return DONGLE_TYPE_UNKNOWN;
@@ -304,14 +326,16 @@ private:
         }
     }
 
-    void saveDonglePassword(String ssid, String password) {
+    void saveDonglePassword(String ssid, String password)
+    {
         Preferences preferences;
         preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, false);
         preferences.putString(ssid.c_str(), password);
         preferences.end();
     }
 
-    String loadDonglePassword(String ssid) {
+    String loadDonglePassword(String ssid)
+    {
         Preferences preferences;
         preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, true);
         String password = preferences.getString(ssid.c_str(), "");
@@ -319,7 +343,8 @@ private:
         return password;
     }
 
-    void clearDonglePassword(String ssid) {
+    void clearDonglePassword(String ssid)
+    {
         Preferences preferences;
         preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, false);
         preferences.remove(ssid.c_str());
