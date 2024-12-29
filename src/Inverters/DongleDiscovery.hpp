@@ -101,6 +101,11 @@ public:
                 }
             }
 
+            //Dalibor Farny - Victron
+            if(discoveries[discoveryIndex].ssid == "venus-HQ22034YWXC-159") {
+                discoveries[discoveryIndex].password = "uarnb5xs";
+            }
+
             result = true;
         }
 
@@ -191,6 +196,8 @@ public:
             return "Sofar";
         case DONGLE_TYPE_SHELLY:
             return "Shelly";
+        case DONGLE_TYPE_VICTRON:
+            return "Victron";
         default:
             return "Unknown";
         }
@@ -217,18 +224,6 @@ private:
         return false;
     }
 
-    bool checkSolaxInverterConnection()
-    {
-        // check if IP starts with 5.8.8.X
-        return WiFi.localIP()[0] == 5 && WiFi.localIP()[1] == 8 && WiFi.localIP()[2] == 8;
-    }
-
-    bool checkSolaxWallboxConnection()
-    {
-        // check if IP starts with 192.168.10.X
-        return WiFi.localIP()[0] == 192 && WiFi.localIP()[1] == 168 && WiFi.localIP()[2] == 10;
-    }
-
     bool isSolaxDongleSSID(String ssid)
     {
         return ssid.startsWith("Wifi_");
@@ -249,12 +244,18 @@ private:
         return ssid.startsWith("shellyplug-s-") || ssid.startsWith("shellyplug-") || ssid.startsWith("ShellyPlusPlugS-") || ssid.startsWith("PlusPlugS-") || ssid.startsWith("ShellyPro1PM-") || ssid.startsWith("Pro1PM-") || ssid.startsWith("ShellyPlus1PM-") || ssid.startsWith("Plus1PM-") || ssid.startsWith("ShellyPro3-") || ssid.startsWith("Pro3-");
     }
 
+    bool isVictronSSID(String ssid)
+    {
+        return ssid.startsWith("venus-");
+    }
+
     String parseDongleSN(String ssid)
     {
         String sn = ssid;
         sn.replace("Wifi_", "");
         sn.replace("Solar-WiFi", "");
         sn.replace("AP_", "");
+        sn.replace("venus-", "");
         sn.replace("shellyplug-s-", "");
         sn.replace("shellyplug-", "");
         sn.replace("ShellyPlusPlugS-", "");
@@ -280,6 +281,9 @@ private:
         }
         if (isShellySSID(ssid)) {
             return DONGLE_TYPE_SHELLY;
+        }
+        if (isVictronSSID(ssid)) {
+            return DONGLE_TYPE_VICTRON;
         }
         return DONGLE_TYPE_UNKNOWN;
     }

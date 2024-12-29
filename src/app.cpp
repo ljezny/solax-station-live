@@ -10,6 +10,7 @@
 #include "Inverters/Goodwe/GoodweDongleAPI.hpp"
 #include "Inverters/Solax/SolaxDongleAPI.hpp"
 #include "Inverters/SofarSolar/SofarSolarDongleAPI.hpp"
+#include "Inverters/Victron/VictronDongleAPI.hpp"
 #include "Shelly/Shelly.hpp"
 #include "utils/UnitFormatter.hpp"
 #include "utils/SolarChartDataProvider.hpp"
@@ -226,6 +227,7 @@ InverterData_t loadInverterData(DongleDiscoveryResult_t &discoveryResult)
     static SolaxDongleAPI solaxDongleAPI = SolaxDongleAPI();
     static GoodweDongleAPI goodweDongleAPI = GoodweDongleAPI();
     static SofarSolarDongleAPI sofarSolarDongleAPI = SofarSolarDongleAPI();
+    static VictronDongleAPI victronDongleAPI = VictronDongleAPI();
 
     InverterData_t d;
     switch (discoveryResult.type)
@@ -238,6 +240,9 @@ InverterData_t loadInverterData(DongleDiscoveryResult_t &discoveryResult)
         break;
     case DONGLE_TYPE_SOFAR:
         d = sofarSolarDongleAPI.loadData(discoveryResult.sn);
+        break;
+    case DONGLE_TYPE_VICTRON:
+        d = victronDongleAPI.loadData(discoveryResult.sn);
         break;
     }
 
