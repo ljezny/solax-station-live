@@ -74,9 +74,9 @@ protected:
         memset(RX_BUFFER, 0, RX_BUFFER_SIZE);
         
         int len = client.read(RX_BUFFER, 2);
-        if (len != 2 || RX_BUFFER[0] != sequenceNumber >> 8 || RX_BUFFER[1] != sequenceNumber & 0xff)
+        if (RX_BUFFER[0] != sequenceNumber >> 8 || RX_BUFFER[1] != sequenceNumber & 0xff)
         {
-            log_d("Invalid sequence number");
+            log_d("Expected sequence number %d, but got %d", sequenceNumber, RX_BUFFER[0] << 8 | RX_BUFFER[1]);
             return false;
         }
 
