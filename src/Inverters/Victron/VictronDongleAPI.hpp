@@ -22,10 +22,10 @@ public:
         
         inverterData.millis = millis();
 
-        if(sendReadRequest(801, 6)) {
+        if(sendReadRequest(800, 12)) {
            if(readResponse()) {
                 inverterData.status = DONGLE_STATUS_OK;
-                inverterData.sn = macAddressToString();
+                inverterData.sn = String((char *) RX_BUFFER);
                 log_d("SN: %s", inverterData.sn.c_str());
            }
         }
@@ -43,12 +43,5 @@ public:
         return inverterData;
     }
 
-    private:
-        String macAddressToString() {
-            String mac = "";
-            for (int i = 0; i < 6; i++) {
-                mac += String(RX_BUFFER[i], HEX);                
-            }
-            return mac;
-        }        
+    private:        
 };
