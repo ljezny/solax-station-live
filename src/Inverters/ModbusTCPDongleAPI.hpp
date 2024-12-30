@@ -28,7 +28,7 @@ protected:
         client.stop();
     }
 
-    bool sendReadRequest(uint16_t addr, uint8_t len)
+    bool sendReadRequest(uint8_t unit, uint16_t addr, uint8_t len)
     {
         sequenceNumber++;
 
@@ -39,7 +39,7 @@ protected:
                 0, 
                 0, 
                 6, //length of following 
-                0x00, //unit identifier
+                unit, //unit identifier
                 0x03, //function code 
                 addr >> 8, 
                 addr & 0xff,
@@ -98,9 +98,9 @@ protected:
         }
 
         len = client.read(RX_BUFFER, 1); // read unit identifier
-        if(RX_BUFFER[0] != 0)
+        if(len != 1)
         {
-            log_d("Invalid unit identifier");
+            log_d("Unable to read client.");
             return false;
         }
 
@@ -142,6 +142,11 @@ protected:
     uint32_t readUInt32(byte reg)
     {
         return readUInt16(reg) << 16 | readUInt16(reg + 1);
+    }
+
+    uint64_t readUInt64(byte reg)
+    {
+        return readUInt32(reg) << 32 | readUInt32(reg + 1);
     }
     
     int32_t readInt32(byte reg)

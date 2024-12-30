@@ -22,7 +22,7 @@ public:
         
         inverterData.millis = millis();
 
-        if(sendReadRequest(800, 12)) {
+        if(sendReadRequest(100, 800, 12)) {
            if(readResponse()) {
                 inverterData.status = DONGLE_STATUS_OK;
                 inverterData.sn = String((char *) RX_BUFFER);
@@ -30,26 +30,39 @@ public:
            }
         }
 
-        if(sendReadRequest(842, 2)) {
+        if(sendReadRequest(100, 842, 2)) {
             if(readResponse()) {
                 inverterData.batteryPower = readInt16(842 - 842);
                 inverterData.soc = readUInt16(843 - 842);
             }
         }
 
-        if(sendReadRequest(817, 3)) {
+        if(sendReadRequest(100, 817, 3)) {
             if(readResponse()) {
                 inverterData.loadPower = readUInt16(817 - 817) + readUInt16(818 - 817) + readUInt16(819 - 817);
                 inverterData.feedInPower = readInt16(820 - 817) + readInt16(821 - 817) + readInt16(822 - 817);
             }
         }
 
-        if(sendReadRequest(868, 16)) {
+        if(sendReadRequest(100, 868, 16)) {
             if(readResponse()) {
                 inverterData.inverterPower = readInt32(870 - 868);
                 inverterData.L1Power = readInt32(878 - 868);
                 inverterData.L2Power = readInt32(880 - 868);
                 inverterData.L3Power = readInt32(882 - 868);
+            }
+        }
+
+        if(sendReadRequest(100, 830, 4)) {
+            if(readResponse()) {
+                time_t time = readUInt32(830 - 830);
+                log_d("Time: %s", ctime(&time));
+            }
+        }
+
+        if(sendReadRequest(225, 262, 16)) {
+            if(readResponse()) {
+                inverterData.batteryTemperature = readUInt16(262 - 262) / 10;             
             }
         }
 
