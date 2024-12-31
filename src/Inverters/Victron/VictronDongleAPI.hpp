@@ -59,23 +59,34 @@ public:
             inverterData.pv1Power = pvPower;
         }
 
-        response = sendModbusRequest(100, 830, 4);
-        if (response.functionCode == 0x03)
-        {
-            time_t time = readUInt64(response, 830);
-            log_d("Time: %s", ctime(&time));
-        }
-
         response = sendModbusRequest(100, 790, 1);
         if (response.functionCode == 0x03)
         {
-            inverterData.pvTotal = readUInt16(response, 790) / 10;
+            inverterData.pvTotal = readUInt16(response, 790) / 10.0;
         }
 
         response = sendModbusRequest(225, 262, 16);
         if (response.functionCode == 0x03)
         {
             inverterData.batteryTemperature = readUInt16(response, 262) / 10;
+        }
+
+        response = sendModbusRequest(100, 830, 4);
+        if (response.functionCode == 0x03)
+        {
+            time_t time = readUInt64(response, 830);
+            log_d("Time: %s", ctime(&time));
+            log_d("Day: %d", day);
+            struct tm *tm = localtime(&time);
+            int day = tm->tm_mday;
+            if (this->day != day)
+            {
+                log_d("Day changed, resetting counters");
+                this->day = day;
+                pvTotal = inverterData.pvTotal;
+            }
+
+            inverterData.pvToday = inverterData.pvTotal - pvTotal;
         }
 
         logInverterData(inverterData);
