@@ -139,13 +139,12 @@ protected:
 
         //log response data as hex
         log_d("Request address: %d", addr);
-        log_d("Response data:");
         String data = "";
         for (int i = 0; i < response.length; i++)
         {
             data += String(response.data[i], HEX);
         }
-        log_d(data);
+        log_d("Response data: %s", data.c_str());
 
         return response;
     }
