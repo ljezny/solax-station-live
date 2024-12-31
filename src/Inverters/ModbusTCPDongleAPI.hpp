@@ -7,6 +7,17 @@
 #include <NetworkClient.h>
 
 #define RX_BUFFER_SIZE 259
+
+typedef struct
+{
+    uint16_t sequenceNumber;
+    uint16_t unit;
+    uint8_t functionCode;
+    uint16_t address;
+    uint16_t length;
+    uint8_t data[RX_BUFFER_SIZE];
+} ModbusTCPResponse_t;
+
 class ModbusTCPDongleAPI
 {
 public:
@@ -15,9 +26,9 @@ public:
     }
 
 protected:
-    NetworkClient client;    
-    byte RX_BUFFER[RX_BUFFER_SIZE];
+    NetworkClient client;
     uint16_t sequenceNumber;
+
     bool connect(IPAddress ip, uint16_t port)
     {
         return client.connect(ip, port);
@@ -28,26 +39,105 @@ protected:
         client.stop();
     }
 
-    bool sendReadRequest(uint8_t unit, uint16_t addr, uint8_t len)
+    ModbusTCPResponse_t sendReadRequest(uint8_t unit, uint16_t addr, uint8_t count)
     {
         sequenceNumber++;
 
         byte request[] = {
-                sequenceNumber >> 8, 
-                sequenceNumber & 0xff, 
-                0, 
-                0, 
-                0, 
-                6, //length of following 
-                unit, //unit identifier
-                0x03, //function code 
-                addr >> 8, 
-                addr & 0xff,
-                0,
-                len
-        };
+            sequenceNumber >> 8,
+            sequenceNumber & 0xff,
+            0,
+            0,
+            0,
+            6,    // length of following
+            unit, // unit identifier
+            0x03, // function code
+            addr >> 8,
+            addr & 0xff,
+            0,
+            count};
+
+        ModbusTCPResponse_t response;
+        response.sequenceNumber = sequenceNumber;
+
+        int len = client.write(request, sizeof(request)) == sizeof(request);
+        if (len != sizeof(request))
+        {
+            log_d("Failed to send request");
+            return response;
+        }
+
+        if (!awaitResponse(5000))
+        {
+            log_d("Response timeout");
+            return response;
+        }
         
-        return client.write(request, sizeof(request)) == sizeof(request);
+        response.address = addr;
+
+        memset(response.data, 0, RX_BUFFER_SIZE);
+
+        len = client.read(response.data, 2);
+        uint16_t sequenceNumberReceived = response.data[0] << 8 | response.data[1];
+        if (sequenceNumberReceived != sequenceNumber)
+        {
+            log_d("Expected sequence number %d, but got %d", sequenceNumber, sequenceNumberReceived);
+            client.read(response.data, RX_BUFFER_SIZE); // clear buffer
+            memset(response.data, 0, RX_BUFFER_SIZE);
+            return response;
+        }
+        response.sequenceNumber = sequenceNumberReceived;
+        
+        len = client.read(response.data, 2);
+        if (len != 2)
+        {
+            log_d("Unable to read client.");
+            return response;
+        }
+        
+        len = client.read(response.data, 2); // read length
+        if (len != 2)
+        {
+            log_d("Unable to read client.");
+            return response;
+        }
+
+        len = client.read(response.data, 1); // read unit identifier
+        if (len != 1)
+        {
+            log_d("Unable to read client.");
+            return response;
+        }
+
+        len = client.read(response.data, 1); // read function code
+        response.functionCode = response.data[0];
+        if (response.data[0] != 0x03)
+        {
+            log_d("Invalid function code");
+            log_d("Unit: %d, Function code: %d", unit, addr);
+            log_d("Returned function code: %d", response.data[0]);
+            client.read(response.data, RX_BUFFER_SIZE); // clear buffer
+            memset(response.data, 0, RX_BUFFER_SIZE);
+            return response;
+        }
+
+        len = client.read(response.data, 1); // read byte count
+        if (len != 1)
+        {
+            log_d("Unable to read client.");
+            return response;
+        }
+        response.length = response.data[0];
+
+        memset(response.data, 0, RX_BUFFER_SIZE);
+        len = client.read(response.data, response.length); // read data
+        if (len != response.length)
+        {
+            log_d("Unable to read client.");
+            return response;
+        }
+
+        return response;
     }
 
     bool awaitResponse(int timeout)
@@ -65,98 +155,35 @@ protected:
         return false;
     }
 
-    bool readResponse() {
-        if (!awaitResponse(5000))
-        {
-            log_d("Response timeout");
-            return false;
-        }
-        memset(RX_BUFFER, 0, RX_BUFFER_SIZE);
-        
-        int len = client.read(RX_BUFFER, 2);
-        uint16_t sequenceNumberReceived = RX_BUFFER[0] << 8 | RX_BUFFER[1];
-        if (sequenceNumberReceived != sequenceNumber)
-        {
-            log_d("Expected sequence number %d, but got %d", sequenceNumber, sequenceNumberReceived);
-            client.read(RX_BUFFER, RX_BUFFER_SIZE); // clear buffer
-            memset(RX_BUFFER, 0, RX_BUFFER_SIZE);
-            return false;
-        }
-
-        len = client.read(RX_BUFFER, 2);
-        if (len != 2)
-        {
-            log_d("Unable to read client.");
-            return false;
-        }
-
-        len = client.read(RX_BUFFER, 2); // read length
-        if (len != 2)
-        {
-            log_d("Unable to read client.");
-            return false;
-        }
-
-        len = client.read(RX_BUFFER, 1); // read unit identifier
-        if(len != 1)
-        {
-            log_d("Unable to read client.");
-            return false;
-        }
-
-        len = client.read(RX_BUFFER, 1); // read function code
-        if(RX_BUFFER[0] != 0x03)
-        {
-            log_d("Invalid function code");
-            return false;
-        }
-
-        len = client.read(RX_BUFFER, 1); // read byte count
-        if(len != 1)
-        {
-            log_d("Unable to read client.");
-            return false;
-        }
-
-        uint8_t byteCount = RX_BUFFER[0];
-        memset(RX_BUFFER, 0, RX_BUFFER_SIZE);
-        len = client.read(RX_BUFFER, byteCount); // read data
-        if(len != byteCount)
-        {
-            log_d("Unable to read client.");
-            return false;
-        }
-        return true;
+    uint16_t readUInt16(ModbusTCPResponse_t &response, byte reg)
+    {
+        uint8_t index = reg - response.address;
+        return (response.data[index * 2] << 8 | response.data[index * 2 + 1]);
     }
 
-    uint16_t readUInt16(byte reg)
+    int16_t readInt16(ModbusTCPResponse_t &response, byte reg)
     {
-        return (RX_BUFFER[reg * 2] << 8 | RX_BUFFER[reg * 2 + 1]);
+        return readUInt16(response, reg);
     }
 
-    int16_t readInt16(byte reg)
+    uint32_t readUInt32(ModbusTCPResponse_t &response, byte reg)
     {
-        return (RX_BUFFER[reg * 2] << 8 | RX_BUFFER[reg * 2 + 1]);
+        return readUInt16(response, reg) << 16 | readUInt16(response, reg + 1);
     }
 
-    uint32_t readUInt32(byte reg)
+    uint64_t readUInt64(ModbusTCPResponse_t &response, byte reg)
     {
-        return readUInt16(reg) << 16 | readUInt16(reg + 1);
+        return readUInt32(response, reg) << 32 | readUInt32(response, reg + 1);
     }
 
-    uint64_t readUInt64(byte reg)
+    int32_t readInt32(ModbusTCPResponse_t &response, byte reg)
     {
-        return readUInt32(reg) << 32 | readUInt32(reg + 1);
-    }
-    
-    int32_t readInt32(byte reg)
-    {
-        return readInt16(reg) << 16 | readInt16(reg + 1);
+        return readInt16(response, reg) << 16 | readInt16(response, reg + 1);
     }
 
-    float readIEEE754(byte reg)
+    float readIEEE754(ModbusTCPResponse_t &response, byte reg)
     {
-        uint32_t v = readUInt32(reg);
+        uint32_t v = readUInt32(response, reg);
         return *(float *)&v;
     }
 };

@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include "../ModbusTCPDongleAPI.hpp"
 
-class VictronDongleAPI: public ModbusTCPDongleAPI
+class VictronDongleAPI : public ModbusTCPDongleAPI
 {
 public:
     VictronDongleAPI()
@@ -14,65 +14,67 @@ public:
     {
         InverterData_t inverterData;
 
-        if(!connect(IPAddress(172, 24, 24, 1), 502)) {
+        if (!connect(IPAddress(172, 24, 24, 1), 502))
+        {
             log_d("Failed to connect to Victron dongle");
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             return inverterData;
         }
-        
+
         inverterData.millis = millis();
+        ModbusTCPResponse_t response;
 
-        if(sendReadRequest(100, 800, 12)) {
-           if(readResponse()) {
-                inverterData.status = DONGLE_STATUS_OK;
-                inverterData.sn = String((char *) RX_BUFFER);
-                log_d("SN: %s", inverterData.sn.c_str());
-           }
+        response = sendReadRequest(100, 800, 12);
+        if (response.functionCode == 0x03)
+        {
+            inverterData.status = DONGLE_STATUS_OK;
+            inverterData.sn = String((char *)response.data);
+            log_d("SN: %s", inverterData.sn.c_str());
         }
 
-        if(sendReadRequest(100, 842, 2)) {
-            if(readResponse()) {
-                inverterData.batteryPower = readInt16(842 - 842);
-                inverterData.soc = readUInt16(843 - 842);
-            }
+        response = sendReadRequest(100, 842, 2);
+        if (response.functionCode == 0x03)
+        {
+            inverterData.batteryPower = readInt16(response, 842);
+            inverterData.soc = readUInt16(response, 843);
         }
 
-        if(sendReadRequest(100, 817, 3)) {
-            if(readResponse()) {
-                inverterData.loadPower = readUInt16(817 - 817) + readUInt16(818 - 817) + readUInt16(819 - 817);
-                inverterData.feedInPower = readInt16(820 - 817) + readInt16(821 - 817) + readInt16(822 - 817);
-            }
+        response = sendReadRequest(100, 817, 3);
+        if (response.functionCode == 0x03)
+        {
+            inverterData.loadPower = readUInt16(response, 817) + readUInt16(response, 818) + readUInt16(response, 819);
+            inverterData.feedInPower = readInt16(response, 820) + readInt16(response, 821) + readInt16(response, 822);
         }
 
-        if(sendReadRequest(100, 868, 16)) {
-            if(readResponse()) {
-                inverterData.inverterPower = readInt32(870 - 868);
-                inverterData.L1Power = readInt32(878 - 868);
-                inverterData.L2Power = readInt32(880 - 868);
-                inverterData.L3Power = readInt32(882 - 868);
-            }
+        response = sendReadRequest(100, 868, 16);
+        if (response.functionCode == 0x03)
+        {
+            inverterData.inverterPower = readInt32(response, 870);
+            inverterData.L1Power = readInt32(response, 878);
+            inverterData.L2Power = readInt32(response, 880);
+            inverterData.L3Power = readInt32(response, 882);
         }
 
-        if(sendReadRequest(100, 776, 2)) {
-            if(readResponse()) {
-                int pvPower = readUInt16(776 - 776);
-                pvPower = pvPower * readInt16(777 - 776);
-                pvPower = pvPower / 10 / 100;
-                inverterData.pv1Power = pvPower;
-            }
+        response = sendReadRequest(100, 776, 2);
+        if (response.functionCode == 0x03)
+        {
+            int pvPower = readUInt16(response, 776);
+            pvPower = pvPower * readInt16(response, 777);
+            pvPower = pvPower / 10 / 100;
+            inverterData.pv1Power = pvPower;
         }
 
-        if(sendReadRequest(100, 830, 4)) {
-            if(readResponse()) {
-                time_t time = readUInt32(830 - 830);
-                log_d("Time: %s", ctime(&time));
-            }
+        response = sendReadRequest(100, 830, 4);
+        if (response.functionCode == 0x03)
+        {
+            time_t time = readUInt32(response, 830);
+            log_d("Time: %s", ctime(&time));
         }
 
-        if(sendReadRequest(225, 262, 16)) {
-            if(readResponse()) {
-                inverterData.batteryTemperature = readUInt16(262 - 262) / 10;             
-            }
+        response = sendReadRequest(225, 262, 16);
+        if (response.functionCode == 0x03)
+        {
+            inverterData.batteryTemperature = readUInt16(response, 262) / 10;
         }
 
         logInverterData(inverterData);
@@ -81,5 +83,5 @@ public:
         return inverterData;
     }
 
-    private:        
+private:
 };
