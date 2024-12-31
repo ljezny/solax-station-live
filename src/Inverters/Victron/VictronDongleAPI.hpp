@@ -45,7 +45,7 @@ public:
             inverterData.feedInPower = readInt16(response, 820) + readInt16(response, 821) + readInt16(response, 822);
         }
 
-        response = sendModbusRequest(100, 872, 6);
+        response = sendModbusRequest(100, 872, 12);
         if (response.functionCode == 0x03)
         {
             inverterData.loadPower = readInt32(response, 872) + readInt32(response, 874) + readInt32(response, 876);
