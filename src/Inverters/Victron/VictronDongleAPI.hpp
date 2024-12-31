@@ -67,7 +67,7 @@ public:
         response = sendModbusRequest(100, 830, 4);
         if (response.functionCode == 0x03)
         {
-            time_t time = readUInt32(response, 830);
+            time_t time = readUInt64(response, 830);
             log_d("Time: %s", ctime(&time));
         }
 
