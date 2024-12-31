@@ -53,6 +53,15 @@ public:
             }
         }
 
+        if(sendReadRequest(100, 776, 2)) {
+            if(readResponse()) {
+                int pvPower = readUInt16(776 - 776);
+                pvPower = pvPower * readInt16(777 - 776);
+                pvPower = pvPower / 10 / 100;
+                inverterData.pv1Power = pvPower;
+            }
+        }
+
         if(sendReadRequest(100, 830, 4)) {
             if(readResponse()) {
                 time_t time = readUInt32(830 - 830);
