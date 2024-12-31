@@ -328,7 +328,7 @@ private:
 
     String hashString(String str)
     {
-        uint64_t hash = 0;
+        uint32_t hash = 0;
         for (int i = 0; i < str.length(); i++)
         {
             hash = (hash << 5) + hash + str[i];
