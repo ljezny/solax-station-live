@@ -62,7 +62,7 @@ public:
         response = sendModbusRequest(100, 790, 1);
         if (response.functionCode == 0x03)
         {
-            inverterData.pvTotal = ((double)readUInt16(response, 790)) / 10.0;
+            inverterData.pvTotal = readUInt16(response, 790) / 10.0;
         }
 
         response = sendModbusRequest(225, 262, 16);

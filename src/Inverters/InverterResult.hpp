@@ -71,7 +71,7 @@ void logInverterData(InverterData_t& inverterData) {
     log_d("Inverter Temperature: %d", inverterData.inverterTemperature);
     log_d("Battery Temperature: %d", inverterData.batteryTemperature);
     log_d("PV Today: %f", inverterData.pvToday);
-    log_d("PV Total: %d", inverterData.pvTotal);
+    log_d("PV Total: %f", inverterData.pvTotal);
     log_d("Has Battery: %d", inverterData.hasBattery);
 } 
 
