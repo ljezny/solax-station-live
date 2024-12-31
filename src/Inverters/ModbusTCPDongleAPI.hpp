@@ -137,6 +137,14 @@ protected:
             return response;
         }
 
+        //log response data as hex
+        log_d("Request address: %d", addr);
+        log_d("Response data:");
+        for (int i = 0; i < response.length; i++)
+        {
+            log_d("%02X", response.data[i]);
+        }
+
         return response;
     }
 
