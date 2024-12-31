@@ -182,7 +182,7 @@ protected:
 
     uint64_t readUInt64(ModbusTCPResponse_t &response, u16_t reg)
     {
-        return ((uint64_t)(response, reg)) << 32 | readUInt32(response, reg + 1);
+        return ((uint64_t)readUInt32(response, reg)) << 32 | readUInt32(response, reg + 2);
     }
 
     int32_t readInt32(ModbusTCPResponse_t &response, u16_t reg)
