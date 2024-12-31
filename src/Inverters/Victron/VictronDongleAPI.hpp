@@ -66,6 +66,12 @@ public:
             log_d("Time: %s", ctime(&time));
         }
 
+        response = sendModbusRequest(100, 784, 1);
+        if (response.functionCode == 0x03)
+        {
+            inverterData.pvToday = readUInt16(response, 784) / 10;
+        }
+
         response = sendModbusRequest(225, 262, 16);
         if (response.functionCode == 0x03)
         {
@@ -79,4 +85,6 @@ public:
     }
 
 private:
+    double pvTotal = 0;
+    int day = -1;
 };
