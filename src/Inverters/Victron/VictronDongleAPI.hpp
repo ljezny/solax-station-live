@@ -66,10 +66,10 @@ public:
             log_d("Time: %s", ctime(&time));
         }
 
-        response = sendModbusRequest(100, 784, 1);
+        response = sendModbusRequest(100, 790, 1);
         if (response.functionCode == 0x03)
         {
-            inverterData.pvToday = readUInt16(response, 784) / 10;
+            inverterData.pvTotal = readUInt16(response, 790) / 10;
         }
 
         response = sendModbusRequest(225, 262, 16);
