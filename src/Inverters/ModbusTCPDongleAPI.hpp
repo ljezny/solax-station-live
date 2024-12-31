@@ -39,7 +39,7 @@ protected:
         client.stop();
     }
 
-    ModbusTCPResponse_t sendReadRequest(uint8_t unit, uint16_t addr, uint8_t count)
+    ModbusTCPResponse_t sendModbusRequest(uint8_t unit, uint16_t addr, uint8_t count)
     {
         sequenceNumber++;
 
@@ -60,7 +60,7 @@ protected:
         ModbusTCPResponse_t response;
         response.sequenceNumber = sequenceNumber;
 
-        int len = client.write(request, sizeof(request)) == sizeof(request);
+        int len = client.write(request, sizeof(request));
         if (len != sizeof(request))
         {
             log_d("Failed to send request");
@@ -155,33 +155,33 @@ protected:
         return false;
     }
 
-    uint16_t readUInt16(ModbusTCPResponse_t &response, byte reg)
+    uint16_t readUInt16(ModbusTCPResponse_t &response, u16_t reg)
     {
         uint8_t index = reg - response.address;
         return (response.data[index * 2] << 8 | response.data[index * 2 + 1]);
     }
 
-    int16_t readInt16(ModbusTCPResponse_t &response, byte reg)
+    int16_t readInt16(ModbusTCPResponse_t &response, u16_t reg)
     {
         return readUInt16(response, reg);
     }
 
-    uint32_t readUInt32(ModbusTCPResponse_t &response, byte reg)
+    uint32_t readUInt32(ModbusTCPResponse_t &response, u16_t reg)
     {
-        return readUInt16(response, reg) << 16 | readUInt16(response, reg + 1);
+        return ((uint32_t)readUInt16(response, reg)) << 16 | readUInt16(response, reg + 1);
     }
 
-    uint64_t readUInt64(ModbusTCPResponse_t &response, byte reg)
+    uint64_t readUInt64(ModbusTCPResponse_t &response, u16_t reg)
     {
-        return readUInt32(response, reg) << 32 | readUInt32(response, reg + 1);
+        return ((uint64_t)(response, reg)) << 32 | readUInt32(response, reg + 1);
     }
 
-    int32_t readInt32(ModbusTCPResponse_t &response, byte reg)
+    int32_t readInt32(ModbusTCPResponse_t &response, u16_t reg)
     {
-        return readInt16(response, reg) << 16 | readInt16(response, reg + 1);
+        return ((int32_t)readInt16(response, reg)) << 16 | readInt16(response, reg + 1);
     }
 
-    float readIEEE754(ModbusTCPResponse_t &response, byte reg)
+    float readIEEE754(ModbusTCPResponse_t &response, u16_t reg)
     {
         uint32_t v = readUInt32(response, reg);
         return *(float *)&v;

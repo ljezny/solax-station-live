@@ -24,7 +24,7 @@ public:
         inverterData.millis = millis();
         ModbusTCPResponse_t response;
 
-        response = sendReadRequest(100, 800, 12);
+        response = sendModbusRequest(100, 800, 12);
         if (response.functionCode == 0x03)
         {
             inverterData.status = DONGLE_STATUS_OK;
@@ -32,21 +32,21 @@ public:
             log_d("SN: %s", inverterData.sn.c_str());
         }
 
-        response = sendReadRequest(100, 842, 2);
+        response = sendModbusRequest(100, 842, 2);
         if (response.functionCode == 0x03)
         {
             inverterData.batteryPower = readInt16(response, 842);
             inverterData.soc = readUInt16(response, 843);
         }
 
-        response = sendReadRequest(100, 817, 3);
+        response = sendModbusRequest(100, 817, 3);
         if (response.functionCode == 0x03)
         {
             inverterData.loadPower = readUInt16(response, 817) + readUInt16(response, 818) + readUInt16(response, 819);
             inverterData.feedInPower = readInt16(response, 820) + readInt16(response, 821) + readInt16(response, 822);
         }
 
-        response = sendReadRequest(100, 868, 16);
+        response = sendModbusRequest(100, 868, 16);
         if (response.functionCode == 0x03)
         {
             inverterData.inverterPower = readInt32(response, 870);
@@ -55,7 +55,7 @@ public:
             inverterData.L3Power = readInt32(response, 882);
         }
 
-        response = sendReadRequest(100, 776, 2);
+        response = sendModbusRequest(100, 776, 2);
         if (response.functionCode == 0x03)
         {
             int pvPower = readUInt16(response, 776);
@@ -64,14 +64,14 @@ public:
             inverterData.pv1Power = pvPower;
         }
 
-        response = sendReadRequest(100, 830, 4);
+        response = sendModbusRequest(100, 830, 4);
         if (response.functionCode == 0x03)
         {
             time_t time = readUInt32(response, 830);
             log_d("Time: %s", ctime(&time));
         }
 
-        response = sendReadRequest(225, 262, 16);
+        response = sendModbusRequest(225, 262, 16);
         if (response.functionCode == 0x03)
         {
             inverterData.batteryTemperature = readUInt16(response, 262) / 10;
