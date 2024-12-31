@@ -39,20 +39,15 @@ public:
             inverterData.soc = readUInt16(response, 843);
         }
 
-        response = sendModbusRequest(100, 817, 6);
+        response = sendModbusRequest(100, 808, 15);
         if (response.functionCode == 0x03)
         {
+            inverterData.L1Power = readInt32(response, 808);
+            inverterData.L2Power = readInt32(response, 809);
+            inverterData.L3Power = readInt32(response, 810);
+            inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
             inverterData.loadPower = readUInt16(response, 817) + readUInt16(response, 818) + readUInt16(response, 819);
             inverterData.feedInPower = readInt16(response, 820) + readInt16(response, 821) + readInt16(response, 822);
-        }
-
-        response = sendModbusRequest(100, 872, 12);
-        if (response.functionCode == 0x03)
-        {
-            inverterData.L1Power = readInt32(response, 878);
-            inverterData.L2Power = readInt32(response, 880);
-            inverterData.L3Power = readInt32(response, 882);
-            inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
         }
 
         response = sendModbusRequest(100, 776, 2);
