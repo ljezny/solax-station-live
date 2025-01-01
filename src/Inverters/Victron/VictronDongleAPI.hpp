@@ -57,10 +57,11 @@ public:
                 continue;
             }
 
-            response = sendModbusRequest(solarChargerUnits[i], 3730, 1);
+            response = sendModbusRequest(solarChargerUnits[i], 3728, 3);
             if (response.functionCode == 0x03)
             {
                 int pvPower = readUInt16(response, 3730);
+                int pvTotal = readUInt32(response, 3728);
                 switch (solarChargerIndex)
                 {
                 case 0:
@@ -79,16 +80,11 @@ public:
                     inverterData.pv4Power += pvPower;
                     break;
                 }
+                inverterData.pvTotal += pvTotal;
                 solarChargerIndex++;    
             } else {
                 solarChargerUnits[i] = 0;
             }
-        }
-
-        response = sendModbusRequest(100, 790, 1);
-        if (response.functionCode == 0x03)
-        {
-            inverterData.pvTotal = readUInt16(response, 790) / 10.0;
         }
 
         response = sendModbusRequest(225, 262, 16);
