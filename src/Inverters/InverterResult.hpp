@@ -24,7 +24,9 @@ typedef struct
     int16_t batteryPower = 0;
     float batteryVoltage = 0.0f;
     double batteryChargedToday = 0;
+    double batteryChargedTotal = 0;
     double batteryDischargedToday = 0;
+    double batteryDischargedTotal = 0;
     double gridBuyToday = 0;
     double gridSellToday = 0;
     double gridBuyTotal = 0;

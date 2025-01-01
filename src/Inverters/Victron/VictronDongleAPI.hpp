@@ -50,13 +50,39 @@ public:
             inverterData.feedInPower = readInt16(response, 820) + readInt16(response, 821) + readInt16(response, 822);
         }
 
-        response = sendModbusRequest(100, 776, 2);
-        if (response.functionCode == 0x03)
+        int solarChargerIndex = 0;  
+        for (int i = 0; i < sizeof(solarChargerUnits); i++)
         {
-            int pvPower = readUInt16(response, 776);
-            pvPower = pvPower * readInt16(response, 777);
-            pvPower = pvPower / 10 / 100;
-            inverterData.pv1Power = pvPower;
+            if(solarChargerUnits[i] == 0) {
+                continue;
+            }
+
+            response = sendModbusRequest(solarChargerUnits[i], 3730, 1);
+            if (response.functionCode == 0x03)
+            {
+                int pvPower = readUInt16(response, 3730);
+                switch (solarChargerIndex)
+                {
+                case 0:
+                    inverterData.pv1Power = pvPower;
+                    break;
+                case 1:
+                    inverterData.pv2Power = pvPower;
+                    break;
+                case 2:
+                    inverterData.pv3Power = pvPower;
+                    break;
+                case 3:
+                    inverterData.pv4Power = pvPower;
+                    break;
+                default:
+                    inverterData.pv4Power += pvPower;
+                    break;
+                }
+                solarChargerIndex++;    
+            } else {
+                solarChargerUnits[i] = 0;
+            }
         }
 
         response = sendModbusRequest(100, 790, 1);
@@ -69,6 +95,13 @@ public:
         if (response.functionCode == 0x03)
         {
             inverterData.batteryTemperature = readUInt16(response, 262) / 10;
+        }
+
+        response = sendModbusRequest(225, 301, 2);
+        if (response.functionCode == 0x03)
+        {
+            inverterData.batteryDischargedTotal = readUInt16(response, 301) / 10;
+            inverterData.batteryChargedTotal = readUInt16(response, 302) / 10;
         }
 
         response = sendModbusRequest(100, 830, 4);
@@ -84,9 +117,13 @@ public:
                 log_d("Day changed, resetting counters");
                 this->day = day;
                 pvTotal = inverterData.pvTotal;
+                batteryDischargedTotal = inverterData.batteryDischargedTotal;
+                batteryChargedTotal = inverterData.batteryChargedTotal;
             }
 
             inverterData.pvToday = inverterData.pvTotal - pvTotal;
+            inverterData.batteryDischargedToday = inverterData.batteryDischargedTotal - batteryDischargedTotal;
+            inverterData.batteryChargedToday = inverterData.batteryChargedTotal - batteryChargedTotal;
         }
 
         logInverterData(inverterData);
@@ -97,5 +134,15 @@ public:
 
 private:
     double pvTotal = 0;
+    double batteryDischargedTotal = 0;
+    double batteryChargedTotal = 0;
     int day = -1;
+    uint8_t solarChargerUnits[100] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                                 11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+                                 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
+                                 44, 45, 46, 100, 101, 204, 205, 206, 207, 208, 209,
+                                 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
+                                 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231,
+                                 232, 233, 234, 235, 236, 237, 238, 239, 242, 243, 245,
+                                 246, 247};
 };
