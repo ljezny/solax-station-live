@@ -42,18 +42,35 @@ public:
         response = sendModbusRequest(100, 808, 15);
         if (response.functionCode == 0x03)
         {
-            inverterData.L1Power = readInt32(response, 808);
-            inverterData.L2Power = readInt32(response, 809);
-            inverterData.L3Power = readInt32(response, 810);
-            inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
             inverterData.loadPower = readUInt16(response, 817) + readUInt16(response, 818) + readUInt16(response, 819);
             inverterData.feedInPower = readInt16(response, 820) + readInt16(response, 821) + readInt16(response, 822);
         }
 
-        int solarChargerIndex = 0;  
+        for (int i = 0; i < sizeof(vebusUnits); i++)
+        {
+            if (vebusUnits[i] == 0)
+            {
+                continue;
+            }
+            response = sendModbusRequest(227, 23, 3);
+            if (response.functionCode == 0x03)
+            {
+                inverterData.L1Power = readUInt16(response, 23) * 10;
+                inverterData.L2Power = readUInt16(response, 24) * 10;
+                inverterData.L3Power = readUInt16(response, 25) * 10;
+                inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
+            }
+            else
+            {
+                vebusUnits[i] = 0;
+            }
+        }
+
+        int solarChargerIndex = 0;
         for (int i = 0; i < sizeof(solarChargerUnits); i++)
         {
-            if(solarChargerUnits[i] == 0) {
+            if (solarChargerUnits[i] == 0)
+            {
                 continue;
             }
 
@@ -81,8 +98,10 @@ public:
                     break;
                 }
                 inverterData.pvTotal += pvTotal;
-                solarChargerIndex++;    
-            } else {
+                solarChargerIndex++;
+            }
+            else
+            {
                 solarChargerUnits[i] = 0;
             }
         }
@@ -104,6 +123,7 @@ public:
         if (response.functionCode == 0x03)
         {
             time_t time = readUInt64(response, 830);
+
             log_d("Time: %s", ctime(&time));
             log_d("Day: %d", day);
             struct tm *tm = localtime(&time);
@@ -134,11 +154,19 @@ private:
     double batteryChargedTotal = 0;
     int day = -1;
     uint8_t solarChargerUnits[100] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                                 11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-                                 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
-                                 44, 45, 46, 100, 101, 204, 205, 206, 207, 208, 209,
-                                 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
-                                 221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231,
-                                 232, 233, 234, 235, 236, 237, 238, 239, 242, 243, 245,
-                                 246, 247};
+                                      11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+                                      31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
+                                      44, 45, 46, 100, 101, 204, 205, 206, 207, 208, 209,
+                                      210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
+                                      221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231,
+                                      232, 233, 234, 235, 236, 237, 238, 239, 242, 243, 245,
+                                      246, 247};
+    uint8_t vebusUnits[100] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                               11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+                               31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
+                               44, 45, 46, 100, 101, 204, 205, 206, 207, 208, 209,
+                               210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
+                               221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231,
+                               232, 233, 234, 235, 236, 237, 238, 239, 242, 243, 245,
+                               246, 247};
 };
