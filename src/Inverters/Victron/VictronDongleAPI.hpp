@@ -52,7 +52,7 @@ public:
             {
                 continue;
             }
-            response = sendModbusRequest(227, 23, 3);
+            response = sendModbusRequest(vebusUnits[i], 23, 3);
             if (response.functionCode == 0x03)
             {
                 inverterData.L1Power = readUInt16(response, 23) * 10;
