@@ -63,12 +63,11 @@ public:
                 response = sendModbusRequest(vebusUnits[i], 74, 20);
                 if (response.functionCode == 0x03)
                 {
-                    
                     inverterData.gridBuyTotal = readUInt32(response, 74) / 100 + readUInt32(response, 76) / 100; //total grid use
                     inverterData.gridSellTotal = readUInt32(response, 86) / 100; 
                     //inverterData.batteryChargedTotal = readUInt32(response, 76) / 100;
-                    inverterData.pvTotal = readUInt16(response, 90) / 100; //solar + battery
-                    inverterData.loadTotal = inverterData.pvTotal + gridBuyTotal - gridSellTotal;
+                    //inverterData.pvTotal = readUInt32(response, 90) / 100; //solar + battery
+                    inverterData.loadTotal = readUInt32(response, 74) / 100 + readUInt32(response, 90) / 100;
                 }
             }
             else
