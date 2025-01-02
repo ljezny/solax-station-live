@@ -59,6 +59,13 @@ public:
                 inverterData.L2Power = readUInt16(response, 24) * 10;
                 inverterData.L3Power = readUInt16(response, 25) * 10;
                 inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
+
+                response = sendModbusRequest(vebusUnits[i], 74, 20);
+                if (response.functionCode == 0x03)
+                {
+                    inverterData.batteryChargedTotal = readUInt32(response, 76) / 100;
+                    inverterData.batteryDischargedToday = readUInt16(response, 90) / 100;
+                }
             }
             else
             {
@@ -110,13 +117,6 @@ public:
         if (response.functionCode == 0x03)
         {
             inverterData.batteryTemperature = readUInt16(response, 262) / 10;
-        }
-
-        response = sendModbusRequest(225, 301, 2);
-        if (response.functionCode == 0x03)
-        {
-            inverterData.batteryDischargedTotal = readUInt16(response, 301) / 10;
-            inverterData.batteryChargedTotal = readUInt16(response, 302) / 10;
         }
 
         response = sendModbusRequest(100, 830, 4);
