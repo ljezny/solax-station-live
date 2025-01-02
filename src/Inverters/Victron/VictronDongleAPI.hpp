@@ -63,8 +63,11 @@ public:
                 response = sendModbusRequest(vebusUnits[i], 74, 20);
                 if (response.functionCode == 0x03)
                 {
+                    inverterData.gridBuyTotal = readUInt32(response, 74) / 100;
+                    inverterData.gridSellTotal = readUInt32(response, 86) / 100;
                     inverterData.batteryChargedTotal = readUInt32(response, 76) / 100;
                     inverterData.batteryDischargedToday = readUInt16(response, 90) / 100;
+                    inverterData.loadTotal = readUInt32(response, 74) / 100 + readUInt16(response, 90) / 100
                 }
             }
             else
@@ -135,6 +138,8 @@ public:
                 pvTotal = inverterData.pvTotal;
                 batteryDischargedTotal = inverterData.batteryDischargedTotal;
                 batteryChargedTotal = inverterData.batteryChargedTotal;
+                gridBuyTotal = inverterData.gridBuyTotal;
+                gridSellTotal = inverterData.gridSellTotal;
             }
 
             inverterData.pvToday = inverterData.pvTotal - pvTotal;
@@ -152,6 +157,8 @@ private:
     double pvTotal = 0;
     double batteryDischargedTotal = 0;
     double batteryChargedTotal = 0;
+    double gridBuyTotal = 0;
+    double gridSellTotal = 0;
     int day = -1;
     uint8_t solarChargerUnits[100] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                                       11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
