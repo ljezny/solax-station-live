@@ -69,6 +69,7 @@ void logInverterData(InverterData_t& inverterData) {
     log_d("Inverter Power: %d", inverterData.inverterPower);
     log_d("Load Power: %d", inverterData.loadPower);
     log_d("Load Today: %f", inverterData.loadToday);
+    log_d("Load Total: %f", inverterData.loadTotal);
     log_d("Feed In Power: %d", inverterData.feedInPower);
     log_d("Inverter Temperature: %d", inverterData.inverterTemperature);
     log_d("Battery Temperature: %d", inverterData.batteryTemperature);

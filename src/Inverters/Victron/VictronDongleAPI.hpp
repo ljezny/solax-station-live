@@ -142,7 +142,25 @@ public:
                 gridSellTotal = inverterData.gridSellTotal;
                 loadTotal = inverterData.loadTotal;
             }
-
+            //if system was restarted, reset counters
+            if(inverterData.pvTotal < pvTotal){
+                pvTotal = inverterData.pvTotal;
+            }
+            if(inverterData.batteryDischargedTotal < batteryDischargedTotal){
+                batteryDischargedTotal = inverterData.batteryDischargedTotal;
+            }
+            if(inverterData.batteryChargedTotal < batteryChargedTotal){
+                batteryChargedTotal = inverterData.batteryChargedTotal;
+            }
+            if(inverterData.gridBuyTotal < gridBuyTotal){
+                gridBuyTotal = inverterData.gridBuyTotal;
+            }
+            if(inverterData.gridSellTotal < gridSellTotal){
+                gridSellTotal = inverterData.gridSellTotal;
+            }
+            if(inverterData.loadTotal < loadTotal){
+                loadTotal = inverterData.loadTotal;
+            }
             inverterData.pvToday = inverterData.pvTotal - pvTotal;
             inverterData.batteryDischargedToday = inverterData.batteryDischargedTotal - batteryDischargedTotal;
             inverterData.batteryChargedToday = inverterData.batteryChargedTotal - batteryChargedTotal;
