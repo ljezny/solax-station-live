@@ -125,9 +125,9 @@ public:
                                 inverterData.batteryPower = read16BitSigned(doc["Data"][41].as<uint16_t>()) + read16BitSigned(doc["Data"][134].as<uint16_t>());
                                 inverterData.batteryTemperature = doc["Data"][105].as<uint8_t>();
                                 inverterData.inverterTemperature = doc["Data"][54].as<uint8_t>();
-                                inverterData.L1Power = ((int16_t)doc["Data"][6].as<uint16_t>());
-                                inverterData.L2Power = ((int16_t)doc["Data"][7].as<uint16_t>());
-                                inverterData.L3Power = ((int16_t)doc["Data"][8].as<uint16_t>());
+                                inverterData.L1Power = ((int16_t)doc["Data"][6].as<uint16_t>()) + ((int16_t)doc["Data"][29].as<uint16_t>());
+                                inverterData.L2Power = ((int16_t)doc["Data"][7].as<uint16_t>()) + ((int16_t)doc["Data"][30].as<uint16_t>());
+                                inverterData.L3Power = ((int16_t)doc["Data"][8].as<uint16_t>()) + ((int16_t)doc["Data"][31].as<uint16_t>());
                                 inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
                                 inverterData.soc = doc["Data"][158].as<int>();
                                 inverterData.pvToday = doc["Data"][70].as<uint16_t>() / 10.0; // yield is PV + battery
