@@ -65,7 +65,8 @@ public:
                 {
                     inverterData.gridBuyTotal = readUInt32(response, 74) / 100.0 + readUInt32(response, 76) / 100.0; //total grid use
                     inverterData.gridSellTotal = readUInt32(response, 86) / 100.0; 
-                    //inverterData.batteryChargedTotal = readUInt32(response, 76) / 100.0;
+                    inverterData.batteryChargedTotal = readUInt32(response, 76) / 100.0;
+                    inverterData.batteryDischargedTotal = readUInt32(response, 90) / 100.0;
                     //inverterData.pvTotal = readUInt32(response, 90) / 100.0; //solar + battery
                     inverterData.loadTotal = readUInt32(response, 74) / 100.0 + readUInt32(response, 90) / 100.0;
                 }
