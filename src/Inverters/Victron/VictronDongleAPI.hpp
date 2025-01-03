@@ -42,10 +42,11 @@ public:
         response = sendModbusRequest(100, 808, 15);
         if (response.functionCode == 0x03)
         {
-            inverterData.L1Power = readUInt16(response, 817) - readInt16(response, 820);
-            inverterData.L2Power = readUInt16(response, 818) - readInt16(response, 821);
-            inverterData.L3Power = readUInt16(response, 819) - readInt16(response, 822);
-            inverterData.loadPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
+            inverterData.L1Power = readUInt16(response, 817) + readInt16(response, 820);
+            inverterData.L2Power = readUInt16(response, 818) + readInt16(response, 821);
+            inverterData.L3Power = readUInt16(response, 819) + readInt16(response, 822);
+            inverterData.loadPower = readUInt16(response, 817) + readUInt16(response, 818) + readUInt16(response, 819);
+            inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
             inverterData.feedInPower = -1 * (readInt16(response, 820) + readInt16(response, 821) + readInt16(response, 822));
         }
 
