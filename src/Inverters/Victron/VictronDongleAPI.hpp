@@ -42,8 +42,11 @@ public:
         response = sendModbusRequest(100, 808, 15);
         if (response.functionCode == 0x03)
         {
-            inverterData.loadPower = readUInt16(response, 817) + readUInt16(response, 818) + readUInt16(response, 819);
-            inverterData.feedInPower = readInt16(response, 820) + readInt16(response, 821) + readInt16(response, 822);
+            inverterData.L1Power = readUInt16(response, 817) - readInt16(response, 820);
+            inverterData.L2Power = readUInt16(response, 818) - readInt16(response, 821);
+            inverterData.L3Power = readUInt16(response, 819) - readInt16(response, 822);
+            inverterData.loadPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
+            inverterData.feedInPower = -1 * (readInt16(response, 820) + readInt16(response, 821) + readInt16(response, 822));
         }
 
         for (int i = 0; i < sizeof(vebusUnits); i++)
@@ -55,10 +58,10 @@ public:
             response = sendModbusRequest(vebusUnits[i], 23, 3);
             if (response.functionCode == 0x03)
             {
-                inverterData.L1Power = readUInt16(response, 23) * 10;
-                inverterData.L2Power = readUInt16(response, 24) * 10;
-                inverterData.L3Power = readUInt16(response, 25) * 10;
-                inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
+                // inverterData.L1Power = readUInt16(response, 23) * 10;
+                // inverterData.L2Power = readUInt16(response, 24) * 10;
+                // inverterData.L3Power = readUInt16(response, 25) * 10;
+                // inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power - inverterData.feedInPower; 
 
                 response = sendModbusRequest(vebusUnits[i], 74, 20);
                 if (response.functionCode == 0x03)
@@ -66,8 +69,8 @@ public:
                     inverterData.gridBuyTotal = readUInt32(response, 74) / 100.0 + readUInt32(response, 76) / 100.0; //total grid use
                     inverterData.gridSellTotal = readUInt32(response, 86) / 100.0; 
                     inverterData.batteryChargedTotal = readUInt32(response, 76) / 100.0;
-                    inverterData.batteryDischargedTotal = readUInt32(response, 90) / 100.0;
-                    //inverterData.pvTotal = readUInt32(response, 90) / 100.0; //solar + battery
+                    inverterData.batteryDischargedTotal = readUInt32(response, 90) / 100.0; //it seems that it is battery + solar
+                    //inverterData.pvTotal = readUInt32(response, 90) / 100.0;
                     inverterData.loadTotal = readUInt32(response, 74) / 100.0 + readUInt32(response, 90) / 100.0;
                 }
             }
