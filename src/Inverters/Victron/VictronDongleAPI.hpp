@@ -140,11 +140,15 @@ public:
                 batteryChargedTotal = inverterData.batteryChargedTotal;
                 gridBuyTotal = inverterData.gridBuyTotal;
                 gridSellTotal = inverterData.gridSellTotal;
+                loadTotal = inverterData.loadTotal;
             }
 
             inverterData.pvToday = inverterData.pvTotal - pvTotal;
             inverterData.batteryDischargedToday = inverterData.batteryDischargedTotal - batteryDischargedTotal;
             inverterData.batteryChargedToday = inverterData.batteryChargedTotal - batteryChargedTotal;
+            inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
+            inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
+            inverterData.loadToday = inverterData.loadTotal - loadTotal;
         }
 
         logInverterData(inverterData);
@@ -159,6 +163,7 @@ private:
     double batteryChargedTotal = 0;
     double gridBuyTotal = 0;
     double gridSellTotal = 0;
+    double loadTotal = 0;
     int day = -1;
     uint8_t solarChargerUnits[100] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                                       11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
