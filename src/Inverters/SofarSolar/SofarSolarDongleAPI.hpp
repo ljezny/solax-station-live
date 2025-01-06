@@ -220,6 +220,7 @@ private:
 
     InverterData_t readData(String dongleSN)
     {
+        //https://github.com/wills106/homeassistant-solax-modbus/blob/main/custom_components/solax_modbus/plugin_sofar.py
         InverterData_t inverterData;
         log_d("Connecting to dongle...");
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
@@ -320,7 +321,7 @@ private:
                 inverterData.loadToday = readUInt32(packetBuffer, 0x688 - 0x684) / 100.0f;
                 inverterData.loadTotal = readUInt32(packetBuffer, 0x68A - 0x684) / 10.0f;
                 inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x694 - 0x684) / 100.0f;
-                inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x698 - 0x684) / 100.0f;
+                inverterData.batteryDischargedToday = readUInt32(packetBuffer, 0x698 - 0x684) / 100.0f;
                 inverterData.gridBuyToday = readUInt32(packetBuffer, 0x68C - 0x684) / 100.0f;
                 inverterData.gridBuyTotal = readUInt32(packetBuffer, 0x68E - 0x684) / 10.0f;
                 inverterData.gridSellToday = readUInt32(packetBuffer, 0x690 - 0x684) / 100.0f;
