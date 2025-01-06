@@ -4,6 +4,7 @@
 #include <WiFi.h>
 #include <CRC.h>
 #include <CRC16.h>
+#include <NetworkClient.h>
 #include "Inverters/InverterResult.hpp"
 
 #define READ_TIMEOUT 5000
@@ -17,7 +18,7 @@ public:
     }
 
 private:
-    WiFiClient client;
+    NetworkClient client;
 
     uint8_t sequenceNumber = 0;
 
