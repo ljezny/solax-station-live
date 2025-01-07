@@ -38,28 +38,27 @@ public:
             inverterData.batteryPower = readInt16(response, 842);
             inverterData.soc = readUInt16(response, 843);
 
-            if (lastBatteryPowerTime == 0)
+            if (lastBatteryPowerTime != 0)
             {
-                lastBatteryPowerTime = inverterData.millis;
-                lastBatteryPower = inverterData.batteryPower;
+                if (inverterData.batteryPower > 0)
+                {
+                    batteryChargedToday += abs(inverterData.batteryPower) * (inverterData.millis - lastBatteryPowerTime) / 1000 / 3600;
+                }
+                else
+                {
+                    batteryDischargedToday += abs(inverterData.batteryPower) * (inverterData.millis - lastBatteryPowerTime) / 1000 / 3600;
+                }
             }
-
-            if (inverterData.batteryPower > 0)
-            {
-                batteryChargedToday += abs(inverterData.batteryPower) * (inverterData.millis - lastBatteryPowerTime) / 1000 / 3600;
-            }
-            else
-            {
-                batteryDischargedToday += abs(inverterData.batteryPower) * (inverterData.millis - lastBatteryPowerTime) / 1000 / 3600;
-            }
+            lastBatteryPowerTime = inverterData.millis;
+            lastBatteryPower = inverterData.batteryPower;
         }
 
         response = sendModbusRequest(100, 808, 15);
         if (response.functionCode == 0x03)
         {
             inverterData.L1Power = max(0, ((int)readUInt16(response, 817)) - readInt16(response, 820));
-            inverterData.L2Power = max(0,((int)readUInt16(response, 818)) - readInt16(response, 821));
-            inverterData.L3Power = max(0,((int)readUInt16(response, 819)) - readInt16(response, 822));
+            inverterData.L2Power = max(0, ((int)readUInt16(response, 818)) - readInt16(response, 821));
+            inverterData.L3Power = max(0, ((int)readUInt16(response, 819)) - readInt16(response, 822));
             inverterData.loadPower = readUInt16(response, 817) + readUInt16(response, 818) + readUInt16(response, 819);
             inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
             inverterData.feedInPower = -1 * (readInt16(response, 820) + readInt16(response, 821) + readInt16(response, 822));
@@ -185,7 +184,7 @@ public:
             inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
             inverterData.loadToday = inverterData.loadTotal - loadTotal;
 
-            inverterData.batteryChargedToday = batteryChargedToday / 1000.0; // convert to kWh
+            inverterData.batteryChargedToday = batteryChargedToday / 1000.0;       // convert to kWh
             inverterData.batteryDischargedToday = batteryDischargedToday / 1000.0; // convert to kWh
         }
 
@@ -197,8 +196,8 @@ public:
 
 private:
     double pvTotal = 0;
-    double batteryDischargedToday = 0; //in Wh
-    double batteryChargedToday = 0; //in Wh
+    double batteryDischargedToday = 0; // in Wh
+    double batteryChargedToday = 0;    // in Wh
     double gridBuyTotal = 0;
     double gridSellTotal = 0;
     double loadTotal = 0;
