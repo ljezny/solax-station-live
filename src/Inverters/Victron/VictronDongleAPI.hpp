@@ -37,6 +37,21 @@ public:
         {
             inverterData.batteryPower = readInt16(response, 842);
             inverterData.soc = readUInt16(response, 843);
+
+            if (lastBatteryPowerTime == 0)
+            {
+                lastBatteryPowerTime = inverterData.millis;
+                lastBatteryPower = inverterData.batteryPower;
+            }
+
+            if (inverterData.batteryPower > 0)
+            {
+                batteryChargedToday += abs(inverterData.batteryPower) * (inverterData.millis - lastBatteryPowerTime) / 1000 / 3600;
+            }
+            else
+            {
+                batteryDischargedToday += abs(inverterData.batteryPower) * (inverterData.millis - lastBatteryPowerTime) / 1000 / 3600;
+            }
         }
 
         response = sendModbusRequest(100, 808, 15);
@@ -62,16 +77,16 @@ public:
                 // inverterData.L1Power = readUInt16(response, 23) * 10;
                 // inverterData.L2Power = readUInt16(response, 24) * 10;
                 // inverterData.L3Power = readUInt16(response, 25) * 10;
-                // inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power - inverterData.feedInPower; 
+                // inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power - inverterData.feedInPower;
 
                 response = sendModbusRequest(vebusUnits[i], 74, 20);
                 if (response.functionCode == 0x03)
                 {
-                    inverterData.gridBuyTotal = readUInt32(response, 74) / 100.0 + readUInt32(response, 76) / 100.0; //total grid use
-                    inverterData.gridSellTotal = readUInt32(response, 86) / 100.0; 
+                    inverterData.gridBuyTotal = readUInt32(response, 74) / 100.0 + readUInt32(response, 76) / 100.0; // total grid use
+                    inverterData.gridSellTotal = readUInt32(response, 86) / 100.0;
                     inverterData.batteryChargedTotal = readUInt32(response, 76) / 100.0;
-                    inverterData.batteryDischargedTotal = readUInt32(response, 90) / 100.0; //it seems that it is battery + solar
-                    //inverterData.pvTotal = readUInt32(response, 90) / 100.0;
+                    inverterData.batteryDischargedTotal = readUInt32(response, 90) / 100.0; // it seems that it is battery + solar
+                    // inverterData.pvTotal = readUInt32(response, 90) / 100.0;
                     inverterData.loadTotal = readUInt32(response, 74) / 100.0 + readUInt32(response, 90) / 100.0;
                 }
             }
@@ -141,37 +156,37 @@ public:
                 log_d("Day changed, resetting counters");
                 this->day = day;
                 pvTotal = inverterData.pvTotal;
-                batteryDischargedTotal = inverterData.batteryDischargedTotal;
-                batteryChargedTotal = inverterData.batteryChargedTotal;
                 gridBuyTotal = inverterData.gridBuyTotal;
                 gridSellTotal = inverterData.gridSellTotal;
                 loadTotal = inverterData.loadTotal;
+                batteryChargedToday = 0;
+                batteryDischargedToday = 0;
             }
-            //if system was restarted, reset counters
-            if(inverterData.pvTotal < pvTotal){
+
+            // if system was restarted, reset counters
+            if (inverterData.pvTotal < pvTotal)
+            {
                 pvTotal = inverterData.pvTotal;
             }
-            if(inverterData.batteryDischargedTotal < batteryDischargedTotal){
-                batteryDischargedTotal = inverterData.batteryDischargedTotal;
-            }
-            if(inverterData.batteryChargedTotal < batteryChargedTotal){
-                batteryChargedTotal = inverterData.batteryChargedTotal;
-            }
-            if(inverterData.gridBuyTotal < gridBuyTotal){
+            if (inverterData.gridBuyTotal < gridBuyTotal)
+            {
                 gridBuyTotal = inverterData.gridBuyTotal;
             }
-            if(inverterData.gridSellTotal < gridSellTotal){
+            if (inverterData.gridSellTotal < gridSellTotal)
+            {
                 gridSellTotal = inverterData.gridSellTotal;
             }
-            if(inverterData.loadTotal < loadTotal){
+            if (inverterData.loadTotal < loadTotal)
+            {
                 loadTotal = inverterData.loadTotal;
             }
             inverterData.pvToday = inverterData.pvTotal - pvTotal;
-            inverterData.batteryDischargedToday = inverterData.batteryDischargedTotal - batteryDischargedTotal;
-            inverterData.batteryChargedToday = inverterData.batteryChargedTotal - batteryChargedTotal;
             inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
             inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
             inverterData.loadToday = inverterData.loadTotal - loadTotal;
+
+            inverterData.batteryChargedToday = batteryChargedToday / 1000.0; // convert to kWh
+            inverterData.batteryDischargedToday = batteryDischargedToday / 1000.0; // convert to kWh
         }
 
         logInverterData(inverterData);
@@ -182,11 +197,13 @@ public:
 
 private:
     double pvTotal = 0;
-    double batteryDischargedTotal = 0;
-    double batteryChargedTotal = 0;
+    double batteryDischargedToday = 0; //in Wh
+    double batteryChargedToday = 0; //in Wh
     double gridBuyTotal = 0;
     double gridSellTotal = 0;
     double loadTotal = 0;
+    double lastBatteryPower = 0;
+    time_t lastBatteryPowerTime = 0;
     int day = -1;
     uint8_t solarChargerUnits[100] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                                       11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
