@@ -1,61 +1,52 @@
-<p><strong>SOLAR STATION <span style="color:red">Live</span></strong> to stacja monitorująca dla inwerterów
-    <strong>SOLAX
-        X3-HYBRID G3/G4</strong>, <strong>GoodWe serii ET</strong> oraz <strong>SOFAR SOLAR HYD</strong> - najczęściej
-    używanych inwerterów w Polsce.</p>
-<p>Wyświetla dane na żywo z inwertera:</p>
+<p><strong>SOLAR STATION <span style="color:red">Live</span></strong> to stacja monitorująca dla falowników:
+    <li> <strong>SOLAX X3-HYBRID G3/G4</strong></li>
+    <li><strong>GoodWe serii ET</strong></li>
+    <li><strong>SOFAR SOLAR HYD</strong></li>
+    <li><strong>Victron</strong></li>
+</p>
+<p>Wyświetla dane na żywo z falownika:</p>
 <ul>
-    <li>przepływ energii - czytelnie pokazuje moc paneli, zużycie energii w domu, stan baterii, a nawet temperatury
-        inwertera</li>
-    <li>statystyki - ile energii dziś wyprodukowano, zużyto, kupiono i sprzedano</li>
-    <li>wykres - produkcja, zużycie i stan baterii z ostatnich 24 godzin</li>
+    <li>przepływ energii - przejrzyste informacje o wydajności paneli, zużyciu w gospodarstwie domowym, stanie baterii, a także temperaturze falownika</li>
+    <li>statystyki - ile energii zostało dziś wyprodukowane, zużyte, kupione i sprzedane</li>
+    <li>wykres - produkcja, zużycie i stan baterii w ciągu ostatnich 24 godzin</li>
 </ul>
-<p><video width="800" height="400" style="display: block; margin-left: auto; margin-right: auto;" controls="controls">
-        <source src="/user/documents/upload/IMG_0014.mov" />
-    </video></p>
 <q>Co można ustawić, to może się zepsuć.</q>
-<p>Dlatego <strong>SOLAR STATION <span style="color:red">Live</span></strong> została zaprojektowana tak, aby użytkownik
-    nie musiał nic ustawiać. Stacja automatycznie łączy się z WiFi Twojego inwertera i zaczyna wyświetlać dane.</p>
+<p>Dlatego <strong>SOLAR STATION <span style="color:red">Live</span></strong> została zaprojektowana tak, aby użytkownik nie musiał
+    niczego ustawiać. Stacja automatycznie łączy się z WiFi falownika i zaczyna wyświetlać dane.</p>
+<video width="800" height="400" style="display: block; margin-left: auto; margin-right: auto;" controls="controls">
+    <source src="/user/documents/upload/IMG_0014.mov" />
+</video>
 <h2>Przed zakupem</h2>
-<p>Upewnij się, że w miejscu, gdzie chcesz używać stację, dostępna jest sieć WiFi inwertera:</p>
+<p>Upewnij się, że w miejscu, gdzie chcesz używać stację, dostępna jest sieć WiFi falownika:</p>
 <ul>
-    <li><strong>SOLAX</strong> - Obsługiwane są tylko instalacje z WiFi Dongle. Dongle emituje WiFi o nazwie
-        WiFi_XXXXXX, gdzie XXXXXX
-        to
-        numer seryjny dongla. Sieć ta musi być niezabezpieczona hasłem - domyślnie. Jeśli taka sieć nie jest dostępna,
-        może być
+    <li><strong>SOLAX</strong> - Obsługiwane są tylko instalacje z modułem WiFi Dongle. Dongle emituje WiFi o nazwie
+        WiFi_XXXXXX, gdzie XXXXXX to numer seryjny dongle. Ta sieć musi być niezabezpieczona hasłem - ustawienie domyślne. Jeśli taka sieć nie jest dostępna, może być
         ukryta - można to sprawdzić i ustawić w aplikacji mobilnej SolaxCloud.</li>
-    <li><strong>GoodWe</strong> - Inwerter GoodWe emituje sieć WiFi o nazwie Solar-WifiXXXXXX, gdzie XXXXXX to numer
-        seryjny
-        dongla. Ta
+    <li><strong>GoodWe</strong> - Falownik GoodWe emituje sieć WiFi o nazwie Solar-WifiXXXXXX, gdzie XXXXXX to numer seryjny
+        dongle. Ta
         sieć WiFi jest
-        standardowo zabezpieczona hasłem <code>12345678</code>. Proszę sprawdź, czy możesz się połączyć z tą siecią,
-        używając tego hasła.</li>
-    <li><strong>SOFAR SOLAR</strong> - Inwerter SOFAR SOLAR emituje sieć WiFi o nazwie AP-XXXXXX, gdzie XXXXXX to numer
-        seryjny
-        dongla. Ta
+        standardowo zabezpieczona hasłem <code>12345678</code>. Proszę sprawdź, czy możesz połączyć się z tą siecią przy użyciu tego hasła.</li>
+    <li><strong>SOFAR SOLAR</strong> - Falownik SOFAR SOLAR emituje sieć WiFi o nazwie AP-XXXXXX, gdzie XXXXXX to numer seryjny
+        dongle. Ta
         sieć WiFi jest
-        standardowo zabezpieczona hasłem, które jest wydrukowane na donglu WiFi. Proszę sprawdź, czy możesz się połączyć
-        z tą siecią, używając tego hasła.</li>
-
+        standardowo zabezpieczona hasłem wydrukowanym na donglu WiFi. Proszę sprawdź, czy możesz połączyć się z tą siecią przy użyciu tego hasła.</li>
+    <li><strong>Victron</strong> - Falownik Victron emituje sieć WiFi o nazwie venus-XXXXXX, gdzie XXXXXX to numer seryjny
+        dongle. Ta
+        sieć WiFi jest
+        standardowo zabezpieczona hasłem wydrukowanym na donglu WiFi. Proszę sprawdź, czy możesz połączyć się z tą siecią przy użyciu tego hasła. Dodatkowo należy włączyć Modbus TCP w zdalnej konsoli (Menu/Settings/Services/Modbus TCP - włącz).</li>
 </ul>
-<p>W pierwszej wersji wspierane będą tylko typowe instalacje domowych FVE z wymienionymi inwerterami i baterią. Oznacza
-    to, że instalacje wieloinwerterowe nie będą jeszcze wspierane.</p>
-<p>Jeśli nie jesteś pewny, skontaktuj się ze mną przez formularz.</p>
+<p>W pierwszej wersji będą obsługiwane tylko typowe instalacje domowe FVE z wymienionymi falownikami z baterią. Oznacza to, że instalacje wielofalownikowe nie będą teraz obsługiwane (jeszcze).</p>
+<p>Jeśli masz wątpliwości, skontaktuj się ze mną za pomocą formularza.</p>
 <h2>Instalacja</h2>
-<p>Instalacja jest bardzo prosta. Wystarczy podłączyć stację do gniazdka za pomocą dołączonego kabla. Stacja sama
-    połączy się z
-    inwerterem i od razu zacznie wyświetlać dane. <strong>I to wszystko!</strong></p>
+<p>Instalacja jest bardzo prosta. Wystarczy podłączyć stację do gniazdka za pomocą dołączonego kabla. Stacja automatycznie połączy się z falownikiem i zacznie wyświetlać dane. <strong>To wszystko!</strong></p>
 <h2>Aktualizacja oprogramowania</h2>
-<p><strong>SOLAR STATION <span style="color:red">Live</span></strong> NIE posiada automatycznej aktualizacji
-    oprogramowania,
-    tak jak inne projekty. Urządzenie zostało zaprojektowane tak, że jeśli działa teraz, będzie działać
-    również za 5 lat. Jednak za pomocą kabla USB-C i przeglądarki można zaktualizować oprogramowanie urządzenia.</p>
+<p><strong>SOLAR STATION <span style="color:red">Live</span></strong> NIE jest wyposażona w automatyczną aktualizację oprogramowania, jak inne projekty. Urządzenie zostało zaprojektowane tak, że jeśli działa teraz, będzie działać
+    również za 5 lat. Mimo to możliwe jest zaktualizowanie oprogramowania za pomocą kabla USB-C i przeglądarki.</p>
 <p>Instrukcja aktualizacji oprogramowania jest dostępna <a
         href="https://solar-station.cz/user/documents/solar-station-live/index.html"><strong>tutaj.</strong></a></p>
 <h2>SOLAR PLUG</h2>
-<p>Wszystkie sprzedawane gniazda SOLAR PLUG są wspierane. Po podłączeniu SOLAR PLUG <strong>SOLAR STATION <span
-            style="color:red">Live</span></strong> automatycznie je sparuje, a nowy kafelek zostanie wyświetlony.
-    Gniazda są
+<p>Wszystkie sprzedawane gniazdka SOLAR PLUG są obsługiwane. Po podłączeniu SOLAR PLUG stacja <strong>SOLAR STATION <span
+            style="color:red">Live</span></strong> automatycznie je sparuje, a nowy kafelek zostanie wyświetlony. Gniazdka są
     automatycznie przełączane zgodnie z wewnętrznymi zasadami, aby maksymalnie wykorzystać energię słoneczną.</p>
 <h2>Dane techniczne</h2>
 <ul>
@@ -68,6 +59,6 @@
 <ul>
     <li>SOLAR STATION <span style="color:red">Live</span></li>
     <li>Kabel USB-C</li>
-    <li>Podstawka</li>
-    <li>Samoprzylepny uchwyt na ścianę</li>
+    <li>Stojak</li>
+    <li>Uchwyt samoprzylepny na ścianę</li>
 </ul>
