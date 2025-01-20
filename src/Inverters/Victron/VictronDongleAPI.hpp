@@ -42,11 +42,11 @@ public:
             {
                 if (inverterData.batteryPower > 0)
                 {
-                    batteryChargedToday += abs(inverterData.batteryPower) * (inverterData.millis - lastBatteryPowerTime) / 1000 / 3600;
+                    batteryChargedToday += abs(inverterData.batteryPower) * (inverterData.millis - lastBatteryPowerTime) / 1000.0 / 3600.0;
                 }
                 else
                 {
-                    batteryDischargedToday += abs(inverterData.batteryPower) * (inverterData.millis - lastBatteryPowerTime) / 1000 / 3600;
+                    batteryDischargedToday += abs(inverterData.batteryPower) * (inverterData.millis - lastBatteryPowerTime) / 1000.0 / 3600.0;
                 }
             }
             lastBatteryPowerTime = inverterData.millis;
@@ -81,12 +81,35 @@ public:
                 response = sendModbusRequest(vebusUnits[i], 74, 20);
                 if (response.functionCode == 0x03)
                 {
-                    inverterData.gridBuyTotal = readUInt32(response, 74) / 100.0 + readUInt32(response, 76) / 100.0; // total grid use
-                    inverterData.gridSellTotal = readUInt32(response, 86) / 100.0;
-                    inverterData.batteryChargedTotal = readUInt32(response, 76) / 100.0;
-                    inverterData.batteryDischargedTotal = readUInt32(response, 90) / 100.0; // it seems that it is battery + solar
+                    /*
+                    Energy from AC-In 1 to AC-out	74
+                    Energy from AC-In 1 to battery	76
+                    Energy from AC-In 2 to AC-out	78
+                    Energy from AC-In 2 to battery	80
+                    Energy from AC-out to AC-in 1 (reverse fed PV)	82
+                    Energy from AC-out to AC-in 2 (reverse fed PV)	84
+                    Energy from battery to AC-in 1	86
+                    Energy from battery to AC-in 2	88
+                    Energy from battery to AC-out	90
+                    Energy from AC-out to battery (typically from PV-inverter)	92
+                    */
+                    double energyACIn1ToACOut = readUInt32(response, 74) / 100.0;
+                    double energyACIn1ToBattery = readUInt32(response, 76) / 100.0;
+                    double energyACIn2ToACOut = readUInt32(response, 78) / 100.0;
+                    double energyACIn2ToBattery = readUInt32(response, 80) / 100.0;
+                    double energyACOutToACIn1 = readUInt32(response, 82) / 100.0;
+                    double energyACOutToACIn2 = readUInt32(response, 84) / 100.0;
+                    double energyBatteryToACIn1 = readUInt32(response, 86) / 100.0;
+                    double energyBatteryToACIn2 = readUInt32(response, 88) / 100.0;
+                    double energyBatteryToACOut = readUInt32(response, 90) / 100.0;
+                    double energyACOutToBattery = readUInt32(response, 92) / 100.0;
+                
+                    inverterData.gridBuyTotal = energyACIn1ToACOut + energyACIn1ToBattery; // total grid use
+                    inverterData.gridSellTotal = energyBatteryToACIn1;
+                    inverterData.batteryChargedTotal = energyACIn1ToBattery;
+                    inverterData.batteryDischargedTotal = energyBatteryToACOut; // it seems that it is battery + solar
                     // inverterData.pvTotal = readUInt32(response, 90) / 100.0;
-                    inverterData.loadTotal = readUInt32(response, 74) / 100.0 + readUInt32(response, 90) / 100.0;
+                    inverterData.loadTotal = energyACIn1ToACOut + energyBatteryToACOut;
                 }
             }
             else
