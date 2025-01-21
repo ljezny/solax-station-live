@@ -377,7 +377,6 @@ private:
 
     void updateChart(InverterData_t &inverterData, SolarChartDataProvider &solarChartDataProvider)
     {
-        return;
         while (lv_chart_get_series_next(ui_Chart1, NULL))
         {
             lv_chart_remove_series(ui_Chart1, lv_chart_get_series_next(ui_Chart1, NULL));
