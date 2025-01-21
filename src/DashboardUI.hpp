@@ -40,7 +40,7 @@ static void draw_event_cb(lv_event_t *e)
         /*Draw a rectangle that will be affected by the mask*/
         lv_draw_rect_dsc_t draw_rect_dsc;
         lv_draw_rect_dsc_init(&draw_rect_dsc);
-        draw_rect_dsc.bg_opa = LV_OPA_20;
+        draw_rect_dsc.bg_opa = LV_OPA_50;
         draw_rect_dsc.bg_color = dsc->line_dsc->color;
 
         lv_area_t a;
@@ -377,6 +377,7 @@ private:
 
     void updateChart(InverterData_t &inverterData, SolarChartDataProvider &solarChartDataProvider)
     {
+        return;
         while (lv_chart_get_series_next(ui_Chart1, NULL))
         {
             lv_chart_remove_series(ui_Chart1, lv_chart_get_series_next(ui_Chart1, NULL));
