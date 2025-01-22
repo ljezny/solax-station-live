@@ -2,7 +2,7 @@
 #include <lvgl.h>
 #include <demos/lv_demos.h>
 #include <examples/lv_examples.h>
-#include <Wire.h>
+
 #include <SPI.h>
 #include "consts.h"
 #include "ui/ui.h"
@@ -162,8 +162,6 @@ void setupLVGL()
 {
     pinMode(38, OUTPUT);
     digitalWrite(38, LOW);
-
-    Wire.begin(19, 20);
 
     // Display Prepare
     tft.begin();
