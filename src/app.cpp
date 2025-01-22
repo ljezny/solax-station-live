@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <lvgl.h>
-#include <demos/lv_demos.h>
-#include <examples/lv_examples.h>
+
 
 #include <SPI.h>
 #include "consts.h"
