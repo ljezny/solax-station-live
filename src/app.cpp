@@ -262,6 +262,7 @@ void loadInverterDataTask()
         inverterData = createRandomMockData();
         solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
         dongleDiscovery.preferedInverterWifiDongleIndex = 0;
+        return;
 #endif
 
         if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)

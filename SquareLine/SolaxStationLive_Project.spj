@@ -11042,7 +11042,7 @@
                 "strtype": "OBJECT/Position",
                 "intarray": [
                   4,
-                  -21
+                  -20
                 ],
                 "InheritedType": 7
               },
@@ -16613,13 +16613,42 @@
                   {
                     "nid": 50571972,
                     "strtype": "_style/Bg_Color",
+                    "strval": "pvColor",
+                    "integer": -436202122,
                     "intarray": [
-                      167,
-                      199,
-                      231,
+                      255,
+                      212,
+                      0,
                       255
                     ],
                     "InheritedType": 7
+                  },
+                  {
+                    "nid": 10530,
+                    "strtype": "_style/Bg_gradiens_Color",
+                    "strval": "batteryColor",
+                    "integer": -644687784,
+                    "intarray": [
+                      119,
+                      158,
+                      203
+                    ],
+                    "InheritedType": 7
+                  },
+                  {
+                    "nid": 10540,
+                    "strtype": "_style/Bg_gradient_params",
+                    "intarray": [
+                      0,
+                      255
+                    ],
+                    "InheritedType": 7
+                  },
+                  {
+                    "nid": 10550,
+                    "strtype": "_style/Gradient direction",
+                    "strval": "VER",
+                    "InheritedType": 3
                   },
                   {
                     "nid": 723455050,
@@ -18231,7 +18260,7 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 693,
+    "backup_cnt": 695,
     "autosave_cnt": 0,
     "lvgl_version": "8.3.11",
     "callfuncsexport": "C_FILE",
