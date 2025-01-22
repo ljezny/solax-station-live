@@ -92,6 +92,7 @@ void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
 InverterData_t createRandomMockData()
 {
     InverterData_t inverterData;
+    inverterData.millis = millis();
     inverterData.status = DONGLE_STATUS_OK;
     inverterData.pv1Power = random(2000, 2500);
     inverterData.pv2Power = random(3500, 4000);
@@ -113,7 +114,7 @@ InverterData_t createRandomMockData()
     inverterData.gridBuyToday = random(5, 16);
     inverterData.gridSellToday = random(6, 23);
     inverterData.sn = "1234567890";
-    inverterData.hasBattery = false;
+    inverterData.hasBattery = true;
     return inverterData;
 }
 
@@ -260,7 +261,7 @@ void loadInverterDataTask()
 #if DEMO
         inverterData = createRandomMockData();
         solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
-        return;
+        dongleDiscovery.preferedInverterWifiDongleIndex = 0;
 #endif
 
         if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
@@ -293,7 +294,9 @@ void loadInverterDataTask()
                     WiFi.disconnect();
                 }
             }
-        } else {
+        }
+        else
+        {
             inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
         }
     }
@@ -445,7 +448,8 @@ void updateState()
         splashUI.update(softAP.getESPIdHex(), String(VERSION_NUMBER));
         xSemaphoreGive(lvgl_mutex);
 
-        if (dongleDiscovery.preferedInverterWifiDongleIndex == -1) {
+        if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
+        {
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
             splashUI.updateText("Discovering dongles...");
             xSemaphoreGive(lvgl_mutex);
@@ -503,8 +507,14 @@ void updateState()
         {
             moveToState(STATE_SPLASH);
         }
+#if DEMO
+        moveToState(STATE_DASHBOARD);
+#endif
         break;
     case STATE_DASHBOARD:
+
+        loadInverterDataTask();
+
         if (inverterData.millis != previousInverterData.millis)
         {
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
@@ -516,13 +526,10 @@ void updateState()
 
             backlightResolver.resolve(inverterData);
         }
-
         discoverDonglesTask();
-        loadInverterDataTask();
         pairShellyTask();
         reloadShelly();
         resetWifi();
-
         if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
         {
             moveToState(STATE_WIFI_SETUP);
