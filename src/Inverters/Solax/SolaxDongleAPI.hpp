@@ -179,7 +179,7 @@ public:
                                 inverterData.loadTotal = doc["Data"][52].as<uint16_t>() / 100.0;
                                 inverterData.hasBattery = false;
                                 inverterData.sn = sn;
-                                if(inverterData.pvToday < pvToday) { //day changed
+                                if(pvToday < 0 || inverterData.pvToday < pvToday) { //day changed
                                     pvToday = inverterData.pvToday;
                                     gridBuyTotal = inverterData.gridBuyTotal;
                                     gridSellTotal = inverterData.gridSellTotal;
@@ -283,7 +283,7 @@ private:
     float minimumBatteryVoltage = FLT_MAX;
     float maximumBatteryVoltage = FLT_MIN;
 
-    double pvToday = 0;
+    double pvToday = -1; //init value
     double pvTotal = 0;
     double batteryDischargedToday = 0;
     double batteryChargedToday = 0;
