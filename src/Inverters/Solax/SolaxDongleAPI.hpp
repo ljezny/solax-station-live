@@ -160,6 +160,7 @@ public:
                                 inverterData.gridSellToday = doc["Data"][74].as<uint16_t>() / 100.0;
                                 inverterData.gridBuyToday = doc["Data"][76].as<uint16_t>() / 100.0;
                                 inverterData.hasBattery = false;
+                                inverterData.inverterTemperature = doc["Data"][39].as<uint8_t>();
                                 inverterData.sn = sn;
                                 logInverterData(inverterData);
                             }
@@ -170,13 +171,24 @@ public:
                                 inverterData.pv1Power = doc["Data"][7].as<int>();
                                 inverterData.pv2Power = doc["Data"][8].as<int>();
                                 inverterData.inverterPower = doc["Data"][2].as<int>();
-                                inverterData.pvToday = doc["Data"][11].as<uint16_t>() / 10.0;
-                                inverterData.pvTotal = doc["Data"][12].as<uint16_t>() / 10.0;
-                                inverterData.feedInPower = read16BitSigned(doc["Data"][48].as<uint16_t>());                                
+                                inverterData.pvTotal = ((doc["Data"][12].as<uint32_t>() << 16) + doc["Data"][11].as<uint16_t>()) / 10.0;
+                                inverterData.pvToday = doc["Data"][13].as<uint16_t>() / 10.0;
+                                inverterData.feedInPower = read16BitSigned(doc["Data"][48].as<uint16_t>());
+                                inverterData.loadPower = inverterData.inverterPower - inverterData.feedInPower;
                                 inverterData.gridSellTotal = doc["Data"][50].as<uint16_t>() / 100.0;
                                 inverterData.loadTotal = doc["Data"][52].as<uint16_t>() / 100.0;
                                 inverterData.hasBattery = false;
                                 inverterData.sn = sn;
+                                if(inverterData.pvToday < pvToday) { //day changed
+                                    pvToday = inverterData.pvToday;
+                                    gridBuyTotal = inverterData.gridBuyTotal;
+                                    gridSellTotal = inverterData.gridSellTotal;
+                                    loadTotal = inverterData.loadTotal;
+                                }
+                                inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
+                                inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
+                                inverterData.loadToday = inverterData.loadTotal - loadTotal;
+
                                 logInverterData(inverterData);
                             }
                             else if (doc["type"].as<int>() == 1)
@@ -270,6 +282,14 @@ private:
 
     float minimumBatteryVoltage = FLT_MAX;
     float maximumBatteryVoltage = FLT_MIN;
+
+    double pvToday = 0;
+    double pvTotal = 0;
+    double batteryDischargedToday = 0;
+    double batteryChargedToday = 0;
+    double gridBuyTotal = 0;
+    double gridSellTotal = 0;
+    double loadTotal = 0;
 
     int16_t read16BitSigned(uint16_t a)
     {
