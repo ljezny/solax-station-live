@@ -127,13 +127,14 @@ public:
             _bus_instance.config(cfg);
             _panel_instance.setBus(&_bus_instance);
         }
-#endif
         {
             auto cfg = _light_instance.config();
             cfg.pin_bl = GPIO_NUM_2;
             _light_instance.config(cfg);
             _panel_instance.light(&_light_instance);
         }
+#endif
+        
 
         setPanel(&_panel_instance);
     }

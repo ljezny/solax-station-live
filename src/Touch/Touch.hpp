@@ -4,6 +4,7 @@
 #include "TAMC_GT911.h"
 #include <Wire.h>
 
+
 #define TOUCH_GT911
 #if CROW_PANEL
 #define TOUCH_GT911_SCL 20
@@ -23,9 +24,9 @@ class Touch
 {
 public:
     uint16_t touchX, touchY;
+    
     void init()
     {
-        Wire.begin(TOUCH_GT911_SDA, TOUCH_GT911_SCL);
         ts.begin();
         ts.setRotation(TOUCH_GT911_ROTATION);
     }

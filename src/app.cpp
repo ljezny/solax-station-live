@@ -24,6 +24,7 @@
 #include "gfx_conf.h"
 #include "Touch/Touch.hpp"
 #include <mutex>
+#include <Wire.h>
 
 SemaphoreHandle_t lvgl_mutex = xSemaphoreCreateMutex();
 static lv_disp_draw_buf_t draw_buf;
@@ -160,9 +161,10 @@ void setupWiFi()
 
 void setupLVGL()
 {
+#if CROW_PANEL
     pinMode(38, OUTPUT);
     digitalWrite(38, LOW);
-
+#endif
     // Display Prepare
     tft.begin();
     tft.fillScreen(TFT_BLACK);
@@ -174,7 +176,8 @@ void setupLVGL()
 
     // touch setup
     touch.init();
-
+    backlightResolver.setup();
+    
     lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight / 10);
     /* Initialize the display */
     lv_disp_drv_init(&disp_drv);
@@ -201,6 +204,8 @@ void setupLVGL()
 void setup()
 {
     Serial.begin(115200);
+    Wire.begin(TOUCH_GT911_SDA, TOUCH_GT911_SCL);
+
     setupLVGL();
     setupWiFi();
 }
