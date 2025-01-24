@@ -175,8 +175,8 @@ public:
                                 inverterData.pvToday = doc["Data"][13].as<uint16_t>() / 10.0;
                                 inverterData.feedInPower = read16BitSigned(doc["Data"][48].as<uint16_t>());
                                 inverterData.loadPower = inverterData.inverterPower - inverterData.feedInPower;
-                                inverterData.gridSellTotal = doc["Data"][50].as<uint16_t>() / 100.0;
-                                inverterData.loadTotal = doc["Data"][52].as<uint16_t>() / 100.0;
+                                inverterData.gridSellTotal = ((doc["Data"][51].as<uint32_t>() << 16) + doc["Data"][50].as<uint16_t>()) / 100.0; 
+                                inverterData.loadTotal = ((doc["Data"][53].as<uint32_t>() << 16) + doc["Data"][52].as<uint16_t>()) / 100.0; 
                                 inverterData.hasBattery = false;
                                 inverterData.sn = sn;
                                 if(inverterData.pvToday < pvToday) { //day changed
