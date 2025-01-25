@@ -68,9 +68,12 @@ static void draw_event_cb(lv_event_t *e)
         }
         else if (dsc->id == LV_CHART_AXIS_PRIMARY_X)
         {
-            int noDivLines = max(2, min(5, (int) lv_chart_get_point_count(obj)));
-            int chartPointCounts = ((lv_chart_get_point_count(obj) / noDivLines) + 1) * noDivLines;
-            int totalMinutes = (chartPointCounts - (dsc->value + 1)) * (CHART_SAMPLE_INTERVAL_MS / 60000);
+            int linesCount = 5;//max(2, min(5, (int) lv_chart_get_point_count(obj)));
+            int segmentsCount = linesCount - 1;
+            int pointCountRoundedUp = ((lv_chart_get_point_count(obj) / segmentsCount)) * (segmentsCount + 1);
+            int maxMinutes = pointCountRoundedUp * (CHART_SAMPLE_INTERVAL_MS / 60000);
+            int minutesPerLine = maxMinutes / linesCount;
+            int totalMinutes = (linesCount - (dsc->value + 1)) * minutesPerLine;
             int hours = totalMinutes / 60;
             int minutes = totalMinutes % 60;
             if(totalMinutes == 0) {
@@ -83,8 +86,9 @@ static void draw_event_cb(lv_event_t *e)
                 if(minutes > 0) {
                     format += String(minutes) + "min";
                 }
-                lv_snprintf(dsc->text, dsc->text_length, format.c_str());
+                lv_snprintf(dsc->text, dsc->text_length, format.c_str());                
             }
+            //lv_snprintf(dsc->text, dsc->text_length, "%d", dsc->value);
         }
     }
 }
@@ -111,7 +115,7 @@ public:
         selfUseEnergyTodayPercent = constrain(selfUseEnergyTodayPercent, 0, 100);
         int pvPower = inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power;
         int inPower = pvPower;
-        bool isDarkMode = pvPower > 0;
+        bool isDarkMode = pvPower == 0;
         if (inverterData.batteryPower < 0)
         {
             inPower += abs(inverterData.batteryPower);
@@ -410,7 +414,7 @@ private:
             if(item.samples == 0) {
                 continue;
             }
-
+            
             lv_chart_set_next_value(ui_Chart1, pvPowerSeries, item.pvPower);
             lv_chart_set_next_value(ui_Chart1, acPowerSeries, item.loadPower);
             if (inverterData.hasBattery)
@@ -423,8 +427,8 @@ private:
             c++;
         }
         lv_chart_set_point_count(ui_Chart1, c);
-        lv_chart_set_div_line_count(ui_Chart1, 5, max(2, min(5, c)));
-        lv_chart_set_axis_tick( ui_Chart1, LV_CHART_AXIS_PRIMARY_X, 0, 0, max(2, min(5, c)), max(2, min(5, c)), true, 32);
+        //lv_chart_set_div_line_count(ui_Chart1, 5, 6);
+        //lv_chart_set_axis_tick( ui_Chart1, LV_CHART_AXIS_PRIMARY_X, 0, 0, 6, max(2, min(5, c)), true, 32);
         lv_chart_set_range(ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, (lv_coord_t)maxPower);
     }
 
