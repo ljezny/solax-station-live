@@ -136,7 +136,7 @@ extern lv_obj_t *ui_Container10;
 extern lv_obj_t *ui_gridBuyTodayLabel;
 extern lv_obj_t *ui_gridBuyTodayUnitLabel;
 extern lv_obj_t *ui_Image14;
-extern lv_obj_t *ui_TopBottomContainer;
+extern lv_obj_t *ui_RightBottomContainer;
 extern lv_obj_t *ui_Chart1;
 // CUSTOM VARIABLES
 
