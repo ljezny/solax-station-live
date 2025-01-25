@@ -353,13 +353,13 @@ public:
 
         updateFlowAnimations(inverterData, shellyResult);
 
-        lv_obj_set_style_bg_color(ui_Dashboard, isDarkMode ? black : white, 0);
-        lv_obj_set_style_bg_color(ui_LeftContainer, isDarkMode ? black : white, 0);
-        lv_obj_set_style_bg_color(ui_TopRightContainer, isDarkMode ? black : white, 0);
-        lv_obj_set_style_bg_color(ui_TopBottomContainer, isDarkMode ? black : white, 0);
-        lv_obj_set_style_bg_color(ui_inverterContainer, isDarkMode ? black : white, 0);
-        lv_obj_set_style_bg_color(ui_loadContainer, isDarkMode ? black : white, 0);
-        lv_obj_set_style_bg_color(ui_gridContainer, isDarkMode ? black : white, 0);
+        // lv_obj_set_style_bg_color(ui_Dashboard, isDarkMode ? black : white, 0);
+        // lv_obj_set_style_bg_color(ui_LeftContainer, isDarkMode ? black : white, 0);
+        // lv_obj_set_style_bg_color(ui_TopRightContainer, isDarkMode ? black : white, 0);
+        // lv_obj_set_style_bg_color(ui_TopBottomContainer, isDarkMode ? black : white, 0);
+        // lv_obj_set_style_bg_color(ui_inverterContainer, isDarkMode ? black : white, 0);
+        // lv_obj_set_style_bg_color(ui_loadContainer, isDarkMode ? black : white, 0);
+        // lv_obj_set_style_bg_color(ui_gridContainer, isDarkMode ? black : white, 0);
     }
 
 private:
