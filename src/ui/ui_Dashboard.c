@@ -657,8 +657,6 @@ lv_obj_set_width( ui_inverterPowerLabel, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_inverterPowerLabel, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_inverterPowerLabel, LV_ALIGN_CENTER );
 lv_label_set_text(ui_inverterPowerLabel,"1034");
-lv_obj_set_style_text_color(ui_inverterPowerLabel, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
-lv_obj_set_style_text_opa(ui_inverterPowerLabel, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_inverterPowerLabel, &ui_font_OpenSansLarge, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_inverterPowerUnitLabel = lv_label_create(ui_Container26);
@@ -1149,8 +1147,6 @@ lv_obj_set_style_line_rounded(ui_Chart1, true, LV_PART_ITEMS| LV_STATE_DEFAULT);
 
 lv_obj_set_style_size(ui_Chart1, 0, LV_PART_INDICATOR| LV_STATE_DEFAULT);
 
-lv_obj_set_style_text_color(ui_Chart1, lv_color_hex(0x000000), LV_PART_TICKS | LV_STATE_DEFAULT );
-lv_obj_set_style_text_opa(ui_Chart1, 255, LV_PART_TICKS| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_Chart1, &ui_font_OpenSansExtraSmall, LV_PART_TICKS| LV_STATE_DEFAULT);
 
 

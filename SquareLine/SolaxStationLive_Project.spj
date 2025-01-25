@@ -8992,17 +8992,6 @@
                                 "strval": "DEFAULT",
                                 "childs": [
                                   {
-                                    "nid": -2016047063,
-                                    "strtype": "_style/Text_Color",
-                                    "intarray": [
-                                      0,
-                                      0,
-                                      0,
-                                      255
-                                    ],
-                                    "InheritedType": 7
-                                  },
-                                  {
                                     "nid": 129752346,
                                     "strtype": "_style/Text_Font",
                                     "strval": "OpenSansLarge",
@@ -13390,8 +13379,7 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "CONTAINER",
-                    "tree_closed": true
+                    "saved_objtypeKey": "CONTAINER"
                   },
                   {
                     "guid": "GUID86037624-314082S1993214",
@@ -16191,17 +16179,6 @@
                             "strtype": "_style/StyleState",
                             "strval": "DEFAULT",
                             "childs": [
-                              {
-                                "nid": 31929815,
-                                "strtype": "_style/Text_Color",
-                                "intarray": [
-                                  0,
-                                  0,
-                                  0,
-                                  255
-                                ],
-                                "InheritedType": 7
-                              },
                               {
                                 "nid": 1439534553,
                                 "strtype": "_style/Text_Font",
