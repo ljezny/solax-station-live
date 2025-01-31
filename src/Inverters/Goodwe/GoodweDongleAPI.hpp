@@ -37,6 +37,11 @@ private:
         return readUInt16(buf, reg) << 16 | readUInt16(buf, reg + 1);
     }
 
+    int32_t readInt32(byte *buf, byte reg)
+    {
+        return readInt16(buf, reg) << 16 | readInt16(buf, reg + 1);
+    }
+
     float readIEEE754(byte *buf, byte reg)
     {
         uint32_t v = readUInt32(buf, reg);
@@ -143,8 +148,10 @@ private:
                                 inverterData.L1Power = readInt16(packetBuffer, 25); // - readInt16(packetBuffer, 64) + readInt16(packetBuffer, 50);
                                 inverterData.L2Power = readInt16(packetBuffer, 30); // - readInt16(packetBuffer, 66) + readInt16(packetBuffer, 56);
                                 inverterData.L3Power = readInt16(packetBuffer, 35); // - readInt16(packetBuffer, 68) + readInt16(packetBuffer, 62);
-                                inverterData.feedInPower =
-                                    readInt16(packetBuffer, 25) + readInt16(packetBuffer, 30) + readInt16(packetBuffer, 35) - readInt16(packetBuffer, 64) - readInt16(packetBuffer, 50) - readInt16(packetBuffer, 66) - readInt16(packetBuffer, 56) - readInt16(packetBuffer, 68) - readInt16(packetBuffer, 62);
+                                // inverterData.feedInPower =
+                                //     readInt16(packetBuffer, 25) + readInt16(packetBuffer, 30) + readInt16(packetBuffer, 35) 
+                                //     - readInt16(packetBuffer, 64) - readInt16(packetBuffer, 50) - readInt16(packetBuffer, 66) 
+                                //     - readInt16(packetBuffer, 56) - readInt16(packetBuffer, 68) - readInt16(packetBuffer, 62);
                                 inverterData.loadPower = readInt16(packetBuffer, 72) + readInt16(packetBuffer, 70);
                                 inverterData.inverterTemperature = readInt16(packetBuffer, 74) / 10;
                                 inverterData.pvTotal = readUInt32(packetBuffer, 91) / 10.0;
@@ -201,6 +208,7 @@ private:
                             {
                                 inverterData.gridSellTotal = readIEEE754(packetBuffer, 15) / 1000.0f;
                                 inverterData.gridBuyTotal = readIEEE754(packetBuffer, 17) / 1000.0f;
+                                inverterData.feedInPower = -1 * readInt32(packetBuffer, 25);
                                 log_d("Grid sell total: %f", inverterData.gridSellTotal);
                                 log_d("Grid buy total: %f", inverterData.gridBuyTotal);
                                 if(gridBuyTotal == 0) {
