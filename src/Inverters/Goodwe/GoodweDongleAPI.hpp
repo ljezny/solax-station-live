@@ -208,7 +208,16 @@ private:
                             {
                                 inverterData.gridSellTotal = readIEEE754(packetBuffer, 15) / 1000.0f;
                                 inverterData.gridBuyTotal = readIEEE754(packetBuffer, 17) / 1000.0f;
+                                
+                                //debug logging
+                                int register25 = readInt32(packetBuffer, 25);
+                                log_d("Register 25: %d", register25);
+                                int register8 = readInt16(packetBuffer, 8);
+                                log_d("Register 8: %d", register8);
+                                //end debug logging
+                                
                                 inverterData.feedInPower = -1 * readInt32(packetBuffer, 25);
+                                
                                 log_d("Grid sell total: %f", inverterData.gridSellTotal);
                                 log_d("Grid buy total: %f", inverterData.gridBuyTotal);
                                 if(gridBuyTotal == 0) {
