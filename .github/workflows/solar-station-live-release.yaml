@@ -41,7 +41,7 @@ jobs:
     
     steps:
       - name: Download archive release files
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: firmware
           path: tempFirmware
