@@ -68,7 +68,27 @@ static void draw_event_cb(lv_event_t *e)
         }
         else if (dsc->id == LV_CHART_AXIS_PRIMARY_X)
         {
-            lv_snprintf(dsc->text, dsc->text_length, "%dh", -24 + 6 * dsc->value);
+            int linesCount = 5;//max(2, min(5, (int) lv_chart_get_point_count(obj)));
+            int segmentsCount = linesCount - 1;
+            int pointCountRoundedUp = ((lv_chart_get_point_count(obj) / segmentsCount)) * (segmentsCount + 1);
+            int maxMinutes = pointCountRoundedUp * (CHART_SAMPLE_INTERVAL_MS / 60000);
+            int minutesPerLine = maxMinutes / linesCount;
+            int totalMinutes = (linesCount - (dsc->value + 1)) * minutesPerLine;
+            int hours = totalMinutes / 60;
+            int minutes = totalMinutes % 60;
+            if(totalMinutes == 0) {
+                lv_snprintf(dsc->text, dsc->text_length, "");
+            } else {
+                String format = "-";
+                if(hours > 0) {
+                    format += String(hours) + "h";
+                }
+                if(minutes > 0) {
+                    format += String(minutes) + "min";
+                }
+                lv_snprintf(dsc->text, dsc->text_length, format.c_str());                
+            }
+            //lv_snprintf(dsc->text, dsc->text_length, "%d", dsc->value);
         }
     }
 }
@@ -95,7 +115,7 @@ public:
         selfUseEnergyTodayPercent = constrain(selfUseEnergyTodayPercent, 0, 100);
         int pvPower = inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power;
         int inPower = pvPower;
-        bool isDarkMode = false; //pvPower == 0;
+        bool isDarkMode = pvPower == 0;
         if (inverterData.batteryPower < 0)
         {
             inPower += abs(inverterData.batteryPower);
@@ -124,16 +144,15 @@ public:
         lv_color_t red = lv_color_hex(0xAB2328);
         lv_color_t orange = lv_color_hex(0xFFD400);
         lv_color_t green = lv_color_hex(0x03AD36);
+        lv_color_t textColor = isDarkMode ? white : black;
+        lv_color_t containerBackground = isDarkMode ? black : white;
 
-        // lv_label_set_text(ui_pvLabel, format(POWER, inverterData.pv1Power + inverterData.pv2Power).value.c_str());
         pvPowerTextAnimator.animate(ui_pvLabel, 
             previousInverterData.pv1Power + previousInverterData.pv2Power + previousInverterData.pv3Power + previousInverterData.pv4Power, 
             inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power);
         lv_label_set_text(ui_pvUnitLabel, format(POWER, pvPower).unit.c_str());
-        // lv_label_set_text(ui_pv1Label, format(POWER, inverterData.pv1Power, 1.0f, true).value.c_str());
         pv1PowerTextAnimator.animate(ui_pv1Label, previousInverterData.pv1Power, inverterData.pv1Power);
         lv_label_set_text(ui_pv1UnitLabel, format(POWER, inverterData.pv1Power, 1.0f, true).unit.c_str());
-        // lv_label_set_text(ui_pv2Label, format(POWER, inverterData.pv2Power, 1.0f, true).value.c_str());
         pv2PowerTextAnimator.animate(ui_pv2Label, previousInverterData.pv2Power, inverterData.pv2Power);
         lv_label_set_text(ui_pv2UnitLabel, format(POWER, inverterData.pv2Power, 1.0f, true).unit.c_str());
         pv3PowerTextAnimator.animate(ui_pv3Label, previousInverterData.pv3Power, inverterData.pv3Power);
@@ -184,48 +203,33 @@ public:
             lv_obj_clear_flag(ui_inverterTemperatureContainer, LV_OBJ_FLAG_HIDDEN);
         }
         
-        // lv_label_set_text(ui_inverterPowerLabel, format(POWER, inverterData.inverterPower).value.c_str());
         inverterPowerTextAnimator.animate(ui_inverterPowerLabel, previousInverterData.inverterPower, inverterData.inverterPower);
-        // lv_obj_set_style_bg_color(ui_pvContainer, (inverterData.pv1Power + inverterData.pv2Power) > 0 ? lv_color_hex(_ui_theme_color_pvColor[0]) :  lv_color_white(), 0);
-        pvBackgroundAnimator.animate(ui_pvContainer, (previousInverterData.pv1Power + previousInverterData.pv2Power  + previousInverterData.pv3Power + previousInverterData.pv4Power) > 0, (inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power) > 0);
+        pvBackgroundAnimator.animate(ui_pvContainer, ((previousInverterData.pv1Power + previousInverterData.pv2Power  + previousInverterData.pv3Power + previousInverterData.pv4Power) > 0) ? lv_color_hex(_ui_theme_color_pvColor[0]) : containerBackground
+            , ((inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power) > 0) ? lv_color_hex(_ui_theme_color_pvColor[0]) : containerBackground);
         lv_label_set_text(ui_inverterPowerUnitLabel, format(POWER, inverterData.inverterPower).unit.c_str());
-        // lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.L1Power).value.c_str());
         inverterPowerL1TextAnimator.animate(ui_inverterPowerL1Label, previousInverterData.L1Power, inverterData.L1Power);
         lv_label_set_text(ui_inverterPowerL1UnitLabel, format(POWER, inverterData.L1Power).unit.c_str());
-        lv_obj_set_style_text_color(ui_inverterPowerL1Label, l1PercentUsage > 50 ? red : black, 0);
-        lv_obj_set_style_text_color(ui_inverterPowerL1UnitLabel, l1PercentUsage > 50 ? red : black, 0);
-        // lv_label_set_text(ui_inverterPowerL2Label, format(POWER, inverterData.L2Power).value.c_str());
+        lv_obj_set_style_text_color(ui_inverterPowerL1Label, l1PercentUsage > 50 ? red : textColor, 0);
+        lv_obj_set_style_text_color(ui_inverterPowerL1UnitLabel, l1PercentUsage > 50 ? red : textColor, 0);
         inverterPowerL2TextAnimator.animate(ui_inverterPowerL2Label, previousInverterData.L2Power, inverterData.L2Power);
         lv_label_set_text(ui_inverterPowerL2UnitLabel, format(POWER, inverterData.L2Power).unit.c_str());
-        lv_obj_set_style_text_color(ui_inverterPowerL2Label, l2PercentUsage > 50 ? red : black, 0);
-        lv_obj_set_style_text_color(ui_inverterPowerL2UnitLabel, l2PercentUsage > 50 ? red : black, 0);
-        // lv_label_set_text(ui_inverterPowerL3Label, format(POWER, inverterData.L3Power).value.c_str());
+        lv_obj_set_style_text_color(ui_inverterPowerL2Label, l2PercentUsage > 50 ? red : textColor, 0);
+        lv_obj_set_style_text_color(ui_inverterPowerL2UnitLabel, l2PercentUsage > 50 ? red : textColor, 0);
         inverterPowerL3TextAnimator.animate(ui_inverterPowerL3Label, previousInverterData.L3Power, inverterData.L3Power);
         lv_label_set_text(ui_inverterPowerL3UnitLabel, format(POWER, inverterData.L3Power).unit.c_str());
-        lv_obj_set_style_text_color(ui_inverterPowerL3Label, l3PercentUsage > 50 ? red : black, 0);
-        lv_obj_set_style_text_color(ui_inverterPowerL3UnitLabel, l3PercentUsage > 50 ? red : black, 0);
+        lv_obj_set_style_text_color(ui_inverterPowerL3Label, l3PercentUsage > 50 ? red : textColor, 0);
+        lv_obj_set_style_text_color(ui_inverterPowerL3UnitLabel, l3PercentUsage > 50 ? red : textColor, 0);
         loadPowerTextAnimator.animate(ui_loadPowerLabel, previousInverterData.loadPower, inverterData.loadPower);
         lv_label_set_text(ui_loadPowerUnitLabel, format(POWER, inverterData.loadPower).unit.c_str());
         feedInPowerTextAnimator.animate(ui_feedInPowerLabel, abs(previousInverterData.feedInPower), abs(inverterData.feedInPower));
         lv_label_set_text(ui_feedInPowerUnitLabel, format(POWER, abs(inverterData.feedInPower)).unit.c_str());
-        // lv_obj_set_style_bg_color(ui_gridContainer, (inverterData.feedInPower) < 0 ? lv_color_hex(_ui_theme_color_gridColor[0]) :  lv_color_white(), 0);
-        gridBackgroundAnimator.animate(ui_gridContainer, (previousInverterData.feedInPower) < 0, (inverterData.feedInPower) < 0);
-        lv_obj_set_style_text_color(ui_feedInPowerLabel, inverterData.feedInPower < 0 ? white : black, 0);
-        lv_obj_set_style_text_color(ui_feedInPowerUnitLabel, inverterData.feedInPower < 0 ? white : black, 0);
+        gridBackgroundAnimator.animate(ui_gridContainer, ((previousInverterData.feedInPower) < 0) ? lv_color_hex(_ui_theme_color_gridColor[0]) : containerBackground, ((inverterData.feedInPower) < 0) ? lv_color_hex(_ui_theme_color_gridColor[0]) : containerBackground);
         lv_label_set_text_fmt(ui_socLabel, (inverterData.socApproximated ? "~%d" : "%d"), inverterData.soc);
 
-        // batteryPercentTextAnimator.animate(ui_socLabel, previousInverterData.soc, inverterData.soc);
-        // batteryPercentTextAnimator.animate(ui_socLabel, previousInverterData.soc, inverterData.soc);
-        //  lv_label_set_text(ui_socLabel1, "%");
-
-        // lv_label_set_text(ui_batteryPowerLabel, format(POWER, abs(inverterData.batteryPower)).value.c_str());
         batteryPowerTextAnimator.animate(ui_batteryPowerLabel, abs(previousInverterData.batteryPower), abs(inverterData.batteryPower));
-        batteryBackgroundAnimator.animate(ui_batteryContainer, (previousInverterData.batteryPower) < 0, (inverterData.batteryPower) < 0);
-        // lv_obj_set_style_bg_color(ui_batteryContainer, (inverterData.batteryPower) < 0 ? lv_color_hex(_ui_theme_color_batteryColor[0]) :  lv_color_white(), 0);
+        batteryBackgroundAnimator.animate(ui_batteryContainer, ((previousInverterData.batteryPower) < 0) ? lv_color_hex(_ui_theme_color_batteryColor[0]) : containerBackground, ((inverterData.batteryPower) < 0) ? lv_color_hex(_ui_theme_color_batteryColor[0]) : containerBackground);
 
         lv_label_set_text(ui_batteryPowerUnitLabel, format(POWER, abs(inverterData.batteryPower)).unit.c_str());
-        // lv_obj_set_style_text_color(ui_batteryPowerLabel, inverterData.batteryPower < 0 ? red : black, 0);
-        // lv_obj_set_style_text_color(ui_batteryPowerUnitLabel, inverterData.batteryPower < 0 ? red : black, 0);
         lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d", inverterData.batteryTemperature);
 
         if (inverterData.batteryTemperature > 40)
@@ -353,13 +357,20 @@ public:
 
         updateFlowAnimations(inverterData, shellyResult);
 
-        // lv_obj_set_style_bg_color(ui_Dashboard, isDarkMode ? black : white, 0);
-        // lv_obj_set_style_bg_color(ui_LeftContainer, isDarkMode ? black : white, 0);
-        // lv_obj_set_style_bg_color(ui_TopRightContainer, isDarkMode ? black : white, 0);
-        // lv_obj_set_style_bg_color(ui_TopBottomContainer, isDarkMode ? black : white, 0);
-        // lv_obj_set_style_bg_color(ui_inverterContainer, isDarkMode ? black : white, 0);
-        // lv_obj_set_style_bg_color(ui_loadContainer, isDarkMode ? black : white, 0);
-        // lv_obj_set_style_bg_color(ui_gridContainer, isDarkMode ? black : white, 0);
+        lv_obj_set_style_bg_color(ui_Dashboard, isDarkMode ? black : white, 0);
+        lv_obj_set_style_bg_color(ui_LeftContainer, containerBackground, 0);
+        lv_obj_set_style_bg_opa(ui_LeftContainer, isDarkMode ? LV_OPA_80 : LV_OPA_COVER, 0);
+        lv_obj_set_style_bg_color(ui_TopRightContainer, containerBackground, 0);
+        lv_obj_set_style_bg_opa(ui_TopRightContainer, isDarkMode ? LV_OPA_80 : LV_OPA_COVER, 0);
+        lv_obj_set_style_bg_color(ui_RightBottomContainer, containerBackground, 0);
+        lv_obj_set_style_bg_opa(ui_RightBottomContainer, isDarkMode ? LV_OPA_80 : LV_OPA_COVER, 0);
+        lv_obj_set_style_bg_color(ui_inverterContainer, containerBackground, 0);
+        lv_obj_set_style_outline_color(ui_inverterContainer, containerBackground, 0);
+        lv_obj_set_style_outline_opa(ui_inverterContainer, isDarkMode ? LV_OPA_80 : LV_OPA_COVER, 0);
+        lv_obj_set_style_line_opa(ui_Chart1, isDarkMode ? LV_OPA_20 : LV_OPA_COVER, LV_PART_MAIN);
+        lv_obj_set_style_bg_color(ui_loadContainer, isDarkMode ? black : white, 0);
+        lv_obj_set_style_bg_color(ui_gridContainer, isDarkMode ? black : white, 0);
+        lv_obj_set_style_text_color(ui_Dashboard, isDarkMode ? white : black, 0);
     }
 
 private:
@@ -380,9 +391,9 @@ private:
     UITextChangeAnimator pv4PowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
     UITextChangeAnimator batteryPercentTextAnimator = UITextChangeAnimator(PERCENT, UI_TEXT_CHANGE_ANIMATION_DURATION);
     UITextChangeAnimator selfUsePercentTextAnimator = UITextChangeAnimator(PERCENT, UI_TEXT_CHANGE_ANIMATION_DURATION);
-    UIBackgroundAnimator pvBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION, lv_color_hex(_ui_theme_color_pvColor[0]));
-    UIBackgroundAnimator batteryBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION, lv_color_hex(_ui_theme_color_batteryColor[0]));
-    UIBackgroundAnimator gridBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION, lv_color_hex(_ui_theme_color_gridColor[0]));
+    UIBackgroundAnimator pvBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
+    UIBackgroundAnimator batteryBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
+    UIBackgroundAnimator gridBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
 
     void updateChart(InverterData_t &inverterData, SolarChartDataProvider &solarChartDataProvider)
     {
@@ -398,10 +409,14 @@ private:
         uint32_t i;
 
         float maxPower = 5000.0f;
+        int c = 0;
         for (i = 0; i < CHART_SAMPLES_PER_DAY; i++)
         {
             SolarChartDataItem_t item = solarChartDataProvider.getData()[CHART_SAMPLES_PER_DAY - i - 1];
-
+            if(item.samples == 0) {
+                continue;
+            }
+            
             lv_chart_set_next_value(ui_Chart1, pvPowerSeries, item.pvPower);
             lv_chart_set_next_value(ui_Chart1, acPowerSeries, item.loadPower);
             if (inverterData.hasBattery)
@@ -410,7 +425,12 @@ private:
             }
 
             maxPower = max(maxPower, max(item.pvPower, item.loadPower));
+
+            c++;
         }
+        lv_chart_set_point_count(ui_Chart1, c);
+        //lv_chart_set_div_line_count(ui_Chart1, 5, 6);
+        //lv_chart_set_axis_tick( ui_Chart1, LV_CHART_AXIS_PRIMARY_X, 0, 0, 6, max(2, min(5, c)), true, 32);
         lv_chart_set_range(ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, (lv_coord_t)maxPower);
     }
 

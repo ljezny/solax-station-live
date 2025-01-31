@@ -129,7 +129,7 @@ lv_obj_t *ui_Container10;
 lv_obj_t *ui_gridBuyTodayLabel;
 lv_obj_t *ui_gridBuyTodayUnitLabel;
 lv_obj_t *ui_Image14;
-lv_obj_t *ui_TopBottomContainer;
+lv_obj_t *ui_RightBottomContainer;
 lv_obj_t *ui_Chart1;
 // CUSTOM VARIABLES
 
