@@ -30,7 +30,7 @@ jobs:
       - name: Build PlatformIO Project
         run: PLATFORMIO_BUILD_FLAGS="-DVERSION_NUMBER=${GITHUB_REF_NAME:8:3} -DDEMO=0" pio run -e solar-station-live
       - name: Archive
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: firmware
           path: |
