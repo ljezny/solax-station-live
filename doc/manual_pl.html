@@ -1,0 +1,83 @@
+<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> został zaprojektowany do automatycznego podłączenia się do
+    twojego inwertera bez konieczności ręcznej konfiguracji.</p>
+
+<p>Jeśli jednak <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> nie znajdzie kompatybilnej sieci WiFi,
+    wyświetli menu wyboru dostępnych obsługiwanych sieci WiFi. Wyświetlane są tylko sieci inwerterów, a nie twoja domowa sieć WiFi.</p>
+
+<p>Wybierz odpowiedni inwerter, a w razie potrzeby wprowadź hasło do sieci WiFi. <strong>SOLAR STATION <span
+            style="color: #ff0000;">LIVE</span></strong> zapamięta hasło.</p>
+
+<h2>Aktualizacja oprogramowania układowego</h2>
+<p>Szczegółową instrukcję aktualizacji oprogramowania układowego znajdziesz <a
+        href="https://solar-station.cz/user/documents/solar-station-live/index.html"><strong>tutaj</strong></a>.</p>
+
+<h2>Wyświetlane dane</h2>
+<p><img src="https://cdn.myshoptet.com/usr/www.solar-station.cz/user/documents/upload/solar-station-live-layout.png"
+        alt="solar-station-live-layout" /></p>
+
+<ol>
+    <li>Aktualna moc paneli FV</li>
+    <li>Moc poszczególnych stringów (jeśli dostępne)</li>
+    <li>Procentowa samozaopatrzenie w energię słoneczną</li>
+    <li>Poziom naładowania baterii</li>
+    <li>Moc ładowania i rozładowywania baterii</li>
+    <li>Temperatura baterii</li>
+    <li>Całkowita moc inwertera</li>
+    <li>Obciążenie poszczególnych faz inwertera (czerwona oznacza przeciążoną fazę). Znak minus oznacza przeciwny kierunek przepływu na danej fazie - zazwyczaj gdy dochodzi do ładowania baterii z sieci itp.</li>
+    <li>Numer seryjny inwertera i siła sygnału WiFi</li>
+    <li>Temperatura inwertera</li>
+    <li>Liczba aktywnych i sparowanych gniazdek (łączna moc włączonych gniazdek)</li>
+    <li>Całkowite zużycie gospodarstwa domowego</li>
+    <li>Ilość kupowanej i sprzedawanej energii do sieci</li>
+    <li>Dzisiejsza produkcja energii elektrycznej</li>
+    <li>Całkowita produkcja od instalacji</li>
+    <li>Dzisiejsze zużycie energii elektrycznej</li>
+    <li>Dzisiejsza procentowa samozaopatrzenie</li>
+    <li>Dzisiejsza ilość zgromadzonej energii w baterii</li>
+    <li>Dzisiejsze wykorzystanie energii z baterii</li>
+    <li>Dzisiejszy nadmiar do sieci</li>
+    <li>Dzisiejszy pobór z sieci</li>
+    <li>Graficzne przedstawienie produkcji paneli (żółty), stanu naładowania baterii (niebieski) i zużycia gospodarstwa domowego (zielony)</li>
+</ol>
+<p>Niektóre dzienne statystyki po starcie wyświetlają u niektórych inwerterów (Victron, GoodWe) zera. Jest to spowodowane tym, że
+    inwerter tej dziennej statystyki nie rejestruje. <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> oblicza ją sam z ogólnych statystyk i dlatego wyświetla się dopiero po północy.</p>
+    
+<h1>Obsługiwane inwertery</h1>
+
+<h2>SOLAX</h2>
+<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> standardowo automatycznie łączy się z
+    inwerterem za pomocą podstawowych ustawień. Jeśli się tak nie stanie, postępuj zgodnie z poniższymi krokami:</p>
+<ol>
+    <li>Sprawdź, czy dostępna jest sieć WiFi o nazwie <em>Wifi_XXXXXX</em> (sieć WiFi nadawana przez dongle inwertera). Jeśli
+        nie jest widoczna, może być ukryta – wyłącz ukrywanie sieci w aplikacji mobilnej SOLAX Cloud (Menu -> Ustawienia ->
+        Sieć -> Pocket WiFi SSID Broadcast).</li>
+    <li>Sieć WiFi dongle nie jest zabezpieczona hasłem, ale dostęp do API jest chroniony. Domyślne hasło API jest podane na WiFi
+        dongle i zaczyna się od litery „S”.</li>
+</ol>
+
+<h2>GOODWE</h2>
+<ol>
+    <li>Sprawdź dostępność sieci WiFi <em>SolarWifiXXXXXX</em> (XXXXXX odpowiada numerowi seryjnemu dongle). Domyślne
+        hasło do tej sieci to <strong>12345678</strong>.</li>
+    <li>Jeśli dongle się nie zgłasza, zresetuj go krótkim naciśnięciem przycisku i poczekaj około 3 minut na jego restart.</li>
+</ol>
+
+<h2>VICTRON</h2>
+<p>Inwerter Victron nadaje sieć WiFi <em>venus-XXXXXX</em> (XXXXXX odpowiada numerowi seryjnemu dongle). Połączenie z tą siecią
+    wymaga hasła podanego na dongle.</p>
+<p>Aby prawidłowo działać, należy aktywować <strong>Modbus TCP</strong> w menu urządzenia (Menu -> Ustawienia -> Usługi ->
+    Modbus TCP).</p>
+
+<h1>SOLAR PLUG</h1>
+<p>Wszystkie gniazdka SOLAR PLUG są w pełni kompatybilne. Po podłączeniu do sieci są automatycznie wykrywane i wyświetlają się w
+    statystyce zużycia gospodarstwa domowego.</p>
+<p>Pierwsze uruchomienie aktywuje tryb parowania. Parowanie można wywołać w dowolnym momencie, przytrzymując przycisk na gniazdku przez 10 sekund
+    (zapalą się niebieskie kontrolki).</p>
+<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> automatycznie wyszukuje i paruje dostępne
+    jednostki SOLAR PLUG. Podczas konfiguracji wskazania zmieniają się:</p>
+<ul>
+    <li><strong>Niebieski:</strong> aktywny tryb parowania</li>
+    <li><strong>Pomarańczowy:</strong> trwa konfiguracja</li>
+    <li><strong>Zielony:</strong> urządzenie jest pomyślnie podłączone i aktywne</li>
+</ul>
+<p>Po pomyślnym sparowaniu gniazdko wyświetli się w przeglądzie zużycia domowego.</p>

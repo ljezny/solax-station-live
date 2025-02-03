@@ -1,0 +1,84 @@
+<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> is designed for automatic connection to
+    your inverter without the need for manual configuration.</p>
+
+<p>However, if <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> does not find a compatible WiFi network,
+    it will display a selection menu of available supported WiFi networks. Only inverter networks are displayed, not your home WiFi
+    network.</p>
+
+<p>Select the correct inverter and, if necessary, enter the WiFi network password. <strong>SOLAR STATION <span
+            style="color: #ff0000;">LIVE</span></strong> will save the password.</p>
+
+<h2>Firmware Update</h2>
+<p>Detailed instructions for firmware updates can be found <a
+        href="https://solar-station.cz/user/documents/solar-station-live/index.html"><strong>here</strong></a>.</p>
+
+<h2>Displayed Information</h2>
+<p><img src="https://cdn.myshoptet.com/usr/www.solar-station.cz/user/documents/upload/solar-station-live-layout.png"
+        alt="solar-station-live-layout" /></p>
+
+<ol>
+    <li>Current PV panel power</li>
+    <li>Power of individual strings (if available)</li>
+    <li>Percentage self-sufficiency from solar energy</li>
+    <li>Battery charge level</li>
+    <li>Battery charging and discharging power</li>
+    <li>Battery temperature</li>
+    <li>Total inverter power</li>
+    <li>Load on individual inverter phases (red indicates overloaded phase). A negative sign indicates the opposite direction of flow on the given phase - typically when charging the battery from the grid, etc.</li>
+    <li>Inverter serial number and WiFi signal strength</li>
+    <li>Inverter temperature</li>
+    <li>Number of active and paired sockets (total power of connected sockets)</li>
+    <li>Total household consumption</li>
+    <li>Amount of energy purchased and sold to the grid</li>
+    <li>Today's electricity production</li>
+    <li>Total production since installation</li>
+    <li>Today's electricity consumption</li>
+    <li>Today's percentage self-sufficiency</li>
+    <li>Today's amount of energy stored in the battery</li>
+    <li>Today's utilization of energy from the battery</li>
+    <li>Today's surplus to the grid</li>
+    <li>Today's grid import</li>
+    <li>Graphical representation of panel production (yellow), battery charge status (blue), and household consumption (green)</li>
+</ol>
+<p>Some daily statistics may show zeros for certain inverters (Victron, GoodWe) after startup. This is because
+    the inverter does not record this daily statistic. <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> calculates it itself from the overall statistics and therefore it appears only after midnight.</p>
+    
+<h1>Supported Inverters</h1>
+
+<h2>SOLAX</h2>
+<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> automatically connects to
+    the inverter using default settings by default. If this does not happen, follow these steps:</p>
+<ol>
+    <li>Check if a WiFi network named <em>Wifi_XXXXXX</em> (WiFi network broadcasted by the inverter dongle) is available. If
+        it is not visible, it might be hidden – disable network hiding in the SOLAX Cloud mobile app (Menu -> Settings ->
+        Network -> Pocket WiFi SSID Broadcast).</li>
+    <li>The dongle's WiFi network is not password protected, but API access is secured. The default API password is printed on the WiFi
+        dongle and starts with the letter "S".</li>
+</ol>
+
+<h2>GOODWE</h2>
+<ol>
+    <li>Check the availability of the WiFi network <em>SolarWifiXXXXXX</em> (XXXXXX corresponds to the dongle's serial number). The default
+        password for this network is <strong>12345678</strong>.</li>
+    <li>If the dongle does not respond, reset it by pressing the button briefly and wait about 3 minutes for it to restart.</li>
+</ol>
+
+<h2>VICTRON</h2>
+<p>The Victron inverter broadcasts the WiFi network <em>venus-XXXXXX</em> (XXXXXX corresponds to the dongle's serial number). Connecting to this network
+    requires the password provided on the dongle.</p>
+<p>For proper functioning, it is necessary to activate <strong>Modbus TCP</strong> in the device menu (Menu -> Settings -> Services ->
+    Modbus TCP).</p>
+
+<h1>SOLAR PLUG</h1>
+<p>All SOLAR PLUG sockets are fully compatible. Once connected to the network, they are automatically detected and displayed in the
+    household consumption statistics.</p>
+<p>First-time setup activates pairing mode. Pairing can be initiated at any time by holding the button on the socket for 10 seconds
+    (the blue indicator light will turn on).</p>
+<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> automatically searches for and pairs available
+    SOLAR PLUG units. During configuration, the indicators change as follows:</p>
+<ul>
+    <li><strong>Blue:</strong> active pairing mode</li>
+    <li><strong>Orange:</strong> configuration in progress</li>
+    <li><strong>Green:</strong> device successfully connected and active</li>
+</ul>
+<p>After successful pairing, the socket will appear in the household consumption overview.</p>
