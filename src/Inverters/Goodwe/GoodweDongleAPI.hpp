@@ -216,7 +216,7 @@ private:
                                 log_d("Register 8: %d", register8);
                                 //end debug logging
                                 
-                                inverterData.feedInPower = -1 * readInt32(packetBuffer, 25);
+                                inverterData.feedInPower = readInt32(packetBuffer, 25);
                                 
                                 log_d("Grid sell total: %f", inverterData.gridSellTotal);
                                 log_d("Grid buy total: %f", inverterData.gridBuyTotal);
