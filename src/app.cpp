@@ -1,7 +1,6 @@
 #include <Arduino.h>
 #include <lvgl.h>
 
-
 #include <SPI.h>
 #include "consts.h"
 #include "ui/ui.h"
@@ -22,7 +21,7 @@
 #include "utils/ShellyRuleResolver.hpp"
 
 #define UI_REFRESH_INTERVAL 5000 // Define the UI refresh interval in milliseconds
-#define INVERTER_DATA_REFRESH_INTERVAL 1000
+#define INVERTER_DATA_REFRESH_INTERVAL 2000
 #define SHELLY_REFRESH_INTERVAL 15000
 
 #include "gfx_conf.h"
@@ -217,13 +216,12 @@ bool discoverDonglesTask()
 {
     static long lastAttempt = 0;
     bool hasDongles = false;
-    if (lastAttempt == 0 || millis() - lastAttempt > 30000)
+    bool run = false;
+    if (lastAttempt == 0 || millis() - lastAttempt > 60 * 1000)
     {
-        if (dongleDiscovery.discoverDongle())
-        {
-            lastAttempt = millis();
-            return true;
-        }
+        run = true;
+        lastAttempt = millis();
+        dongleDiscovery.discoverDongle(true);
     }
     return false;
 }
@@ -255,16 +253,16 @@ InverterData_t loadInverterData(DongleDiscoveryResult_t &discoveryResult)
     return d;
 }
 
-void loadInverterDataTask()
+bool loadInverterDataTask()
 {
     static long lastAttempt = 0;
-
+    bool run = false;
     static int failures = 0;
     if (lastAttempt == 0 || millis() - lastAttempt > INVERTER_DATA_REFRESH_INTERVAL)
     {
         log_d("Loading inverter data");
         lastAttempt = millis();
-
+        run = true;
 #if DEMO
         inverterData = createRandomMockData();
         solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
@@ -274,7 +272,7 @@ void loadInverterDataTask()
 
         if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
         {
-            return;
+            return run;
         }
 
         DongleDiscoveryResult_t &discoveryResult = dongleDiscovery.discoveries[dongleDiscovery.preferedInverterWifiDongleIndex];
@@ -308,11 +306,13 @@ void loadInverterDataTask()
             inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
         }
     }
+    return run;
 }
 
-void pairShellyTask()
+bool pairShellyTask()
 {
     static long lastAttempt = 0;
+    bool run = false;
     if (lastAttempt == 0 || millis() - lastAttempt > 30000)
     {
         log_d("Pairing Shelly");
@@ -331,10 +331,12 @@ void pairShellyTask()
         }
 
         lastAttempt = millis();
+        run = true;
     }
+    return run;
 }
 
-void reloadShelly()
+bool reloadShellyTask()
 {
     if (shellyAPI.getPairedCount() < softAP.getNumberOfConnectedDevices())
     {
@@ -342,6 +344,7 @@ void reloadShelly()
         shellyAPI.queryMDNS();
     }
     static long lastAttempt = 0;
+    bool run = false;
     if (lastAttempt == 0 || millis() - lastAttempt > SHELLY_REFRESH_INTERVAL)
     {
         log_d("Reloading Shelly data");
@@ -349,7 +352,9 @@ void reloadShelly()
         RequestedShellyState_t state = shellyRuleResolver.resolveShellyState();
         shellyAPI.updateState(state, 5 * 60);
         lastAttempt = millis();
+        run = true;
     }
+    return run;
 }
 
 void logMemory()
@@ -359,23 +364,25 @@ void logMemory()
     log_d("Free stack: %d", uxTaskGetStackHighWaterMark(NULL));
 }
 
-void resetWifi()
+bool resetWifiTask()
 {
     static long lastAttempt = 0;
+    bool run = false;
     if (millis() - lastAttempt > 300000) // every 5 minutes
     {
         lastAttempt = millis();
+        run = true;
         logMemory();
         if (WiFi.status() == WL_CONNECTED)
         {
             log_d("Wifi connected, skipping reset");
-            return;
+            return run;
         }
 
         if (WiFi.scanComplete() == WIFI_SCAN_RUNNING)
         {
             log_d("Wifi Scan is running, skipping reset");
-            return;
+            return run;
         }
 
         log_d("Resetting wifi");
@@ -385,6 +392,7 @@ void resetWifi()
         softAP.start();
         logMemory();
     }
+    return run;
 }
 
 void onEntering(state_t newState)
@@ -463,7 +471,7 @@ void updateState()
             splashUI.updateText("Discovering dongles...");
             xSemaphoreGive(lvgl_mutex);
 
-            dongleDiscovery.discoverDongle();
+            dongleDiscovery.discoverDongle(false);
             dongleDiscovery.trySelectPreferedInverterWifiDongleIndex();
         }
 
@@ -521,9 +529,6 @@ void updateState()
 #endif
         break;
     case STATE_DASHBOARD:
-
-        loadInverterDataTask();
-
         if ((millis() - previousInverterData.millis) > UI_REFRESH_INTERVAL)
         {
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
@@ -535,10 +540,24 @@ void updateState()
 
             backlightResolver.resolve(inverterData);
         }
-        discoverDonglesTask();
-        pairShellyTask();
-        reloadShelly();
-        resetWifi();
+        //only one task per state update
+        if(loadInverterDataTask())
+        {
+            break;
+        }
+        if(discoverDonglesTask()) {
+            break;
+        }
+        if(pairShellyTask()) {
+            break;
+        }
+        if(reloadShellyTask()){
+            break;
+        }
+        if(resetWifiTask()){
+            break;
+        }
+
         if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
         {
             moveToState(STATE_WIFI_SETUP);

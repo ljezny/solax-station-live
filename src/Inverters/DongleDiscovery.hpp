@@ -18,7 +18,7 @@ public:
     DongleDiscoveryResult_t discoveries[DONGLE_DISCOVERY_MAX_RESULTS];
     int preferedInverterWifiDongleIndex = -1;
 
-    bool discoverDongle()
+    bool discoverDongle(bool fast = false)
     {
         bool result = false;
 
@@ -27,7 +27,7 @@ public:
             return false;
         }
 
-        int found = WiFi.scanNetworks();
+        int found = WiFi.scanNetworks(false, false, false, fast ? 100 : 300);
 
         for (int i = 0; i < found; i++)
         {
