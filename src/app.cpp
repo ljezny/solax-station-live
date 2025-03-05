@@ -157,7 +157,6 @@ void lvglTimerTask(void *param)
 
 void setupWiFi()
 {
-    WiFi.setTxPower(WIFI_POWER_8_5dBm); // 8.5 dBm
     WiFi.persistent(false);
     WiFi.setSleep(false);
     softAP.start();
@@ -413,6 +412,7 @@ void onEntering(state_t newState)
             dashboardUI.update(inverterData, inverterData, shellyResult, shellyResult, solarChartDataProvider, wifiSignalPercent());
             previousShellyResult = shellyResult;
             previousInverterData = inverterData;
+            previousInverterData.millis = 0;
         }
         xSemaphoreGive(lvgl_mutex);
         break;
