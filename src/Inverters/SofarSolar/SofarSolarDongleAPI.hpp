@@ -120,8 +120,8 @@ private:
         //     log_d("%02X ", request[i]);
         // }
 
-        client.write(request, sizeof(request));
-        return true;
+        size_t requestSize = sizeof(request);
+        return client.write(request, requestSize) == requestSize;
     }
 
     bool awaitPacket(int timeout)
@@ -220,7 +220,7 @@ private:
 
     InverterData_t readData(String dongleSN)
     {
-        //https://github.com/wills106/homeassistant-solax-modbus/blob/main/custom_components/solax_modbus/plugin_sofar.py
+        // https://github.com/wills106/homeassistant-solax-modbus/blob/main/custom_components/solax_modbus/plugin_sofar.py
         InverterData_t inverterData;
         log_d("Connecting to dongle...");
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
@@ -234,102 +234,159 @@ private:
 
             // pv input
             // 0x0580 - 0x05FF
-            //but we need only few
-            sendReadDataRequest(sequenceNumber, 0x586, 0x58F - 0x586 + 1, sn);
-            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+            // but we need only few
+            if (sendReadDataRequest(sequenceNumber, 0x586, 0x58F - 0x586 + 1, sn))
             {
-                inverterData.status = DONGLE_STATUS_OK;
-                inverterData.millis = millis();
-                inverterData.pv1Power = readUInt16(packetBuffer, 0x586 - 0x586) * 10;
-                inverterData.pv2Power = readUInt16(packetBuffer, 0x589 - 0x586) * 10;
-                inverterData.pv3Power = readUInt16(packetBuffer, 0x58B - 0x586) * 10;
-                inverterData.pv4Power = readUInt16(packetBuffer, 0x58F - 0x586) * 10;
-        
-                 // inverterData.feedInPower =
-                //     readInt16(packetBuffer, 25) + readInt16(packetBuffer, 30) + readInt16(packetBuffer, 35) - readInt16(packetBuffer, 64) - readInt16(packetBuffer, 50) - readInt16(packetBuffer, 66) - readInt16(packetBuffer, 56) - readInt16(packetBuffer, 68) - readInt16(packetBuffer, 62);
-                // inverterData.loadPower = readInt16(packetBuffer, 72) + readInt16(packetBuffer, 70);
-             }
+                if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+                {
+                    inverterData.status = DONGLE_STATUS_OK;
+                    inverterData.millis = millis();
+                    inverterData.pv1Power = readUInt16(packetBuffer, 0x586 - 0x586) * 10;
+                    inverterData.pv2Power = readUInt16(packetBuffer, 0x589 - 0x586) * 10;
+                    inverterData.pv3Power = readUInt16(packetBuffer, 0x58B - 0x586) * 10;
+                    inverterData.pv4Power = readUInt16(packetBuffer, 0x58F - 0x586) * 10;
+
+                    // inverterData.feedInPower =
+                    //     readInt16(packetBuffer, 25) + readInt16(packetBuffer, 30) + readInt16(packetBuffer, 35) - readInt16(packetBuffer, 64) - readInt16(packetBuffer, 50) - readInt16(packetBuffer, 66) - readInt16(packetBuffer, 56) - readInt16(packetBuffer, 68) - readInt16(packetBuffer, 62);
+                    // inverterData.loadPower = readInt16(packetBuffer, 72) + readInt16(packetBuffer, 70);
+                }
+                else
+                {
+                    disconnect();
+                    inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                    return inverterData;
+                }
+            }
             else
             {
+                log_d("Failed to send request");
                 disconnect();
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
 
-            //battery input
-            //0x0600 - 0x067F
-            sendReadDataRequest(sequenceNumber, 0x667, 2, sn);
-            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+            // battery input
+            // 0x0600 - 0x067F
+            if (sendReadDataRequest(sequenceNumber, 0x667, 2, sn))
             {
-                inverterData.batteryPower = readInt16(packetBuffer, 0) * 100;
-                inverterData.soc = readUInt16(packetBuffer, 1);
+                if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+                {
+                    inverterData.batteryPower = readInt16(packetBuffer, 0) * 100;
+                    inverterData.soc = readUInt16(packetBuffer, 1);
+                }
+                else
+                {
+                    disconnect();
+                    inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                    return inverterData;
+                }
             }
             else
             {
+                log_d("Failed to send request");
                 disconnect();
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
 
-            sendReadDataRequest(sequenceNumber, 0x607, 0x607 - 0x607 + 1, sn);
-            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+            if (sendReadDataRequest(sequenceNumber, 0x607, 0x607 - 0x607 + 1, sn))
             {
-                inverterData.batteryTemperature = readInt16(packetBuffer, 0x607 - 0x607);
+                if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+                {
+                    inverterData.batteryTemperature = readInt16(packetBuffer, 0x607 - 0x607);
+                }
+                else
+                {
+                    disconnect();
+                    inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                    return inverterData;
+                }
             }
             else
             {
+                log_d("Failed to send request");
                 disconnect();
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
 
-            //module info
-            //0x404 - 0x44F
-            sendReadDataRequest(sequenceNumber, 0x418, 0x418 - 0x418 + 1, sn);
-            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+            // module info
+            // 0x404 - 0x44F
+            if (sendReadDataRequest(sequenceNumber, 0x418, 0x418 - 0x418 + 1, sn))
             {
-                inverterData.inverterTemperature = readInt16(packetBuffer, 0x418 - 0x418);
+                if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+                {
+                    inverterData.inverterTemperature = readInt16(packetBuffer, 0x418 - 0x418);
+                }
+                else
+                {
+                    disconnect();
+                    inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                    return inverterData;
+                }
             }
             else
             {
+                log_d("Failed to send request");
                 disconnect();
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
 
-            //on grid input
-            //0x484 - 0x4BC
-            sendReadDataRequest(sequenceNumber, 0x484, 0x4BC - 0x484 + 1, sn);
-            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+            // on grid input
+            // 0x484 - 0x4BC
+            if (sendReadDataRequest(sequenceNumber, 0x484, 0x4BC - 0x484 + 1, sn))
             {
-                inverterData.inverterPower = readInt16(packetBuffer, 0x485 - 0x484) * 10;
-                inverterData.loadPower = readInt16(packetBuffer, 0x04AF - 0x484) * 10;
-                inverterData.feedInPower = readInt16(packetBuffer, 0x0488 - 0x484) * 10;
-                inverterData.L1Power = readInt16(packetBuffer, 0x48F - 0x484) * 10;
-                inverterData.L2Power = readInt16(packetBuffer, 0x49A - 0x484) * 10;
-                inverterData.L3Power = readInt16(packetBuffer, 0x4A5 - 0x484) * 10;
+                if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+                {
+                    inverterData.inverterPower = readInt16(packetBuffer, 0x485 - 0x484) * 10;
+                    inverterData.loadPower = readInt16(packetBuffer, 0x04AF - 0x484) * 10;
+                    inverterData.feedInPower = readInt16(packetBuffer, 0x0488 - 0x484) * 10;
+                    inverterData.L1Power = readInt16(packetBuffer, 0x48F - 0x484) * 10;
+                    inverterData.L2Power = readInt16(packetBuffer, 0x49A - 0x484) * 10;
+                    inverterData.L3Power = readInt16(packetBuffer, 0x4A5 - 0x484) * 10;
+                }
+                else
+                {
+                    disconnect();
+                    return inverterData;
+                }
             }
             else
             {
+                log_d("Failed to send request");
                 disconnect();
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
 
             // //stats
             // 0x0680 - 0x06BF
-            sendReadDataRequest(sequenceNumber, 0x684, 0x698 - 0x684 + 2, sn);
-            if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+            if (sendReadDataRequest(sequenceNumber, 0x684, 0x698 - 0x684 + 2, sn))
             {
-                inverterData.pvToday = readUInt32(packetBuffer, 0x684 - 0x684) / 100.0f;
-                inverterData.pvTotal = readUInt32(packetBuffer, 0x686 - 0x684) / 10.0f;
-                inverterData.loadToday = readUInt32(packetBuffer, 0x688 - 0x684) / 100.0f;
-                inverterData.loadTotal = readUInt32(packetBuffer, 0x68A - 0x684) / 10.0f;
-                inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x694 - 0x684) / 100.0f;
-                inverterData.batteryDischargedToday = readUInt32(packetBuffer, 0x698 - 0x684) / 100.0f;
-                inverterData.gridBuyToday = readUInt32(packetBuffer, 0x68C - 0x684) / 100.0f;
-                inverterData.gridBuyTotal = readUInt32(packetBuffer, 0x68E - 0x684) / 10.0f;
-                inverterData.gridSellToday = readUInt32(packetBuffer, 0x690 - 0x684) / 100.0f;
-                inverterData.gridSellTotal = readUInt32(packetBuffer, 0x692 - 0x684) / 10.0f;
-            }
-            else
-            {
+                if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+                {
+                    inverterData.pvToday = readUInt32(packetBuffer, 0x684 - 0x684) / 100.0f;
+                    inverterData.pvTotal = readUInt32(packetBuffer, 0x686 - 0x684) / 10.0f;
+                    inverterData.loadToday = readUInt32(packetBuffer, 0x688 - 0x684) / 100.0f;
+                    inverterData.loadTotal = readUInt32(packetBuffer, 0x68A - 0x684) / 10.0f;
+                    inverterData.batteryChargedToday = readUInt32(packetBuffer, 0x694 - 0x684) / 100.0f;
+                    inverterData.batteryDischargedToday = readUInt32(packetBuffer, 0x698 - 0x684) / 100.0f;
+                    inverterData.gridBuyToday = readUInt32(packetBuffer, 0x68C - 0x684) / 100.0f;
+                    inverterData.gridBuyTotal = readUInt32(packetBuffer, 0x68E - 0x684) / 10.0f;
+                    inverterData.gridSellToday = readUInt32(packetBuffer, 0x690 - 0x684) / 100.0f;
+                    inverterData.gridSellTotal = readUInt32(packetBuffer, 0x692 - 0x684) / 10.0f;
+                }
+                else
+                {
+                    disconnect();
+                    inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                    return inverterData;
+                }
+            } else {
+                log_d("Failed to send request");
                 disconnect();
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
         }
