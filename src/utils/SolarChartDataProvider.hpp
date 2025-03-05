@@ -9,8 +9,8 @@ typedef struct SolarChartDataItem
     int soc = 0;
 } SolarChartDataItem_t;
 
-#define CHART_SAMPLE_INTERVAL_MS (5 * 60 * 1000)
-#define CHART_SAMPLES_PER_DAY (24 * 60 / 5)
+#define CHART_SAMPLE_INTERVAL_MS (15 * 60 * 1000)
+#define CHART_SAMPLES_PER_DAY (24 * 60 / 15)
 
 class SolarChartDataProvider
 {
