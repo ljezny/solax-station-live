@@ -537,7 +537,7 @@ void updateState()
 
             previousShellyResult = shellyResult;
             previousInverterData = inverterData;
-
+            previousInverterData.millis = millis(); //this ensures that if we dont have new data, we will use the old data
             backlightResolver.resolve(inverterData);
         }
         //only one task per state update
