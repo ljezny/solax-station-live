@@ -21,6 +21,10 @@
 #include "utils/SoftAP.hpp"
 #include "utils/ShellyRuleResolver.hpp"
 
+#define UI_REFRESH_INTERVAL 5000 // Define the UI refresh interval in milliseconds
+#define INVERTER_DATA_REFRESH_INTERVAL 1000
+#define SHELLY_REFRESH_INTERVAL 15000
+
 #include "gfx_conf.h"
 #include "Touch/Touch.hpp"
 #include <mutex>
@@ -203,7 +207,7 @@ void setupLVGL()
 
 void setup()
 {
-    Serial.begin(115200);
+    Serial.begin(460800);
     Wire.begin(TOUCH_GT911_SDA, TOUCH_GT911_SCL);
 
     setupLVGL();
@@ -257,7 +261,7 @@ void loadInverterDataTask()
     static long lastAttempt = 0;
 
     static int failures = 0;
-    if (lastAttempt == 0 || millis() - lastAttempt > 5000)
+    if (lastAttempt == 0 || millis() - lastAttempt > INVERTER_DATA_REFRESH_INTERVAL)
     {
         log_d("Loading inverter data");
         lastAttempt = millis();
@@ -339,7 +343,7 @@ void reloadShelly()
         shellyAPI.queryMDNS();
     }
     static long lastAttempt = 0;
-    if (lastAttempt == 0 || millis() - lastAttempt > 5000)
+    if (lastAttempt == 0 || millis() - lastAttempt > SHELLY_REFRESH_INTERVAL)
     {
         log_d("Reloading Shelly data");
         shellyResult = shellyAPI.getState();
@@ -520,7 +524,7 @@ void updateState()
 
         loadInverterDataTask();
 
-        if (inverterData.millis != previousInverterData.millis)
+        if ((millis() - previousInverterData.millis) > UI_REFRESH_INTERVAL)
         {
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
             dashboardUI.update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, shellyResult, previousShellyResult, solarChartDataProvider, wifiSignalPercent());
