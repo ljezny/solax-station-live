@@ -507,9 +507,6 @@ private:
             case SHELLY_PARTIAL_OFF:
                 step = -5;
                 break;
-            case SHELLY_KEEP_CURRENT_STATE:
-                step = 0;
-                break;
             case SHELLY_FULL_ON:
                 step = 10;
                 break;
@@ -561,7 +558,7 @@ private:
     {
         bool result = true;
         String url = "http://" + ipAddress.toString() + "/" + type + "/" + String(index) + "?turn=" + (on ? "on" : "off");
-        if (timeoutSec > 0)
+        if (on && timeoutSec > 0)
         {
             url += "&timer=" + String(timeoutSec);
         }
