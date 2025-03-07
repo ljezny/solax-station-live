@@ -22,7 +22,7 @@
 
 #define UI_REFRESH_INTERVAL 5000 // Define the UI refresh interval in milliseconds
 #define INVERTER_DATA_REFRESH_INTERVAL 2000
-#define SHELLY_REFRESH_INTERVAL 15000
+#define SHELLY_REFRESH_INTERVAL 5000
 
 #include "gfx_conf.h"
 #include "Touch/Touch.hpp"
@@ -351,6 +351,12 @@ bool reloadShellyTask()
         shellyResult = shellyAPI.getState();
         RequestedShellyState_t state = shellyRuleResolver.resolveShellyState();
         shellyAPI.updateState(state, 5 * 60);
+
+        //state should change
+        if((shellyResult.activeCount == 0 && state > SHELLY_FULL_OFF) || (shellyResult.activeCount > 0 && state < SHELLY_KEEP_CURRENT_STATE)) {
+            shellyResult = shellyAPI.getState(); //reload state after update    
+        }
+
         lastAttempt = millis();
         run = true;
     }

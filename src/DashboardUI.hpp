@@ -326,7 +326,12 @@ public:
         // lv_label_set_text(ui_shellyPowerLabel, format(POWER, shellyResult.totalPower).value.c_str());
         shellyPowerTextAnimator.animate(ui_shellyPowerLabel, previousShellyResult.totalPower, shellyResult.totalPower);
         lv_label_set_text(ui_shellyPowerUnitLabel, format(POWER, shellyResult.totalPower).unit.c_str());
-        lv_label_set_text_fmt(ui_shellyCountLabel, "%d / %d", shellyResult.activeCount, shellyResult.pairedCount);
+        if(shellyResult.maxPercent > 0) {
+            lv_label_set_text_fmt(ui_shellyCountLabel, "%d%% / %d / %d", shellyResult.maxPercent, shellyResult.activeCount, shellyResult.pairedCount);
+        } else {
+            lv_label_set_text_fmt(ui_shellyCountLabel, "%d / %d", shellyResult.activeCount, shellyResult.pairedCount);
+        }
+        
 
         updateChart(inverterData, solarChartDataProvider);
 

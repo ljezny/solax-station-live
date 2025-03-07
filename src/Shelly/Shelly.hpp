@@ -51,6 +51,7 @@ typedef struct ShellyStateResult
     int updated = 0;
     ShellyModel_t model = PLUG_S;
     bool isOn = false;
+    int percent = 0;
     String source = "init";
     int totalPower = 0;
     int totalEnergy = 0;
@@ -68,6 +69,7 @@ typedef struct ShellyResult
 {
     int pairedCount = 0;
     int activeCount = 0;
+    int maxPercent = 0;
     int totalPower = 0;
     int totalEnergy = 0;
 } ShellyResult_t;
@@ -254,6 +256,7 @@ public:
                 }
                 result.totalPower += state.totalPower;
                 result.totalEnergy += state.totalEnergy;
+                result.maxPercent = max(result.maxPercent, state.percent);
 
                 if ((millis() - pairs[i].lastState.updated) > 5 * 60 * 1000)
                 {
@@ -284,7 +287,7 @@ public:
 
                         setState(pairs[i], requestedState, timeoutSec);
 
-                        if (!wasOn)
+                        if (!wasOn && requestedState == SHELLY_FULL_ON)
                         {
                             break; // activete only one relay
                         }
@@ -453,13 +456,19 @@ private:
             else
             {
                 result.updated = millis();
-
-                result.isOn = doc[type + ":0"]["output"].as<bool>();
-                result.totalPower = doc[type + ":0"]["apower"].as<float>();
-                result.source = doc[type + ":0"]["source"].as<String>();
-                result.totalEnergy = doc[type + ":0"]["aenergy"]["total"].as<float>();
-
-                result.signalPercent = min(max(2 * (doc["wifi"]["rssi"].as<int>() + 100), 0), 100);
+                DynamicJsonDocument resultDoc = doc;
+                if (doc.containsKey("result"))
+                {
+                    resultDoc = doc["result"];
+                }
+                result.isOn = resultDoc[type + ":0"]["output"].as<bool>();
+                result.totalPower = resultDoc[type + ":0"]["apower"].as<float>();
+                result.source = resultDoc[type + ":0"]["source"].as<String>();
+                result.totalEnergy = resultDoc[type + ":0"]["aenergy"]["total"].as<float>();
+                if(result.isOn){
+                    result.percent = resultDoc[type + ":0"]["brightness"].as<int>();
+                }                
+                result.signalPercent = min(max(2 * (resultDoc["wifi"]["rssi"].as<int>() + 100), 0), 100);
             }
         }
         client.stop();
@@ -493,19 +502,21 @@ private:
             switch (requestedState)
             {
             case SHELLY_FULL_OFF:
-                step = -100;
+                step = -10;
                 break;
             case SHELLY_PARTIAL_OFF:
                 step = -5;
                 break;
             case SHELLY_FULL_ON:
-                step = 100;
+                step = 10;
                 break;
             case SHELLY_PARTIAL_ON:
                 step = 5;
                 break;
             }
-            result = setState_Gen2(shellyPair.ip, "light", 0, requestedState > SHELLY_KEEP_CURRENT_STATE || (requestedState > SHELLY_FULL_OFF && shellyPair.lastState.isOn), timeoutSec, step);
+            int percent = (shellyPair.lastState.isOn ? shellyPair.lastState.percent : 0) + step;
+            percent = min(max(percent, 0), 100);
+            result = setState_Gen2(shellyPair.ip, "light", 0, percent > 0, timeoutSec, percent);
             break;
         }
         case PRO3:
@@ -543,7 +554,7 @@ private:
         return result;
     }
 
-    bool setState_Gen2(IPAddress ipAddress, String type, int index, bool on, int timeoutSec, int step = 0)
+    bool setState_Gen2(IPAddress ipAddress, String type, int index, bool on, int timeoutSec, int percent = -1)
     {
         bool result = true;
         String url = "http://" + ipAddress.toString() + "/" + type + "/" + String(index) + "?turn=" + (on ? "on" : "off");
@@ -551,21 +562,9 @@ private:
         {
             url += "&timer=" + String(timeoutSec);
         }
-        if (step == 100)
+        if (percent > 0)
         {
-            url += "&brightness=100";
-        }
-        else if (step > 0)
-        {
-            url += "&dim=up&step=" + String(step);
-        }
-        else if (step == -100)
-        {
-            url += "&brightness=0";
-        }
-        else if (step < 0)
-        {
-            url += "&dim=down&step=" + String(-step);
+            url += "&brightness=" + String(percent);
         }
 
         if (http.begin(url))
