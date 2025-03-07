@@ -137,8 +137,6 @@ public:
 
         resetSamples();
 
-        return getMedianLoadPower() > 400 ? SHELLY_PARTIAL_ON : SHELLY_PARTIAL_OFF; // testing
-
         if (batteryPower < -disableFullPowerTreshold)
         {
             log_d("Battery discharging, deactivating");
