@@ -3,9 +3,11 @@
 #include <Arduino.h>
 
 typedef enum {
-    SHELLY_DEACTIVATE = 0,
-    SHELLY_KEEP_CURRENT_STATE = 1,
-    SHELLY_ACTIVATE = 2
+    SHELLY_FULL_OFF = -2,
+    SHELLY_PARTIAL_OFF = -1,
+    SHELLY_KEEP_CURRENT_STATE = 0,
+    SHELLY_PARTIAL_ON = 1,
+    SHELLY_FULL_ON = 2
 } RequestedShellyState_t;
 
 typedef struct PowerSample {
@@ -90,47 +92,71 @@ public:
     RequestedShellyState_t resolveShellyState()
     {
         int enablePowerTreshold = 1500;
-        int disablePowerTreshold = 500;
+        int enablePartialPowerTreshold = 100;
+        int disableFullPowerTreshold = 500;
+        int disablePartialPowerTreshold = 100;
 
         bool hasBattery = getSOC() != 0 && getMedianBatteryPower() != 0;
         log_d("SOC: %d, Median battery power: %d, Median feed in power: %d, Median PV power: %d, Median load power: %d", getSOC(), getMedianBatteryPower(), getMedianFeedInPower(), getMedianPVPower(), getMedianLoadPower());
        
         if (!hasValidSamples())
         {
-            return SHELLY_DEACTIVATE;
+            return SHELLY_FULL_OFF;
         }
-
-        if(getMedianBatteryPower() < -disablePowerTreshold) {
+        
+        if(getMedianBatteryPower() < -disableFullPowerTreshold) {
             log_d("Battery discharging, deactivating");
-            return SHELLY_DEACTIVATE;
+            return SHELLY_FULL_OFF;
         }
 
-        if(getMedianFeedInPower() < -disablePowerTreshold) {
+        if(getMedianBatteryPower() < -disablePartialPowerTreshold) {
+            log_d("Battery discharging, partial deactivating");
+            return SHELLY_PARTIAL_OFF;
+        }
+
+        if(getMedianFeedInPower() < -disableFullPowerTreshold) {
             log_d("Grid power, deactivating");
-            return SHELLY_DEACTIVATE;
+            return SHELLY_FULL_OFF;
+        }
+
+        if(getMedianFeedInPower() < -disablePartialPowerTreshold) {
+            log_d("Grid power, partial deactivating");
+            return SHELLY_PARTIAL_OFF;
         }
         
         if(hasBattery && getSOC() < 80) {
             log_d("Battery under limit empty, deactivating");
-            return SHELLY_DEACTIVATE;
+            return SHELLY_FULL_OFF;
         }
 
         if (getSOC() >= 99)
         {
             log_d("Battery full, activating");
-            return SHELLY_ACTIVATE;
+            return SHELLY_FULL_ON;
         }
 
         if (getSOC() > 90 && getMedianBatteryPower() > enablePowerTreshold)
         {
             log_d("Battery almost full and charging, activating");
-            return SHELLY_ACTIVATE;
+            return SHELLY_FULL_ON;
+        }
+
+        if(getSOC() > 96 && getMedianBatteryPower() > enablePartialPowerTreshold)
+        {
+            log_d("Battery almost full and charging, partial activating");
+            return SHELLY_PARTIAL_ON;
         }
 
         if (getMedianFeedInPower() > enablePowerTreshold)
         {
             log_d("Feeding in power, activating");
-            return SHELLY_ACTIVATE;
+            return SHELLY_FULL_ON;
+        }
+
+        if(getMedianFeedInPower() > enablePartialPowerTreshold)
+        {
+            log_d("Feeding in power, partial activating");
+            return SHELLY_PARTIAL_ON;
         }
 
         return SHELLY_KEEP_CURRENT_STATE;

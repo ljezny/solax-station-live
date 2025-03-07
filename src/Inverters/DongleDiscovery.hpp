@@ -7,6 +7,7 @@
 
 #include "DongleResult.hpp"
 #include "utils/SoftAP.hpp"
+#include "Shelly/Shelly.hpp"
 
 #define DONGLE_DISCOVERY_MAX_RESULTS 10
 
@@ -257,7 +258,14 @@ private:
 
     bool isShellySSID(String ssid)
     {
-        return ssid.startsWith("shellyplug-s-") || ssid.startsWith("shellyplug-") || ssid.startsWith("ShellyPlusPlugS-") || ssid.startsWith("PlusPlugS-") || ssid.startsWith("ShellyPro1PM-") || ssid.startsWith("Pro1PM-") || ssid.startsWith("ShellyPlus1PM-") || ssid.startsWith("Plus1PM-") || ssid.startsWith("ShellyPro3-") || ssid.startsWith("Pro3-");
+        for(int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
+        {
+            if(ssid.startsWith(supportedModels[i].prefix))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     bool isVictronSSID(String ssid)
@@ -272,16 +280,11 @@ private:
         sn.replace("Solar-WiFi", "");
         sn.replace("AP_", "");
         sn.replace("venus-", "");
-        sn.replace("shellyplug-s-", "");
-        sn.replace("shellyplug-", "");
-        sn.replace("ShellyPlusPlugS-", "");
-        sn.replace("PlusPlugS-", "");
-        sn.replace("ShellyPro1PM-", "");
-        sn.replace("Pro1PM-", "");
-        sn.replace("ShellyPlus1PM-", "");
-        sn.replace("Plus1PM-", "");
-        sn.replace("ShellyPro3-", "");
-        sn.replace("Pro3-", "");
+        
+        for(int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
+        {
+            sn.replace(supportedModels[i].prefix, "");
+        }
         return sn;
     }
 

@@ -1,4 +1,3 @@
-#pragma once
 
 #ifndef ShellyAPI_h
 #define ShellyAPI_h
@@ -12,6 +11,7 @@
 #include <mdns.h>
 #include "utils/ShellyRuleResolver.hpp"
 #include <StreamUtils.h>
+#include <algorithm>
 
 #define MAX_SHELLY_PAIRS 8
 
@@ -22,7 +22,8 @@ typedef enum
     PRO1PM,
     PLUS_PLUG_S,
     PLUS1PM,
-    PRO3
+    PRO3,
+    PRODM1PM // dimmer
 } ShellyModel_t;
 
 typedef struct ShellyModelInfo
@@ -31,7 +32,7 @@ typedef struct ShellyModelInfo
     String prefix;
 } ShellyModelInfo_t;
 
-#define SHELLY_SUPPORTED_MODEL_COUNT 10
+#define SHELLY_SUPPORTED_MODEL_COUNT 11
 const ShellyModelInfo_t supportedModels[SHELLY_SUPPORTED_MODEL_COUNT] = {
     {PLUG_S, "shellyplug-s-"},
     {PLUG, "shellyplug-"},
@@ -42,7 +43,8 @@ const ShellyModelInfo_t supportedModels[SHELLY_SUPPORTED_MODEL_COUNT] = {
     {PLUS1PM, "ShellyPlus1PM-"},
     {PLUS1PM, "Plus1PM-"}, //????
     {PRO3, "ShellyPro3-"},
-    {PRO3, "Pro3-"}};
+    {PRO3, "Pro3-"},
+    {PRODM1PM, "ShellyProDM1PM-"}};
 
 typedef struct ShellyStateResult
 {
@@ -52,6 +54,7 @@ typedef struct ShellyStateResult
     String source = "init";
     int totalPower = 0;
     int totalEnergy = 0;
+    int signalPercent = 0;
 } ShellyStateResult_t;
 
 typedef struct ShellyPair
@@ -109,6 +112,61 @@ public:
         WiFi.disconnect();
     }
 
+    bool sendRequest(NetworkClient &client, IPAddress ipAddress, String method, String path, String requestBody)
+    {
+        log_d("IP: %s", ipAddress.toString().c_str());
+
+        if (client.connect(ipAddress, 80, 5000))
+        {
+            String request = "";
+            request += method + " ";
+            request += path;
+            request += " HTTP/1.1\r\n";
+            request += "Host: ";
+            request += ipAddress.toString();
+            request += "\r\n";
+            request += "Connection: close\r\n";
+            if (!requestBody.isEmpty())
+            {
+                request += "Content-Length: " + String(requestBody.length()) + "\r\n";
+                request += "Content-Type: application/json\r\n";
+            }
+            request += "\r\n";
+            if (!requestBody.isEmpty())
+            {
+                request += requestBody;
+            }
+            log_d("Request: %s", request.c_str());
+            client.write(request.c_str(), request.length());
+
+            for (int i = 0; i < 50; i++)
+            {
+                if (client.available())
+                {
+                    break;
+                }
+                delay(10);
+            }
+
+            String headerLine = client.readStringUntil('\n');
+            log_d("Response code: %s", headerLine.c_str());
+            if (headerLine.startsWith("HTTP/1.1 200 OK"))
+            {
+                while (!headerLine.isEmpty())
+                {
+                    headerLine = client.readStringUntil('\n');
+                    headerLine.trim();
+                }
+                return true;
+            }
+        }
+        else
+        {
+            log_e("Failed to connect");
+        }
+        return false;
+    }
+
     void queryMDNS()
     {
         mdns_result_t *results = NULL;
@@ -127,7 +185,7 @@ public:
             }
         }
         uint8_t numResult = 0;
-        if (mdns_query_async_get_results(mdnsSearch, 100, &results, &numResult))
+        if (mdns_query_async_get_results(mdnsSearch, 1000, &results, &numResult))
         {
             mdns_result_t *r = results;
 
@@ -222,25 +280,13 @@ public:
                     bool canBeControlled = (state.isOn && (state.source == NULL || String("http").equals(state.source) || String("init").equals(state.source))) || !state.isOn;
                     if (canBeControlled)
                     {
-                        if (state.isOn)
-                        { // prolong timeout
-                            if (requestedState >= SHELLY_KEEP_CURRENT_STATE)
-                            {
-                                log_d("Prolonging timeout for Shelly %s", String(pairs[i].shellyId, HEX).c_str());
-                                setState(pairs[i], true, timeoutSec);
-                            }
-                        }
-                        else
+                        bool wasOn = state.isOn;
+
+                        setState(pairs[i], requestedState, timeoutSec);
+
+                        if (!wasOn)
                         {
-                            if (!newActivated)
-                            {
-                                if (requestedState == SHELLY_ACTIVATE)
-                                {
-                                    log_d("Activating Shelly %s", String(pairs[i].shellyId, HEX).c_str());
-                                    setState(pairs[i], true, timeoutSec);
-                                }
-                                newActivated = true;
-                            }
+                            break; // activete only one relay
                         }
                     }
                 }
@@ -259,6 +305,7 @@ public:
         case PLUS_PLUG_S:
         case PLUS1PM:
         case PRO3:
+        case PRODM1PM:
             return setWiFiSTA_Gen2(ssid, password);
         }
         return false;
@@ -350,7 +397,10 @@ private:
         case PLUS_PLUG_S:
         case PLUS1PM:
         case PRO3:
-            result = getState_Gen2(shellyPair.ip);
+            result = getState_Gen2(shellyPair.ip, "switch");
+            break;
+        case PRODM1PM:
+            result = getState_Gen2(shellyPair.ip, "light");
             break;
         }
         return result;
@@ -361,117 +411,113 @@ private:
         ShellyStateResult_t result;
         result.updated = 0;
 
-        if (client.connect(ipAddress, 80))
+        if (sendRequest(client, ipAddress, "GET", "/status", ""))
         {
-            client.print("GET ");
-            client.print("/status");
-            client.println(" HTTP/1.1");
-            client.print("Host: ");
-            client.println(ipAddress.toString());
-            client.println("Connection: close");
-            client.println();
-            delay(100);
-            
-            String headerLine = client.readStringUntil('\n');
-            log_d("Response code: %s", headerLine.c_str());
-            if(headerLine.startsWith("HTTP/1.1 200 OK")) {
-                while(!headerLine.isEmpty()) {
-                    headerLine = client.readStringUntil('\n');
-                    headerLine.trim();
-                    log_d("Header: %s", headerLine.c_str());                                        
-                }   
-
-                DynamicJsonDocument doc(8192);
-                ReadBufferingStream bufferingStream(client, 1024);
-                LoggingStream loggingStream(bufferingStream, Serial);
-                DeserializationError err = deserializeJson(doc, loggingStream);
-                if (err)
-                {
-                    log_e("Failed to parse JSON");
-                }
-                else
-                {
-                    result.updated = millis();
-                    result.isOn = doc["relays"][0]["ison"].as<bool>();
-                    result.source = doc["relays"][0]["source"].as<String>();
-                    result.totalPower = doc["meters"][0]["power"].as<int>();
-                    result.totalEnergy = doc["meters"][0]["total"].as<int>();
-                }
-            }                       
+            DynamicJsonDocument doc(8192);
+            ReadBufferingStream bufferingStream(client, 1024);
+            LoggingStream loggingStream(bufferingStream, Serial);
+            DeserializationError err = deserializeJson(doc, loggingStream);
+            if (err)
+            {
+                log_e("Failed to parse JSON");
+            }
+            else
+            {
+                result.updated = millis();
+                result.isOn = doc["relays"][0]["ison"].as<bool>();
+                result.source = doc["relays"][0]["source"].as<String>();
+                result.totalPower = doc["meters"][0]["power"].as<int>();
+                result.totalEnergy = doc["meters"][0]["total"].as<int>();
+                result.signalPercent = min(max(2 * (doc["wifi_sta"]["rssi"].as<int>() + 100), 0), 100);
+            }
         }
-        client.stop(); 
+        client.stop();
         return result;
     }
 
-    ShellyStateResult_t getState_Gen2(IPAddress ipAddress)
+    ShellyStateResult_t getState_Gen2(IPAddress ipAddress, String type)
     {
         ShellyStateResult_t result;
         result.updated = 0;
 
-        if (client.connect(ipAddress, 80))
+        if (sendRequest(client, ipAddress, "POST", "/rpc", "{\"id\":1,\"method\":\"Shelly.GetStatus\"}"))
         {
-            client.print("GET ");
-            client.print("/rpc/Switch.GetStatus?id=0");
-            client.println(" HTTP/1.1");
-            client.print("Host: ");
-            client.println(ipAddress.toString());
-            client.println("Connection: close");
-            client.println();
-            delay(100);
-            
-            String headerLine = client.readStringUntil('\n');
-            log_d("Response code: %s", headerLine.c_str());
-            if(headerLine.startsWith("HTTP/1.1 200 OK")) {
-                while(!headerLine.isEmpty()) {
-                    headerLine = client.readStringUntil('\n');
-                    headerLine.trim();
-                    log_d("Header: %s", headerLine.c_str());                                        
-                }   
+            DynamicJsonDocument doc(8192);
+            ReadBufferingStream bufferingStream(client, 1024);
+            LoggingStream loggingStream(bufferingStream, Serial);
+            DeserializationError err = deserializeJson(doc, loggingStream);
+            if (err)
+            {
+                log_e("Failed to parse JSON");
+            }
+            else
+            {
+                result.updated = millis();
 
-                DynamicJsonDocument doc(8192);
-                ReadBufferingStream bufferingStream(client, 1024);
-                LoggingStream loggingStream(bufferingStream, Serial);
-                DeserializationError err = deserializeJson(doc, loggingStream);
-                if (err)
-                {
-                    log_e("Failed to parse JSON");
-                }
-                else
-                {
-                    result.updated = millis();
-                    result.isOn = doc["output"].as<bool>();
-                    result.totalPower = doc["apower"].as<float>();
-                    result.source = doc["source"].as<String>();
-                    result.totalEnergy = doc["aenergy"]["total"].as<float>();
-                }
-            }                       
+                result.isOn = doc[type + ":0"]["output"].as<bool>();
+                result.totalPower = doc[type + ":0"]["apower"].as<float>();
+                result.source = doc[type + ":0"]["source"].as<String>();
+                result.totalEnergy = doc[type + ":0"]["aenergy"]["total"].as<float>();
+
+                result.signalPercent = min(max(2 * (doc["wifi"]["rssi"].as<int>() + 100), 0), 100);
+            }
         }
-        client.stop(); 
+        client.stop();
         return result;
     }
 
-    bool setState(ShellyPair_t shellyPair, bool on, int timeoutSec)
+    bool setState(ShellyPair_t shellyPair, RequestedShellyState_t requestedState, int timeoutSec)
     {
         bool result = true;
+
         switch (shellyPair.model)
         {
         case PLUG:
-            result = setState_Gen1(shellyPair.ip, on, timeoutSec);
-            break;
         case PLUG_S:
-            result = setState_Gen1(shellyPair.ip, on, timeoutSec);
+            if (requestedState == SHELLY_FULL_ON || requestedState >= SHELLY_KEEP_CURRENT_STATE && shellyPair.lastState.isOn)
+            {
+                result = setState_Gen1(shellyPair.ip, true, timeoutSec);
+            }
             break;
         case PRO1PM:
         case PLUS_PLUG_S:
         case PLUS1PM:
-            result = setState_Gen2(shellyPair.ip, 0, on, timeoutSec);
+            if (requestedState == SHELLY_FULL_ON || requestedState >= SHELLY_KEEP_CURRENT_STATE && shellyPair.lastState.isOn)
+            {
+                result = setState_Gen2(shellyPair.ip, "relay", 0, true, timeoutSec);
+            }
             break;
-        case PRO3:
-            result = setState_Gen2(shellyPair.ip, 0, on, timeoutSec);
-            result = setState_Gen2(shellyPair.ip, 1, on, timeoutSec);
-            result = setState_Gen2(shellyPair.ip, 2, on, timeoutSec);
+        case PRODM1PM:
+        {
+            int step = 0;
+            switch (requestedState)
+            {
+            case SHELLY_FULL_OFF:
+                step = -100;
+                break;
+            case SHELLY_PARTIAL_OFF:
+                step = -5;
+                break;
+            case SHELLY_FULL_ON:
+                step = 100;
+                break;
+            case SHELLY_PARTIAL_ON:
+                step = 5;
+                break;
+            }
+            result = setState_Gen2(shellyPair.ip, "light", 0, requestedState > SHELLY_KEEP_CURRENT_STATE || (requestedState > SHELLY_FULL_OFF && shellyPair.lastState.isOn), timeoutSec, step);
             break;
         }
+        case PRO3:
+            if (requestedState == SHELLY_FULL_ON || requestedState >= SHELLY_KEEP_CURRENT_STATE && shellyPair.lastState.isOn)
+            {
+                result &= setState_Gen2(shellyPair.ip, "relay", 0, true, timeoutSec);
+                result &= setState_Gen2(shellyPair.ip, "relay", 1, true, timeoutSec);
+                result &= setState_Gen2(shellyPair.ip, "relay", 2, true, timeoutSec);
+            }
+            break;
+        }
+
         return result;
     }
 
@@ -497,13 +543,29 @@ private:
         return result;
     }
 
-    bool setState_Gen2(IPAddress ipAddress, int relay, bool on, int timeoutSec)
+    bool setState_Gen2(IPAddress ipAddress, String type, int index, bool on, int timeoutSec, int step = 0)
     {
         bool result = true;
-        String url = "http://" + ipAddress.toString() + "/relay/" + String(relay) + "?turn=" + (on ? "on" : "off");
+        String url = "http://" + ipAddress.toString() + "/" + type + "/" + String(index) + "?turn=" + (on ? "on" : "off");
         if (timeoutSec > 0)
         {
             url += "&timer=" + String(timeoutSec);
+        }
+        if (step == 100)
+        {
+            url += "&brightness=100";
+        }
+        else if (step > 0)
+        {
+            url += "&dim=up&step=" + String(step);
+        }
+        else if (step == -100)
+        {
+            url += "&brightness=0";
+        }
+        else if (step < 0)
+        {
+            url += "&dim=down&step=" + String(-step);
         }
 
         if (http.begin(url))
