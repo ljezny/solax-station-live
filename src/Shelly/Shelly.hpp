@@ -272,7 +272,7 @@ public:
 
     void updateState(RequestedShellyState_t requestedState, int timeoutSec)
     {
-        bool newActivated = false;
+        log_d("Updating state to %d", requestedState);
         for (int i = 0; i < MAX_SHELLY_PAIRS; i++)
         {
             if (pairs[i].shellyId != 0 && pairs[i].ip != INADDR_NONE)
@@ -280,7 +280,7 @@ public:
                 ShellyStateResult_t state = pairs[i].lastState;
                 if (state.updated != 0)
                 {
-                    bool canBeControlled = (state.isOn && (state.source == NULL || String("http").equals(state.source) || String("init").equals(state.source))) || !state.isOn;
+                    bool canBeControlled = (state.isOn && (state.source == NULL || String("http").equals(state.source) || String("timer").equals(state.source) || String("init").equals(state.source))) || !state.isOn;
                     if (canBeControlled)
                     {
                         bool wasOn = state.isOn;
@@ -291,6 +291,8 @@ public:
                         {
                             break; // activete only one relay
                         }
+                    } else {
+                        log_w("Shelly %s cannot be controlled", String(pairs[i].shellyId, HEX).c_str());
                     }
                 }
             }

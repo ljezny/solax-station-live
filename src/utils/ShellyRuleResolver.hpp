@@ -126,14 +126,14 @@ public:
             return SHELLY_KEEP_CURRENT_STATE;
         }
 
-        float pvPower = getMedianPVPower();
-        float loadPower = getMedianLoadPower();
-        float feedInPower = getMedianFeedInPower();
-        float batteryPower = getMedianBatteryPower();
+        int pvPower = getMedianPVPower();
+        int loadPower = getMedianLoadPower();
+        int feedInPower = getMedianFeedInPower();
+        int batteryPower = getMedianBatteryPower();
         int soc = getSOC();
 
         bool hasBattery = getSOC() != 0 && getMedianBatteryPower() != 0;
-        log_d("SOC: %d, Median battery power: %d, Median feed in power: %d, Median PV power: %d, Median load power: %d", getSOC(), batteryPower, feedInPower, pvPower, loadPower);
+        log_d("SOC: %d, Median battery power: %d, Median feed in power: %d, Median PV power: %d, Median load power: %d", soc, batteryPower, feedInPower, pvPower, loadPower);
 
         resetSamples();
 
