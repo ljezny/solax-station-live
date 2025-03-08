@@ -4,6 +4,7 @@
 
 typedef enum
 {
+    SHELLY_UNKNOWN = -999,
     SHELLY_FULL_OFF = -2,
     SHELLY_PARTIAL_OFF = -1,
     SHELLY_KEEP_CURRENT_STATE = 0,
@@ -123,7 +124,7 @@ public:
 
         if (!hasValidSamples())
         {
-            return SHELLY_KEEP_CURRENT_STATE;
+            return SHELLY_UNKNOWN;
         }
 
         int pvPower = getMedianPVPower();
@@ -137,16 +138,16 @@ public:
 
         resetSamples();
 
+        if (hasBattery && soc < 80)
+        {
+            log_d("Battery under limit empty, deactivating");
+            return SHELLY_FULL_OFF;
+        }
+
         if (batteryPower < -disableFullPowerTreshold)
         {
             log_d("Battery discharging, deactivating");
             return SHELLY_FULL_OFF;
-        }
-
-        if (batteryPower < -disablePartialPowerTreshold)
-        {
-            log_d("Battery discharging, partial deactivating");
-            return SHELLY_PARTIAL_OFF;
         }
 
         if (feedInPower < -disableFullPowerTreshold)
@@ -154,17 +155,17 @@ public:
             log_d("Grid power, deactivating");
             return SHELLY_FULL_OFF;
         }
+        
+        if (batteryPower < -disablePartialPowerTreshold)
+        {
+            log_d("Battery discharging, partial deactivating");
+            return SHELLY_PARTIAL_OFF;
+        }
 
         if (feedInPower < -disablePartialPowerTreshold)
         {
             log_d("Grid power, partial deactivating");
             return SHELLY_PARTIAL_OFF;
-        }
-
-        if (hasBattery && soc < 80)
-        {
-            log_d("Battery under limit empty, deactivating");
-            return SHELLY_FULL_OFF;
         }
 
         if (soc >= 99)
