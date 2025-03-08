@@ -21,7 +21,7 @@ typedef struct PowerSample
     int32_t feedInPower = 0;
 } PowerSample_t;
 
-#define MAX_POWER_SAMPLES 3
+#define MAX_POWER_SAMPLES 5
 
 class ShellyRuleResolver
 {
