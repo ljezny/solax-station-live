@@ -210,7 +210,7 @@ public:
             inverterData.batteryChargedToday = batteryChargedToday / 1000.0;       // convert to kWh
             inverterData.batteryDischargedToday = batteryDischargedToday / 1000.0; // convert to kWh
         }
-
+        inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
         logInverterData(inverterData);
         disconnect();
 

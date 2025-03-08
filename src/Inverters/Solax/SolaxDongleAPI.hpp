@@ -113,6 +113,7 @@ public:
                                 inverterData.batteryChargedToday = doc["Data"][79].as<uint16_t>() / 10.0;
                                 inverterData.batteryDischargedToday = doc["Data"][78].as<uint16_t>() / 10.0;
                                 inverterData.loadToday = inverterData.pvToday + inverterData.gridBuyToday - inverterData.gridSellToday;
+                                inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
                                 inverterData.sn = sn;
                                 logInverterData(inverterData);
                             }
@@ -142,6 +143,7 @@ public:
                                 inverterData.loadToday = inverterData.pvToday + inverterData.gridBuyToday - inverterData.gridSellToday;
                                 inverterData.loadPower = inverterData.inverterPower - inverterData.feedInPower;
                                 inverterData.sn = sn;
+                                inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
                                 logInverterData(inverterData);
                             }
                             else if (doc["type"].as<int>() == 16)

@@ -390,6 +390,8 @@ private:
                 return inverterData;
             }
         }
+
+        inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
         logInverterData(inverterData);
 
         disconnect();
