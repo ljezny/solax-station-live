@@ -350,7 +350,9 @@ bool reloadShellyTask()
         log_d("Reloading Shelly data");
         shellyResult = shellyAPI.getState();
         RequestedShellyState_t state = shellyRuleResolver.resolveShellyState();
-        shellyAPI.updateState(state, 5 * 60);
+        if(state != SHELLY_UNKNOWN) {
+            shellyAPI.updateState(state, 5 * 60);
+        }
 
         //state should change
         if((shellyResult.activeCount == 0 && state > SHELLY_FULL_OFF) || (shellyResult.activeCount > 0 && state < SHELLY_KEEP_CURRENT_STATE)) {
