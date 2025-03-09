@@ -374,7 +374,6 @@ public:
         lv_obj_set_style_outline_opa(ui_inverterContainer, isDarkMode ? LV_OPA_80 : LV_OPA_COVER, 0);
         lv_obj_set_style_line_opa(ui_Chart1, isDarkMode ? LV_OPA_20 : LV_OPA_COVER, LV_PART_MAIN);
         lv_obj_set_style_bg_color(ui_loadContainer, isDarkMode ? black : white, 0);
-        lv_obj_set_style_bg_color(ui_gridContainer, isDarkMode ? black : white, 0);
         lv_obj_set_style_text_color(ui_Dashboard, isDarkMode ? white : black, 0);
     }
 
