@@ -142,17 +142,13 @@ private:
                                 inverterData.pv2Power = readUInt32(packetBuffer, 9);
                                 inverterData.pv3Power = readUInt32(packetBuffer, 13);
                                 inverterData.pv4Power = readUInt32(packetBuffer, 17);
-                                inverterData.inverterPower = readInt16(packetBuffer, 38);
+                                inverterData.inverterPower = readInt16(packetBuffer, 38); //38 - total inverter power
                                 inverterData.batteryPower -= readInt16(packetBuffer, 83); // TODO: maybe sign readuw(packetBuffer, 84);
                                 // _ac = readsw(packetBuffer, 40);
                                 inverterData.L1Power = readInt16(packetBuffer, 25); // - readInt16(packetBuffer, 64) + readInt16(packetBuffer, 50);
                                 inverterData.L2Power = readInt16(packetBuffer, 30); // - readInt16(packetBuffer, 66) + readInt16(packetBuffer, 56);
                                 inverterData.L3Power = readInt16(packetBuffer, 35); // - readInt16(packetBuffer, 68) + readInt16(packetBuffer, 62);
-                                // inverterData.feedInPower =
-                                //     readInt16(packetBuffer, 25) + readInt16(packetBuffer, 30) + readInt16(packetBuffer, 35) 
-                                //     - readInt16(packetBuffer, 64) - readInt16(packetBuffer, 50) - readInt16(packetBuffer, 66) 
-                                //     - readInt16(packetBuffer, 56) - readInt16(packetBuffer, 68) - readInt16(packetBuffer, 62);
-                                inverterData.loadPower = readInt16(packetBuffer, 72) + readInt16(packetBuffer, 70);
+                                inverterData.loadPower = readInt16(packetBuffer, 72); //72 - Total Load Power
                                 inverterData.inverterTemperature = readInt16(packetBuffer, 74) / 10;
                                 inverterData.pvTotal = readUInt32(packetBuffer, 91) / 10.0;
                                 inverterData.pvToday = readUInt32(packetBuffer, 93) / 10.0;
