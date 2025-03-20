@@ -183,6 +183,10 @@ public:
             {
                 continue;
             }
+            if (discoveries[i].type == DONGLE_TYPE_SHELLY) //skip shelly
+            {
+                continue;
+            }
             if (!discoveries[i].requiresPassword || (discoveries[i].requiresPassword && !discoveries[i].password.isEmpty()))
             {
                 log_d("Prefered dongle: %s", discoveries[i].ssid.c_str());

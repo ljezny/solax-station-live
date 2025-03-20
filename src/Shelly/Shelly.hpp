@@ -23,7 +23,8 @@ typedef enum
     PLUS_PLUG_S,
     PLUS1PM,
     PRO3,
-    PRODM1PM // dimmer
+    PRODM1PM,
+    DIMG3
 } ShellyModel_t;
 
 typedef struct ShellyModelInfo
@@ -32,7 +33,7 @@ typedef struct ShellyModelInfo
     String prefix;
 } ShellyModelInfo_t;
 
-#define SHELLY_SUPPORTED_MODEL_COUNT 11
+#define SHELLY_SUPPORTED_MODEL_COUNT 12
 const ShellyModelInfo_t supportedModels[SHELLY_SUPPORTED_MODEL_COUNT] = {
     {PLUG_S, "shellyplug-s-"},
     {PLUG, "shellyplug-"},
@@ -44,7 +45,10 @@ const ShellyModelInfo_t supportedModels[SHELLY_SUPPORTED_MODEL_COUNT] = {
     {PLUS1PM, "Plus1PM-"}, //????
     {PRO3, "ShellyPro3-"},
     {PRO3, "Pro3-"},
-    {PRODM1PM, "ShellyProDM1PM-"}};
+    {PRODM1PM, "ShellyProDM1PM-"},
+    {DIMG3, "Shelly0110DimG3-"}
+};
+
 
 typedef struct ShellyStateResult
 {
@@ -311,6 +315,7 @@ public:
         case PLUS1PM:
         case PRO3:
         case PRODM1PM:
+        case DIMG3:
             return setWiFiSTA_Gen2(ssid, password);
         }
         return false;
@@ -405,6 +410,7 @@ private:
             result = getState_Gen2(shellyPair.ip, "switch");
             break;
         case PRODM1PM:
+        case DIMG3:
             result = getState_Gen2(shellyPair.ip, "light");
             break;
         }
@@ -498,6 +504,7 @@ private:
                 result = setState_Gen2(shellyPair.ip, "relay", 0, true, timeoutSec);
             }
             break;
+        case DIMG3:
         case PRODM1PM:
         {
             int step = 0;
