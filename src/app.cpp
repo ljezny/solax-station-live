@@ -205,7 +205,7 @@ void setupLVGL()
 
 void setup()
 {
-    Serial.begin(460800);
+    Serial.begin(115200);
     Wire.begin(TOUCH_GT911_SDA, TOUCH_GT911_SCL);
 
     setupLVGL();
