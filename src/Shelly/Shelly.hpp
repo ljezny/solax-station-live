@@ -52,7 +52,7 @@ const ShellyModelInfo_t supportedModels[SHELLY_SUPPORTED_MODEL_COUNT] = {
 
 typedef struct ShellyStateResult
 {
-    int updated = 0;
+    int updated = -1;
     ShellyModel_t model = PLUG_S;
     bool isOn = false;
     int percent = 0;
@@ -69,6 +69,7 @@ typedef struct ShellyPair
     ShellyModel_t model = PLUG_S;
     ShellyStateResult_t lastState;
 } ShellyPair_t;
+
 typedef struct ShellyResult
 {
     int pairedCount = 0;
@@ -76,6 +77,7 @@ typedef struct ShellyResult
     int maxPercent = 0;
     int totalPower = 0;
     int totalEnergy = 0;
+    ShellyStateResult_t states[MAX_SHELLY_PAIRS];
 } ShellyResult_t;
 
 class ShellyAPI
@@ -269,6 +271,8 @@ public:
                     pairs[i].ip = INADDR_NONE;
                     pairs[i].shellyId = 0;
                 }
+
+                result.states[i] = state;
             }
         }
         return result;

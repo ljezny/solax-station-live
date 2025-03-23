@@ -13,6 +13,8 @@ extern "C" {
     #include "lvgl.h"
 
 #include "ui_helpers.h"
+#include "ui_comp.h"
+#include "ui_comp_hook.h"
 #include "ui_events.h"
 #include "ui_theme_manager.h"
 #include "ui_themes.h"
@@ -138,7 +140,7 @@ extern lv_obj_t *ui_gridBuyTodayUnitLabel;
 extern lv_obj_t *ui_Image14;
 extern lv_obj_t *ui_RightBottomContainer;
 extern lv_obj_t *ui_Chart1;
-extern lv_obj_t *ui_Container34;
+extern lv_obj_t *ui_plugsContainer;
 // CUSTOM VARIABLES
 
 // SCREEN: ui_WifiSetup
@@ -155,6 +157,12 @@ extern lv_obj_t *ui_Container17;
 extern lv_obj_t *ui_wifiSetupCompleteButton;
 extern lv_obj_t *ui_Label3;
 extern lv_obj_t *ui_Keyboard2;
+// CUSTOM VARIABLES
+
+// SCREEN: ui_ComponentsScreen
+void ui_ComponentsScreen_screen_init(void);
+extern lv_obj_t *ui_ComponentsScreen;
+extern lv_obj_t *ui_plugComponent;
 // CUSTOM VARIABLES
 
 // EVENTS
