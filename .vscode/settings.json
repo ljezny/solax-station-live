@@ -26,7 +26,9 @@
         "type_traits": "cpp",
         "utility": "cpp",
         "algorithm": "cpp",
-        "wifisetupui.hpp": "c"
+        "wifisetupui.hpp": "c",
+        "ratio": "cpp",
+        "system_error": "cpp"
     },
     "cmake.sourceDirectory": "/Users/lukasjezny/solax-station-live/src/ui"
 }
