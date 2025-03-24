@@ -16,6 +16,7 @@ SET(SOURCES ui_comp_plugcomponent.c
     ui_img_960241876.c
     ui_img_1061873486.c
     ui_img_performance_png.c
+    ui_img_1337922523.c
     fonts/ui_font_OpenSansExtraSmall.c
     fonts/ui_font_OpenSansLarge.c
     fonts/ui_font_OpenSansMedium.c

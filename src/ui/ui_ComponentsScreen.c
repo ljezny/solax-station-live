@@ -11,9 +11,10 @@ ui_ComponentsScreen = lv_obj_create(NULL);
 lv_obj_clear_flag( ui_ComponentsScreen, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_plugComponent = ui_plugComponent_create(ui_ComponentsScreen);
-lv_obj_set_x( ui_plugComponent, 0 );
-lv_obj_set_y( ui_plugComponent, 0 );
+lv_obj_set_x( ui_plugComponent, -3 );
+lv_obj_set_y( ui_plugComponent, 3 );
 lv_obj_clear_flag( ui_plugComponent, LV_OBJ_FLAG_HIDDEN );    /// Flags
+
 
 
 }

@@ -29,10 +29,11 @@
 #include <mutex>
 #include <Wire.h>
 
+#define DISPLAY_BUFFER_SIZE (screenWidth * screenHeight / 16)
 SemaphoreHandle_t lvgl_mutex = xSemaphoreCreateMutex();
 static lv_disp_draw_buf_t draw_buf;
-static lv_color_t disp_draw_buf1[screenWidth * screenHeight / 10];
-static lv_color_t disp_draw_buf2[screenWidth * screenHeight / 10];
+static lv_color_t disp_draw_buf1[DISPLAY_BUFFER_SIZE];
+static lv_color_t disp_draw_buf2[DISPLAY_BUFFER_SIZE];
 static lv_disp_drv_t disp_drv;
 
 SET_LOOP_TASK_STACK_SIZE(18 * 1024); // use freeStack
@@ -121,6 +122,34 @@ InverterData_t createRandomMockData()
     return inverterData;
 }
 
+ShellyResult_t createShellyRandomMockData() {
+    ShellyResult_t shellyResult;
+    shellyResult.pairedCount = 3;
+
+    shellyResult.states[0].isOn = random(0, 2);
+    shellyResult.states[0].totalPower = shellyResult.states[0].isOn ? random(0, 1000) : 0;
+    shellyResult.states[0].totalEnergy = 0;//random(0, 1000);
+    shellyResult.states[0].percent = shellyResult.states[0].isOn ? random(0, 100) : 0;
+    shellyResult.states[0].updated = 1;
+    shellyResult.states[0].signalPercent = random(0, 100);
+
+    shellyResult.states[1].isOn = random(0, 2);
+    shellyResult.states[1].totalPower = shellyResult.states[1].isOn ? random(0, 1000) : 0;
+    shellyResult.states[1].totalEnergy = 0;//random(0, 1000);
+    shellyResult.states[1].percent = shellyResult.states[1].isOn ? random(0, 100) : 0;
+    shellyResult.states[1].updated = 1;
+
+    shellyResult.states[2].isOn = random(0, 2);
+    shellyResult.states[2].totalPower = shellyResult.states[1].isOn ? random(0, 1000) : 0;
+    shellyResult.states[2].totalEnergy = 0;//random(0, 1000);
+    shellyResult.states[2].percent = shellyResult.states[2].isOn ? random(0, 100) : 0;
+    shellyResult.states[2].updated = 1;
+
+    shellyResult.activeCount = shellyResult.states[0].isOn + shellyResult.states[1].isOn + shellyResult.states[2].isOn;
+
+    return shellyResult;
+}
+
 int wifiSignalPercent()
 {
     if (WiFi.status() != WL_CONNECTED)
@@ -179,15 +208,15 @@ void setupLVGL()
     // touch setup
     touch.init();
     backlightResolver.setup();
-    
-    lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight / 10);
+
+    lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, DISPLAY_BUFFER_SIZE);
     /* Initialize the display */
     lv_disp_drv_init(&disp_drv);
     /* Change the following line to your display resolution */
     disp_drv.hor_res = screenWidth;
     disp_drv.ver_res = screenHeight;
     disp_drv.flush_cb = my_disp_flush;
-    disp_drv.full_refresh = 1;
+    disp_drv.full_refresh = 0;
     disp_drv.draw_buf = &draw_buf;
     lv_disp_drv_register(&disp_drv);
 
@@ -267,7 +296,7 @@ bool loadInverterDataTask()
         inverterData = createRandomMockData();
         solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
         dongleDiscovery.preferedInverterWifiDongleIndex = 0;
-        return;
+        return run;
 #endif
 
         if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
@@ -347,20 +376,27 @@ bool reloadShellyTask()
     bool run = false;
     if (lastAttempt == 0 || millis() - lastAttempt > SHELLY_REFRESH_INTERVAL)
     {
+        lastAttempt = millis();
+        run = true;
+
+#if DEMO
+        shellyResult = createShellyRandomMockData();
+        return run;
+#endif
+
         log_d("Reloading Shelly data");
         shellyResult = shellyAPI.getState();
         RequestedShellyState_t state = shellyRuleResolver.resolveShellyState();
-        if(state != SHELLY_UNKNOWN) {
+        if (state != SHELLY_UNKNOWN)
+        {
             shellyAPI.updateState(state, 5 * 60);
         }
 
-        //state should change
-        if((shellyResult.activeCount == 0 && state > SHELLY_FULL_OFF) || (shellyResult.activeCount > 0 && state < SHELLY_KEEP_CURRENT_STATE)) {
-            shellyResult = shellyAPI.getState(); //reload state after update    
+        // state should change
+        if ((shellyResult.activeCount == 0 && state > SHELLY_FULL_OFF) || (shellyResult.activeCount > 0 && state < SHELLY_KEEP_CURRENT_STATE))
+        {
+            shellyResult = shellyAPI.getState(); // reload state after update
         }
-
-        lastAttempt = millis();
-        run = true;
     }
     return run;
 }
@@ -545,24 +581,28 @@ void updateState()
 
             previousShellyResult = shellyResult;
             previousInverterData = inverterData;
-            previousInverterData.millis = millis(); //this ensures that if we dont have new data, we will use the old data
+            previousInverterData.millis = millis(); // this ensures that if we dont have new data, we will use the old data
             backlightResolver.resolve(inverterData);
         }
-        //only one task per state update
-        if(loadInverterDataTask())
+        // only one task per state update
+        if (loadInverterDataTask())
         {
             break;
         }
-        if(discoverDonglesTask()) {
+        if (discoverDonglesTask())
+        {
             break;
         }
-        if(pairShellyTask()) {
+        if (pairShellyTask())
+        {
             break;
         }
-        if(reloadShellyTask()){
+        if (reloadShellyTask())
+        {
             break;
         }
-        if(resetWifiTask()){
+        if (resetWifiTask())
+        {
             break;
         }
 

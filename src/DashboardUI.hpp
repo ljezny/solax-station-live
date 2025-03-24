@@ -111,12 +111,82 @@ public:
         for (int i = 0; i < MAX_SHELLY_PAIRS; i++)
         {
             plugs[i] = ui_plugComponent_create(ui_plugsContainer);
+
+           // lv_dropdown_set_symbol(ui_comp_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER34_PLUGPRIORITYDROPDOWN), "");
+           // lv_dropdown_set_symbol(ui_comp_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER34_PLUGNAMEDROPDOWN), "");
         }
     }
 
     int getSelfUsePowerPercent(InverterData_t &inverterData)
     {
         return constrain(inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0, 0, 100);
+    }
+
+    void updateShelly(ShellyResult_t &shellyResult, bool isDarkMode, lv_color_t containerBackground, lv_color_t activeContainerColor)
+    {
+        for (int i = 0; i < MAX_SHELLY_PAIRS; i++)
+        {
+            lv_obj_set_style_bg_color(plugs[i], containerBackground, 0);
+            lv_obj_set_style_bg_opa(plugs[i], isDarkMode ? LV_OPA_80 : LV_OPA_COVER, 0);
+
+            if (shellyResult.states[i].updated == -1)
+            {
+                // hide
+                lv_obj_add_flag(plugs[i], LV_OBJ_FLAG_HIDDEN);
+            }
+            else
+            {
+                // show
+                lv_obj_clear_flag(plugs[i], LV_OBJ_FLAG_HIDDEN);
+
+                if (shellyResult.states[i].totalPower > 0)
+                {
+                    lv_obj_clear_flag(ui_comp_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_PLUGPOWERCONTAINER), LV_OBJ_FLAG_HIDDEN);
+                    lv_label_set_text(ui_comp_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_PLUGPOWERCONTAINER_PLUGPOWERLABEL), format(POWER, shellyResult.states[i].totalPower).value.c_str());
+                    lv_label_set_text(ui_comp_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_PLUGPOWERCONTAINER_PLUGPOWERUNITLABEL), format(POWER, shellyResult.states[i].totalPower).unit.c_str());
+                }
+                else
+                {
+                    lv_obj_add_flag(ui_comp_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_PLUGPOWERCONTAINER), LV_OBJ_FLAG_HIDDEN);
+                }
+
+                if (shellyResult.states[i].totalEnergy > 0)
+                {
+                    lv_obj_clear_flag(ui_comp_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_PLUGENERGYCONTAINER), LV_OBJ_FLAG_HIDDEN);
+                    lv_label_set_text(ui_comp_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_PLUGENERGYCONTAINER_PLUGENERGYLABEL), format(ENERGY, shellyResult.states[i].totalEnergy).value.c_str());
+                    lv_label_set_text(ui_comp_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_PLUGENERGYCONTAINER_PLUGENERGYUNITLABEL), format(ENERGY, shellyResult.states[i].totalEnergy).unit.c_str());
+                }
+                else
+                {
+                    lv_obj_add_flag(ui_comp_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_PLUGENERGYCONTAINER), LV_OBJ_FLAG_HIDDEN);
+                }
+
+                if (shellyResult.states[i].isOn)
+                {
+                    lv_obj_set_style_bg_color(plugs[i], activeContainerColor, 0);
+                    lv_obj_set_style_bg_opa(plugs[i], LV_OPA_COVER, 0);
+                }
+
+                lv_obj_t *plugPercentArc = ui_comp_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_CONTAINER35_PLUGPERCENTARC);
+                if (shellyResult.states[i].percent > 0)
+                {
+                    lv_obj_clear_flag(plugPercentArc, LV_OBJ_FLAG_HIDDEN);
+                }
+                else
+                {
+                    lv_obj_add_flag(plugPercentArc, LV_OBJ_FLAG_HIDDEN);
+                }
+                lv_arc_set_value(plugPercentArc, shellyResult.states[i].percent);
+            }
+        }
+        if (shellyResult.pairedCount > 0)
+        {
+            lv_obj_clear_flag(ui_plugsContainer, LV_OBJ_FLAG_HIDDEN);
+        }
+        else
+        {
+            lv_obj_add_flag(ui_plugsContainer, LV_OBJ_FLAG_HIDDEN);
+        }
     }
 
     void update(InverterData_t &inverterData, InverterData_t &previousInverterData, ShellyResult_t &shellyResult, ShellyResult_t &previousShellyResult, SolarChartDataProvider &solarChartDataProvider, int wifiSignalPercent)
@@ -154,6 +224,7 @@ public:
         lv_color_t red = lv_color_hex(0xAB2328);
         lv_color_t orange = lv_color_hex(0xFFD400);
         lv_color_t green = lv_color_hex(0x03AD36);
+
         lv_color_t textColor = isDarkMode ? white : black;
         lv_color_t containerBackground = isDarkMode ? black : white;
 
@@ -390,35 +461,7 @@ public:
         lv_obj_set_style_bg_color(ui_loadContainer, isDarkMode ? black : white, 0);
         lv_obj_set_style_text_color(ui_Dashboard, isDarkMode ? white : black, 0);
 
-        for (int i = 0; i < MAX_SHELLY_PAIRS; i++)
-        {
-            lv_obj_set_style_bg_color(plugs[i], containerBackground, 0);
-            lv_obj_set_style_bg_opa(plugs[i], isDarkMode ? LV_OPA_80 : LV_OPA_COVER, 0);
-
-            if (shellyResult.states[i].updated == -1)
-            {
-                // hide
-                lv_obj_add_flag(plugs[i], LV_OBJ_FLAG_HIDDEN);
-            }
-            else
-            {
-                // show
-                lv_obj_clear_flag(plugs[i], LV_OBJ_FLAG_HIDDEN);
-                // lv_obj_clear_state(lv_obj_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER39_SWITCH1), LV_STATE_CHECKED);
-                // lv_label_set_text(lv_obj_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_LABEL4), shellyResult.states[i].isOn ? "ON" : "OFF");
-                // if (shellyResult.states[i].isOn)
-                // {
-                //     lv_obj_add_state(lv_obj_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER39_SWITCH1), LV_STATE_CHECKED);
-                // } else {
-                //     lv_obj_clear_state(lv_obj_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER39_SWITCH1), LV_STATE_CHECKED);
-                // }
-            }
-        }
-        if(shellyResult.pairedCount > 0) {
-            lv_obj_clear_flag(ui_plugsContainer, LV_OBJ_FLAG_HIDDEN);
-        } else {
-            lv_obj_add_flag(ui_plugsContainer, LV_OBJ_FLAG_HIDDEN);
-        }
+        updateShelly(shellyResult, isDarkMode, containerBackground, lv_color_hex(_ui_theme_color_pvColor[0]));
     }
 
 private:
@@ -444,6 +487,7 @@ private:
     UIBackgroundAnimator gridBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
 
     lv_obj_t *plugs[MAX_SHELLY_PAIRS];
+    
 
     void updateChart(InverterData_t &inverterData, SolarChartDataProvider &solarChartDataProvider)
     {

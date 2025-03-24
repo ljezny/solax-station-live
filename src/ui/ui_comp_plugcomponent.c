@@ -14,6 +14,8 @@ cui_plugComponent = lv_obj_create(comp_parent);
 lv_obj_remove_style_all(cui_plugComponent);
 lv_obj_set_width( cui_plugComponent, lv_pct(100));
 lv_obj_set_height( cui_plugComponent, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_x( cui_plugComponent, -3 );
+lv_obj_set_y( cui_plugComponent, 3 );
 lv_obj_set_align( cui_plugComponent, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(cui_plugComponent,LV_FLEX_FLOW_COLUMN);
 lv_obj_set_flex_align(cui_plugComponent, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
@@ -28,11 +30,107 @@ lv_obj_set_style_pad_bottom(cui_plugComponent, 8, LV_PART_MAIN| LV_STATE_DEFAULT
 lv_obj_set_style_pad_row(cui_plugComponent, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(cui_plugComponent, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
+lv_obj_t *cui_Container34;
+cui_Container34 = lv_obj_create(cui_plugComponent);
+lv_obj_remove_style_all(cui_Container34);
+lv_obj_set_width( cui_Container34, lv_pct(100));
+lv_obj_set_height( cui_Container34, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( cui_Container34, LV_ALIGN_CENTER );
+lv_obj_set_flex_flow(cui_Container34,LV_FLEX_FLOW_ROW);
+lv_obj_set_flex_align(cui_Container34, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+lv_obj_clear_flag( cui_Container34, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+lv_obj_set_style_pad_row(cui_Container34, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_column(cui_Container34, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+lv_obj_t *cui_Image2;
+cui_Image2 = lv_img_create(cui_Container34);
+lv_img_set_src(cui_Image2, &ui_img_1337922523);
+lv_obj_set_width( cui_Image2, LV_SIZE_CONTENT);  /// 32
+lv_obj_set_height( cui_Image2, LV_SIZE_CONTENT);   /// 32
+lv_obj_set_x( cui_Image2, -175 );
+lv_obj_set_y( cui_Image2, -72 );
+lv_obj_set_align( cui_Image2, LV_ALIGN_CENTER );
+lv_obj_add_flag( cui_Image2, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
+lv_obj_clear_flag( cui_Image2, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+lv_obj_t *cui_plugTemperatureContainer;
+cui_plugTemperatureContainer = lv_obj_create(cui_Container34);
+lv_obj_remove_style_all(cui_plugTemperatureContainer);
+lv_obj_set_width( cui_plugTemperatureContainer, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( cui_plugTemperatureContainer, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( cui_plugTemperatureContainer, LV_ALIGN_LEFT_MID );
+lv_obj_set_flex_flow(cui_plugTemperatureContainer,LV_FLEX_FLOW_ROW);
+lv_obj_set_flex_align(cui_plugTemperatureContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+lv_obj_clear_flag( cui_plugTemperatureContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+lv_obj_set_style_radius(cui_plugTemperatureContainer, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_bg_color(cui_plugTemperatureContainer, lv_color_hex(0xFFAA00), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_bg_opa(cui_plugTemperatureContainer, 192, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_left(cui_plugTemperatureContainer, 6, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_right(cui_plugTemperatureContainer, 6, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_top(cui_plugTemperatureContainer, 6, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(cui_plugTemperatureContainer, 6, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+lv_obj_t *cui_plugTemperatureLabel;
+cui_plugTemperatureLabel = lv_label_create(cui_plugTemperatureContainer);
+lv_obj_set_width( cui_plugTemperatureLabel, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( cui_plugTemperatureLabel, LV_SIZE_CONTENT);   /// 100
+lv_obj_set_align( cui_plugTemperatureLabel, LV_ALIGN_CENTER );
+lv_label_set_text(cui_plugTemperatureLabel,"56");
+lv_obj_set_style_text_font(cui_plugTemperatureLabel, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+lv_obj_t *cui_plugTemperatureUnitLabel;
+cui_plugTemperatureUnitLabel = lv_label_create(cui_plugTemperatureContainer);
+lv_obj_set_width( cui_plugTemperatureUnitLabel, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( cui_plugTemperatureUnitLabel, LV_SIZE_CONTENT);   /// 100
+lv_obj_set_align( cui_plugTemperatureUnitLabel, LV_ALIGN_CENTER );
+lv_label_set_text(cui_plugTemperatureUnitLabel,"°C");
+lv_obj_set_style_text_font(cui_plugTemperatureUnitLabel, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+lv_obj_t *cui_plugNameDropdown;
+cui_plugNameDropdown = lv_dropdown_create(cui_Container34);
+lv_dropdown_set_options( cui_plugNameDropdown, "Solar Plug\nBoiler 1\nBoiler 2\nBoiler 3\nPool\nEV Charger" );
+lv_obj_set_height( cui_plugNameDropdown, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_flex_grow( cui_plugNameDropdown, 1);
+lv_obj_set_align( cui_plugNameDropdown, LV_ALIGN_CENTER );
+lv_obj_add_flag( cui_plugNameDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
+lv_obj_set_style_text_font(cui_plugNameDropdown, &ui_font_OpenSansMedium, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_bg_color(cui_plugNameDropdown, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_bg_opa(cui_plugNameDropdown, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_border_color(cui_plugNameDropdown, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_border_opa(cui_plugNameDropdown, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_left(cui_plugNameDropdown, 2, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_right(cui_plugNameDropdown, 2, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_top(cui_plugNameDropdown, 2, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(cui_plugNameDropdown, 2, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+lv_obj_set_style_text_font(cui_plugNameDropdown, &lv_font_montserrat_14, LV_PART_INDICATOR| LV_STATE_DEFAULT);
+
+lv_obj_t *cui_plugPriorityDropdown;
+cui_plugPriorityDropdown = lv_dropdown_create(cui_plugComponent);
+lv_dropdown_set_options( cui_plugPriorityDropdown, "Disabled\nLow priority\nNormal priority\nHigh priority" );
+lv_obj_set_width( cui_plugPriorityDropdown, lv_pct(100));
+lv_obj_set_height( cui_plugPriorityDropdown, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_x( cui_plugPriorityDropdown, -1 );
+lv_obj_set_y( cui_plugPriorityDropdown, 4 );
+lv_obj_set_align( cui_plugPriorityDropdown, LV_ALIGN_CENTER );
+lv_obj_add_flag( cui_plugPriorityDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
+lv_obj_set_style_text_font(cui_plugPriorityDropdown, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_bg_color(cui_plugPriorityDropdown, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_bg_opa(cui_plugPriorityDropdown, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_border_color(cui_plugPriorityDropdown, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_border_opa(cui_plugPriorityDropdown, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_left(cui_plugPriorityDropdown, 2, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_right(cui_plugPriorityDropdown, 2, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_top(cui_plugPriorityDropdown, 2, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(cui_plugPriorityDropdown, 2, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+lv_obj_set_style_text_font(cui_plugPriorityDropdown, &lv_font_montserrat_14, LV_PART_INDICATOR| LV_STATE_DEFAULT);
+
 lv_obj_t *cui_Container39;
 cui_Container39 = lv_obj_create(cui_plugComponent);
 lv_obj_remove_style_all(cui_Container39);
-lv_obj_set_height( cui_Container39, 50);
 lv_obj_set_width( cui_Container39, lv_pct(100));
+lv_obj_set_height( cui_Container39, LV_SIZE_CONTENT);   /// 50
 lv_obj_set_x( cui_Container39, 1 );
 lv_obj_set_y( cui_Container39, 0 );
 lv_obj_set_align( cui_Container39, LV_ALIGN_CENTER );
@@ -44,116 +142,132 @@ lv_obj_set_style_pad_right(cui_Container39, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_top(cui_Container39, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_bottom(cui_Container39, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-lv_obj_t *cui_Switch1;
-cui_Switch1 = lv_switch_create(cui_Container39);
-lv_obj_set_width( cui_Switch1, 50);
-lv_obj_set_height( cui_Switch1, 25);
-lv_obj_set_align( cui_Switch1, LV_ALIGN_CENTER );
-lv_obj_add_state( cui_Switch1, LV_STATE_CHECKED | LV_STATE_DISABLED );     /// States
-
 lv_obj_t *cui_Container38;
 cui_Container38 = lv_obj_create(cui_Container39);
 lv_obj_remove_style_all(cui_Container38);
-lv_obj_set_height( cui_Container38, 50);
+lv_obj_set_height( cui_Container38, LV_SIZE_CONTENT);   /// 50
 lv_obj_set_flex_grow( cui_Container38, 1);
 lv_obj_set_align( cui_Container38, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(cui_Container38,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(cui_Container38, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+lv_obj_set_flex_align(cui_Container38, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_START);
 lv_obj_clear_flag( cui_Container38, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
-lv_obj_t *cui_Container36;
-cui_Container36 = lv_obj_create(cui_Container38);
-lv_obj_remove_style_all(cui_Container36);
-lv_obj_set_height( cui_Container36, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_flex_grow( cui_Container36, 1);
-lv_obj_set_align( cui_Container36, LV_ALIGN_CENTER );
-lv_obj_set_flex_flow(cui_Container36,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(cui_Container36, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
-lv_obj_clear_flag( cui_Container36, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_obj_set_style_pad_row(cui_Container36, -6, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_column(cui_Container36, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_text_font(cui_Container36, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_t *cui_Container35;
+cui_Container35 = lv_obj_create(cui_Container38);
+lv_obj_remove_style_all(cui_Container35);
+lv_obj_set_height( cui_Container35, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_flex_grow( cui_Container35, 1);
+lv_obj_set_align( cui_Container35, LV_ALIGN_CENTER );
+lv_obj_clear_flag( cui_Container35, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
-lv_obj_t *cui_gridSellTodayLabel1;
-cui_gridSellTodayLabel1 = lv_label_create(cui_Container36);
-lv_obj_set_height( cui_gridSellTodayLabel1, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_flex_grow( cui_gridSellTodayLabel1, 2);
-lv_obj_set_align( cui_gridSellTodayLabel1, LV_ALIGN_CENTER );
-lv_label_set_long_mode(cui_gridSellTodayLabel1,LV_LABEL_LONG_SCROLL);
-lv_label_set_text(cui_gridSellTodayLabel1,"45");
-lv_obj_set_style_text_align(cui_gridSellTodayLabel1, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_text_font(cui_gridSellTodayLabel1, &ui_font_OpenSansLarge, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_t *cui_plugPercentArc;
+cui_plugPercentArc = lv_arc_create(cui_Container35);
+lv_obj_set_width( cui_plugPercentArc, 80);
+lv_obj_set_height( cui_plugPercentArc, 80);
+lv_obj_set_align( cui_plugPercentArc, LV_ALIGN_CENTER );
+lv_arc_set_value(cui_plugPercentArc, 56);
+lv_obj_set_style_arc_width(cui_plugPercentArc, 6, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-lv_obj_t *cui_gridSellTodayUnitLabel1;
-cui_gridSellTodayUnitLabel1 = lv_label_create(cui_Container36);
-lv_obj_set_height( cui_gridSellTodayUnitLabel1, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_flex_grow( cui_gridSellTodayUnitLabel1, 1);
-lv_obj_set_align( cui_gridSellTodayUnitLabel1, LV_ALIGN_CENTER );
-lv_label_set_text(cui_gridSellTodayUnitLabel1,"kWh");
-lv_obj_set_style_text_align(cui_gridSellTodayUnitLabel1, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_text_font(cui_gridSellTodayUnitLabel1, &ui_font_OpenSansExtraSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_arc_width(cui_plugPercentArc, 6, LV_PART_INDICATOR| LV_STATE_DEFAULT);
 
-lv_obj_t *cui_Container37;
-cui_Container37 = lv_obj_create(cui_Container38);
-lv_obj_remove_style_all(cui_Container37);
-lv_obj_set_height( cui_Container37, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_flex_grow( cui_Container37, 1);
-lv_obj_set_align( cui_Container37, LV_ALIGN_CENTER );
-lv_obj_set_flex_flow(cui_Container37,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(cui_Container37, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
-lv_obj_clear_flag( cui_Container37, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_obj_set_style_pad_row(cui_Container37, -6, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_column(cui_Container37, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_text_font(cui_Container37, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
-
-lv_obj_t *cui_gridSellTodayLabel2;
-cui_gridSellTodayLabel2 = lv_label_create(cui_Container37);
-lv_obj_set_height( cui_gridSellTodayLabel2, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_flex_grow( cui_gridSellTodayLabel2, 2);
-lv_obj_set_align( cui_gridSellTodayLabel2, LV_ALIGN_CENTER );
-lv_label_set_long_mode(cui_gridSellTodayLabel2,LV_LABEL_LONG_SCROLL);
-lv_label_set_text(cui_gridSellTodayLabel2,"45");
-lv_obj_set_style_text_align(cui_gridSellTodayLabel2, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_text_font(cui_gridSellTodayLabel2, &ui_font_OpenSansLarge, LV_PART_MAIN| LV_STATE_DEFAULT);
-
-lv_obj_t *cui_gridSellTodayUnitLabel2;
-cui_gridSellTodayUnitLabel2 = lv_label_create(cui_Container37);
-lv_obj_set_height( cui_gridSellTodayUnitLabel2, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_flex_grow( cui_gridSellTodayUnitLabel2, 1);
-lv_obj_set_align( cui_gridSellTodayUnitLabel2, LV_ALIGN_CENTER );
-lv_label_set_text(cui_gridSellTodayUnitLabel2,"kWh");
-lv_obj_set_style_text_align(cui_gridSellTodayUnitLabel2, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_text_font(cui_gridSellTodayUnitLabel2, &ui_font_OpenSansExtraSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
-
-lv_obj_t *cui_Bar1;
-cui_Bar1 = lv_bar_create(cui_plugComponent);
-lv_bar_set_value(cui_Bar1,25,LV_ANIM_OFF);
-lv_bar_set_start_value(cui_Bar1, 0, LV_ANIM_OFF);
-lv_obj_set_height( cui_Bar1, 10);
-lv_obj_set_width( cui_Bar1, lv_pct(100));
-lv_obj_set_align( cui_Bar1, LV_ALIGN_CENTER );
+lv_obj_set_style_radius(cui_plugPercentArc, 0, LV_PART_KNOB| LV_STATE_DEFAULT);
+lv_obj_set_style_bg_color(cui_plugPercentArc, lv_color_hex(0xFFFFFF), LV_PART_KNOB | LV_STATE_DEFAULT );
+lv_obj_set_style_bg_opa(cui_plugPercentArc, 0, LV_PART_KNOB| LV_STATE_DEFAULT);
 
 lv_obj_t *cui_Label4;
-cui_Label4 = lv_label_create(cui_plugComponent);
+cui_Label4 = lv_label_create(cui_plugPercentArc);
 lv_obj_set_width( cui_Label4, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( cui_Label4, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( cui_Label4, LV_ALIGN_CENTER );
-lv_label_set_text(cui_Label4,"Solar Plug 3600W");
-lv_obj_set_style_text_font(cui_Label4, &ui_font_OpenSansExtraSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_label_set_text(cui_Label4,"56%");
+lv_obj_set_style_text_font(cui_Label4, &ui_font_OpenSansMedium, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+lv_obj_t *cui_plugPowerContainer;
+cui_plugPowerContainer = lv_obj_create(cui_Container38);
+lv_obj_remove_style_all(cui_plugPowerContainer);
+lv_obj_set_height( cui_plugPowerContainer, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_flex_grow( cui_plugPowerContainer, 1);
+lv_obj_set_align( cui_plugPowerContainer, LV_ALIGN_CENTER );
+lv_obj_set_flex_flow(cui_plugPowerContainer,LV_FLEX_FLOW_ROW);
+lv_obj_set_flex_align(cui_plugPowerContainer, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
+lv_obj_clear_flag( cui_plugPowerContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+lv_obj_set_style_pad_row(cui_plugPowerContainer, -6, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_column(cui_plugPowerContainer, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_font(cui_plugPowerContainer, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+lv_obj_t *cui_plugPowerLabel;
+cui_plugPowerLabel = lv_label_create(cui_plugPowerContainer);
+lv_obj_set_height( cui_plugPowerLabel, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_flex_grow( cui_plugPowerLabel, 2);
+lv_obj_set_align( cui_plugPowerLabel, LV_ALIGN_CENTER );
+lv_label_set_long_mode(cui_plugPowerLabel,LV_LABEL_LONG_SCROLL);
+lv_label_set_text(cui_plugPowerLabel,"45");
+lv_obj_set_style_text_align(cui_plugPowerLabel, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_font(cui_plugPowerLabel, &ui_font_OpenSansLarge, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+lv_obj_t *cui_plugPowerUnitLabel;
+cui_plugPowerUnitLabel = lv_label_create(cui_plugPowerContainer);
+lv_obj_set_width( cui_plugPowerUnitLabel, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( cui_plugPowerUnitLabel, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( cui_plugPowerUnitLabel, LV_ALIGN_CENTER );
+lv_label_set_text(cui_plugPowerUnitLabel,"kWh");
+lv_obj_set_style_text_align(cui_plugPowerUnitLabel, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_font(cui_plugPowerUnitLabel, &ui_font_OpenSansExtraSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+lv_obj_t *cui_plugEnergyContainer;
+cui_plugEnergyContainer = lv_obj_create(cui_Container38);
+lv_obj_remove_style_all(cui_plugEnergyContainer);
+lv_obj_set_height( cui_plugEnergyContainer, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_flex_grow( cui_plugEnergyContainer, 1);
+lv_obj_set_x( cui_plugEnergyContainer, 1 );
+lv_obj_set_y( cui_plugEnergyContainer, 0 );
+lv_obj_set_align( cui_plugEnergyContainer, LV_ALIGN_CENTER );
+lv_obj_set_flex_flow(cui_plugEnergyContainer,LV_FLEX_FLOW_ROW);
+lv_obj_set_flex_align(cui_plugEnergyContainer, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
+lv_obj_clear_flag( cui_plugEnergyContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+lv_obj_set_style_pad_row(cui_plugEnergyContainer, -6, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_column(cui_plugEnergyContainer, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_font(cui_plugEnergyContainer, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+lv_obj_t *cui_plugEnergyLabel;
+cui_plugEnergyLabel = lv_label_create(cui_plugEnergyContainer);
+lv_obj_set_height( cui_plugEnergyLabel, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_flex_grow( cui_plugEnergyLabel, 2);
+lv_obj_set_align( cui_plugEnergyLabel, LV_ALIGN_CENTER );
+lv_label_set_long_mode(cui_plugEnergyLabel,LV_LABEL_LONG_SCROLL);
+lv_label_set_text(cui_plugEnergyLabel,"45");
+lv_obj_set_style_text_align(cui_plugEnergyLabel, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_font(cui_plugEnergyLabel, &ui_font_OpenSansLarge, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+lv_obj_t *cui_plugEnergyUnitLabel;
+cui_plugEnergyUnitLabel = lv_label_create(cui_plugEnergyContainer);
+lv_obj_set_width( cui_plugEnergyUnitLabel, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( cui_plugEnergyUnitLabel, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( cui_plugEnergyUnitLabel, LV_ALIGN_CENTER );
+lv_label_set_text(cui_plugEnergyUnitLabel,"kWh");
+lv_obj_set_style_text_align(cui_plugEnergyUnitLabel, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_font(cui_plugEnergyUnitLabel, &ui_font_OpenSansExtraSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 lv_obj_t ** children = lv_mem_alloc(sizeof(lv_obj_t *) * _UI_COMP_PLUGCOMPONENT_NUM);
 children[UI_COMP_PLUGCOMPONENT_PLUGCOMPONENT] = cui_plugComponent;
+children[UI_COMP_PLUGCOMPONENT_CONTAINER34] = cui_Container34;
+children[UI_COMP_PLUGCOMPONENT_CONTAINER34_IMAGE2] = cui_Image2;
+children[UI_COMP_PLUGCOMPONENT_CONTAINER34_PLUGTEMPERATURECONTAINER] = cui_plugTemperatureContainer;
+children[UI_COMP_PLUGCOMPONENT_CONTAINER34_PLUGTEMPERATURECONTAINER_PLUGTEMPERATURELABEL] = cui_plugTemperatureLabel;
+children[UI_COMP_PLUGCOMPONENT_CONTAINER34_PLUGTEMPERATURECONTAINER_PLUGTEMPERATUREUNITLABEL] = cui_plugTemperatureUnitLabel;
+children[UI_COMP_PLUGCOMPONENT_CONTAINER34_PLUGNAMEDROPDOWN] = cui_plugNameDropdown;
+children[UI_COMP_PLUGCOMPONENT_PLUGPRIORITYDROPDOWN] = cui_plugPriorityDropdown;
 children[UI_COMP_PLUGCOMPONENT_CONTAINER39] = cui_Container39;
-children[UI_COMP_PLUGCOMPONENT_CONTAINER39_SWITCH1] = cui_Switch1;
 children[UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38] = cui_Container38;
-children[UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_CONTAINER36] = cui_Container36;
-children[UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_CONTAINER36_GRIDSELLTODAYLABEL1] = cui_gridSellTodayLabel1;
-children[UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_CONTAINER36_GRIDSELLTODAYUNITLABEL1] = cui_gridSellTodayUnitLabel1;
-children[UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_CONTAINER37] = cui_Container37;
-children[UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_CONTAINER37_GRIDSELLTODAYLABEL2] = cui_gridSellTodayLabel2;
-children[UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_CONTAINER37_GRIDSELLTODAYUNITLABEL2] = cui_gridSellTodayUnitLabel2;
-children[UI_COMP_PLUGCOMPONENT_BAR1] = cui_Bar1;
-children[UI_COMP_PLUGCOMPONENT_LABEL4] = cui_Label4;
+children[UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_CONTAINER35] = cui_Container35;
+children[UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_CONTAINER35_PLUGPERCENTARC] = cui_plugPercentArc;
+children[UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_CONTAINER35_PLUGPERCENTARC_LABEL4] = cui_Label4;
+children[UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_PLUGPOWERCONTAINER] = cui_plugPowerContainer;
+children[UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_PLUGPOWERCONTAINER_PLUGPOWERLABEL] = cui_plugPowerLabel;
+children[UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_PLUGPOWERCONTAINER_PLUGPOWERUNITLABEL] = cui_plugPowerUnitLabel;
+children[UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_PLUGENERGYCONTAINER] = cui_plugEnergyContainer;
+children[UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_PLUGENERGYCONTAINER_PLUGENERGYLABEL] = cui_plugEnergyLabel;
+children[UI_COMP_PLUGCOMPONENT_CONTAINER39_CONTAINER38_PLUGENERGYCONTAINER_PLUGENERGYUNITLABEL] = cui_plugEnergyUnitLabel;
 lv_obj_add_event_cb(cui_plugComponent, get_component_child_event_cb, LV_EVENT_GET_COMP_CHILD, children);
 lv_obj_add_event_cb(cui_plugComponent, del_component_child_event_cb, LV_EVENT_DELETE, children);
 ui_comp_plugComponent_create_hook(cui_plugComponent);

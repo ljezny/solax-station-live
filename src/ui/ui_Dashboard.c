@@ -12,7 +12,7 @@ lv_obj_clear_flag( ui_Dashboard, LV_OBJ_FLAG_SCROLL_MOMENTUM );    /// Flags
 lv_obj_set_scrollbar_mode(ui_Dashboard, LV_SCROLLBAR_MODE_OFF);
 lv_obj_set_scroll_dir(ui_Dashboard, LV_DIR_HOR);
 lv_obj_set_flex_flow(ui_Dashboard,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_Dashboard, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+lv_obj_set_flex_align(ui_Dashboard, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_END);
 lv_obj_set_style_radius(ui_Dashboard, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 ui_object_set_themeable_style_property(ui_Dashboard, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BG_COLOR, _ui_theme_color_pvColor);
 ui_object_set_themeable_style_property(ui_Dashboard, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BG_OPA, _ui_theme_alpha_pvColor);

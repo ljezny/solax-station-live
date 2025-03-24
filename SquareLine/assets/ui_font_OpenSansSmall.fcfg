@@ -6,7 +6,7 @@
   "cfg_path": "/assets/ui_font_OpenSansSmall.fcfg",
   "size": 14,
   "bpp": 4,
-  "letters": 0,
+  "letters": 3,
   "ranges": [
     "0x20-0xff"
   ],
