@@ -60,6 +60,7 @@ typedef struct ShellyStateResult
     int totalPower = 0;
     int totalEnergy = 0;
     int signalPercent = 0;
+    int internalTemperature = 0;
 } ShellyStateResult_t;
 
 typedef struct ShellyPair
@@ -443,6 +444,7 @@ private:
                 result.source = doc["relays"][0]["source"].as<String>();
                 result.totalPower = doc["meters"][0]["power"].as<int>();
                 result.totalEnergy = doc["meters"][0]["total"].as<int>();
+                //result.internalTemperture = doc["temperature"].as<int>();
                 result.signalPercent = min(max(2 * (doc["wifi_sta"]["rssi"].as<int>() + 100), 0), 100);
             }
         }
@@ -477,6 +479,7 @@ private:
                 result.totalPower = resultDoc[type + ":0"]["apower"].as<float>();
                 result.source = resultDoc[type + ":0"]["source"].as<String>();
                 result.totalEnergy = resultDoc[type + ":0"]["aenergy"]["total"].as<float>();
+                result.internalTemperature = resultDoc[type + ":0"]["temperature"]["tC"].as<int>();
                 if(result.isOn){
                     result.percent = resultDoc[type + ":0"]["brightness"].as<int>();
                 }                

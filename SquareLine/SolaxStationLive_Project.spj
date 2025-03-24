@@ -20723,7 +20723,7 @@
                         "nid": 100,
                         "compnid": 100,
                         "strtype": "OBJECT/Hidden",
-                        "strval": "True",
+                        "strval": "False",
                         "InheritedType": 2
                       },
                       {
@@ -22120,8 +22120,8 @@
                         "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
-                          0,
-                          0
+                          -8,
+                          -8
                         ],
                         "InheritedType": 7
                       },
@@ -22140,7 +22140,7 @@
                         "nid": 645291971,
                         "compnid": 645291971,
                         "strtype": "OBJECT/Align",
-                        "strval": "LEFT_MID",
+                        "strval": "TOP_LEFT",
                         "InheritedType": 3
                       },
                       {
@@ -22658,8 +22658,7 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "CONTAINER",
-                    "tree_closed": true
+                    "saved_objtypeKey": "CONTAINER"
                   },
                   {
                     "guid": "GUID59292008-63157S737483",
@@ -31963,7 +31962,7 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 718,
+    "backup_cnt": 719,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",

@@ -76,7 +76,7 @@
             {
               "nid": 100,
               "strtype": "OBJECT/Hidden",
-              "strval": "True",
+              "strval": "False",
               "InheritedType": 2
             },
             {
@@ -323,8 +323,7 @@
               "InheritedType": 11
             }
           ],
-          "saved_objtypeKey": "IMAGE",
-          "tree_closed": true
+          "saved_objtypeKey": "IMAGE"
         },
         {
           "guid": "GUID30969055-63115S43140483",
@@ -1020,8 +1019,8 @@
               "flags": 17,
               "strtype": "OBJECT/Position",
               "intarray": [
-                0,
-                0
+                -8,
+                -8
               ],
               "InheritedType": 7
             },
@@ -1038,7 +1037,7 @@
             {
               "nid": 645291971,
               "strtype": "OBJECT/Align",
-              "strval": "LEFT_MID",
+              "strval": "TOP_LEFT",
               "InheritedType": 3
             },
             {

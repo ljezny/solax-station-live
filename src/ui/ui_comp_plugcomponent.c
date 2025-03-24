@@ -50,7 +50,7 @@ lv_obj_set_height( cui_Image2, LV_SIZE_CONTENT);   /// 32
 lv_obj_set_x( cui_Image2, -175 );
 lv_obj_set_y( cui_Image2, -72 );
 lv_obj_set_align( cui_Image2, LV_ALIGN_CENTER );
-lv_obj_add_flag( cui_Image2, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
+lv_obj_add_flag( cui_Image2, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
 lv_obj_clear_flag( cui_Image2, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 lv_obj_t *cui_plugTemperatureContainer;
@@ -58,7 +58,8 @@ cui_plugTemperatureContainer = lv_obj_create(cui_Container34);
 lv_obj_remove_style_all(cui_plugTemperatureContainer);
 lv_obj_set_width( cui_plugTemperatureContainer, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( cui_plugTemperatureContainer, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_align( cui_plugTemperatureContainer, LV_ALIGN_LEFT_MID );
+lv_obj_set_x( cui_plugTemperatureContainer, -8 );
+lv_obj_set_y( cui_plugTemperatureContainer, -8 );
 lv_obj_set_flex_flow(cui_plugTemperatureContainer,LV_FLEX_FLOW_ROW);
 lv_obj_set_flex_align(cui_plugTemperatureContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 lv_obj_clear_flag( cui_plugTemperatureContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags

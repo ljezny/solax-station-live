@@ -112,8 +112,8 @@ public:
         {
             plugs[i] = ui_plugComponent_create(ui_plugsContainer);
 
-           // lv_dropdown_set_symbol(ui_comp_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER34_PLUGPRIORITYDROPDOWN), "");
-           // lv_dropdown_set_symbol(ui_comp_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER34_PLUGNAMEDROPDOWN), "");
+            // lv_dropdown_set_symbol(ui_comp_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER34_PLUGPRIORITYDROPDOWN), "");
+            // lv_dropdown_set_symbol(ui_comp_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER34_PLUGNAMEDROPDOWN), "");
         }
     }
 
@@ -177,6 +177,32 @@ public:
                     lv_obj_add_flag(plugPercentArc, LV_OBJ_FLAG_HIDDEN);
                 }
                 lv_arc_set_value(plugPercentArc, shellyResult.states[i].percent);
+
+                lv_obj_t *temperatureContainer = ui_comp_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER34_PLUGTEMPERATURECONTAINER);
+                lv_obj_t *temperatureLabel = ui_comp_get_child(plugs[i], UI_COMP_PLUGCOMPONENT_CONTAINER34_PLUGTEMPERATURECONTAINER_PLUGTEMPERATURELABEL);
+
+                if (shellyResult.states[i].internalTemperature != 0)
+                {
+                    lv_obj_clear_flag(temperatureContainer, LV_OBJ_FLAG_HIDDEN);
+                    lv_label_set_text_fmt(temperatureLabel, "%d", shellyResult.states[i].internalTemperature);
+                    if (shellyResult.states[i].internalTemperature > 50)
+                    {
+                        lv_obj_set_style_bg_color(temperatureContainer, red, 0);
+                        lv_obj_set_style_text_color(temperatureContainer, white, 0);
+                    }
+                    else if (shellyResult.states[i].internalTemperature > 40)
+                    {
+                        lv_obj_set_style_bg_color(temperatureContainer, orange, 0);
+                        lv_obj_set_style_text_color(temperatureContainer, black, 0);
+                    }
+                    else
+                    {
+                        lv_obj_set_style_bg_color(temperatureContainer, green, 0);
+                        lv_obj_set_style_text_color(temperatureContainer, white, 0);
+                    }
+                } else {
+                    lv_obj_add_flag(temperatureContainer, LV_OBJ_FLAG_HIDDEN);
+                }
             }
         }
         if (shellyResult.pairedCount > 0)
@@ -218,12 +244,6 @@ public:
         int l1PercentUsage = totalPhasePower > 0 ? (100 * inverterData.L1Power) / totalPhasePower : 0;
         int l2PercentUsage = totalPhasePower > 0 ? (100 * inverterData.L2Power) / totalPhasePower : 0;
         int l3PercentUsage = totalPhasePower > 0 ? (100 * inverterData.L3Power) / totalPhasePower : 0;
-
-        lv_color_t black = lv_color_make(0, 0, 0);
-        lv_color_t white = lv_color_make(255, 255, 255);
-        lv_color_t red = lv_color_hex(0xAB2328);
-        lv_color_t orange = lv_color_hex(0xFFD400);
-        lv_color_t green = lv_color_hex(0x03AD36);
 
         lv_color_t textColor = isDarkMode ? white : black;
         lv_color_t containerBackground = isDarkMode ? black : white;
@@ -487,7 +507,12 @@ private:
     UIBackgroundAnimator gridBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
 
     lv_obj_t *plugs[MAX_SHELLY_PAIRS];
-    
+
+    lv_color_t black = lv_color_make(0, 0, 0);
+    lv_color_t white = lv_color_make(255, 255, 255);
+    lv_color_t red = lv_color_hex(0xAB2328);
+    lv_color_t orange = lv_color_hex(0xFFD400);
+    lv_color_t green = lv_color_hex(0x03AD36);
 
     void updateChart(InverterData_t &inverterData, SolarChartDataProvider &solarChartDataProvider)
     {
