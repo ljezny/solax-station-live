@@ -1,8 +1,11 @@
-<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> został zaprojektowany do automatycznego podłączenia się do
+<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> został zaprojektowany do automatycznego
+    podłączenia się do
     twojego inwertera bez konieczności ręcznej konfiguracji.</p>
 
-<p>Jeśli jednak <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> nie znajdzie kompatybilnej sieci WiFi,
-    wyświetli menu wyboru dostępnych obsługiwanych sieci WiFi. Wyświetlane są tylko sieci inwerterów, a nie twoja domowa sieć WiFi.</p>
+<p>Jeśli jednak <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> nie znajdzie kompatybilnej
+    sieci WiFi,
+    wyświetli menu wyboru dostępnych obsługiwanych sieci WiFi. Wyświetlane są tylko sieci inwerterów, a nie twoja domowa
+    sieć WiFi.</p>
 
 <p>Wybierz odpowiedni inwerter, a w razie potrzeby wprowadź hasło do sieci WiFi. <strong>SOLAR STATION <span
             style="color: #ff0000;">LIVE</span></strong> zapamięta hasło.</p>
@@ -23,7 +26,8 @@
     <li>Moc ładowania i rozładowywania baterii</li>
     <li>Temperatura baterii</li>
     <li>Całkowita moc inwertera</li>
-    <li>Obciążenie poszczególnych faz inwertera (czerwona oznacza przeciążoną fazę). Znak minus oznacza przeciwny kierunek przepływu na danej fazie - zazwyczaj gdy dochodzi do ładowania baterii z sieci itp.</li>
+    <li>Obciążenie poszczególnych faz inwertera (czerwona oznacza przeciążoną fazę). Znak minus oznacza przeciwny
+        kierunek przepływu na danej fazie - zazwyczaj gdy dochodzi do ładowania baterii z sieci itp.</li>
     <li>Numer seryjny inwertera i siła sygnału WiFi</li>
     <li>Temperatura inwertera</li>
     <li>Liczba aktywnych i sparowanych gniazdek (łączna moc włączonych gniazdek)</li>
@@ -37,21 +41,28 @@
     <li>Dzisiejsze wykorzystanie energii z baterii</li>
     <li>Dzisiejszy nadmiar do sieci</li>
     <li>Dzisiejszy pobór z sieci</li>
-    <li>Graficzne przedstawienie produkcji paneli (żółty), stanu naładowania baterii (niebieski) i zużycia gospodarstwa domowego (zielony)</li>
+    <li>Graficzne przedstawienie produkcji paneli (żółty), stanu naładowania baterii (niebieski) i zużycia gospodarstwa
+        domowego (zielony)</li>
 </ol>
-<p>Niektóre dzienne statystyki po starcie wyświetlają u niektórych inwerterów (Victron, GoodWe) zera. Jest to spowodowane tym, że
-    inwerter tej dziennej statystyki nie rejestruje. <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> oblicza ją sam z ogólnych statystyk i dlatego wyświetla się dopiero po północy.</p>
-    
+<p>Niektóre dzienne statystyki po starcie wyświetlają u niektórych inwerterów (Victron, GoodWe) zera. Jest to
+    spowodowane tym, że
+    inwerter tej dziennej statystyki nie rejestruje. <strong>SOLAR STATION <span
+            style="color: #ff0000;">LIVE</span></strong> oblicza ją sam z ogólnych statystyk i dlatego wyświetla się
+    dopiero po północy.</p>
+
 <h1>Obsługiwane inwertery</h1>
 
 <h2>SOLAX</h2>
 <p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> standardowo automatycznie łączy się z
     inwerterem za pomocą podstawowych ustawień. Jeśli się tak nie stanie, postępuj zgodnie z poniższymi krokami:</p>
 <ol>
-    <li>Sprawdź, czy dostępna jest sieć WiFi o nazwie <em>Wifi_XXXXXX</em> (sieć WiFi nadawana przez dongle inwertera). Jeśli
-        nie jest widoczna, może być ukryta – wyłącz ukrywanie sieci w aplikacji mobilnej SOLAX Cloud (Menu -> Ustawienia ->
+    <li>Sprawdź, czy dostępna jest sieć WiFi o nazwie <em>Wifi_XXXXXX</em> (sieć WiFi nadawana przez dongle inwertera).
+        Jeśli
+        nie jest widoczna, może być ukryta – wyłącz ukrywanie sieci w aplikacji mobilnej SOLAX Cloud (Menu -> Ustawienia
+        ->
         Sieć -> Pocket WiFi SSID Broadcast).</li>
-    <li>Sieć WiFi dongle nie jest zabezpieczona hasłem, ale dostęp do API jest chroniony. Domyślne hasło API jest podane na WiFi
+    <li>Sieć WiFi dongle nie jest zabezpieczona hasłem, ale dostęp do API jest chroniony. Domyślne hasło API jest podane
+        na WiFi
         dongle i zaczyna się od litery „S”.</li>
 </ol>
 
@@ -59,25 +70,42 @@
 <ol>
     <li>Sprawdź dostępność sieci WiFi <em>SolarWifiXXXXXX</em> (XXXXXX odpowiada numerowi seryjnemu dongle). Domyślne
         hasło do tej sieci to <strong>12345678</strong>.</li>
-    <li>Jeśli dongle się nie zgłasza, zresetuj go krótkim naciśnięciem przycisku i poczekaj około 3 minut na jego restart.</li>
+    <li>Jeśli dongle się nie zgłasza, zresetuj go krótkim naciśnięciem przycisku i poczekaj około 3 minut na jego
+        restart.</li>
 </ol>
 
 <h2>VICTRON</h2>
-<p>Inwerter Victron nadaje sieć WiFi <em>venus-XXXXXX</em> (XXXXXX odpowiada numerowi seryjnemu dongle). Połączenie z tą siecią
+<p>Inwerter Victron nadaje sieć WiFi <em>venus-XXXXXX</em> (XXXXXX odpowiada numerowi seryjnemu dongle). Połączenie z tą
+    siecią
     wymaga hasła podanego na dongle.</p>
-<p>Aby prawidłowo działać, należy aktywować <strong>Modbus TCP</strong> w menu urządzenia (Menu -> Ustawienia -> Usługi ->
+<p>Aby prawidłowo działać, należy aktywować <strong>Modbus TCP</strong> w menu urządzenia (Menu -> Ustawienia -> Usługi
+    ->
     Modbus TCP).</p>
 
 <h1>SOLAR PLUG</h1>
-<p>Wszystkie gniazdka SOLAR PLUG są w pełni kompatybilne. Po podłączeniu do sieci są automatycznie wykrywane i wyświetlają się w
-    statystyce zużycia gospodarstwa domowego.</p>
-<p>Pierwsze uruchomienie aktywuje tryb parowania. Parowanie można wywołać w dowolnym momencie, przytrzymując przycisk na gniazdku przez 10 sekund
-    (zapalą się niebieskie kontrolki).</p>
-<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> automatycznie wyszukuje i paruje dostępne
-    jednostki SOLAR PLUG. Podczas konfiguracji wskazania zmieniają się:</p>
+<p>Wszystkie gniazdka i przekaźniki SOLAR PLUG są w pełni kompatybilne.</p>
+<p>Gniazdko dostarczamy zawsze już w trybie parowania. Wystarczy podłączyć gniazdko do prądu, a stacja sama je znajdzie
+    i połączy.</p>
+<p>Jeśli z jakiegoś powodu musisz przełączyć gniazdko w tryb parowania, możesz to zrobić w dowolnym momencie,
+    przytrzymując przycisk na gniazdku przez 10 sekund (zaświeci się niebieska kontrolka).</p>
+<p>Parowanie gniazdka może potrwać nawet kilka minut. Jeśli chcesz przyspieszyć ten proces, możesz zrestartować stację.
+    Jednak nawet wtedy gniazdko zostanie znalezione.</p>
+<p>Sparowane gniazdko nie jest podłączone do Twojej sieci domowej ani internetu. Jest ono sterowane wyłącznie przez
+    stację <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong>. W związku z tym nie można go
+    podłączyć do oryginalnej aplikacji Shelly.</p>
+<p>Podczas konfiguracji zmieniają się wskaźniki:</p>
 <ul>
     <li><strong>Niebieski:</strong> aktywny tryb parowania</li>
-    <li><strong>Pomarańczowy:</strong> trwa konfiguracja</li>
-    <li><strong>Zielony:</strong> urządzenie jest pomyślnie podłączone i aktywne</li>
+    <li><strong>Czerwony:</strong> trwa konfiguracja</li>
+    <li><strong>Pomarańczowy:</strong> urządzenie jest pomyślnie połączone i aktywne.</li>
 </ul>
-<p>Po pomyślnym sparowaniu gniazdko wyświetli się w przeglądzie zużycia domowego.</p>
+<p>Po pomyślnym sparowaniu gniazdko pojawi się w przeglądzie zużycia energii domowej.</p>
+<h2>Przełączanie gniazdka</h2>
+<p>Stacja <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> automatycznie przełącza gniazdka
+    zgodnie z wewnętrznymi zasadami. <strong>Nie ustawiasz niczego ręcznie.</strong> Monitorowany jest bilans
+    energetyczny, a priorytet ma naładowana bateria domowa. Gdy bateria domowa jest naładowana lub występują nadwyżki,
+    stacja stopniowo, kaskadowo przełącza poszczególne gniazdka. Gniazdka pozostają włączone przez co najmniej 5 minut.
+</p>
+<p>Podczas włączonego gniazdka może dojść do pobierania energii z baterii, ale maksymalnie przez 5 minut. Przy
+    granicznych mocach instalacji fotowoltaicznej (FVE) dochodzi do cyklicznego wyłączania gniazdek, co maksymalizuje
+    wykorzystanie energii z tej instalacji.</p>
