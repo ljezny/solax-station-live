@@ -9,13 +9,20 @@
             style="color: #ff0000;">LIVE</span></strong> si heslo uloží.</p>
 
 <h2>Aktualizace firmware</h2>
-<p>Podrobný návod k aktualizaci firmware naleznete <a
-        href="https://solar-station.cz/user/documents/solar-station-live/index.html"><strong>zde</strong></a>.</p>
-
+<p>Nejprve se mrkněte jakou máte verzi <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong></p>
+<p>Pokud máte vzadu RESET tlačítko, jedná se o 2. generaci. Firmware pro 1. a 2. generaci jsou jiné (jiný ovladač
+    displaye). Nicméně pokud omylem přehrajete špatný firmware, nahrátím správného se to opraví - nic nepokazíte.</p>
+<ul>
+    <li>1. generace: <a
+            href="https://solar-station.cz/user/documents/solar-station-live/solar-station-live.html"><strong>Návod
+                zde</strong></a></li>
+    <li>2. generace: <a
+            href="https://www.solar-station.cz/user/documents/solar-station-live/solar-station-live-advance.html"><strong>Návod
+                zde</strong></a></li>
+</ul>
 <h2>Zobrazované údaje</h2>
 <p><img src="https://cdn.myshoptet.com/usr/www.solar-station.cz/user/documents/upload/solar-station-live-layout.png"
         alt="solar-station-live-layout" /></p>
-
 <ol>
     <li>Aktuální výkon FV panelů</li>
     <li>Výkon jednotlivých stringů (pokud jsou k dispozici)</li>
@@ -24,8 +31,13 @@
     <li>Výkon nabíjení a vybíjení baterie</li>
     <li>Teplota baterie</li>
     <li>Celkový výkon střídače</li>
+<<<<<<< HEAD
     <li>Zatížení jednotlivých fází střídače (červeně označena přetížená fáze). Záporné znaménko značí pak opační směr
         toku na dané fázi - typicky pokud dochází k nabíjení baterie ze sítě apod.</li>
+=======
+    <li>Zatížení jednotlivých fází střídače (červeně označena přetížená fáze). Záporné znaménko značí pak opační
+        směr toku na dané fázi - typicky pokud dochází k nabíjení baterie ze sítě apod.</li>
+>>>>>>> 2632295 (Progress on Shelly plugs)
     <li>Sériové číslo střídače a síla WiFi signálu</li>
     <li>Teplota střídače</li>
     <li>Počet aktivních a spárovaných zásuvek (souhrnný výkon sepnutých zásuvek)</li>
@@ -39,39 +51,50 @@
     <li>Dnešní využití energie z baterie</li>
     <li>Dnešní přetok do sítě</li>
     <li>Dnešní odběr ze sítě</li>
-    <li>Grafické znázornění výroby panelů (žlutá), stavu nabití baterie (modrá) a spotřeby domácnosti (zelená)</li>
+    <li>Grafické znázornění výroby panelů (žlutá), stavu nabití baterie (modrá) a spotřeby domácnosti (zelená)
+    </li>
 </ol>
-<p>Některé denní statistiky po startu zobrazují u některých střídačů (Victron, GoodWe) nuly. Je to způsobeno tím, že
+<p>Některé denní statistiky po startu zobrazují u některých střídačů (Victron, GoodWe) nuly. Je to způsobeno
+    tím, že
     střídač tuto denní statistiku neeviduje. <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> si
     ji počítá sám z celkových statistik a proto se zobrazí až po půlnoci.</p>
 
 <h1>Podporované střídače</h1>
 
 <h2>SOLAX</h2>
-<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> se standardně automaticky připojuje ke
+<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> se standardně automaticky připojuje
+    ke
     střídači pomocí základního nastavení. Pokud se tak nestane, postupujte následovně:</p>
 <ol>
-    <li>Zkontrolujte, zda je dostupná WiFi síť s názvem <em>Wifi_XXXXXX</em> (WiFi síť vysílaná donglem střídače). Pokud
-        není viditelná, může být skrytá – deaktivujte skrytí sítě v mobilní aplikaci SOLAX Cloud (Menu -> Nastavení ->
+    <li>Zkontrolujte, zda je dostupná WiFi síť s názvem <em>Wifi_XXXXXX</em> (WiFi síť vysílaná donglem
+        střídače). Pokud
+        není viditelná, může být skrytá – deaktivujte skrytí sítě v mobilní aplikaci SOLAX Cloud (Menu ->
+        Nastavení ->
         Síť -> Pocket WiFi SSID Broadcast).</li>
-    <li>WiFi síť donglu není chráněna heslem, ale přístup k API je zabezpečen. Výchozí heslo API je uvedeno na WiFi
+    <li>WiFi síť donglu není chráněna heslem, ale přístup k API je zabezpečen. Výchozí heslo API je uvedeno na
+        WiFi
         donglu a začíná písmenem „S“.</li>
 </ol>
 
 <h2>GOODWE</h2>
 <ol>
-    <li>Zkontrolujte dostupnost WiFi sítě <em>SolarWifiXXXXXX</em> (XXXXXX odpovídá sériovému číslu donglu). Výchozí
+    <li>Zkontrolujte dostupnost WiFi sítě <em>SolarWifiXXXXXX</em> (XXXXXX odpovídá sériovému číslu donglu).
+        Výchozí
         heslo k této síti je <strong>12345678</strong>.</li>
-    <li>Pokud se dongle nehlásí, resetujte jej krátkým stiskem tlačítka a vyčkejte cca 3 minuty na jeho restart.</li>
+    <li>Pokud se dongle nehlásí, resetujte jej krátkým stiskem tlačítka a vyčkejte cca 3 minuty na jeho restart.
+    </li>
 </ol>
 
 <h2>VICTRON</h2>
-<p>Střídač Victron vysílá WiFi síť <em>venus-XXXXXX</em> (XXXXXX odpovídá sériovému číslu donglu). Připojení k této síti
+<p>Střídač Victron vysílá WiFi síť <em>venus-XXXXXX</em> (XXXXXX odpovídá sériovému číslu donglu). Připojení k
+    této síti
     vyžaduje heslo uvedené na donglu.</p>
-<p>Pro správné fungování je nutné aktivovat <strong>Modbus TCP</strong> v menu zařízení (Menu -> Settings -> Services ->
+<p>Pro správné fungování je nutné aktivovat <strong>Modbus TCP</strong> v menu zařízení (Menu -> Settings ->
+    Services ->
     Modbus TCP).</p>
 
 <h1>SOLAR PLUG</h1>
+<<<<<<< HEAD
 <p>Všechny zásuvky a relé SOLAR PLUG jsou plně kompatibilní.</p>
 <p>Zásuvku dodáváme vždy rovnou v párovacím režimu. Zásuvku jen zapojte do elektřiny a stanice si ji sama najde a
     připojí.</p>
@@ -84,6 +107,17 @@
         <span style="color: #ff0000;">LIVE</span></strong>. Nelze ji tedy ani připojit do originální aplikace Shelly.
 </p>
 <p>Během konfigurace se indikace mění:</p>
+=======
+<p>Všechny zásuvky SOLAR PLUG jsou plně kompatibilní. Po připojení do sítě jsou automaticky detekovány a zobrazí
+    se ve
+    statistice spotřeby domácnosti.</p>
+<p>První spuštění aktivuje párovací režim. Párování lze kdykoliv vyvolat podržením tlačítka na zásuvce po dobu
+    10 sekund
+    (rozsvítí se modrá kontrolka).</p>
+<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> automaticky vyhledává a páruje
+    dostupné
+    SOLAR PLUG jednotky. Během konfigurace se indikace mění:</p>
+>>>>>>> 2632295 (Progress on Shelly plugs)
 <ul>
     <li><strong>Modrá:</strong> aktivní párovací režim</li>
     <li><strong>Červená:</strong> konfigurace probíhá</li>
