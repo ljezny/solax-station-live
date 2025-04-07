@@ -146,6 +146,38 @@ public:
                                 inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
                                 logInverterData(inverterData);
                             }
+                            else if (doc["type"].as<int>() == 5) // X3-Hybiyd/Fit / X3-20K/30K / X3-MIC/PRO
+                            {
+                                inverterData.status = DONGLE_STATUS_OK;
+                                inverterData.millis = millis();
+                                inverterData.pv1Power = doc["Data"][13].as<int>();
+                                inverterData.pv2Power = doc["Data"][14].as<int>();
+                                inverterData.batteryPower = read16BitSigned(doc["Data"][26].as<uint16_t>());
+                                inverterData.batteryVoltage = doc["Data"][24].as<int>() / 100.0;
+                                inverterData.batteryTemperature = doc["Data"][27].as<uint8_t>();
+                                inverterData.soc = doc["Data"][28].as<int>();
+                                inverterData.inverterTemperature = doc["Data"][49].as<uint8_t>(); //??
+                                inverterData.L1Power = ((int16_t)doc["Data"][6].as<uint16_t>());
+                                inverterData.L2Power = ((int16_t)doc["Data"][7].as<uint16_t>());
+                                inverterData.L3Power = ((int16_t)doc["Data"][8].as<uint16_t>());
+                                inverterData.inverterPower = ((int16_t)doc["Data"][181].as<uint16_t>()); //???
+                                //inverterData.loadPower = read16BitSigned(doc["Data"][47].as<uint16_t>()); //
+                               
+                                inverterData.pvToday = doc["Data"][112].as<uint16_t>() / 10.0; // yield is PV inverter output (solar + battery)
+                                inverterData.pvTotal = ((doc["Data"][90].as<uint32_t>() << 16) + doc["Data"][89].as<uint16_t>()) / 10.0;
+                                inverterData.feedInPower = read16BitSigned(doc["Data"][65].as<uint16_t>());
+                                // inverterData.gridSellToday = doc["Data"][90].as<uint16_t>() / 100.0;
+                                // inverterData.gridBuyToday = doc["Data"][92].as<uint16_t>() / 100.0;
+                                inverterData.gridSellTotal = ((doc["Data"][68].as<uint32_t>() << 16) + doc["Data"][67].as<uint16_t>()) / 100.0;
+                                // inverterData.gridBuyTotal = ((doc["Data"][89].as<uint32_t>() << 16) + doc["Data"][88].as<uint16_t>()) / 100.0;
+                                inverterData.batteryChargedToday = doc["Data"][114].as<uint16_t>() / 10.0;
+                                inverterData.batteryDischargedToday = doc["Data"][113].as<uint16_t>() / 10.0;
+                                inverterData.loadToday = doc["Data"][21].as<uint16_t>() / 10.0;
+                                inverterData.loadTotal = ((doc["Data"][70].as<uint32_t>() << 16) + doc["Data"][69].as<uint16_t>()) / 10.0;
+                                inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
+                                inverterData.sn = sn;
+                                logInverterData(inverterData);
+                            }
                             else if (doc["type"].as<int>() == 16)
                             { // X3-MIC/PRO-G2 https://github.com/simatec/ioBroker.solax/blob/master/lib/inverterData.js
                                 inverterData.status = DONGLE_STATUS_OK;
@@ -177,11 +209,12 @@ public:
                                 inverterData.pvToday = doc["Data"][13].as<uint16_t>() / 10.0;
                                 inverterData.feedInPower = read16BitSigned(doc["Data"][48].as<uint16_t>());
                                 inverterData.loadPower = inverterData.inverterPower - inverterData.feedInPower;
-                                inverterData.gridSellTotal = ((doc["Data"][51].as<uint32_t>() << 16) + doc["Data"][50].as<uint16_t>()) / 100.0; 
-                                inverterData.loadTotal = ((doc["Data"][53].as<uint32_t>() << 16) + doc["Data"][52].as<uint16_t>()) / 100.0; 
+                                inverterData.gridSellTotal = ((doc["Data"][51].as<uint32_t>() << 16) + doc["Data"][50].as<uint16_t>()) / 100.0;
+                                inverterData.loadTotal = ((doc["Data"][53].as<uint32_t>() << 16) + doc["Data"][52].as<uint16_t>()) / 100.0;
                                 inverterData.hasBattery = false;
                                 inverterData.sn = sn;
-                                if(pvToday < 0 || inverterData.pvToday < pvToday) { //day changed
+                                if (pvToday < 0 || inverterData.pvToday < pvToday)
+                                { // day changed
                                     pvToday = inverterData.pvToday;
                                     gridBuyTotal = inverterData.gridBuyTotal;
                                     gridSellTotal = inverterData.gridSellTotal;
@@ -238,7 +271,8 @@ public:
         return inverterData;
     }
 
-    String getStatusText(DongleStatus_t status)
+    String
+    getStatusText(DongleStatus_t status)
     {
         switch (status)
         {
@@ -285,7 +319,7 @@ private:
     float minimumBatteryVoltage = FLT_MAX;
     float maximumBatteryVoltage = FLT_MIN;
 
-    double pvToday = -1; //init value
+    double pvToday = -1; // init value
     double pvTotal = 0;
     double batteryDischargedToday = 0;
     double batteryChargedToday = 0;
