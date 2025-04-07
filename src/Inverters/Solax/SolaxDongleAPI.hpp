@@ -161,7 +161,7 @@ public:
                                 inverterData.L2Power = ((int16_t)doc["Data"][7].as<uint16_t>());
                                 inverterData.L3Power = ((int16_t)doc["Data"][8].as<uint16_t>());
                                 inverterData.inverterPower = ((int16_t)doc["Data"][181].as<uint16_t>()); //???
-                                //inverterData.loadPower = read16BitSigned(doc["Data"][47].as<uint16_t>()); //
+                                inverterData.loadPower = inverterData.inverterPower - inverterData.feedInPower;
                                
                                 inverterData.pvToday = doc["Data"][112].as<uint16_t>() / 10.0; // yield is PV inverter output (solar + battery)
                                 inverterData.pvTotal = ((doc["Data"][90].as<uint32_t>() << 16) + doc["Data"][89].as<uint16_t>()) / 10.0;
