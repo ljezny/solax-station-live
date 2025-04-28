@@ -284,7 +284,12 @@ public:
                 ShellyStateResult_t state = pairs[i].lastState;
                 if (state.updated != 0)
                 {
-                    bool canBeControlled = (state.isOn && (state.source == NULL || String("http").equals(state.source) || String("timer").equals(state.source) || String("init").equals(state.source))) || !state.isOn;
+                    bool canBeControlled = (state.isOn && (state.source == NULL 
+                        || String("http").equals(state.source) 
+                    || String("timer").equals(state.source)
+                    || String("init").equals(state.source)
+                    || String("WS_in").equals(state.source))
+                    || !state.isOn);
                     if (canBeControlled)
                     {
                         bool wasOn = state.isOn;
