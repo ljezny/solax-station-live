@@ -284,12 +284,7 @@ public:
                 ShellyStateResult_t state = pairs[i].lastState;
                 if (state.updated != 0)
                 {
-                    bool canBeControlled = (state.isOn && (state.source == NULL 
-                        || String("http").equals(state.source) 
-                    || String("timer").equals(state.source)
-                    || String("init").equals(state.source)
-                    || String("WS_in").equals(state.source))
-                    || !state.isOn);
+                    bool canBeControlled = (state.isOn && (state.source == NULL || String("http").equals(state.source) || String("timer").equals(state.source) || String("init").equals(state.source) || String("WS_in").equals(state.source)) || !state.isOn);
                     if (canBeControlled)
                     {
                         bool wasOn = state.isOn;
@@ -300,7 +295,9 @@ public:
                         {
                             break; // activete only one relay
                         }
-                    } else {
+                    }
+                    else
+                    {
                         log_w("Shelly %s cannot be controlled", String(pairs[i].shellyId, HEX).c_str());
                     }
                 }
@@ -478,9 +475,10 @@ private:
                 result.totalPower = resultDoc[type + ":0"]["apower"].as<float>();
                 result.source = resultDoc[type + ":0"]["source"].as<String>();
                 result.totalEnergy = resultDoc[type + ":0"]["aenergy"]["total"].as<float>();
-                if(result.isOn){
+                if (result.isOn)
+                {
                     result.percent = resultDoc[type + ":0"]["brightness"].as<int>();
-                }                
+                }
                 result.signalPercent = min(max(2 * (resultDoc["wifi"]["rssi"].as<int>() + 100), 0), 100);
             }
         }
@@ -549,47 +547,39 @@ private:
     bool setState_Gen1(IPAddress ipAddress, bool on, int timeoutSec)
     {
         bool result = false;
-        String url = "http://" + ipAddress.toString() + "/relay/0?turn=" + (on ? "on" : "off");
+        String path = String("/relay/0?turn=") + (on ? "on" : "off");
         if (timeoutSec > 0)
         {
-            url += "&timer=" + String(timeoutSec);
+            path += "&timer=" + String(timeoutSec);
         }
 
-        if (http.begin(url))
+        if (sendRequest(client, ipAddress, "GET", path, ""))
         {
-            int httpCode = http.GET();
-            if (httpCode == HTTP_CODE_OK)
-            {
-                result = true;
-            }
+            result = true;
         }
-        http.end();
+        client.stop();
 
         return result;
     }
 
     bool setState_Gen2(IPAddress ipAddress, String type, int index, bool on, int timeoutSec, int percent = -1)
     {
-        bool result = true;
-        String url = "http://" + ipAddress.toString() + "/" + type + "/" + String(index) + "?turn=" + (on ? "on" : "off");
+        bool result = false;
+        String path = String("/") + type + "/" + String(index) + "?turn=" + (on ? "on" : "off");
         if (on && timeoutSec > 0)
         {
-            url += "&timer=" + String(timeoutSec);
+            path += "&timer=" + String(timeoutSec);
         }
         if (percent > 0)
         {
-            url += "&brightness=" + String(percent);
+            path += "&brightness=" + String(percent);
         }
 
-        if (http.begin(url))
+        if (sendRequest(client, ipAddress, "GET", path, ""))
         {
-            int httpCode = http.GET();
-            if (httpCode == HTTP_CODE_OK)
-            {
-                result = true;
-            }
+            result = true;
         }
-        http.end();
+        client.stop();
 
         return result;
     }
