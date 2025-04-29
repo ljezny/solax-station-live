@@ -46,9 +46,7 @@ const ShellyModelInfo_t supportedModels[SHELLY_SUPPORTED_MODEL_COUNT] = {
     {PRO3, "ShellyPro3-"},
     {PRO3, "Pro3-"},
     {PRODM1PM, "ShellyProDM1PM-"},
-    {DIMG3, "Shelly0110DimG3-"}
-};
-
+    {DIMG3, "Shelly0110DimG3-"}};
 
 typedef struct ShellyStateResult
 {
@@ -311,7 +309,7 @@ public:
         {
         case PLUG:
         case PLUG_S:
-            return setWiFiSTA_Gen1(ssid, password);
+            return setCloudEnabled_Gen1(false) && setWiFiSTA_Gen1(ssid, password);
         case PRO1PM:
         case PLUS_PLUG_S:
         case PLUS1PM:
@@ -352,19 +350,29 @@ private:
         return PLUG;
     }
 
+    bool setCloudEnabled_Gen1(bool enabled)
+    {
+        bool result = false;
+        String path = String("/settings/cloud?enabled=") + (enabled ? "1" : "0");
+        
+        if (sendRequest(client, IPAddress(192,168,33,1), "GET", path, ""))
+        {
+            result = true;
+        }
+        client.stop();
+
+        return result;
+    }
+
     bool setWiFiSTA_Gen1(String ssid, String password)
     {
         bool result = false;
-        String url = "http://192.168.33.1/settings/sta?enabled=true&ssid=" + urlencode(ssid) + "&key=" + urlencode(password);
-        if (http.begin(url))
+        String path = String("/settings/sta?enabled=true&ssid=") + urlencode(ssid) + "&key=" + urlencode(password);
+        if (sendRequest(client, IPAddress(192,168,33,1), "GET", path, ""))
         {
-            int httpCode = http.GET();
-            if (httpCode == HTTP_CODE_OK)
-            {
-                result = true;
-            }
+            result = true;
         }
-        http.end();
+        client.stop();
         return result;
     }
 
