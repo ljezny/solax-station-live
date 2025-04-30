@@ -448,7 +448,6 @@ private:
                 result.signalPercent = min(max(2 * (doc["wifi_sta"]["rssi"].as<int>() + 100), 0), 100);
             }
         }
-        log_d("connected %d", client.connected());
         client.stop();
         return result;
     }
