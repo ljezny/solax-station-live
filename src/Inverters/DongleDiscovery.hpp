@@ -139,7 +139,7 @@ public:
 
         log_d("Connecting to %s", discovery.ssid.c_str());
         WiFi.begin(discovery.ssid.c_str(), discovery.password.c_str());
-
+        WiFi.setSleep(false);
         bool connectionResult = awaitWifiConnection();
 
         if (connectionResult)
@@ -155,6 +155,7 @@ public:
             clearDonglePassword(discovery.ssid);
 
             WiFi.begin(discovery.ssid.c_str(), SoftAP::getPassword().c_str());
+            WiFi.setSleep(false);
 
             connectionResult = awaitWifiConnection();
 

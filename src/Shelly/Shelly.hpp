@@ -83,9 +83,6 @@ public:
 
     ShellyAPI()
     {
-        http.setConnectTimeout(2000);
-        http.setTimeout(2000);
-        client.setTimeout(2000);
         for (int i = 0; i < MAX_SHELLY_PAIRS; i++)
         {
             pairs[i].shellyId = 0;
@@ -309,7 +306,9 @@ public:
         {
         case PLUG:
         case PLUG_S:
-            return setCloudEnabled_Gen1(false) && setWiFiSTA_Gen1(ssid, password);
+            setup_Gen1();
+            disableCloud_Gen1();
+            return setWiFiSTA_Gen1(ssid, password);
         case PRO1PM:
         case PLUS_PLUG_S:
         case PLUS1PM:
@@ -336,8 +335,6 @@ public:
 
 private:
     mdns_search_once_t *mdnsSearch = NULL;
-    HTTPClient http;
-    WiFiClient client;
     ShellyModel_t getModelFromSSID(String ssid)
     {
         for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
@@ -350,25 +347,30 @@ private:
         return PLUG;
     }
 
-    bool setCloudEnabled_Gen1(bool enabled)
+    void disableCloud_Gen1()
     {
-        bool result = false;
-        String path = String("/settings/cloud?enabled=") + (enabled ? "1" : "0");
-        
-        if (sendRequest(client, IPAddress(192,168,33,1), "GET", path, ""))
+        NetworkClient client;
+        if (sendRequest(client, IPAddress(192, 168, 33, 1), "GET", "/settings/cloud?enabled=0", ""))
         {
-            result = true;
         }
         client.stop();
+    }
 
-        return result;
+    void setup_Gen1()
+    {
+        NetworkClient client;
+        if (sendRequest(client, IPAddress(192, 168, 33, 1), "GET", "/settings/coiot_enable=0&mqtt_enable=0&ap_roaming_enabled=0", ""))
+        {
+        }
+        client.stop();
     }
 
     bool setWiFiSTA_Gen1(String ssid, String password)
     {
         bool result = false;
         String path = String("/settings/sta?enabled=true&ssid=") + urlencode(ssid) + "&key=" + urlencode(password);
-        if (sendRequest(client, IPAddress(192,168,33,1), "GET", path, ""))
+        NetworkClient client;
+        if (sendRequest(client, IPAddress(192, 168, 33, 1), "GET", path, ""))
         {
             result = true;
         }
@@ -378,7 +380,6 @@ private:
 
     bool setWiFiSTA_Gen2(String ssid, String password)
     {
-        String url = "http://192.168.33.1/rpc";
         StaticJsonDocument<1024> doc;
         doc["id"] = 1;
         doc["method"] = "WiFi.SetConfig";
@@ -389,17 +390,12 @@ private:
         String requestBody;
         serializeJson(doc, requestBody);
         bool result = false;
-
-        if (http.begin(url))
+        NetworkClient client;
+        if (sendRequest(client, IPAddress(192, 168, 33, 1), "POST", "/rpc", requestBody))
         {
-            int httpCode = http.POST(requestBody);
-            log_d("HTTP POST %s", requestBody.c_str());
-            if (httpCode == HTTP_CODE_OK)
-            {
-                result = true;
-            }
+            result = true;
         }
-        http.end();
+        client.stop();
         return result;
     }
 
@@ -431,7 +427,7 @@ private:
     {
         ShellyStateResult_t result;
         result.updated = 0;
-
+        NetworkClient client;
         if (sendRequest(client, ipAddress, "GET", "/status", ""))
         {
             DynamicJsonDocument doc(8192);
@@ -452,6 +448,7 @@ private:
                 result.signalPercent = min(max(2 * (doc["wifi_sta"]["rssi"].as<int>() + 100), 0), 100);
             }
         }
+        log_d("connected %d", client.connected());
         client.stop();
         return result;
     }
@@ -460,7 +457,7 @@ private:
     {
         ShellyStateResult_t result;
         result.updated = 0;
-
+        NetworkClient client;
         if (sendRequest(client, ipAddress, "POST", "/rpc", "{\"id\":1,\"method\":\"Shelly.GetStatus\"}"))
         {
             DynamicJsonDocument doc(8192);
@@ -560,7 +557,7 @@ private:
         {
             path += "&timer=" + String(timeoutSec);
         }
-
+        NetworkClient client;
         if (sendRequest(client, ipAddress, "GET", path, ""))
         {
             result = true;
@@ -582,7 +579,7 @@ private:
         {
             path += "&brightness=" + String(percent);
         }
-
+        NetworkClient client;
         if (sendRequest(client, ipAddress, "GET", path, ""))
         {
             result = true;
