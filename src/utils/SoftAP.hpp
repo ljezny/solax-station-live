@@ -21,8 +21,8 @@ public:
     void start()
     {
         log_d("Starting SoftAP");
-
-        WiFi.softAP(getSSID().c_str(), getPassword().c_str(), 10, 1, MAX_SHELLY_PAIRS);
+        //do NOT use a hidden SSID, it will not work for Shelly, some devices has connection issues with hidden SSID
+        WiFi.softAP(getSSID().c_str(), getPassword().c_str(), 10, 0, MAX_SHELLY_PAIRS);
     }
 
     int getNumberOfConnectedDevices()
