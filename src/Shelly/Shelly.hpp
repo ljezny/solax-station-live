@@ -119,8 +119,7 @@ public:
     bool sendRequest(NetworkClient &client, IPAddress ipAddress, String method, String path, String requestBody)
     {
         log_d("IP: %s", ipAddress.toString().c_str());
-
-        if (client.connect(ipAddress, 80, 5000))
+        if (client.connect(ipAddress, 80, 3000))
         {
             String request = "";
             request += method + " ";
@@ -168,6 +167,7 @@ public:
         {
             log_e("Failed to connect");
         }
+
         return false;
     }
 

@@ -179,7 +179,6 @@ void setupLVGL()
     // touch setup
     touch.init();
     backlightResolver.setup();
-    
     lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight / 10);
     /* Initialize the display */
     lv_disp_drv_init(&disp_drv);
@@ -350,13 +349,16 @@ bool reloadShellyTask()
         log_d("Reloading Shelly data");
         shellyResult = shellyAPI.getState();
         RequestedShellyState_t state = shellyRuleResolver.resolveShellyState();
-        if(state != SHELLY_UNKNOWN) {
+        if (state != SHELLY_UNKNOWN)
+        {
+            delay(1000);
             shellyAPI.updateState(state, 5 * 60);
-        }
-
-        //state should change
-        if((shellyResult.activeCount == 0 && state > SHELLY_FULL_OFF) || (shellyResult.activeCount > 0 && state < SHELLY_KEEP_CURRENT_STATE)) {
-            shellyResult = shellyAPI.getState(); //reload state after update    
+ 
+            // state should change
+            if ((shellyResult.activeCount == 0 && state > SHELLY_FULL_OFF) || (shellyResult.activeCount > 0 && state < SHELLY_KEEP_CURRENT_STATE))
+            {
+                shellyResult = shellyAPI.getState(); // reload state after update
+            }
         }
 
         lastAttempt = millis();

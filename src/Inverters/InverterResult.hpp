@@ -47,6 +47,7 @@ typedef struct
 } InverterData_t;
 
 void logInverterData(InverterData_t& inverterData) {
+    return;
     log_d("Inverter data:");
     log_d("Status: %d", inverterData.status);
     log_d("Millis: %ld", inverterData.millis);
