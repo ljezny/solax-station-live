@@ -325,6 +325,7 @@ bool pairShellyTask()
                     {
                         dongleDiscovery.discoveries[i].type = DONGLE_TYPE_IGNORE;
                     }
+                    WiFi.disconnect();
                 }
             }
         }
