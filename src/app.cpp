@@ -22,7 +22,7 @@
 
 #define UI_REFRESH_INTERVAL 5000 // Define the UI refresh interval in milliseconds
 #define INVERTER_DATA_REFRESH_INTERVAL 2000
-#define SHELLY_REFRESH_INTERVAL 5000
+#define SHELLY_REFRESH_INTERVAL 2000
 
 #include "gfx_conf.h"
 #include "Touch/Touch.hpp"
@@ -266,7 +266,7 @@ bool loadInverterDataTask()
         inverterData = createRandomMockData();
         solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
         dongleDiscovery.preferedInverterWifiDongleIndex = 0;
-        return;
+        return run;
 #endif
 
         if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
