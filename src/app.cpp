@@ -19,7 +19,7 @@
 #include "WiFiSetupUI.hpp"
 #include "utils/SoftAP.hpp"
 #include "utils/ShellyRuleResolver.hpp"
-
+#include "utils/MedianPowerSampler.hpp"
 #define UI_REFRESH_INTERVAL 5000 // Define the UI refresh interval in milliseconds
 #define INVERTER_DATA_REFRESH_INTERVAL 2000
 #define SHELLY_REFRESH_INTERVAL 2000
@@ -49,7 +49,9 @@ WallboxData_t wallboxData;
 ShellyResult_t shellyResult;
 ShellyResult_t previousShellyResult;
 SolarChartDataProvider solarChartDataProvider;
-ShellyRuleResolver shellyRuleResolver;
+MedianPowerSampler shellyMedianPowerSampler;
+MedianPowerSampler uiMedianPowerSampler;
+ShellyRuleResolver shellyRuleResolver(shellyMedianPowerSampler);
 
 SplashUI splashUI;
 WiFiSetupUI wifiSetupUI(dongleDiscovery);
@@ -287,7 +289,8 @@ bool loadInverterDataTask()
                 failures = 0;
                 inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.loadPower, inverterData.soc);
-                shellyRuleResolver.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
+                shellyMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
+                uiMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
             }
             else
             {
@@ -428,7 +431,7 @@ void onEntering(state_t newState)
         dashboardUI.show();
         if (inverterData.status == DONGLE_STATUS_OK)
         {
-            dashboardUI.update(inverterData, inverterData, shellyResult, shellyResult, solarChartDataProvider, wifiSignalPercent());
+            dashboardUI.update(inverterData, inverterData, uiMedianPowerSampler, shellyResult, shellyResult, solarChartDataProvider, wifiSignalPercent());
             previousShellyResult = shellyResult;
             previousInverterData = inverterData;
             previousInverterData.millis = 0;
@@ -543,7 +546,7 @@ void updateState()
         if ((millis() - previousInverterData.millis) > UI_REFRESH_INTERVAL)
         {
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-            dashboardUI.update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, shellyResult, previousShellyResult, solarChartDataProvider, wifiSignalPercent());
+            dashboardUI.update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, uiMedianPowerSampler, shellyResult, previousShellyResult, solarChartDataProvider, wifiSignalPercent());
             xSemaphoreGive(lvgl_mutex);
 
             previousShellyResult = shellyResult;

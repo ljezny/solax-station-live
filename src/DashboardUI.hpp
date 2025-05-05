@@ -8,7 +8,7 @@
 #include "Shelly/Shelly.hpp"
 #include "utils/UITextChangeAnimator.hpp"
 #include "utils/UIBackgroundAnimatior.hpp"
-
+#include "utils/MedianPowerSampler.hpp"
 static void draw_event_cb(lv_event_t *e)
 {
     lv_obj_t *obj = lv_event_get_target(e);
@@ -68,7 +68,7 @@ static void draw_event_cb(lv_event_t *e)
         }
         else if (dsc->id == LV_CHART_AXIS_PRIMARY_X)
         {
-            int linesCount = 5;//max(2, min(5, (int) lv_chart_get_point_count(obj)));
+            int linesCount = 5; // max(2, min(5, (int) lv_chart_get_point_count(obj)));
             int segmentsCount = linesCount - 1;
             int pointCountRoundedUp = ((lv_chart_get_point_count(obj) / segmentsCount)) * (segmentsCount + 1);
             int maxMinutes = pointCountRoundedUp * (CHART_SAMPLE_INTERVAL_MS / 60000);
@@ -76,25 +76,32 @@ static void draw_event_cb(lv_event_t *e)
             int totalMinutes = (linesCount - (dsc->value + 1)) * minutesPerLine;
             int hours = totalMinutes / 60;
             int minutes = totalMinutes % 60;
-            if(totalMinutes == 0) {
+            if (totalMinutes == 0)
+            {
                 lv_snprintf(dsc->text, dsc->text_length, "");
-            } else {
+            }
+            else
+            {
                 String format = "-";
-                if(hours > 0) {
+                if (hours > 0)
+                {
                     format += String(hours) + "h";
                 }
-                if(minutes > 0) {
+                if (minutes > 0)
+                {
                     format += String(minutes) + "min";
                 }
-                lv_snprintf(dsc->text, dsc->text_length, format.c_str());                
+                lv_snprintf(dsc->text, dsc->text_length, format.c_str());
             }
-            //lv_snprintf(dsc->text, dsc->text_length, "%d", dsc->value);
+            // lv_snprintf(dsc->text, dsc->text_length, "%d", dsc->value);
         }
     }
 }
 
 class DashboardUI
 {
+private:
+    bool isDarkMode = false;
 public:
     const int UI_REFRESH_PERIOD_MS = 5000;
     void show()
@@ -109,13 +116,17 @@ public:
         return constrain(inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0, 0, 100);
     }
 
-    void update(InverterData_t &inverterData, InverterData_t &previousInverterData, ShellyResult_t &shellyResult, ShellyResult_t &previousShellyResult, SolarChartDataProvider &solarChartDataProvider, int wifiSignalPercent)
+    void update(InverterData_t &inverterData, InverterData_t &previousInverterData, MedianPowerSampler &uiMedianPowerSampler, ShellyResult_t &shellyResult, ShellyResult_t &previousShellyResult, SolarChartDataProvider &solarChartDataProvider, int wifiSignalPercent)
     {
+        if(uiMedianPowerSampler.hasValidSamples()) {
+            isDarkMode = uiMedianPowerSampler.getMedianPVPower() > 0;
+            uiMedianPowerSampler.resetSamples();
+        }
         int selfUseEnergyTodayPercent = inverterData.loadToday > 0 ? ((inverterData.loadToday - inverterData.gridBuyToday) / inverterData.loadToday) * 100 : 0;
         selfUseEnergyTodayPercent = constrain(selfUseEnergyTodayPercent, 0, 100);
         int pvPower = inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power;
         int inPower = pvPower;
-        bool isDarkMode = pvPower == 0;
+
         if (inverterData.batteryPower < 0)
         {
             inPower += abs(inverterData.batteryPower);
@@ -147,9 +158,9 @@ public:
         lv_color_t textColor = isDarkMode ? white : black;
         lv_color_t containerBackground = isDarkMode ? black : white;
 
-        pvPowerTextAnimator.animate(ui_pvLabel, 
-            previousInverterData.pv1Power + previousInverterData.pv2Power + previousInverterData.pv3Power + previousInverterData.pv4Power, 
-            inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power);
+        pvPowerTextAnimator.animate(ui_pvLabel,
+                                    previousInverterData.pv1Power + previousInverterData.pv2Power + previousInverterData.pv3Power + previousInverterData.pv4Power,
+                                    inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power);
         lv_label_set_text(ui_pvUnitLabel, format(POWER, pvPower).unit.c_str());
         pv1PowerTextAnimator.animate(ui_pv1Label, previousInverterData.pv1Power, inverterData.pv1Power);
         lv_label_set_text(ui_pv1UnitLabel, format(POWER, inverterData.pv1Power, 1.0f, true).unit.c_str());
@@ -168,9 +179,12 @@ public:
         {
             lv_obj_clear_flag(ui_pvStringsContainer, LV_OBJ_FLAG_HIDDEN);
         }
-        if(inverterData.pv3Power == 0 && inverterData.pv4Power == 0) {
+        if (inverterData.pv3Power == 0 && inverterData.pv4Power == 0)
+        {
             lv_obj_add_flag(ui_pvStringsContainer1, LV_OBJ_FLAG_HIDDEN);
-        } else {
+        }
+        else
+        {
             lv_obj_clear_flag(ui_pvStringsContainer1, LV_OBJ_FLAG_HIDDEN);
         }
 
@@ -202,10 +216,9 @@ public:
         {
             lv_obj_clear_flag(ui_inverterTemperatureContainer, LV_OBJ_FLAG_HIDDEN);
         }
-        
+
         inverterPowerTextAnimator.animate(ui_inverterPowerLabel, previousInverterData.inverterPower, inverterData.inverterPower);
-        pvBackgroundAnimator.animate(ui_pvContainer, ((previousInverterData.pv1Power + previousInverterData.pv2Power  + previousInverterData.pv3Power + previousInverterData.pv4Power) > 0) ? lv_color_hex(_ui_theme_color_pvColor[0]) : containerBackground
-            , ((inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power) > 0) ? lv_color_hex(_ui_theme_color_pvColor[0]) : containerBackground);
+        pvBackgroundAnimator.animate(ui_pvContainer, ((previousInverterData.pv1Power + previousInverterData.pv2Power + previousInverterData.pv3Power + previousInverterData.pv4Power) > 0) ? lv_color_hex(_ui_theme_color_pvColor[0]) : containerBackground, ((inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power) > 0) ? lv_color_hex(_ui_theme_color_pvColor[0]) : containerBackground);
         lv_label_set_text(ui_inverterPowerUnitLabel, format(POWER, inverterData.inverterPower).unit.c_str());
         inverterPowerL1TextAnimator.animate(ui_inverterPowerL1Label, previousInverterData.L1Power, inverterData.L1Power);
         lv_label_set_text(ui_inverterPowerL1UnitLabel, format(POWER, inverterData.L1Power).unit.c_str());
@@ -326,12 +339,14 @@ public:
         // lv_label_set_text(ui_shellyPowerLabel, format(POWER, shellyResult.totalPower).value.c_str());
         shellyPowerTextAnimator.animate(ui_shellyPowerLabel, previousShellyResult.totalPower, shellyResult.totalPower);
         lv_label_set_text(ui_shellyPowerUnitLabel, format(POWER, shellyResult.totalPower).unit.c_str());
-        if(shellyResult.maxPercent > 0) {
+        if (shellyResult.maxPercent > 0)
+        {
             lv_label_set_text_fmt(ui_shellyCountLabel, "%d%% / %d / %d", shellyResult.maxPercent, shellyResult.activeCount, shellyResult.pairedCount);
-        } else {
+        }
+        else
+        {
             lv_label_set_text_fmt(ui_shellyCountLabel, "%d / %d", shellyResult.activeCount, shellyResult.pairedCount);
         }
-        
 
         updateChart(inverterData, solarChartDataProvider);
 
@@ -417,10 +432,11 @@ private:
         for (i = 0; i < CHART_SAMPLES_PER_DAY; i++)
         {
             SolarChartDataItem_t item = solarChartDataProvider.getData()[CHART_SAMPLES_PER_DAY - i - 1];
-            if(item.samples == 0) {
+            if (item.samples == 0)
+            {
                 continue;
             }
-            
+
             lv_chart_set_next_value(ui_Chart1, pvPowerSeries, item.pvPower);
             lv_chart_set_next_value(ui_Chart1, acPowerSeries, item.loadPower);
             if (inverterData.hasBattery)
@@ -433,8 +449,8 @@ private:
             c++;
         }
         lv_chart_set_point_count(ui_Chart1, c);
-        //lv_chart_set_div_line_count(ui_Chart1, 5, 6);
-        //lv_chart_set_axis_tick( ui_Chart1, LV_CHART_AXIS_PRIMARY_X, 0, 0, 6, max(2, min(5, c)), true, 32);
+        // lv_chart_set_div_line_count(ui_Chart1, 5, 6);
+        // lv_chart_set_axis_tick( ui_Chart1, LV_CHART_AXIS_PRIMARY_X, 0, 0, 6, max(2, min(5, c)), true, 32);
         lv_chart_set_range(ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, (lv_coord_t)maxPower);
     }
 

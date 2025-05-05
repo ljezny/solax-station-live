@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-
+#include "MedianPowerSampler.hpp"
 typedef enum
 {
     SHELLY_UNKNOWN = -999,
@@ -12,107 +12,14 @@ typedef enum
     SHELLY_FULL_ON = 2
 } RequestedShellyState_t;
 
-typedef struct PowerSample
-{
-    uint32_t timestamp;
-    int pvPower = 0;
-    int soc = 0;
-    int16_t batteryPower = 0;
-    int16_t loadPower = 0;
-    int32_t feedInPower = 0;
-} PowerSample_t;
-
-#define MAX_POWER_SAMPLES 5
-
 class ShellyRuleResolver
 {
 private:
-    PowerSample_t powerSamples[MAX_POWER_SAMPLES];
-
-    bool hasValidSamples()
-    {
-        for (int i = 0; i < MAX_POWER_SAMPLES; i++)
-        {
-            if (powerSamples[i].timestamp == 0)
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    void resetSamples()
-    {
-        for (int i = 0; i < MAX_POWER_SAMPLES; i++)
-        {
-            powerSamples[i].timestamp = 0;
-        }
-    }
-
-    int getMedianPVPower()
-    {
-        int values[MAX_POWER_SAMPLES];
-        for (int i = 0; i < MAX_POWER_SAMPLES; i++)
-        {
-            values[i] = powerSamples[i].pvPower;
-        }
-        std::sort(values, values + MAX_POWER_SAMPLES);
-        return values[MAX_POWER_SAMPLES / 2];
-    }
-
-    int getSOC()
-    {
-        return powerSamples[0].soc;
-    }
-
-    int getMedianBatteryPower()
-    {
-        int values[MAX_POWER_SAMPLES];
-        for (int i = 0; i < MAX_POWER_SAMPLES; i++)
-        {
-            values[i] = powerSamples[i].batteryPower;
-        }
-        std::sort(values, values + MAX_POWER_SAMPLES);
-        return values[MAX_POWER_SAMPLES / 2];
-    }
-
-    int getMedianLoadPower()
-    {
-        int values[MAX_POWER_SAMPLES];
-        for (int i = 0; i < MAX_POWER_SAMPLES; i++)
-        {
-            values[i] = powerSamples[i].loadPower;
-        }
-        std::sort(values, values + MAX_POWER_SAMPLES);
-        return values[MAX_POWER_SAMPLES / 2];
-    }
-
-    int getMedianFeedInPower()
-    {
-        int values[MAX_POWER_SAMPLES];
-        for (int i = 0; i < MAX_POWER_SAMPLES; i++)
-        {
-            values[i] = powerSamples[i].feedInPower;
-        }
-        std::sort(values, values + MAX_POWER_SAMPLES);
-        return values[MAX_POWER_SAMPLES / 2];
-    }
+    MedianPowerSampler &medianPowerSampler;
 
 public:
-    void addPowerSample(int pvPower, int soc, int batteryPower, int loadPower, int feedInPower)
+    ShellyRuleResolver(MedianPowerSampler &medianPowerSampler) : medianPowerSampler(medianPowerSampler)
     {
-        PowerSample_t sample;
-        sample.timestamp = millis();
-        sample.pvPower = pvPower;
-        sample.soc = soc;
-        sample.batteryPower = batteryPower;
-        sample.loadPower = loadPower;
-        sample.feedInPower = feedInPower;
-        for (int i = MAX_POWER_SAMPLES - 1; i > 0; i--)
-        {
-            powerSamples[i] = powerSamples[i - 1];
-        }
-        powerSamples[0] = sample;
     }
 
     RequestedShellyState_t resolveShellyState()
@@ -122,21 +29,21 @@ public:
         int disableFullPowerTreshold = 500;
         int disablePartialPowerTreshold = 100;
 
-        if (!hasValidSamples())
+        if (!medianPowerSampler.hasValidSamples())
         {
             return SHELLY_UNKNOWN;
         }
 
-        int pvPower = getMedianPVPower();
-        int loadPower = getMedianLoadPower();
-        int feedInPower = getMedianFeedInPower();
-        int batteryPower = getMedianBatteryPower();
-        int soc = getSOC();
+        int pvPower = medianPowerSampler.getMedianPVPower();
+        int loadPower = medianPowerSampler.getMedianLoadPower();
+        int feedInPower = medianPowerSampler.getMedianFeedInPower();
+        int batteryPower = medianPowerSampler.getMedianBatteryPower();
+        int soc = medianPowerSampler.getSOC();
 
-        bool hasBattery = getSOC() != 0 && getMedianBatteryPower() != 0;
+        bool hasBattery = medianPowerSampler.getSOC() != 0 && medianPowerSampler.getMedianBatteryPower() != 0;
         log_d("SOC: %d, Median battery power: %d, Median feed in power: %d, Median PV power: %d, Median load power: %d", soc, batteryPower, feedInPower, pvPower, loadPower);
 
-        resetSamples();
+        medianPowerSampler.resetSamples();
 
         if (hasBattery && soc < 80)
         {
@@ -155,7 +62,7 @@ public:
             log_d("Grid power, deactivating");
             return SHELLY_FULL_OFF;
         }
-        
+
         if (batteryPower < -disablePartialPowerTreshold)
         {
             log_d("Battery discharging, partial deactivating");
