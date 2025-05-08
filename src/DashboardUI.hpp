@@ -327,7 +327,16 @@ public:
         shellyPowerTextAnimator.animate(ui_shellyPowerLabel, previousShellyResult.totalPower, shellyResult.totalPower);
         lv_label_set_text(ui_shellyPowerUnitLabel, format(POWER, shellyResult.totalPower).unit.c_str());
         if(shellyResult.maxPercent > 0) {
-            lv_label_set_text_fmt(ui_shellyCountLabel, "%d%% / %d / %d", shellyResult.maxPercent, shellyResult.activeCount, shellyResult.pairedCount);
+            int uiPercent = shellyResult.maxPercent;
+            if(uiPercent < 60) {
+                uiPercent = 10;
+            } else if(uiPercent > 90) {
+                uiPercent = 100;
+            } else {
+                uiPercent = map(uiPercent, 60, 90, 10, 100);
+            }
+
+            lv_label_set_text_fmt(ui_shellyCountLabel, "%d%% / %d / %d", uiPercent, shellyResult.activeCount, shellyResult.pairedCount);
         } else {
             lv_label_set_text_fmt(ui_shellyCountLabel, "%d / %d", shellyResult.activeCount, shellyResult.pairedCount);
         }

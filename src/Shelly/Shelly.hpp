@@ -515,22 +515,32 @@ private:
         case PRODM1PM:
         {
             int step = 0;
+            int percent = (shellyPair.lastState.isOn ? shellyPair.lastState.percent : 0);
+
+            //be more precise with dimmer with 70-90% range
+            int multiplier = 1;
+            if(percent > 90) {
+                multiplier = 3;
+            } else if(percent < 70) {
+                multiplier = 5;
+            }
+
             switch (requestedState)
             {
             case SHELLY_FULL_OFF:
-                step = -10;
+                step = -2;
                 break;
             case SHELLY_PARTIAL_OFF:
-                step = -5;
+                step = -1;
                 break;
             case SHELLY_FULL_ON:
-                step = 10;
+                step = 2;
                 break;
             case SHELLY_PARTIAL_ON:
-                step = 5;
+                step = 1;
                 break;
             }
-            int percent = (shellyPair.lastState.isOn ? shellyPair.lastState.percent : 0) + step;
+            percent += step * multiplier;
             percent = min(max(percent, 0), 100);
             result = setState_Gen2(shellyPair.ip, "light", 0, percent > 0, timeoutSec, percent);
             break;
