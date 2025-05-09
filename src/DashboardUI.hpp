@@ -119,7 +119,7 @@ public:
     void update(InverterData_t &inverterData, InverterData_t &previousInverterData, MedianPowerSampler &uiMedianPowerSampler, ShellyResult_t &shellyResult, ShellyResult_t &previousShellyResult, SolarChartDataProvider &solarChartDataProvider, int wifiSignalPercent)
     {
         if(uiMedianPowerSampler.hasValidSamples()) {
-            isDarkMode = uiMedianPowerSampler.getMedianPVPower() > 0;
+            isDarkMode = uiMedianPowerSampler.getMedianPVPower() == 0;
             uiMedianPowerSampler.resetSamples();
         }
         int selfUseEnergyTodayPercent = inverterData.loadToday > 0 ? ((inverterData.loadToday - inverterData.gridBuyToday) / inverterData.loadToday) * 100 : 0;

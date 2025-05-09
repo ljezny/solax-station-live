@@ -21,7 +21,7 @@
 #include "utils/ShellyRuleResolver.hpp"
 #include "utils/MedianPowerSampler.hpp"
 #define UI_REFRESH_INTERVAL 5000 // Define the UI refresh interval in milliseconds
-#define INVERTER_DATA_REFRESH_INTERVAL 5000
+#define INVERTER_DATA_REFRESH_INTERVAL 2000
 #define SHELLY_REFRESH_INTERVAL 2000
 
 #include "gfx_conf.h"
