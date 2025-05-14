@@ -15,7 +15,6 @@ class SolaxDongleAPI
 public:
     SolaxDongleAPI()
     {
-        client.setTimeout(SOLAX_DONGLE_TIMEOUT_MS);
     }
 
     float voltageToPercent(float voltage, float minVoltage, float maxVoltage)
@@ -41,7 +40,8 @@ public:
     InverterData_t loadData(String sn)
     {
         InverterData_t inverterData;
-
+        NetworkClient client;
+        client.setTimeout(SOLAX_DONGLE_TIMEOUT_MS);
         if (client.connect(getIp(), 80, SOLAX_DONGLE_TIMEOUT_MS))
         {
             String request = "";
@@ -161,7 +161,7 @@ public:
                                 inverterData.L2Power = ((int16_t)doc["Data"][7].as<uint16_t>());
                                 inverterData.L3Power = ((int16_t)doc["Data"][8].as<uint16_t>());
                                 inverterData.inverterPower = ((int16_t)doc["Data"][181].as<uint16_t>()); //???
-                                inverterData.pvToday = doc["Data"][112].as<uint16_t>() / 10.0; // yield is PV inverter output (solar + battery)
+                                inverterData.pvToday = doc["Data"][112].as<uint16_t>() / 10.0;           // yield is PV inverter output (solar + battery)
                                 inverterData.pvTotal = ((doc["Data"][90].as<uint32_t>() << 16) + doc["Data"][89].as<uint16_t>()) / 10.0;
                                 inverterData.feedInPower = read16BitSigned(doc["Data"][65].as<uint16_t>());
                                 // inverterData.gridSellToday = doc["Data"][90].as<uint16_t>() / 100.0;
@@ -313,7 +313,6 @@ public:
     }
 
 private:
-    NetworkClient client;
 
     float minimumBatteryVoltage = FLT_MAX;
     float maximumBatteryVoltage = FLT_MIN;

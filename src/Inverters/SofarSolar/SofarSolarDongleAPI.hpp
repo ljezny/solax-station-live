@@ -18,8 +18,6 @@ public:
     }
 
 private:
-    NetworkClient client;
-
     uint8_t sequenceNumber = 0;
 
     uint16_t readUInt16(byte *buf, byte reg)
@@ -43,7 +41,7 @@ private:
         return *(float *)&v;
     }
 
-    bool connect()
+    bool connect(NetworkClient &client)
     {
         if (!client.connect(IPAddress(10, 10, 100, 254), 8899))
         {
@@ -53,12 +51,12 @@ private:
         return true;
     }
 
-    void disconnect()
+    void disconnect(NetworkClient &client)
     {
         client.stop();
     }
 
-    bool sendReadDataRequest(uint8_t sequenceNumber, uint16_t addr, uint8_t len, uint32_t sn)
+    bool sendReadDataRequest(NetworkClient &client, uint8_t sequenceNumber, uint16_t addr, uint8_t len, uint32_t sn)
     {
         sequenceNumber++;
 
@@ -124,7 +122,7 @@ private:
         return client.write(request, requestSize) == requestSize;
     }
 
-    bool awaitPacket(int timeout)
+    bool awaitPacket(NetworkClient &client, int timeout)
     {
         unsigned long start = millis();
         while (millis() - start < timeout)
@@ -139,9 +137,9 @@ private:
         return false;
     }
 
-    int readModbusRTUResponse(byte *packetBuffer, size_t bufferLength)
+    int readModbusRTUResponse(NetworkClient &client, byte *packetBuffer, size_t bufferLength)
     {
-        if (!awaitPacket(READ_TIMEOUT))
+        if (!awaitPacket(client, READ_TIMEOUT))
         {
             log_d("Response timeout");
             return -1;
@@ -222,10 +220,11 @@ private:
     {
         // https://github.com/wills106/homeassistant-solax-modbus/blob/main/custom_components/solax_modbus/plugin_sofar.py
         InverterData_t inverterData;
+        NetworkClient client;
         log_d("Connecting to dongle...");
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
         log_d("SN: %d", sn);
-        if (connect())
+        if (connect(client))
         {
             log_d("Connected.");
             byte packetBuffer[1024];
@@ -235,9 +234,9 @@ private:
             // pv input
             // 0x0580 - 0x05FF
             // but we need only few
-            if (sendReadDataRequest(sequenceNumber, 0x586, 0x58F - 0x586 + 1, sn))
+            if (sendReadDataRequest(client, sequenceNumber, 0x586, 0x58F - 0x586 + 1, sn))
             {
-                if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+                if (readModbusRTUResponse(client, packetBuffer, sizeof(packetBuffer)) > 0)
                 {
                     inverterData.status = DONGLE_STATUS_OK;
                     inverterData.millis = millis();
@@ -252,7 +251,7 @@ private:
                 }
                 else
                 {
-                    disconnect();
+                    disconnect(client);
                     inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                     return inverterData;
                 }
@@ -260,23 +259,23 @@ private:
             else
             {
                 log_d("Failed to send request");
-                disconnect();
+                disconnect(client);
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
 
             // battery input
             // 0x0600 - 0x067F
-            if (sendReadDataRequest(sequenceNumber, 0x667, 2, sn))
+            if (sendReadDataRequest(client, sequenceNumber, 0x667, 2, sn))
             {
-                if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+                if (readModbusRTUResponse(client, packetBuffer, sizeof(packetBuffer)) > 0)
                 {
                     inverterData.batteryPower = readInt16(packetBuffer, 0) * 100;
                     inverterData.soc = readUInt16(packetBuffer, 1);
                 }
                 else
                 {
-                    disconnect();
+                    disconnect(client);
                     inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                     return inverterData;
                 }
@@ -284,20 +283,20 @@ private:
             else
             {
                 log_d("Failed to send request");
-                disconnect();
+                disconnect(client);
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
 
-            if (sendReadDataRequest(sequenceNumber, 0x607, 0x607 - 0x607 + 1, sn))
+            if (sendReadDataRequest(client, sequenceNumber, 0x607, 0x607 - 0x607 + 1, sn))
             {
-                if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+                if (readModbusRTUResponse(client, packetBuffer, sizeof(packetBuffer)) > 0)
                 {
                     inverterData.batteryTemperature = readInt16(packetBuffer, 0x607 - 0x607);
                 }
                 else
                 {
-                    disconnect();
+                    disconnect(client);
                     inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                     return inverterData;
                 }
@@ -305,22 +304,22 @@ private:
             else
             {
                 log_d("Failed to send request");
-                disconnect();
+                disconnect(client);
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
 
             // module info
             // 0x404 - 0x44F
-            if (sendReadDataRequest(sequenceNumber, 0x418, 0x418 - 0x418 + 1, sn))
+            if (sendReadDataRequest(client, sequenceNumber, 0x418, 0x418 - 0x418 + 1, sn))
             {
-                if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+                if (readModbusRTUResponse(client, packetBuffer, sizeof(packetBuffer)) > 0)
                 {
                     inverterData.inverterTemperature = readInt16(packetBuffer, 0x418 - 0x418);
                 }
                 else
                 {
-                    disconnect();
+                    disconnect(client);
                     inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                     return inverterData;
                 }
@@ -328,16 +327,16 @@ private:
             else
             {
                 log_d("Failed to send request");
-                disconnect();
+                disconnect(client);
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
 
             // on grid input
             // 0x484 - 0x4BC
-            if (sendReadDataRequest(sequenceNumber, 0x484, 0x4BC - 0x484 + 1, sn))
+            if (sendReadDataRequest(client, sequenceNumber, 0x484, 0x4BC - 0x484 + 1, sn))
             {
-                if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+                if (readModbusRTUResponse(client, packetBuffer, sizeof(packetBuffer)) > 0)
                 {
                     inverterData.inverterPower = readInt16(packetBuffer, 0x485 - 0x484) * 10;
                     inverterData.loadPower = readInt16(packetBuffer, 0x04AF - 0x484) * 10;
@@ -348,23 +347,23 @@ private:
                 }
                 else
                 {
-                    disconnect();
+                    disconnect(client);
                     return inverterData;
                 }
             }
             else
             {
                 log_d("Failed to send request");
-                disconnect();
+                disconnect(client);
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
 
             // //stats
             // 0x0680 - 0x06BF
-            if (sendReadDataRequest(sequenceNumber, 0x684, 0x698 - 0x684 + 2, sn))
+            if (sendReadDataRequest(client, sequenceNumber, 0x684, 0x698 - 0x684 + 2, sn))
             {
-                if (readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
+                if (readModbusRTUResponse(client, packetBuffer, sizeof(packetBuffer)) > 0)
                 {
                     inverterData.pvToday = readUInt32(packetBuffer, 0x684 - 0x684) / 100.0f;
                     inverterData.pvTotal = readUInt32(packetBuffer, 0x686 - 0x684) / 10.0f;
@@ -379,13 +378,13 @@ private:
                 }
                 else
                 {
-                    disconnect();
+                    disconnect(client);
                     inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                     return inverterData;
                 }
             } else {
                 log_d("Failed to send request");
-                disconnect();
+                disconnect(client);
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
@@ -394,7 +393,7 @@ private:
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
         logInverterData(inverterData);
 
-        disconnect();
+        disconnect(client);
         return inverterData;
     }
 };
