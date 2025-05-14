@@ -43,6 +43,7 @@ private:
 
     bool connect(NetworkClient &client)
     {
+        client.setTimeout(5000);
         if (!client.connect(IPAddress(10, 10, 100, 254), 8899))
         {
             log_d("Failed to begin packet");
