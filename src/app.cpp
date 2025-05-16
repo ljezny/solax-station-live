@@ -590,5 +590,4 @@ void updateState()
 void loop()
 {
     updateState();
-    log_i("loop");
 }

@@ -91,8 +91,7 @@ public:
         {
             Wire.beginTransmission(0x30);
             Wire.write(brightness == 255 ? 0x10 : 0x07);
-            int error = Wire.endTransmission();
-            log_e("PCA9557 error: %d", error);
+            Wire.endTransmission();
         }
 #else
         for (int i = tft.getBrightness(); i != brightness; i += (brightness > tft.getBrightness()) ? 1 : -1)
