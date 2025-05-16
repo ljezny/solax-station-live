@@ -73,8 +73,8 @@ public:
                         StaticJsonDocument<14 * 1024> doc;
                         log_d("Parsing JSON");
                         ReadBufferingStream bufferingStream(client, 1024);
-                        LoggingStream loggingStream(bufferingStream, Serial);
-                        DeserializationError err = deserializeJson(doc, loggingStream);
+                        
+                        DeserializationError err = deserializeJson(doc, bufferingStream);
                         if (err == DeserializationError::Ok)
                         {
                             if (doc["type"].as<int>() == 14) // X1-Hybrid 3.0
