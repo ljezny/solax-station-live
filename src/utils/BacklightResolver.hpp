@@ -15,11 +15,32 @@ class BacklightResolver
 private:
     long lastTouchTime = 0;
 
+    bool i2cScanForAddress(uint8_t address)
+    {
+        Wire.beginTransmission(address);
+        return (Wire.endTransmission() == 0);
+    }
+
 public:
     void setup()
     {
 #if CROW_PANEL_ADVANCE
-        io.pinMode(1, OUTPUT);
+        Wire.begin(15, 16);
+        delay(500);
+
+        if (i2cScanForAddress(0x18)) //old V1.0
+        {
+            io.pinMode(1, OUTPUT);
+            io.digitalWrite(1, 1);
+        }
+        else if (i2cScanForAddress(0x30)) //new V1.2
+        {
+            Wire.beginTransmission(0x30);
+            Wire.write(0x10);
+            int error = Wire.endTransmission();
+            log_e("PCA9557 error: %d", error);
+        }
+
 #endif
         setBacklightAnimated(255);
     }
@@ -66,7 +87,13 @@ public:
     void setBacklightAnimated(int brightness)
     {
 #if CROW_PANEL_ADVANCE
-        io.digitalWrite(1, brightness > 0);
+        if (i2cScanForAddress(0x30)) //new V1.2
+        {
+            Wire.beginTransmission(0x30);
+            Wire.write(brightness == 255 ? 0x10 : 0x07);
+            int error = Wire.endTransmission();
+            log_e("PCA9557 error: %d", error);
+        }
 #else
         for (int i = tft.getBrightness(); i != brightness; i += (brightness > tft.getBrightness()) ? 1 : -1)
         {
@@ -74,5 +101,5 @@ public:
             delay(5);
         }
 #endif
-    } 
+    }
 };

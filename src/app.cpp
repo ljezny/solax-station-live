@@ -169,6 +169,9 @@ void setupLVGL()
     pinMode(38, OUTPUT);
     digitalWrite(38, LOW);
 #endif
+
+    backlightResolver.setup();
+
     // Display Prepare
     tft.begin();
     tft.fillScreen(TFT_BLACK);
@@ -180,7 +183,7 @@ void setupLVGL()
 
     // touch setup
     touch.init();
-    backlightResolver.setup();
+
     lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight / 10);
     /* Initialize the display */
     lv_disp_drv_init(&disp_drv);
@@ -201,13 +204,12 @@ void setupLVGL()
 
     ui_init();
 
-    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 1);
+    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 0);
 }
 
 void setup()
 {
     Serial.begin(115200);
-    Wire.begin(TOUCH_GT911_SDA, TOUCH_GT911_SCL);
 
     setupLVGL();
     setupWiFi();
@@ -357,7 +359,7 @@ bool reloadShellyTask()
         {
             delay(1000);
             shellyAPI.updateState(state, 5 * 60);
- 
+
             // state should change
             if ((shellyResult.activeCount == 0 && state > SHELLY_FULL_OFF) || (shellyResult.activeCount > 0 && state < SHELLY_KEEP_CURRENT_STATE))
             {
@@ -551,24 +553,28 @@ void updateState()
 
             previousShellyResult = shellyResult;
             previousInverterData = inverterData;
-            previousInverterData.millis = millis(); //this ensures that if we dont have new data, we will use the old data
+            previousInverterData.millis = millis(); // this ensures that if we dont have new data, we will use the old data
             backlightResolver.resolve(inverterData);
         }
-        //only one task per state update
-        if(loadInverterDataTask())
+        // only one task per state update
+        if (loadInverterDataTask())
         {
             break;
         }
-        if(discoverDonglesTask()) {
+        if (discoverDonglesTask())
+        {
             break;
         }
-        if(pairShellyTask()) {
+        if (pairShellyTask())
+        {
             break;
         }
-        if(reloadShellyTask()){
+        if (reloadShellyTask())
+        {
             break;
         }
-        if(resetWifiTask()){
+        if (resetWifiTask())
+        {
             break;
         }
 
@@ -584,4 +590,5 @@ void updateState()
 void loop()
 {
     updateState();
+    log_i("loop");
 }
