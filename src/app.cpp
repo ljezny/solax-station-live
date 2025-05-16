@@ -31,8 +31,11 @@
 
 SemaphoreHandle_t lvgl_mutex = xSemaphoreCreateMutex();
 static lv_disp_draw_buf_t draw_buf;
-static lv_color_t disp_draw_buf1[screenWidth * screenHeight / 10];
-static lv_color_t disp_draw_buf2[screenWidth * screenHeight / 10];
+// static lv_color_t disp_draw_buf1[screenWidth * screenHeight / 8];
+// static lv_color_t disp_draw_buf2[screenWidth * screenHeight / 8];
+lv_color_t *disp_draw_buf1;
+lv_color_t *disp_draw_buf2;
+
 static lv_disp_drv_t disp_drv;
 
 SET_LOOP_TASK_STACK_SIZE(18 * 1024); // use freeStack
@@ -70,12 +73,20 @@ state_t previousState;
 /* Display flushing */
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
-    uint32_t w = (area->x2 - area->x1 + 1);
-    uint32_t h = (area->y2 - area->y1 + 1);
+    // uint32_t w = (area->x2 - area->x1 + 1);
+    // uint32_t h = (area->y2 - area->y1 + 1);
 
-    tft.pushImageDMA(area->x1, area->y1, w, h, (lgfx::rgb565_t *)&color_p->full);
+    // tft.pushImageDMA(area->x1, area->y1, w, h, (lgfx::rgb565_t *)&color_p->full);
 
-    lv_disp_flush_ready(disp);
+    // lv_disp_flush_ready(disp);
+
+    if (tft.getStartCount() > 0)
+    {
+        tft.endWrite();
+    }
+    tft.pushImageDMA(area->x1, area->y1, area->x2 - area->x1 + 1, area->y2 - area->y1 + 1, (lgfx::rgb565_t *)&color_p->full);
+
+    lv_disp_flush_ready(disp); //	Tell lvgl that the refresh is complete
 }
 
 void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
@@ -183,8 +194,11 @@ void setupLVGL()
 
     // touch setup
     touch.init();
+    int pixelCount = screenWidth * screenHeight;
+    disp_draw_buf1 = (lv_color_t *)heap_caps_malloc(pixelCount * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
+    disp_draw_buf2 = (lv_color_t *)heap_caps_malloc(pixelCount * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
 
-    lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight / 10);
+    lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, pixelCount);
     /* Initialize the display */
     lv_disp_drv_init(&disp_drv);
     /* Change the following line to your display resolution */
