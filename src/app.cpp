@@ -80,13 +80,6 @@ bool IRAM_ATTR example_on_vsync_event(esp_lcd_panel_handle_t panel, const esp_lc
     return high_task_awoken == pdTRUE;
 }
 
-bool IRAM_ATTR my_notify_lvgl_flush_ready(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *event_data, void *user_ctx)
-{
-    lv_display_t *disp = (lv_display_t *)user_ctx;
-    lv_display_flush_ready(disp);
-    return false;
-}
-
 void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
 {
     esp_lcd_panel_handle_t panel_handle = (esp_lcd_panel_handle_t)lv_display_get_user_data(disp);
@@ -97,13 +90,15 @@ void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
 
     xSemaphoreGive(sem_gui_ready);
     xSemaphoreTake(sem_vsync_end, portMAX_DELAY);
-
+    
     esp_lcd_panel_draw_bitmap(panel_handle, offsetx1, offsety1, offsetx2 + 1, offsety2 + 1, px_map);
+    lv_display_flush_ready(disp);
+    
 }
 
 void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
 {
-    if (!touch.hasTouch())
+    if (true || !touch.hasTouch())
     {
         data->state = LV_INDEV_STATE_RELEASED;
     }
@@ -175,7 +170,7 @@ void lvglTimerTask(void *param)
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         uint32_t delay = lv_timer_handler();
         xSemaphoreGive(lvgl_mutex);
-        vTaskDelay(pdMS_TO_TICKS(delay));
+        vTaskDelay(pdMS_TO_TICKS(5));
     }
 }
 
@@ -278,11 +273,10 @@ void setupLVGL()
     // lv_display_set_buffers(display, buf1, NULL, draw_buffer_sz, LV_DISPLAY_RENDER_MODE_PARTIAL);
 
     esp_lcd_rgb_panel_get_frame_buffer(panel_handle, 2, &buf1, &buf2);
-    lv_display_set_buffers(display, buf1, buf2, 800 * 480 * 2, LV_DISPLAY_RENDER_MODE_DIRECT);
+    lv_display_set_buffers(display, buf1, buf2, 800 * 480 * 2, LV_DISPLAY_RENDER_MODE_FULL);
 
     lv_display_set_flush_cb(display, my_disp_flush);
     esp_lcd_rgb_panel_event_callbacks_t cbs = {
-        .on_color_trans_done = my_notify_lvgl_flush_ready,
         .on_vsync = example_on_vsync_event,
     };
     esp_lcd_rgb_panel_register_event_callbacks(panel_handle, &cbs, display);
@@ -293,7 +287,7 @@ void setupLVGL()
 
     ui_init();
 
-    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 1);
+    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 12 * 1024, NULL, 10, NULL, 1);
     xTaskCreatePinnedToCore(lvglIncTask, "lvglIncTask", 1 * 1024, NULL, 10, NULL, 1);
 }
 
