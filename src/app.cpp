@@ -151,12 +151,15 @@ int wifiSignalPercent()
 
 void lvglTimerTask(void *param)
 {
+    long previous = millis();
     for (;;)
     {
+        long now = millis();
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-        lv_tick_inc(5);
+        lv_tick_inc(now - previous);
         lv_timer_handler();
         xSemaphoreGive(lvgl_mutex);
+        previous = millis();
         vTaskDelay(5);
     }
 }
@@ -271,7 +274,7 @@ void setupLVGL()
 
     ui_init();
 
-    // xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 0);
+    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 1);
 }
 
 void setup()
@@ -656,10 +659,4 @@ void updateState()
 void loop()
 {
     updateState();
-
-    xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-    lv_tick_inc(5);
-    lv_timer_handler();
-    xSemaphoreGive(lvgl_mutex);
-    delay(5);
 }
