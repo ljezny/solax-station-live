@@ -4,7 +4,7 @@
  * Opts: --bpp 4 --size 14 --font /Users/ljezny/solax-station-live/SquareLine/assets/OpenSans-SemiBold.ttf -o /Users/ljezny/solax-station-live/SquareLine/assets/ui_font_OpenSansSmall.c --format lvgl -r 0x20-0xff --no-compress --no-prefilter
  ******************************************************************************/
 
-#include "ui.h"
+#include "../ui.h"
 
 #ifndef UI_FONT_OPENSANSSMALL
 #define UI_FONT_OPENSANSSMALL 1

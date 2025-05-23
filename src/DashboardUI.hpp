@@ -9,94 +9,95 @@
 #include "utils/UITextChangeAnimator.hpp"
 #include "utils/UIBackgroundAnimatior.hpp"
 #include "utils/MedianPowerSampler.hpp"
-static void draw_event_cb(lv_event_t *e)
-{
-    lv_obj_t *obj = lv_event_get_target(e);
-    /*Add the faded area before the lines are drawn*/
-    lv_obj_draw_part_dsc_t *dsc = lv_event_get_draw_part_dsc(e);
-    if (dsc->part == LV_PART_ITEMS)
-    {
-        if (!dsc->p1 || !dsc->p2)
-            return;
-        const lv_chart_series_t *ser = (const lv_chart_series_t *)dsc->sub_part_ptr;
-        if (ser->y_axis_sec == 0)
-        {
-            return;
-        }
 
-        /*Add a line mask that keeps the area below the line*/
-        lv_draw_mask_line_param_t line_mask_param;
-        lv_draw_mask_line_points_init(&line_mask_param, dsc->p1->x, dsc->p1->y, dsc->p2->x, dsc->p2->y,
-                                      LV_DRAW_MASK_LINE_SIDE_BOTTOM);
-        int16_t line_mask_id = lv_draw_mask_add(&line_mask_param, NULL);
+// static void draw_event_cb(lv_event_t *e)
+// {
+//     lv_obj_t *obj = lv_event_get_target(e);
+//     /*Add the faded area before the lines are drawn*/
+//     lv_obj_draw_part_dsc_t *dsc = lv_event_get_draw_part_dsc(e);
+//     if (dsc->part == LV_PART_ITEMS)
+//     {
+//         if (!dsc->p1 || !dsc->p2)
+//             return;
+//         const lv_chart_series_t *ser = (const lv_chart_series_t *)dsc->sub_part_ptr;
+//         if (ser->y_axis_sec == 0)
+//         {
+//             return;
+//         }
 
-        /*Add a fade effect: transparent bottom covering top*/
-        lv_coord_t h = lv_obj_get_height(obj);
-        lv_draw_mask_fade_param_t fade_mask_param;
-        lv_draw_mask_fade_init(&fade_mask_param, &obj->coords, LV_OPA_COVER, obj->coords.y1 + h / 8, LV_OPA_TRANSP,
-                               obj->coords.y2);
-        int16_t fade_mask_id = lv_draw_mask_add(&fade_mask_param, NULL);
+//         /*Add a line mask that keeps the area below the line*/
+//         lv_draw_mask_line_param_t line_mask_param;
+//         lv_draw_mask_line_points_init(&line_mask_param, dsc->p1->x, dsc->p1->y, dsc->p2->x, dsc->p2->y,
+//                                       LV_DRAW_MASK_LINE_SIDE_BOTTOM);
+//         int16_t line_mask_id = lv_draw_mask_add(&line_mask_param, NULL);
 
-        /*Draw a rectangle that will be affected by the mask*/
-        lv_draw_rect_dsc_t draw_rect_dsc;
-        lv_draw_rect_dsc_init(&draw_rect_dsc);
-        draw_rect_dsc.bg_opa = LV_OPA_50;
-        draw_rect_dsc.bg_color = dsc->line_dsc->color;
+//         /*Add a fade effect: transparent bottom covering top*/
+//         lv_coord_t h = lv_obj_get_height(obj);
+//         lv_draw_mask_fade_param_t fade_mask_param;
+//         lv_draw_mask_fade_init(&fade_mask_param, &obj->coords, LV_OPA_COVER, obj->coords.y1 + h / 8, LV_OPA_TRANSP,
+//                                obj->coords.y2);
+//         int16_t fade_mask_id = lv_draw_mask_add(&fade_mask_param, NULL);
 
-        lv_area_t a;
-        a.x1 = dsc->p1->x;
-        a.x2 = dsc->p2->x - 1;
-        a.y1 = LV_MIN(dsc->p1->y, dsc->p2->y);
-        a.y2 = obj->coords.y2;
-        lv_draw_rect(dsc->draw_ctx, &draw_rect_dsc, &a);
+//         /*Draw a rectangle that will be affected by the mask*/
+//         lv_draw_rect_dsc_t draw_rect_dsc;
+//         lv_draw_rect_dsc_init(&draw_rect_dsc);
+//         draw_rect_dsc.bg_opa = LV_OPA_50;
+//         draw_rect_dsc.bg_color = dsc->line_dsc->color;
 
-        /*Remove the masks*/
-        lv_draw_mask_free_param(&line_mask_param);
-        lv_draw_mask_free_param(&fade_mask_param);
-        lv_draw_mask_remove_id(line_mask_id);
-        lv_draw_mask_remove_id(fade_mask_id);
-    }
-    else if (dsc->part == LV_PART_TICKS)
-    {
-        if (dsc->id == LV_CHART_AXIS_PRIMARY_Y)
-        {
-            lv_snprintf(dsc->text, dsc->text_length, "%d%%", dsc->value);
-        }
-        else if (dsc->id == LV_CHART_AXIS_SECONDARY_Y)
-        {
-            lv_snprintf(dsc->text, dsc->text_length, "%d\nkW", dsc->value / 1000);
-        }
-        else if (dsc->id == LV_CHART_AXIS_PRIMARY_X)
-        {
-            int linesCount = 5; // max(2, min(5, (int) lv_chart_get_point_count(obj)));
-            int segmentsCount = linesCount - 1;
-            int pointCountRoundedUp = ((lv_chart_get_point_count(obj) / segmentsCount)) * (segmentsCount + 1);
-            int maxMinutes = pointCountRoundedUp * (CHART_SAMPLE_INTERVAL_MS / 60000);
-            int minutesPerLine = maxMinutes / linesCount;
-            int totalMinutes = (linesCount - (dsc->value + 1)) * minutesPerLine;
-            int hours = totalMinutes / 60;
-            int minutes = totalMinutes % 60;
-            if (totalMinutes == 0)
-            {
-                lv_snprintf(dsc->text, dsc->text_length, "");
-            }
-            else
-            {
-                String format = "-";
-                if (hours > 0)
-                {
-                    format += String(hours) + "h";
-                }
-                if (minutes > 0)
-                {
-                    format += String(minutes) + "min";
-                }
-                lv_snprintf(dsc->text, dsc->text_length, format.c_str());
-            }
-            // lv_snprintf(dsc->text, dsc->text_length, "%d", dsc->value);
-        }
-    }
-}
+//         lv_area_t a;
+//         a.x1 = dsc->p1->x;
+//         a.x2 = dsc->p2->x - 1;
+//         a.y1 = LV_MIN(dsc->p1->y, dsc->p2->y);
+//         a.y2 = obj->coords.y2;
+//         lv_draw_rect(dsc->draw_ctx, &draw_rect_dsc, &a);
+
+//         /*Remove the masks*/
+//         lv_draw_mask_free_param(&line_mask_param);
+//         lv_draw_mask_free_param(&fade_mask_param);
+//         lv_draw_mask_remove_id(line_mask_id);
+//         lv_draw_mask_remove_id(fade_mask_id);
+//     }
+//     else if (dsc->part == LV_PART_TICKS)
+//     {
+//         if (dsc->id == LV_CHART_AXIS_PRIMARY_Y)
+//         {
+//             lv_snprintf(dsc->text, dsc->text_length, "%d%%", dsc->value);
+//         }
+//         else if (dsc->id == LV_CHART_AXIS_SECONDARY_Y)
+//         {
+//             lv_snprintf(dsc->text, dsc->text_length, "%d\nkW", dsc->value / 1000);
+//         }
+//         else if (dsc->id == LV_CHART_AXIS_PRIMARY_X)
+//         {
+//             int linesCount = 5; // max(2, min(5, (int) lv_chart_get_point_count(obj)));
+//             int segmentsCount = linesCount - 1;
+//             int pointCountRoundedUp = ((lv_chart_get_point_count(obj) / segmentsCount)) * (segmentsCount + 1);
+//             int maxMinutes = pointCountRoundedUp * (CHART_SAMPLE_INTERVAL_MS / 60000);
+//             int minutesPerLine = maxMinutes / linesCount;
+//             int totalMinutes = (linesCount - (dsc->value + 1)) * minutesPerLine;
+//             int hours = totalMinutes / 60;
+//             int minutes = totalMinutes % 60;
+//             if (totalMinutes == 0)
+//             {
+//                 lv_snprintf(dsc->text, dsc->text_length, "");
+//             }
+//             else
+//             {
+//                 String format = "-";
+//                 if (hours > 0)
+//                 {
+//                     format += String(hours) + "h";
+//                 }
+//                 if (minutes > 0)
+//                 {
+//                     format += String(minutes) + "min";
+//                 }
+//                 lv_snprintf(dsc->text, dsc->text_length, format.c_str());
+//             }
+//             // lv_snprintf(dsc->text, dsc->text_length, "%d", dsc->value);
+//         }
+//     }
+// }
 
 class DashboardUI
 {
@@ -108,7 +109,7 @@ public:
     {
         lv_scr_load(ui_Dashboard);
 
-        lv_obj_add_event_cb(ui_Chart1, draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
+       // lv_obj_add_event_cb(ui_Chart1, draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
     }
 
     int getSelfUsePowerPercent(InverterData_t &inverterData)

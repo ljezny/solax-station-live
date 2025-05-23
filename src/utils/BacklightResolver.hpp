@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Inverters/InverterResult.hpp"
-#include "gfx_conf.h"
 
 #define BACKLIGHT_TOUCH_TIMEOUT 15000
 
@@ -26,6 +25,9 @@ public:
     {
 #if CROW_PANEL_ADVANCE
         Wire.begin(15, 16);
+        Wire.beginTransmission(0x30);
+        Wire.write(0x10);
+        int error = Wire.endTransmission();
         delay(500);
 
         if (i2cScanForAddress(0x18)) //old V1.0

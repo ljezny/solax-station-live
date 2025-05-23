@@ -29,7 +29,7 @@ public:
             int opa = 255;// - i * (128 / ballsCount);
             lv_obj_set_width(items[i].ball, radius);
             lv_obj_set_height(items[i].ball, radius);
-            lv_obj_clear_flag(items[i].ball, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
+            //lv_obj_clear_flag(items[i].ball, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
             lv_obj_set_style_radius(items[i].ball, radius / 2, LV_PART_MAIN | LV_STATE_DEFAULT);
             ui_object_set_themeable_style_property(items[i].ball, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR, color);
             //ui_object_set_themeable_style_property(items[i].ball, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA, _ui_theme_alpha_pvColor);

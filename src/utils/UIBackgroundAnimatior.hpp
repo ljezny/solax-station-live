@@ -13,9 +13,9 @@ struct UIBackgroundAnimatorVariables {
 void animation_set_bg_color(UIBackgroundAnimatorVariables *variables, int32_t value) {
     lv_color_t c = lv_color_mix(variables->startColor, variables->endColor, value);
     lv_color_t old = lv_obj_get_style_bg_color(variables->obj, 0);
-    if(old.full == c.full) {
-        return;
-    }
+    // if(old.full == c.full) {
+    //     return;
+    // }
     lv_obj_set_style_bg_color(variables->obj, c, 0);
 }
 
@@ -36,10 +36,10 @@ class UIBackgroundAnimator {
         }
 
         void animate(lv_obj_t *obj, lv_color_t startColor, lv_color_t endColor) {
-            if(startColor.full == endColor.full) {
-                lv_obj_set_style_bg_color(obj, startColor, 0);
-                return;
-            }
+            // if(startColor.full == endColor.full) {
+            //     lv_obj_set_style_bg_color(obj, startColor, 0);
+            //     return;
+            // }
             variables.obj = obj;
             variables.startColor = startColor; 
             variables.endColor = endColor;

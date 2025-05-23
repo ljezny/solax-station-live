@@ -20,20 +20,18 @@
 #include "utils/SoftAP.hpp"
 #include "utils/ShellyRuleResolver.hpp"
 #include "utils/MedianPowerSampler.hpp"
+#include <esp_lcd_panel_ops.h>
+#include <esp_lcd_panel_rgb.h>
+#include <nvs_flash.h>
 #define UI_REFRESH_INTERVAL 5000 // Define the UI refresh interval in milliseconds
 #define INVERTER_DATA_REFRESH_INTERVAL 2000
 #define SHELLY_REFRESH_INTERVAL 2000
 
-#include "gfx_conf.h"
 #include "Touch/Touch.hpp"
 #include <mutex>
 #include <Wire.h>
 
 SemaphoreHandle_t lvgl_mutex = xSemaphoreCreateMutex();
-static lv_disp_draw_buf_t draw_buf;
-static lv_color_t disp_draw_buf1[screenWidth * screenHeight / 10];
-static lv_color_t disp_draw_buf2[screenWidth * screenHeight / 10];
-static lv_disp_drv_t disp_drv;
 
 SET_LOOP_TASK_STACK_SIZE(18 * 1024); // use freeStack
 
@@ -67,26 +65,32 @@ typedef enum
 state_t state;
 state_t previousState;
 
-/* Display flushing */
-void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
+bool IRAM_ATTR my_notify_lvgl_flush_ready(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *event_data, void *user_ctx)
 {
-    uint32_t w = (area->x2 - area->x1 + 1);
-    uint32_t h = (area->y2 - area->y1 + 1);
-
-    tft.pushImageDMA(area->x1, area->y1, w, h, (lgfx::rgb565_t *)&color_p->full);
-
-    lv_disp_flush_ready(disp);
+    lv_display_t *disp = (lv_display_t *)user_ctx;
+    lv_display_flush_ready(disp);
+    return false;
 }
 
-void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
+void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
+{
+    esp_lcd_panel_handle_t panel_handle = (esp_lcd_panel_handle_t)lv_display_get_user_data(disp);
+    int offsetx1 = area->x1;
+    int offsetx2 = area->x2;
+    int offsety1 = area->y1;
+    int offsety2 = area->y2;
+    esp_lcd_panel_draw_bitmap(panel_handle, offsetx1, offsety1, offsetx2 + 1, offsety2 + 1, px_map);
+}
+
+void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
 {
     if (!touch.hasTouch())
     {
-        data->state = LV_INDEV_STATE_REL;
+        data->state = LV_INDEV_STATE_RELEASED;
     }
     else
     {
-        data->state = LV_INDEV_STATE_PR;
+        data->state = LV_INDEV_STATE_PRESSED;
         data->point.x = touch.touchX;
         data->point.y = touch.touchY;
 
@@ -150,6 +154,7 @@ void lvglTimerTask(void *param)
     for (;;)
     {
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+        lv_tick_inc(5);
         lv_timer_handler();
         xSemaphoreGive(lvgl_mutex);
         vTaskDelay(5);
@@ -172,47 +177,108 @@ void setupLVGL()
 
     backlightResolver.setup();
 
-    // Display Prepare
-    tft.begin();
-    tft.fillScreen(TFT_BLACK);
-    tft.setRotation(2);
+    esp_lcd_panel_handle_t panel_handle = NULL;
+    esp_lcd_rgb_panel_config_t panel_config = {
+        .clk_src = LCD_CLK_SRC_DEFAULT,
+        .timings = {
+            .pclk_hz = (18 * 1000 * 1000),
+            .h_res = 800,
+            .v_res = 480,
+            .hsync_pulse_width = 4,
+            .hsync_back_porch = 8,
+            .hsync_front_porch = 8,
+            .vsync_pulse_width = 4,
+            .vsync_back_porch = 8,
+            .vsync_front_porch = 8,
+            .flags = {
+                .pclk_active_neg = true,
+            },
+        },
+        .data_width = 16,
+        .bits_per_pixel = 0,
+        .num_fbs = 2,
+        .bounce_buffer_size_px = 20 * 800,
+        .dma_burst_size = 64,
+        .hsync_gpio_num = GPIO_NUM_40,
+        .vsync_gpio_num = GPIO_NUM_41,
+        .de_gpio_num = GPIO_NUM_42,
+        .pclk_gpio_num = GPIO_NUM_39,
+        .disp_gpio_num = -1,
+        .data_gpio_nums = {
+            GPIO_NUM_21,
+            GPIO_NUM_47,
+            GPIO_NUM_48,
+            GPIO_NUM_45,
+            GPIO_NUM_38,
+            GPIO_NUM_9,
+            GPIO_NUM_10,
+            GPIO_NUM_11,
+            GPIO_NUM_12,
+            GPIO_NUM_13,
+            GPIO_NUM_14,
+            GPIO_NUM_7,
+            GPIO_NUM_17,
+            GPIO_NUM_18,
+            GPIO_NUM_3,
+            GPIO_NUM_46,
+        },
+        .flags = {
+            .fb_in_psram = 1, // allocate frame buffer in PSRAM
+        }};
+    esp_lcd_new_rgb_panel(&panel_config, &panel_handle);
+    esp_lcd_panel_reset(panel_handle);
+    esp_lcd_panel_init(panel_handle);
+
+    void *buf1 = NULL;
+    void *buf2 = NULL;
+    esp_lcd_rgb_panel_get_frame_buffer(panel_handle, 2, &buf1, &buf2);
+
+    esp_lcd_panel_mirror(panel_handle, true, true);
+
     delay(200);
 
     lv_init();
-    delay(100);
-
-    // touch setup
+    lv_display_t *display = lv_display_create(800, 480);
+    lv_display_set_user_data(display, panel_handle);
+    lv_display_set_color_format(display, LV_COLOR_FORMAT_RGB565);
+    // lv_display_set_rotation(display, LV_DISPLAY_ROTATION_180);
+    //  touch setup
     touch.init();
 
-    lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight / 10);
-    /* Initialize the display */
-    lv_disp_drv_init(&disp_drv);
-    /* Change the following line to your display resolution */
-    disp_drv.hor_res = screenWidth;
-    disp_drv.ver_res = screenHeight;
-    disp_drv.flush_cb = my_disp_flush;
-    disp_drv.full_refresh = 1;
-    disp_drv.draw_buf = &draw_buf;
-    lv_disp_drv_register(&disp_drv);
+    // size_t draw_buffer_sz = 800 * 50 * 2;
+    //  void *buf1 = heap_caps_malloc(draw_buffer_sz, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    //  assert(buf1);
+    //  lv_display_set_buffers(display, buf1, NULL, draw_buffer_sz, LV_DISPLAY_RENDER_MODE_PARTIAL);
 
-    /* Initialize the (dummy) input device driver */
-    static lv_indev_drv_t indev_drv;
-    lv_indev_drv_init(&indev_drv);
-    indev_drv.type = LV_INDEV_TYPE_POINTER;
-    indev_drv.read_cb = my_touchpad_read;
-    lv_indev_drv_register(&indev_drv);
+    // set LVGL draw buffers and direct mode
+    lv_display_set_buffers(display, buf1, buf2, 800 * 480 * 2, LV_DISPLAY_RENDER_MODE_DIRECT);
+
+    lv_display_set_flush_cb(display, my_disp_flush);
+    esp_lcd_rgb_panel_event_callbacks_t cbs = {
+        .on_color_trans_done = my_notify_lvgl_flush_ready,
+    };
+    esp_lcd_rgb_panel_register_event_callbacks(panel_handle, &cbs, display);
+
+    // static lv_indev_drv_t indev_drv;
+    // lv_indev_drv_init(&indev_drv);
+    // indev_drv.type = LV_INDEV_TYPE_POINTER;
+    // indev_drv.read_cb = my_touchpad_read;
+    // lv_indev_drv_register(&indev_drv);
+
+    lv_indev_t *indev = lv_indev_create();           /* Create input device connected to Default Display. */
+    lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER); /* Touch pad is a pointer-like device. */
+    lv_indev_set_read_cb(indev, my_touchpad_read);   /* Set driver function. */
 
     ui_init();
 
-    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 0);
+    // xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 0);
 }
 
 void setup()
 {
     Serial.begin(115200);
-
-    setupLVGL();
     setupWiFi();
+    setupLVGL();
 }
 
 bool discoverDonglesTask()
@@ -590,4 +656,10 @@ void updateState()
 void loop()
 {
     updateState();
+
+    xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+    lv_tick_inc(5);
+    lv_timer_handler();
+    xSemaphoreGive(lvgl_mutex);
+    delay(5);
 }
