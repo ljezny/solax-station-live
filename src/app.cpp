@@ -65,6 +65,21 @@ typedef enum
 state_t state;
 state_t previousState;
 
+SemaphoreHandle_t sem_vsync_end;
+SemaphoreHandle_t sem_gui_ready;
+
+bool IRAM_ATTR example_on_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *event_data, void *user_data)
+{
+    BaseType_t high_task_awoken = pdFALSE;
+
+    if (xSemaphoreTakeFromISR(sem_gui_ready, &high_task_awoken) == pdTRUE)
+    {
+        xSemaphoreGiveFromISR(sem_vsync_end, &high_task_awoken);
+    }
+
+    return high_task_awoken == pdTRUE;
+}
+
 bool IRAM_ATTR my_notify_lvgl_flush_ready(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *event_data, void *user_ctx)
 {
     lv_display_t *disp = (lv_display_t *)user_ctx;
@@ -79,6 +94,10 @@ void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
     int offsetx2 = area->x2;
     int offsety1 = area->y1;
     int offsety2 = area->y2;
+
+    xSemaphoreGive(sem_gui_ready);
+    xSemaphoreTake(sem_vsync_end, portMAX_DELAY);
+
     esp_lcd_panel_draw_bitmap(panel_handle, offsetx1, offsety1, offsetx2 + 1, offsety2 + 1, px_map);
 }
 
@@ -151,16 +170,21 @@ int wifiSignalPercent()
 
 void lvglTimerTask(void *param)
 {
-    long previous = millis();
     for (;;)
     {
-        long now = millis();
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-        lv_tick_inc(now - previous);
-        lv_timer_handler();
+        uint32_t delay = lv_timer_handler();
         xSemaphoreGive(lvgl_mutex);
-        previous = millis();
-        vTaskDelay(5);
+        vTaskDelay(pdMS_TO_TICKS(delay));
+    }
+}
+
+void lvglIncTask(void *param)
+{
+    for (;;)
+    {
+        lv_tick_inc(2);
+        vTaskDelay(pdMS_TO_TICKS(2));
     }
 }
 
@@ -232,11 +256,10 @@ void setupLVGL()
     esp_lcd_panel_reset(panel_handle);
     esp_lcd_panel_init(panel_handle);
 
-    void *buf1 = NULL;
-    void *buf2 = NULL;
-    esp_lcd_rgb_panel_get_frame_buffer(panel_handle, 2, &buf1, &buf2);
-
-    esp_lcd_panel_mirror(panel_handle, true, true);
+    sem_vsync_end = xSemaphoreCreateBinary();
+    sem_gui_ready = xSemaphoreCreateBinary();
+    
+    // esp_lcd_panel_mirror(panel_handle, true, true);
 
     delay(200);
 
@@ -248,25 +271,21 @@ void setupLVGL()
     //  touch setup
     touch.init();
 
+    void *buf1 = NULL;
+    void *buf2 = NULL;
     // size_t draw_buffer_sz = 800 * 50 * 2;
-    //  void *buf1 = heap_caps_malloc(draw_buffer_sz, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-    //  assert(buf1);
-    //  lv_display_set_buffers(display, buf1, NULL, draw_buffer_sz, LV_DISPLAY_RENDER_MODE_PARTIAL);
+    // buf1 = heap_caps_malloc(draw_buffer_sz, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    // lv_display_set_buffers(display, buf1, NULL, draw_buffer_sz, LV_DISPLAY_RENDER_MODE_PARTIAL);
 
-    // set LVGL draw buffers and direct mode
+    esp_lcd_rgb_panel_get_frame_buffer(panel_handle, 2, &buf1, &buf2);
     lv_display_set_buffers(display, buf1, buf2, 800 * 480 * 2, LV_DISPLAY_RENDER_MODE_DIRECT);
 
     lv_display_set_flush_cb(display, my_disp_flush);
     esp_lcd_rgb_panel_event_callbacks_t cbs = {
         .on_color_trans_done = my_notify_lvgl_flush_ready,
+        .on_vsync = example_on_vsync_event,
     };
     esp_lcd_rgb_panel_register_event_callbacks(panel_handle, &cbs, display);
-
-    // static lv_indev_drv_t indev_drv;
-    // lv_indev_drv_init(&indev_drv);
-    // indev_drv.type = LV_INDEV_TYPE_POINTER;
-    // indev_drv.read_cb = my_touchpad_read;
-    // lv_indev_drv_register(&indev_drv);
 
     lv_indev_t *indev = lv_indev_create();           /* Create input device connected to Default Display. */
     lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER); /* Touch pad is a pointer-like device. */
@@ -275,6 +294,7 @@ void setupLVGL()
     ui_init();
 
     xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 1);
+    xTaskCreatePinnedToCore(lvglIncTask, "lvglIncTask", 1 * 1024, NULL, 10, NULL, 1);
 }
 
 void setup()
