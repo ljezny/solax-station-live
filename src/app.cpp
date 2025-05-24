@@ -65,19 +65,17 @@ typedef enum
 state_t state;
 state_t previousState;
 
-SemaphoreHandle_t sem_vsync_end;
-SemaphoreHandle_t sem_gui_ready;
-
-bool IRAM_ATTR example_on_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *event_data, void *user_data)
+bool IRAM_ATTR on_vsync(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx)
 {
-    BaseType_t high_task_awoken = pdFALSE;
+    //esp_lcd_panel_reset(panel);
+    return false;
+}
 
-    if (xSemaphoreTakeFromISR(sem_gui_ready, &high_task_awoken) == pdTRUE)
-    {
-        xSemaphoreGiveFromISR(sem_vsync_end, &high_task_awoken);
-    }
-
-    return high_task_awoken == pdTRUE;
+bool IRAM_ATTR example_notify_lvgl_flush_ready(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *event_data, void *user_ctx)
+{
+    lv_display_t *disp = (lv_display_t *)user_ctx;
+    lv_display_flush_ready(disp);
+    return false;
 }
 
 void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
@@ -87,18 +85,17 @@ void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
     int offsetx2 = area->x2;
     int offsety1 = area->y1;
     int offsety2 = area->y2;
-
-    xSemaphoreGive(sem_gui_ready);
-    xSemaphoreTake(sem_vsync_end, portMAX_DELAY);
     
-    esp_lcd_panel_draw_bitmap(panel_handle, offsetx1, offsety1, offsetx2 + 1, offsety2 + 1, px_map);
-    lv_display_flush_ready(disp);
-    
+    if(lv_disp_flush_is_last(disp)) {
+        esp_lcd_panel_draw_bitmap(panel_handle, offsetx1, offsety1, offsetx2 + 1, offsety2 + 1, px_map);
+    } else {
+        lv_display_flush_ready(disp);
+    }
 }
 
 void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
 {
-    if (true || !touch.hasTouch())
+    if (!touch.hasTouch())
     {
         data->state = LV_INDEV_STATE_RELEASED;
     }
@@ -170,7 +167,7 @@ void lvglTimerTask(void *param)
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         uint32_t delay = lv_timer_handler();
         xSemaphoreGive(lvgl_mutex);
-        vTaskDelay(pdMS_TO_TICKS(5));
+        vTaskDelay(pdMS_TO_TICKS(delay));
     }
 }
 
@@ -196,14 +193,14 @@ void setupLVGL()
     pinMode(38, OUTPUT);
     digitalWrite(38, LOW);
 #endif
-
+    esp_log_level_set("*", ESP_LOG_VERBOSE);
     backlightResolver.setup();
 
     esp_lcd_panel_handle_t panel_handle = NULL;
     esp_lcd_rgb_panel_config_t panel_config = {
         .clk_src = LCD_CLK_SRC_DEFAULT,
         .timings = {
-            .pclk_hz = (18 * 1000 * 1000),
+            .pclk_hz = (17 * 1000 * 1000),
             .h_res = 800,
             .v_res = 480,
             .hsync_pulse_width = 4,
@@ -251,10 +248,8 @@ void setupLVGL()
     esp_lcd_panel_reset(panel_handle);
     esp_lcd_panel_init(panel_handle);
 
-    sem_vsync_end = xSemaphoreCreateBinary();
-    sem_gui_ready = xSemaphoreCreateBinary();
-    
     // esp_lcd_panel_mirror(panel_handle, true, true);
+    // esp_lcd_panel_swap_xy(panel_handle, true);
 
     delay(200);
 
@@ -262,10 +257,10 @@ void setupLVGL()
     lv_display_t *display = lv_display_create(800, 480);
     lv_display_set_user_data(display, panel_handle);
     lv_display_set_color_format(display, LV_COLOR_FORMAT_RGB565);
-    // lv_display_set_rotation(display, LV_DISPLAY_ROTATION_180);
+    //lv_display_set_rotation(display, LV_DISPLAY_ROTATION_180);
     //  touch setup
     touch.init();
-
+ 
     void *buf1 = NULL;
     void *buf2 = NULL;
     // size_t draw_buffer_sz = 800 * 50 * 2;
@@ -273,11 +268,12 @@ void setupLVGL()
     // lv_display_set_buffers(display, buf1, NULL, draw_buffer_sz, LV_DISPLAY_RENDER_MODE_PARTIAL);
 
     esp_lcd_rgb_panel_get_frame_buffer(panel_handle, 2, &buf1, &buf2);
-    lv_display_set_buffers(display, buf1, buf2, 800 * 480 * 2, LV_DISPLAY_RENDER_MODE_FULL);
+    lv_display_set_buffers(display, buf1, buf2, 800 * 480 * 2, LV_DISPLAY_RENDER_MODE_DIRECT);
 
     lv_display_set_flush_cb(display, my_disp_flush);
     esp_lcd_rgb_panel_event_callbacks_t cbs = {
-        .on_vsync = example_on_vsync_event,
+        .on_color_trans_done = example_notify_lvgl_flush_ready,
+        .on_vsync = on_vsync,
     };
     esp_lcd_rgb_panel_register_event_callbacks(panel_handle, &cbs, display);
 
