@@ -348,15 +348,14 @@ private:
 
     void saveDonglePassword(String ssid, String password)
     {
-        // Preferences preferences;
-        // preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, false);
-        // preferences.putString(hashString(ssid).c_str(), password);
-        // preferences.end();
+        Preferences preferences;
+        preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, false);
+        preferences.putString(hashString(ssid).c_str(), password);
+        preferences.end();
     }
 
     String loadDonglePassword(String ssid)
     {
-        return ""; // TODO: remove this line
         Preferences preferences;
         preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, true);
         String password = preferences.getString(hashString(ssid).c_str(), "");

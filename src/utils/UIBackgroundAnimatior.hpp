@@ -43,10 +43,13 @@ public:
 
     void animate(lv_obj_t *obj, lv_color_t endColor)
     {
+        lv_obj_set_style_bg_color(obj, endColor, 0);
+        return;
+
         lv_color_t startColor = lv_obj_get_style_bg_color(obj, 0);
         if (startColor.red == endColor.red && startColor.green == endColor.green && startColor.blue == endColor.blue)
         {
-            lv_obj_set_style_bg_color(obj, startColor, 0);
+            lv_obj_set_style_bg_color(obj, endColor, 0);
             return;
         }
         variables.obj = obj;

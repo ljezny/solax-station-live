@@ -65,6 +65,12 @@ typedef enum
 state_t state;
 state_t previousState;
 
+bool IRAM_ATTR on_bounce_empty(esp_lcd_panel_handle_t panel, void *bounce_buf, int pos_px, int len_bytes, void *user_ctx)
+{
+    memset(bounce_buf, 0, len_bytes);
+    return false;
+}
+
 bool IRAM_ATTR on_vsync(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx)
 {
     //esp_lcd_panel_reset(panel);
@@ -86,11 +92,11 @@ void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
     int offsety1 = area->y1;
     int offsety2 = area->y2;
     
-    if(lv_disp_flush_is_last(disp)) {
+    //if(lv_disp_flush_is_last(disp)) {
         esp_lcd_panel_draw_bitmap(panel_handle, offsetx1, offsety1, offsetx2 + 1, offsety2 + 1, px_map);
-    } else {
-        lv_display_flush_ready(disp);
-    }
+    //} else {
+    //    lv_display_flush_ready(disp);
+    //}
 }
 
 void my_touchpad_read(lv_indev_t *indev, lv_indev_data_t *data)
@@ -200,7 +206,7 @@ void setupLVGL()
     esp_lcd_rgb_panel_config_t panel_config = {
         .clk_src = LCD_CLK_SRC_DEFAULT,
         .timings = {
-            .pclk_hz = (17 * 1000 * 1000),
+            .pclk_hz = 16500000,
             .h_res = 800,
             .v_res = 480,
             .hsync_pulse_width = 4,
@@ -215,7 +221,7 @@ void setupLVGL()
         },
         .data_width = 16,
         .bits_per_pixel = 0,
-        .num_fbs = 2,
+        .num_fbs = 1,
         .bounce_buffer_size_px = 20 * 800,
         .dma_burst_size = 64,
         .hsync_gpio_num = GPIO_NUM_40,
@@ -245,35 +251,39 @@ void setupLVGL()
             .fb_in_psram = 1, // allocate frame buffer in PSRAM
         }};
     esp_lcd_new_rgb_panel(&panel_config, &panel_handle);
+    esp_lcd_panel_mirror(panel_handle, true, true);
+    //esp_lcd_panel_swap_xy(panel_handle, true);
+
     esp_lcd_panel_reset(panel_handle);
     esp_lcd_panel_init(panel_handle);
 
-    // esp_lcd_panel_mirror(panel_handle, true, true);
-    // esp_lcd_panel_swap_xy(panel_handle, true);
-
+    
     delay(200);
 
     lv_init();
     lv_display_t *display = lv_display_create(800, 480);
     lv_display_set_user_data(display, panel_handle);
     lv_display_set_color_format(display, LV_COLOR_FORMAT_RGB565);
-    //lv_display_set_rotation(display, LV_DISPLAY_ROTATION_180);
-    //  touch setup
+ 
     touch.init();
  
     void *buf1 = NULL;
     void *buf2 = NULL;
-    // size_t draw_buffer_sz = 800 * 50 * 2;
-    // buf1 = heap_caps_malloc(draw_buffer_sz, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    //size_t draw_buffer_sz = 800 * 50 * 2;
+    //buf1 = heap_caps_malloc(draw_buffer_sz, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
     // lv_display_set_buffers(display, buf1, NULL, draw_buffer_sz, LV_DISPLAY_RENDER_MODE_PARTIAL);
 
-    esp_lcd_rgb_panel_get_frame_buffer(panel_handle, 2, &buf1, &buf2);
-    lv_display_set_buffers(display, buf1, buf2, 800 * 480 * 2, LV_DISPLAY_RENDER_MODE_DIRECT);
+    //esp_lcd_rgb_panel_get_frame_buffer(panel_handle, 2, &buf1, &buf2);
+    size_t draw_buffer_sz = 800 * 480 * 2; // 800x480 RGB565
+    buf1 = heap_caps_malloc(draw_buffer_sz, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    buf2 = heap_caps_malloc(draw_buffer_sz, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    lv_display_set_buffers(display, buf1, buf2, draw_buffer_sz, LV_DISPLAY_RENDER_MODE_PARTIAL);
 
     lv_display_set_flush_cb(display, my_disp_flush);
     esp_lcd_rgb_panel_event_callbacks_t cbs = {
         .on_color_trans_done = example_notify_lvgl_flush_ready,
         .on_vsync = on_vsync,
+        .on_bounce_empty = on_bounce_empty
     };
     esp_lcd_rgb_panel_register_event_callbacks(panel_handle, &cbs, display);
 
@@ -669,4 +679,5 @@ void updateState()
 void loop()
 {
     updateState();
+    delay(1000); // Yield to other tasks
 }
