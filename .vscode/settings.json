@@ -64,7 +64,8 @@
         "stdexcept": "cpp",
         "streambuf": "cpp",
         "thread": "cpp",
-        "cinttypes": "cpp"
+        "cinttypes": "cpp",
+        "streamutils.h": "c"
     },
     "cmake.sourceDirectory": "/Users/lukasjezny/solax-station-live/src/ui",
     "idf.openOcdConfigs": [
@@ -72,5 +73,10 @@
     ],
     "idf.customExtraVars": {
         "IDF_TARGET": "esp32s3"
-    }
+    },
+    "idf.pythonInstallPath": "/usr/bin/python3",
+    "idf.port": "/dev/tty.wchusbserial120",
+    "idf.flashType": "UART",
+    "idf.espIdfPath": "/Users/lukasjezny/esp/v5.4.1/esp-idf",
+    "idf.toolsPath": "/Users/lukasjezny/.espressif"
 }
