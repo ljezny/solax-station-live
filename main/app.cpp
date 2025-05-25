@@ -33,8 +33,6 @@
 
 SemaphoreHandle_t lvgl_mutex = xSemaphoreCreateMutex();
 
-//SET_LOOP_TASK_STACK_SIZE(18 * 1024); // use freeStack
-
 DongleDiscovery dongleDiscovery;
 ShellyAPI shellyAPI;
 BacklightResolver backlightResolver;
