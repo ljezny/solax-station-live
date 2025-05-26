@@ -9,3 +9,4 @@ SquareLine/autosave/
 SquareLine/backup/
 sdkconfig
 sdkconfig.old
+bin/

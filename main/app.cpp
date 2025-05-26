@@ -201,20 +201,23 @@ void setupLVGL()
     backlightResolver.setup();
 
     esp_lcd_panel_handle_t panel_handle = NULL;
+#if CONFIG_CROWPANEL
     esp_lcd_rgb_panel_config_t panel_config = {
         .clk_src = LCD_CLK_SRC_DEFAULT,
         .timings = {
-            .pclk_hz = 16500000,
+            .pclk_hz = 15000000,
             .h_res = 800,
             .v_res = 480,
-            .hsync_pulse_width = 4,
-            .hsync_back_porch = 8,
-            .hsync_front_porch = 8,
-            .vsync_pulse_width = 4,
-            .vsync_back_porch = 8,
-            .vsync_front_porch = 8,
+            .hsync_pulse_width = 48,
+            .hsync_back_porch = 40,
+            .hsync_front_porch = 40,
+            .vsync_pulse_width = 31,
+            .vsync_back_porch = 13,
+            .vsync_front_porch = 1,
             .flags = {
-                .pclk_active_neg = true,
+                .de_idle_high = false,
+                .pclk_active_neg = true,         
+                .pclk_idle_high = false,
             },
         },
         .data_width = 16,
@@ -222,32 +225,84 @@ void setupLVGL()
         .num_fbs = 1,
         .bounce_buffer_size_px = 16 * 800,
         .dma_burst_size = 64,
-        .hsync_gpio_num = GPIO_NUM_40,
-        .vsync_gpio_num = GPIO_NUM_41,
-        .de_gpio_num = GPIO_NUM_42,
-        .pclk_gpio_num = GPIO_NUM_39,
+        .hsync_gpio_num = GPIO_NUM_39,
+        .vsync_gpio_num = GPIO_NUM_40,
+        .de_gpio_num = GPIO_NUM_41,
+        .pclk_gpio_num = GPIO_NUM_0,
         .disp_gpio_num = -1,
         .data_gpio_nums = {
+            GPIO_NUM_15,
+            GPIO_NUM_7,
+            GPIO_NUM_6,
+            GPIO_NUM_5,
+            GPIO_NUM_4,
+            GPIO_NUM_9,
+            GPIO_NUM_46,
+            GPIO_NUM_3,
+            GPIO_NUM_8,
+            GPIO_NUM_16,
+            GPIO_NUM_1,
+            GPIO_NUM_14,
             GPIO_NUM_21,
             GPIO_NUM_47,
             GPIO_NUM_48,
             GPIO_NUM_45,
-            GPIO_NUM_38,
-            GPIO_NUM_9,
-            GPIO_NUM_10,
-            GPIO_NUM_11,
-            GPIO_NUM_12,
-            GPIO_NUM_13,
-            GPIO_NUM_14,
-            GPIO_NUM_7,
-            GPIO_NUM_17,
-            GPIO_NUM_18,
-            GPIO_NUM_3,
-            GPIO_NUM_46,
         },
         .flags = {
             .fb_in_psram = 1, // allocate frame buffer in PSRAM
         }};
+#endif
+
+#if CONFIG_CROWPANEL_ADVANCE
+        esp_lcd_rgb_panel_config_t panel_config = {
+            .clk_src = LCD_CLK_SRC_DEFAULT,
+            .timings = {
+                .pclk_hz = 16500000,
+                .h_res = 800,
+                .v_res = 480,
+                .hsync_pulse_width = 4,
+                .hsync_back_porch = 8,
+                .hsync_front_porch = 8,
+                .vsync_pulse_width = 4,
+                .vsync_back_porch = 8,
+                .vsync_front_porch = 8,
+                .flags = {
+                    .pclk_active_neg = true,
+                },
+            },
+            .data_width = 16,
+            .bits_per_pixel = 0,
+            .num_fbs = 1,
+            .bounce_buffer_size_px = 16 * 800,
+            .dma_burst_size = 64,
+            .hsync_gpio_num = GPIO_NUM_40,
+            .vsync_gpio_num = GPIO_NUM_41,
+            .de_gpio_num = GPIO_NUM_42,
+            .pclk_gpio_num = GPIO_NUM_39,
+            .disp_gpio_num = -1,
+            .data_gpio_nums = {
+                GPIO_NUM_21,
+                GPIO_NUM_47,
+                GPIO_NUM_48,
+                GPIO_NUM_45,
+                GPIO_NUM_38,
+                GPIO_NUM_9,
+                GPIO_NUM_10,
+                GPIO_NUM_11,
+                GPIO_NUM_12,
+                GPIO_NUM_13,
+                GPIO_NUM_14,
+                GPIO_NUM_7,
+                GPIO_NUM_17,
+                GPIO_NUM_18,
+                GPIO_NUM_3,
+                GPIO_NUM_46,
+            },
+            .flags = {
+                .fb_in_psram = 1, // allocate frame buffer in PSRAM
+            }};
+#endif
+
     esp_lcd_new_rgb_panel(&panel_config, &panel_handle);
     esp_lcd_panel_mirror(panel_handle, true, true);
     // esp_lcd_panel_swap_xy(panel_handle, true);

@@ -6,7 +6,7 @@
         "IDF_TARGET": "esp32s3"
     },
     "idf.flashType": "UART",
-    "idf.port": "/dev/tty.wchusbserial110",
+    "idf.port": "/dev/tty.wchusbserial3120",
     "files.associations": {
         "vector": "cpp",
         "regex": "cpp"

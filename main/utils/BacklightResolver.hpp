@@ -1,11 +1,11 @@
 #pragma once
 
 #include "../Inverters/InverterResult.hpp"
-
+#include "driver/i2c_master.h"
 #define BACKLIGHT_TOUCH_TIMEOUT 15000
 
 #if CONFIG_CROWPANEL_ADVANCE
-#include "driver/i2c_master.h"
+
 #endif
 
 class BacklightResolver
@@ -26,25 +26,6 @@ public:
     void setup()
     {
 #if CONFIG_CROWPANEL_ADVANCE
-        // Wire.begin(15, 16);
-        // Wire.beginTransmission(0x30);
-        // Wire.write(0x10);
-        // int error = Wire.endTransmission();
-        // delay(500);
-
-        // if (i2cScanForAddress(0x18)) //old V1.0
-        // {
-        //     io.pinMode(1, OUTPUT);
-        //     io.digitalWrite(1, 1);
-        // }
-        // else if (i2cScanForAddress(0x30)) //new V1.2
-        // {
-        //     Wire.beginTransmission(0x30);
-        //     Wire.write(0x10);
-        //     int error = Wire.endTransmission();
-        //     log_e("PCA9557 error: %d", error);
-        // }
-
         i2c_master_bus_config_t i2c_mst_config = {
             .i2c_port = I2C_NUM_0,
             .sda_io_num = GPIO_NUM_15,
@@ -89,6 +70,11 @@ public:
 
             delay(100);
         }
+#endif
+
+#if CONFIG_CROWPANEL
+        pinMode(GPIO_NUM_2, OUTPUT);
+        digitalWrite(GPIO_NUM_2, HIGH); // Enable backlight
 #endif
         setBacklightAnimated(255);
     }
@@ -140,12 +126,10 @@ public:
             uint8_t command = brightness / 16;
             i2c_master_transmit(dev_handle, &command, 1, -1);
         }
-#else
-        // for (int i = tft.getBrightness(); i != brightness; i += (brightness > tft.getBrightness()) ? 1 : -1)
-        // {
-        //     tft.setBrightness(i);
-        //     delay(5);
-        // }
+#endif
+
+#if CONFIG_CROWPANEL
+        digitalWrite(GPIO_NUM_2, brightness > 0 ? HIGH : LOW); // Enable backlight
 #endif
     }
 };
