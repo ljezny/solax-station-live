@@ -7,3 +7,5 @@ build/
 managed_components/
 SquareLine/autosave/
 SquareLine/backup/
+sdkconfig
+sdkconfig.old
