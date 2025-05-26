@@ -4,9 +4,8 @@
 
 #define BACKLIGHT_TOUCH_TIMEOUT 15000
 
-#define CROW_PANEL_ADVANCE 1
 
-#if CROW_PANEL_ADVANCE
+#if CONFIG_CROWPANEL_ADVANCE
 // #include <PCA9557.h>
 // PCA9557 io(0x18, &Wire);
 #include "driver/i2c_master.h"
@@ -27,7 +26,7 @@ private:
 public:
     void setup()
     {
-#if CROW_PANEL_ADVANCE
+#if CONFIG_CROWPANEL_ADVANCE
         // Wire.begin(15, 16);
         // Wire.beginTransmission(0x30);
         // Wire.write(0x10);
@@ -121,7 +120,7 @@ public:
 
     void setBacklightAnimated(int brightness)
     {
-#if CROW_PANEL_ADVANCE
+#if CONFIG_CROWPANEL_ADVANCE
         if (i2cScanForAddress(0x30)) // new V1.2
         {
             // Wire.beginTransmission(0x30);
@@ -129,11 +128,11 @@ public:
             // Wire.endTransmission();
         }
 #else
-        for (int i = tft.getBrightness(); i != brightness; i += (brightness > tft.getBrightness()) ? 1 : -1)
-        {
-            tft.setBrightness(i);
-            delay(5);
-        }
+        // for (int i = tft.getBrightness(); i != brightness; i += (brightness > tft.getBrightness()) ? 1 : -1)
+        // {
+        //     tft.setBrightness(i);
+        //     delay(5);
+        // }
 #endif
     }
 };

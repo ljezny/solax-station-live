@@ -3,17 +3,17 @@
     "build": {
       "compileArgs": [],
       "ninjaArgs": [],
-      "buildDirectoryPath": "",
-      "sdkconfigDefaults": [],
-      "sdkconfigFilePath": ""
+      "sdkconfigDefaults": [
+        "sdkconfig.common",
+        "sdkconfig.crowpanel-advance"
+      ]
     },
     "env": {},
+    "idfTarget": "esp32s3",
     "flashBaudRate": "",
-    "idfTarget": "",
     "monitorBaudRate": "",
     "openOCD": {
       "debugLevel": 0,
-      "configs": [],
       "args": []
     },
     "tasks": {
@@ -27,17 +27,17 @@
     "build": {
       "compileArgs": [],
       "ninjaArgs": [],
-      "buildDirectoryPath": "",
-      "sdkconfigDefaults": [],
-      "sdkconfigFilePath": ""
+      "sdkconfigDefaults": [
+        "sdkconfig.common",
+        "sdkconfig.crowpanel"
+      ]
     },
     "env": {},
+    "idfTarget": "esp32s3",
     "flashBaudRate": "",
-    "idfTarget": "",
     "monitorBaudRate": "",
     "openOCD": {
       "debugLevel": 0,
-      "configs": [],
       "args": []
     },
     "tasks": {
