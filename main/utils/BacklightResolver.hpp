@@ -4,18 +4,14 @@
 #include "driver/i2c_master.h"
 #define BACKLIGHT_TOUCH_TIMEOUT 15000
 
-#if CONFIG_CROWPANEL_ADVANCE
-
-#endif
-
 class BacklightResolver
 {
 private:
     long lastTouchTime = 0;
-    
-    i2c_master_dev_handle_t dev_handle;
 
-    bool i2cScanForAddress(i2c_master_bus_handle_t& bus_handle, uint8_t address)
+    i2c_master_dev_handle_t dev_handle;
+    i2c_master_bus_handle_t bus_handle;
+    bool i2cScanForAddress(uint8_t address)
     {
         bool found = i2c_master_probe(bus_handle, address, -1) == ESP_OK; // Example for I2C master probe;
         log_d("I2C scan for address 0x%02X: %s", address, found ? "found" : "not found");
@@ -23,9 +19,10 @@ private:
     }
 
 public:
-    void setup(i2c_master_bus_handle_t& bus_handle)
+    void setup(i2c_master_bus_handle_t bus_handle)
     {
 #if CONFIG_CROWPANEL_ADVANCE
+        this->bus_handle = bus_handle;
         if (i2cScanForAddress(0x30))
         {
             i2c_device_config_t dev_cfg = {

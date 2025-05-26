@@ -197,15 +197,14 @@ void setupLVGL()
     pinMode(38, OUTPUT);
     digitalWrite(38, LOW);
 #endif
-    esp_log_level_set("*", ESP_LOG_VERBOSE);
     backlightResolver.setup(bus_handle);
-
+    touch.init(bus_handle);
     esp_lcd_panel_handle_t panel_handle = NULL;
 #if CONFIG_CROWPANEL
     esp_lcd_rgb_panel_config_t panel_config = {
         .clk_src = LCD_CLK_SRC_DEFAULT,
         .timings = {
-            .pclk_hz = 15000000,
+            .pclk_hz = 18000000,
             .h_res = 800,
             .v_res = 480,
             .hsync_pulse_width = 48,
@@ -316,8 +315,6 @@ void setupLVGL()
     lv_display_t *display = lv_display_create(800, 480);
     lv_display_set_user_data(display, panel_handle);
     lv_display_set_color_format(display, LV_COLOR_FORMAT_RGB565);
-
-    touch.init();
 
     void *buf1 = NULL;
     void *buf2 = NULL;
