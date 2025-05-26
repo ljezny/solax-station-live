@@ -12,10 +12,10 @@ class BacklightResolver
 {
 private:
     long lastTouchTime = 0;
-    i2c_master_bus_handle_t bus_handle;
+    
     i2c_master_dev_handle_t dev_handle;
 
-    bool i2cScanForAddress(uint8_t address)
+    bool i2cScanForAddress(i2c_master_bus_handle_t& bus_handle, uint8_t address)
     {
         bool found = i2c_master_probe(bus_handle, address, -1) == ESP_OK; // Example for I2C master probe;
         log_d("I2C scan for address 0x%02X: %s", address, found ? "found" : "not found");
@@ -23,22 +23,9 @@ private:
     }
 
 public:
-    void setup()
+    void setup(i2c_master_bus_handle_t& bus_handle)
     {
 #if CONFIG_CROWPANEL_ADVANCE
-        i2c_master_bus_config_t i2c_mst_config = {
-            .i2c_port = I2C_NUM_0,
-            .sda_io_num = GPIO_NUM_15,
-            .scl_io_num = GPIO_NUM_16,
-            .clk_source = I2C_CLK_SRC_DEFAULT,
-            .glitch_ignore_cnt = 7,
-            .flags = {
-                .enable_internal_pullup = true,
-            },
-        };
-
-        ESP_ERROR_CHECK(i2c_new_master_bus(&i2c_mst_config, &bus_handle));
-
         if (i2cScanForAddress(0x30))
         {
             i2c_device_config_t dev_cfg = {
