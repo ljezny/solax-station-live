@@ -6,7 +6,8 @@
       "sdkconfigDefaults": [
         "sdkconfig.common",
         "sdkconfig.crowpanel-advance"
-      ]
+      ],
+      "buildDirectoryPath": "${workspaceFolder}/bin/crowpanel-advance"
     },
     "env": {},
     "idfTarget": "esp32s3",
@@ -30,7 +31,8 @@
       "sdkconfigDefaults": [
         "sdkconfig.common",
         "sdkconfig.crowpanel"
-      ]
+      ],
+      "buildDirectoryPath": "${workspaceFolder}/bin/crowpanel"
     },
     "env": {},
     "idfTarget": "esp32s3",

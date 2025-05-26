@@ -71,7 +71,7 @@ bool IRAM_ATTR on_bounce_empty(esp_lcd_panel_handle_t panel, void *bounce_buf, i
 
 bool IRAM_ATTR on_vsync(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx)
 {
-    //esp_lcd_panel_reset(panel);
+    // esp_lcd_panel_reset(panel);
     return false;
 }
 
@@ -89,9 +89,9 @@ void my_disp_flush(lv_display_t *disp, const lv_area_t *area, uint8_t *px_map)
     int offsetx2 = area->x2;
     int offsety1 = area->y1;
     int offsety2 = area->y2;
-    
-    //if(lv_disp_flush_is_last(disp)) {
-        esp_lcd_panel_draw_bitmap(panel_handle, offsetx1, offsety1, offsetx2 + 1, offsety2 + 1, px_map);
+
+    // if(lv_disp_flush_is_last(disp)) {
+    esp_lcd_panel_draw_bitmap(panel_handle, offsetx1, offsety1, offsetx2 + 1, offsety2 + 1, px_map);
     //} else {
     //    lv_display_flush_ready(disp);
     //}
@@ -193,7 +193,7 @@ void setupWiFi()
 
 void setupLVGL()
 {
-#if CROW_PANEL
+#if CONFIG_CROWPANEL
     pinMode(38, OUTPUT);
     digitalWrite(38, LOW);
 #endif
@@ -250,28 +250,27 @@ void setupLVGL()
         }};
     esp_lcd_new_rgb_panel(&panel_config, &panel_handle);
     esp_lcd_panel_mirror(panel_handle, true, true);
-    //esp_lcd_panel_swap_xy(panel_handle, true);
+    // esp_lcd_panel_swap_xy(panel_handle, true);
 
     esp_lcd_panel_reset(panel_handle);
     esp_lcd_panel_init(panel_handle);
 
-    
     delay(200);
 
     lv_init();
     lv_display_t *display = lv_display_create(800, 480);
     lv_display_set_user_data(display, panel_handle);
     lv_display_set_color_format(display, LV_COLOR_FORMAT_RGB565);
- 
+
     touch.init();
- 
+
     void *buf1 = NULL;
     void *buf2 = NULL;
-    //size_t draw_buffer_sz = 800 * 50 * 2;
-    //buf1 = heap_caps_malloc(draw_buffer_sz, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
-    // lv_display_set_buffers(display, buf1, NULL, draw_buffer_sz, LV_DISPLAY_RENDER_MODE_PARTIAL);
+    // size_t draw_buffer_sz = 800 * 50 * 2;
+    // buf1 = heap_caps_malloc(draw_buffer_sz, MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT);
+    //  lv_display_set_buffers(display, buf1, NULL, draw_buffer_sz, LV_DISPLAY_RENDER_MODE_PARTIAL);
 
-    //esp_lcd_rgb_panel_get_frame_buffer(panel_handle, 2, &buf1, &buf2);
+    // esp_lcd_rgb_panel_get_frame_buffer(panel_handle, 2, &buf1, &buf2);
     size_t draw_buffer_sz = 800 * 480 * 2; // 800x480 RGB565
     buf1 = heap_caps_malloc(draw_buffer_sz, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
     buf2 = heap_caps_malloc(draw_buffer_sz, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
@@ -281,8 +280,7 @@ void setupLVGL()
     esp_lcd_rgb_panel_event_callbacks_t cbs = {
         .on_color_trans_done = example_notify_lvgl_flush_ready,
         .on_vsync = on_vsync,
-        .on_bounce_empty = on_bounce_empty
-    };
+        .on_bounce_empty = on_bounce_empty};
     esp_lcd_rgb_panel_register_event_callbacks(panel_handle, &cbs, display);
 
     lv_indev_t *indev = lv_indev_create();           /* Create input device connected to Default Display. */
@@ -298,8 +296,9 @@ void setupLVGL()
 void setup()
 {
     Serial.begin(115200);
-    setupWiFi();
+    esp_log_level_set("*", ESP_LOG_VERBOSE);
     setupLVGL();
+    setupWiFi();
 }
 
 bool discoverDonglesTask()
@@ -340,7 +339,7 @@ InverterData_t loadInverterData(DongleDiscoveryResult_t &discoveryResult)
         break;
     case DONGLE_TYPE_SHELLY:
     case DONGLE_TYPE_IGNORE:
-    case DONGLE_TYPE_UNKNOWN:    
+    case DONGLE_TYPE_UNKNOWN:
         break;
     }
 

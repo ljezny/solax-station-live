@@ -1,0 +1,10 @@
+menu "Solar Station Live Product Configuration"
+    config CROWPANEL
+        bool "Is CrowPanel"
+        help
+            Is CrowPanel
+    config CROWPANEL_ADVANCE
+        bool "Is CrowPanel Advance"
+        help
+            Is CrowPanel Advance
+endmenu

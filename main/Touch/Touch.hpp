@@ -5,8 +5,6 @@
 #include <Wire.h>
 
 
-#define CROW_PANEL_ADVANCE 1
-
 #define TOUCH_GT911
 #if CROW_PANEL
 #define TOUCH_GT911_SCL 20
@@ -29,25 +27,25 @@ public:
     
     void init()
     {
-        ts.begin();
-        ts.setRotation(TOUCH_GT911_ROTATION);
+        // ts.begin();
+        // ts.setRotation(TOUCH_GT911_ROTATION);
     }
     bool hasTouch()
     {
         return false;
-        ts.read();
-        if (!ts.isTouched)
-        {
-            return false;
-        }
-        else
-        {
-            touchX = map(ts.points[0].x, TOUCH_MAP_X1, TOUCH_MAP_X2, 0, TOUCH_MAP_X1 - 1);
-            touchY = map(ts.points[0].y, TOUCH_MAP_Y1, TOUCH_MAP_Y2, 0, TOUCH_MAP_Y1 - 1);
-            return true;
-        }
+        // ts.read();
+        // if (!ts.isTouched)
+        // {
+        //     return false;
+        // }
+        // else
+        // {
+        //     touchX = map(ts.points[0].x, TOUCH_MAP_X1, TOUCH_MAP_X2, 0, TOUCH_MAP_X1 - 1);
+        //     touchY = map(ts.points[0].y, TOUCH_MAP_Y1, TOUCH_MAP_Y2, 0, TOUCH_MAP_Y1 - 1);
+        //     return true;
+        // }
     }
 
 private:
-    TAMC_GT911 ts = TAMC_GT911(TOUCH_GT911_SDA, TOUCH_GT911_SCL, max(TOUCH_MAP_X1, TOUCH_MAP_X2), max(TOUCH_MAP_Y1, TOUCH_MAP_Y2));
+   // TAMC_GT911 ts = TAMC_GT911(TOUCH_GT911_SDA, TOUCH_GT911_SCL, max(TOUCH_MAP_X1, TOUCH_MAP_X2), max(TOUCH_MAP_Y1, TOUCH_MAP_Y2));
 };
