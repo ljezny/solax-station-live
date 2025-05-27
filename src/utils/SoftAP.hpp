@@ -47,6 +47,7 @@ private:
         for (int i = 0; i < found; i++)
         {
             int channel = WiFi.channel(i);
+            log_d("Found network: %s, channel: %d", WiFi.SSID(i).c_str(), channel);
             if (channel > 0 && channel < 14)
             {
                 count[channel]++;
