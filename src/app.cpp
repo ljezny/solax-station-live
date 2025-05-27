@@ -596,4 +596,5 @@ void updateState()
 void loop()
 {
     updateState();
+    delay(1000);
 }
