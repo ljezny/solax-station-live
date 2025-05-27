@@ -23,11 +23,6 @@ public:
     {
         bool result = false;
 
-        if (WiFi.getMode() == WIFI_OFF)
-        {
-            return false;
-        }
-
         int found = WiFi.scanNetworks(false, false, false, fast ? 100 : 300);
 
         for (int i = 0; i < found; i++)

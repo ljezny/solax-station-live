@@ -159,7 +159,7 @@ void setupWiFi()
 {
     WiFi.persistent(false);
     WiFi.setSleep(false);
-    softAP.start();
+ //   softAP.start();
 }
 
 void setupLVGL()
@@ -485,15 +485,12 @@ void updateState()
     case STATE_SPLASH:
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         splashUI.update(softAP.getESPIdHex(), String(VERSION_NUMBER));
+        splashUI.updateText("Discovering dongles...");
         xSemaphoreGive(lvgl_mutex);
 
+        dongleDiscovery.discoverDongle(false);
         if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
-        {
-            xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-            splashUI.updateText("Discovering dongles...");
-            xSemaphoreGive(lvgl_mutex);
-
-            dongleDiscovery.discoverDongle(false);
+        {            
             dongleDiscovery.trySelectPreferedInverterWifiDongleIndex();
         }
 
