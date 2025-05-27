@@ -159,7 +159,7 @@ void setupWiFi()
 {
     WiFi.persistent(false);
     WiFi.setSleep(false);
- //   softAP.start();
+    softAP.start();
 }
 
 void setupLVGL()
