@@ -203,7 +203,7 @@ void setupLVGL()
 
     ui_init();
 
-    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 0);
+    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 24 * 1024, NULL, 10, NULL, 0);
 }
 
 void setup()
