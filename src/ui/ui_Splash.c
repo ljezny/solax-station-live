@@ -25,7 +25,7 @@ lv_obj_add_flag( ui_Image1, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
 lv_obj_clear_flag( ui_Image1, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_fwVersionLabel = lv_label_create(ui_Splash);
-lv_obj_set_width( ui_fwVersionLabel, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_width( ui_fwVersionLabel, lv_pct(20));
 lv_obj_set_height( ui_fwVersionLabel, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_fwVersionLabel, LV_ALIGN_BOTTOM_LEFT );
 lv_label_set_text(ui_fwVersionLabel,"");
@@ -37,11 +37,12 @@ lv_obj_set_style_pad_top(ui_fwVersionLabel, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_bottom(ui_fwVersionLabel, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_ESPIdLabel = lv_label_create(ui_Splash);
-lv_obj_set_width( ui_ESPIdLabel, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_width( ui_ESPIdLabel, lv_pct(30));
 lv_obj_set_height( ui_ESPIdLabel, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_ESPIdLabel, LV_ALIGN_BOTTOM_RIGHT );
 lv_label_set_text(ui_ESPIdLabel,"");
 lv_obj_add_flag( ui_ESPIdLabel, LV_OBJ_FLAG_IGNORE_LAYOUT );   /// Flags
+lv_obj_set_style_text_align(ui_ESPIdLabel, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_ESPIdLabel, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_left(ui_ESPIdLabel, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_right(ui_ESPIdLabel, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -49,12 +50,13 @@ lv_obj_set_style_pad_top(ui_ESPIdLabel, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_bottom(ui_ESPIdLabel, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_splashLabel = lv_label_create(ui_Splash);
-lv_obj_set_width( ui_splashLabel, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_width( ui_splashLabel, lv_pct(50));
 lv_obj_set_height( ui_splashLabel, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_x( ui_splashLabel, -100 );
 lv_obj_set_y( ui_splashLabel, 137 );
 lv_obj_set_align( ui_splashLabel, LV_ALIGN_CENTER );
 lv_label_set_text(ui_splashLabel,"");
+lv_obj_set_style_text_align(ui_splashLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_splashLabel, &ui_font_OpenSansMedium, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 }

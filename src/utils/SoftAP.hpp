@@ -34,9 +34,9 @@ public:
 
     static String getESPIdHex()
     {
-        char idHex[23];
-        snprintf(idHex, 23, "%llX", ESP.getEfuseMac());
-        return idHex;
+        String s = String(ESP.getEfuseMac(), HEX);
+        s.toUpperCase();
+        return s;
     }
 
 private:
