@@ -26,7 +26,16 @@
         "type_traits": "cpp",
         "utility": "cpp",
         "algorithm": "cpp",
-        "wifisetupui.hpp": "c"
+        "wifisetupui.hpp": "c",
+        "__bit_reference": "cpp",
+        "__hash_table": "cpp",
+        "__split_buffer": "cpp",
+        "__tree": "cpp",
+        "list": "cpp",
+        "map": "cpp",
+        "forward_list": "cpp",
+        "regex": "cpp",
+        "set": "cpp"
     },
     "cmake.sourceDirectory": "/Users/lukasjezny/solax-station-live/src/ui"
 }

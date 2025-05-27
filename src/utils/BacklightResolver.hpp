@@ -27,18 +27,27 @@ public:
 #if CROW_PANEL_ADVANCE
         Wire.begin(15, 16);
         delay(500);
-
-        if (i2cScanForAddress(0x18)) //old V1.0
-        {
-            io.pinMode(1, OUTPUT);
-            io.digitalWrite(1, 1);
-        }
-        else if (i2cScanForAddress(0x30)) //new V1.2
+        if (i2cScanForAddress(0x30)) // new V1.2
         {
             Wire.beginTransmission(0x30);
             Wire.write(0x10);
-            int error = Wire.endTransmission();
-            log_e("PCA9557 error: %d", error);
+            Wire.endTransmission();
+        }
+        if (i2cScanForAddress(0x18)) // old V1.0
+        {
+            // Wire.beginTransmission(0x18);
+            // Wire.write(0x03);
+            // Wire.write(0x00);
+            // Wire.endTransmission();
+
+            // Wire.beginTransmission(0x18);
+            // Wire.write(0x02);
+            // Wire.write(0x01);
+            // Wire.endTransmission();
+
+            io.pinMode(1, OUTPUT);
+            io.digitalWrite(1, 1);
+
         }
 
 #endif
@@ -87,7 +96,7 @@ public:
     void setBacklightAnimated(int brightness)
     {
 #if CROW_PANEL_ADVANCE
-        if (i2cScanForAddress(0x30)) //new V1.2
+        if (i2cScanForAddress(0x30)) // new V1.2
         {
             Wire.beginTransmission(0x30);
             Wire.write(brightness == 255 ? 0x10 : 0x07);

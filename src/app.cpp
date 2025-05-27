@@ -27,7 +27,6 @@
 #include "gfx_conf.h"
 #include "Touch/Touch.hpp"
 #include <mutex>
-#include <Wire.h>
 
 SemaphoreHandle_t lvgl_mutex = xSemaphoreCreateMutex();
 static lv_disp_draw_buf_t draw_buf;
@@ -210,7 +209,14 @@ void setupLVGL()
 void setup()
 {
     Serial.begin(115200);
-
+#if CONFIG_SPIRAM_SUPPORT
+    esp_psram_extram_set_clock_rate(120 * 1000000);
+    if (!psramInit())
+    {
+        Serial.println("PSRAM 初始化失败！");
+        while (1);ß
+    }
+#endif
     setupLVGL();
     setupWiFi();
 }
