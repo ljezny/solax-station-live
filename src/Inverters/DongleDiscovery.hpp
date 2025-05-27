@@ -231,8 +231,13 @@ private:
         int retries = 100;
         for (int r = 0; r < retries; r++)
         {
-            if (WiFi.status() == WL_CONNECTED)
+            if (WiFi.status() == WL_CONNECTED && WiFi.localIP() != IPAddress(0, 0, 0, 0))
             {
+                log_d("Connected to WiFi: %s", WiFi.SSID().c_str());
+                log_d("IP Address: %s", WiFi.localIP().toString().c_str());
+                log_d("RSSI: %d", WiFi.RSSI());
+                log_d("Signal strength: %d%%", wifiSignalPercent(WiFi.RSSI()));
+            
                 return true;
             }
             else
