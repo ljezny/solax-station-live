@@ -21,7 +21,7 @@ public:
     void show()
     {   
         complete = false;
-        lv_scr_load_anim(ui_WifiSetup, LV_SCR_LOAD_ANIM_FADE_IN, 300, 0, false);
+        lv_scr_load(ui_WifiSetup);
         lv_obj_add_event_cb(ui_wifiSetupCompleteButton, wifiSetupCompleteHandler, LV_EVENT_ALL, this);
         lv_obj_add_event_cb(ui_wifiDongleRoller, wifiRollerHandler, LV_EVENT_ALL, this);
         // dongleDiscovery.preferedInverterWifiDongleIndex = lv_roller_get_selected(ui_wifiDongleRoller);
