@@ -21,8 +21,8 @@
 #include "utils/ShellyRuleResolver.hpp"
 #include "utils/MedianPowerSampler.hpp"
 #define UI_REFRESH_INTERVAL 5000 // Define the UI refresh interval in milliseconds
-#define INVERTER_DATA_REFRESH_INTERVAL 2000
-#define SHELLY_REFRESH_INTERVAL 2000
+#define INVERTER_DATA_REFRESH_INTERVAL 3000
+#define SHELLY_REFRESH_INTERVAL 3000
 
 #include "gfx_conf.h"
 #include "Touch/Touch.hpp"
@@ -34,7 +34,7 @@ static lv_color_t disp_draw_buf1[screenWidth * screenHeight / 10];
 static lv_color_t disp_draw_buf2[screenWidth * screenHeight / 10];
 static lv_disp_drv_t disp_drv;
 
-SET_LOOP_TASK_STACK_SIZE(18 * 1024); // use freeStack
+SET_LOOP_TASK_STACK_SIZE(24 * 1024); // use freeStack
 
 DongleDiscovery dongleDiscovery;
 ShellyAPI shellyAPI;
@@ -204,7 +204,7 @@ void setupLVGL()
 
     ui_init();
 
-    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 6 * 1024, NULL, 10, NULL, 0);
+    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 24 * 1024, NULL, 10, NULL, 0);
 }
 
 void setup()
@@ -489,15 +489,12 @@ void updateState()
     case STATE_SPLASH:
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         splashUI.update(softAP.getESPIdHex(), String(VERSION_NUMBER));
+        splashUI.updateText("Discovering dongles...");
         xSemaphoreGive(lvgl_mutex);
 
+        dongleDiscovery.discoverDongle(false);
         if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
-        {
-            xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-            splashUI.updateText("Discovering dongles...");
-            xSemaphoreGive(lvgl_mutex);
-
-            dongleDiscovery.discoverDongle(false);
+        {            
             dongleDiscovery.trySelectPreferedInverterWifiDongleIndex();
         }
 
@@ -600,4 +597,5 @@ void updateState()
 void loop()
 {
     updateState();
+    delay(1000);
 }
