@@ -218,7 +218,7 @@ public:
         }
 
         inverterPowerTextAnimator.animate(ui_inverterPowerLabel, previousInverterData.inverterPower, inverterData.inverterPower);
-        pvBackgroundAnimator.animate(ui_pvContainer, ((previousInverterData.pv1Power + previousInverterData.pv2Power + previousInverterData.pv3Power + previousInverterData.pv4Power) > 0) ? lv_color_hex(_ui_theme_color_pvColor[0]) : containerBackground, ((inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power) > 0) ? lv_color_hex(_ui_theme_color_pvColor[0]) : containerBackground);
+        pvBackgroundAnimator.animate(ui_pvContainer, ((inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power) > 0) ? lv_color_hex(_ui_theme_color_pvColor[0]) : containerBackground);
         lv_label_set_text(ui_inverterPowerUnitLabel, format(POWER, inverterData.inverterPower).unit.c_str());
         inverterPowerL1TextAnimator.animate(ui_inverterPowerL1Label, previousInverterData.L1Power, inverterData.L1Power);
         lv_label_set_text(ui_inverterPowerL1UnitLabel, format(POWER, inverterData.L1Power).unit.c_str());
@@ -236,11 +236,11 @@ public:
         lv_label_set_text(ui_loadPowerUnitLabel, format(POWER, inverterData.loadPower).unit.c_str());
         feedInPowerTextAnimator.animate(ui_feedInPowerLabel, abs(previousInverterData.feedInPower), abs(inverterData.feedInPower));
         lv_label_set_text(ui_feedInPowerUnitLabel, format(POWER, abs(inverterData.feedInPower)).unit.c_str());
-        gridBackgroundAnimator.animate(ui_gridContainer, ((previousInverterData.feedInPower) < 0) ? lv_color_hex(_ui_theme_color_gridColor[0]) : containerBackground, ((inverterData.feedInPower) < 0) ? lv_color_hex(_ui_theme_color_gridColor[0]) : containerBackground);
+        gridBackgroundAnimator.animate(ui_gridContainer, ((inverterData.feedInPower) < 0) ? lv_color_hex(_ui_theme_color_gridColor[0]) : containerBackground);
         lv_label_set_text_fmt(ui_socLabel, (inverterData.socApproximated ? "~%d" : "%d"), inverterData.soc);
 
-        batteryPowerTextAnimator.animate(ui_batteryPowerLabel, abs(previousInverterData.batteryPower), abs(inverterData.batteryPower));
-        batteryBackgroundAnimator.animate(ui_batteryContainer, ((previousInverterData.batteryPower) < 0) ? lv_color_hex(_ui_theme_color_batteryColor[0]) : containerBackground, ((inverterData.batteryPower) < 0) ? lv_color_hex(_ui_theme_color_batteryColor[0]) : containerBackground);
+        batteryPowerTextAnimator.animate(ui_batteryPowerLabel, previousInverterData.batteryPower, inverterData.batteryPower);
+        batteryBackgroundAnimator.animate(ui_batteryContainer, ((inverterData.batteryPower) < 0) ? lv_color_hex(_ui_theme_color_batteryColor[0]) : containerBackground);
 
         lv_label_set_text(ui_batteryPowerUnitLabel, format(POWER, abs(inverterData.batteryPower)).unit.c_str());
         lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d", inverterData.batteryTemperature);
@@ -407,7 +407,7 @@ public:
 
 private:
     int const UI_TEXT_CHANGE_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS;
-    int const UI_BACKGROUND_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS;
+    int const UI_BACKGROUND_ANIMATION_DURATION = 2000;
     UITextChangeAnimator loadPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
     UITextChangeAnimator feedInPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
     UITextChangeAnimator batteryPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
@@ -475,7 +475,7 @@ private:
         static UIBallAnimator *loadAnimator = NULL;
         static UIBallAnimator *shellyAnimator = NULL;
 
-        int duration = UI_REFRESH_PERIOD_MS / 2;
+        int duration = UI_REFRESH_PERIOD_MS / 3;
         int offsetY = 15;
         int offsetX = 30;
         if (pvAnimator != NULL)
