@@ -9520,11 +9520,11 @@
                       },
                       {
                         "nid": 1458714086,
-                        "flags": 34,
+                        "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
                           -10,
-                          -3
+                          -10
                         ],
                         "InheritedType": 7
                       },
@@ -9637,7 +9637,7 @@
                               {
                                 "nid": 10510,
                                 "strtype": "_style/Bg_Radius",
-                                "integer": 8,
+                                "integer": 12,
                                 "InheritedType": 6
                               },
                               {
@@ -9657,10 +9657,10 @@
                                 "nid": 11110,
                                 "strtype": "_style/Padding",
                                 "intarray": [
-                                  4,
-                                  4,
-                                  4,
-                                  4
+                                  6,
+                                  6,
+                                  6,
+                                  6
                                 ],
                                 "InheritedType": 7
                               }
@@ -10038,11 +10038,11 @@
                       },
                       {
                         "nid": 1258893183,
-                        "flags": 34,
+                        "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
                           10,
-                          -3
+                          -10
                         ],
                         "InheritedType": 7
                       },
@@ -12484,7 +12484,7 @@
                           {
                             "nid": -1898327175,
                             "strtype": "_style/Bg_Radius",
-                            "integer": 15,
+                            "integer": 16,
                             "InheritedType": 6
                           },
                           {
@@ -20728,7 +20728,7 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 704,
+    "backup_cnt": 707,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",
