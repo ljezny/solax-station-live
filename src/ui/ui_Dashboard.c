@@ -607,12 +607,28 @@ lv_obj_set_align( ui_Image5, LV_ALIGN_CENTER );
 lv_obj_add_flag( ui_Image5, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
 lv_obj_clear_flag( ui_Image5, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
+ui_dongleFWVersion = lv_label_create(ui_inverterContainer);
+lv_obj_set_width( ui_dongleFWVersion, LV_SIZE_CONTENT);  /// 100
+lv_obj_set_height( ui_dongleFWVersion, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_x( ui_dongleFWVersion, lv_pct(-10) );
+lv_obj_set_y( ui_dongleFWVersion, lv_pct(-3) );
+lv_label_set_text(ui_dongleFWVersion,"3.005.01");
+lv_obj_add_flag( ui_dongleFWVersion, LV_OBJ_FLAG_IGNORE_LAYOUT );   /// Flags
+lv_obj_set_style_text_font(ui_dongleFWVersion, &ui_font_OpenSansExtraSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_radius(ui_dongleFWVersion, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
+ui_object_set_themeable_style_property(ui_dongleFWVersion, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BG_COLOR, _ui_theme_color_inverterColor);
+ui_object_set_themeable_style_property(ui_dongleFWVersion, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BG_OPA, _ui_theme_alpha_inverterColor);
+lv_obj_set_style_pad_left(ui_dongleFWVersion, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_right(ui_dongleFWVersion, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_top(ui_dongleFWVersion, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_dongleFWVersion, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
+
 ui_inverterTemperatureContainer = lv_obj_create(ui_inverterContainer);
 lv_obj_remove_style_all(ui_inverterTemperatureContainer);
 lv_obj_set_width( ui_inverterTemperatureContainer, LV_SIZE_CONTENT);  /// 100
 lv_obj_set_height( ui_inverterTemperatureContainer, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_x( ui_inverterTemperatureContainer, lv_pct(10) );
-lv_obj_set_y( ui_inverterTemperatureContainer, lv_pct(-4) );
+lv_obj_set_y( ui_inverterTemperatureContainer, lv_pct(-3) );
 lv_obj_set_align( ui_inverterTemperatureContainer, LV_ALIGN_TOP_RIGHT );
 lv_obj_set_flex_flow(ui_inverterTemperatureContainer,LV_FLEX_FLOW_ROW);
 lv_obj_set_flex_align(ui_inverterTemperatureContainer, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);

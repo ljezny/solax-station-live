@@ -76,6 +76,7 @@ lv_obj_t *ui_selfUsePercentLabel;
 lv_obj_t *ui_selfUsePercentUnitLabel;
 lv_obj_t *ui_inverterContainer;
 lv_obj_t *ui_Image5;
+lv_obj_t *ui_dongleFWVersion;
 lv_obj_t *ui_inverterTemperatureContainer;
 lv_obj_t *ui_inverterTemperatureLabel;
 lv_obj_t *ui_inverterTemperatureUnitLabel;

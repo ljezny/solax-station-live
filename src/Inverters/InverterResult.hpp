@@ -15,7 +15,8 @@ typedef struct
     DongleStatus_t status = DONGLE_STATUS_UNKNOWN;
     long millis = 0;
     String sn;
-    int pv1Power = 0;
+    String dongleFWVersion;
+    int pv1Power = 0; 
     int pv2Power = 0;
     int pv3Power = 0;
     int pv4Power = 0;

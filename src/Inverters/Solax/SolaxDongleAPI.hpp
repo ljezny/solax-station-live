@@ -77,6 +77,7 @@ public:
                         DeserializationError err = deserializeJson(doc, loggingStream);
                         if (err == DeserializationError::Ok)
                         {
+                            inverterData.dongleFWVersion = doc["ver"].as<String>();
                             if (doc["type"].as<int>() == 14) // X1-Hybrid 3.0
                             {
                                 inverterData.status = DONGLE_STATUS_OK;

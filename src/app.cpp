@@ -97,6 +97,7 @@ InverterData_t createRandomMockData()
 {
     InverterData_t inverterData;
     inverterData.millis = millis();
+    inverterData.dongleFWVersion = "3.005.01";
     inverterData.status = DONGLE_STATUS_OK;
     inverterData.pv1Power = random(2000, 2500);
     inverterData.pv2Power = random(3500, 4000);
@@ -217,6 +218,9 @@ void setup()
         while (1);ß
     }
 #endif
+    //set cpu frequency to 240MHz
+    setCpuFrequencyMhz(240);
+    
     setupLVGL();
     setupWiFi();
 }

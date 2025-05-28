@@ -85,6 +85,7 @@ extern lv_obj_t *ui_selfUsePercentLabel;
 extern lv_obj_t *ui_selfUsePercentUnitLabel;
 extern lv_obj_t *ui_inverterContainer;
 extern lv_obj_t *ui_Image5;
+extern lv_obj_t *ui_dongleFWVersion;
 extern lv_obj_t *ui_inverterTemperatureContainer;
 extern lv_obj_t *ui_inverterTemperatureLabel;
 extern lv_obj_t *ui_inverterTemperatureUnitLabel;
