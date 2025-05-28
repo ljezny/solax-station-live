@@ -239,7 +239,7 @@ public:
         gridBackgroundAnimator.animate(ui_gridContainer, ((inverterData.feedInPower) < 0) ? lv_color_hex(_ui_theme_color_gridColor[0]) : containerBackground);
         lv_label_set_text_fmt(ui_socLabel, (inverterData.socApproximated ? "~%d" : "%d"), inverterData.soc);
 
-        batteryPowerTextAnimator.animate(ui_batteryPowerLabel, previousInverterData.batteryPower, inverterData.batteryPower);
+        batteryPowerTextAnimator.animate(ui_batteryPowerLabel, abs(previousInverterData.batteryPower), abs(inverterData.batteryPower));
         batteryBackgroundAnimator.animate(ui_batteryContainer, ((inverterData.batteryPower) < 0) ? lv_color_hex(_ui_theme_color_batteryColor[0]) : containerBackground);
 
         lv_label_set_text(ui_batteryPowerUnitLabel, format(POWER, abs(inverterData.batteryPower)).unit.c_str());
