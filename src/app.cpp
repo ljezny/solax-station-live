@@ -462,6 +462,9 @@ void onLeaving(state_t oldState)
     case BOOT:
         break;
     case STATE_SPLASH:
+        xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+        splashUI.updateText("");
+        xSemaphoreGive(lvgl_mutex);
         break;
     case STATE_WIFI_SETUP:
         break;
@@ -494,7 +497,7 @@ void updateState()
 
         dongleDiscovery.discoverDongle(false);
         if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
-        {            
+        {
             dongleDiscovery.trySelectPreferedInverterWifiDongleIndex();
         }
 
