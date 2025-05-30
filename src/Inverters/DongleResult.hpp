@@ -9,7 +9,9 @@ typedef enum {
     DONGLE_TYPE_GOODWE,
     DONGLE_TYPE_SOFAR,
     DONGLE_TYPE_VICTRON,
+    DONGLE_TYPE_DEYE,
     DONGLE_TYPE_SHELLY,
+    
 } DongleType_t;
 
 typedef struct {
