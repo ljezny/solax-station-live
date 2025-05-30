@@ -120,7 +120,10 @@ private:
         // }
 
         size_t requestSize = sizeof(request);
-        return client.write(request, requestSize) == requestSize;
+        bool result = client.write(request, requestSize) == requestSize;
+        client.flush();
+        delay(100); // wait for the server to process the request
+        return result;
     }
 
     bool awaitPacket(NetworkClient &client, int timeout)
