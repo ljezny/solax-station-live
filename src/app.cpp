@@ -527,6 +527,7 @@ void updateState()
                     xSemaphoreGive(lvgl_mutex);
                     delay(2000);
 
+                    dongleDiscovery.disconnect();
                     moveToState(STATE_WIFI_SETUP);
                 }
             }

@@ -111,6 +111,12 @@ public:
 
         return true;
     }
+    
+    bool disconnect() 
+    {
+        log_d("Disconnecting from WiFi");
+        return WiFi.disconnect();
+    }
 
     bool connectToDongle(DongleDiscoveryResult_t &discovery)
     {
