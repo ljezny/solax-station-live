@@ -591,6 +591,7 @@ void updateState()
 
         if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
         {
+            dongleDiscovery.disconnect();
             moveToState(STATE_WIFI_SETUP);
         }
 
