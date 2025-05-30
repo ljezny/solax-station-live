@@ -149,7 +149,7 @@ private:
                                 inverterData.L2Power = readInt16(packetBuffer, 30) + readInt16(packetBuffer, 56);
                                 inverterData.L3Power = readInt16(packetBuffer, 35) + readInt16(packetBuffer, 62);
                                 inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power; //readInt16(packetBuffer, 38); //38 - total inverter power
-                                inverterData.loadPower = readInt16(packetBuffer, 72);// + readInt16(packetBuffer, 0); //72 - Total Load Power
+                                inverterData.loadPower = readInt16(packetBuffer, 72) + readInt16(packetBuffer, 70); //72 - Total Load Power
                                 inverterData.inverterTemperature = readInt16(packetBuffer, 74) / 10;
                                 inverterData.pvTotal = readUInt32(packetBuffer, 91) / 10.0;
                                 inverterData.pvToday = readUInt32(packetBuffer, 93) / 10.0;
@@ -256,6 +256,7 @@ private:
         }
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
         disconnect();
+        logInverterData(inverterData);
         return inverterData;
     }
 };
