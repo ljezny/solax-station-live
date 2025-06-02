@@ -35,7 +35,7 @@ private:
                     inverterData.status = DONGLE_STATUS_OK;
                     inverterData.millis = millis();
                     inverterData.pv1Power = readUInt16(packetBuffer, 672 - 672);
-                    inverterData.pv2Power = readUInt16(packetBuffer, 673 - 672) * 10;
+                    inverterData.pv2Power = readUInt16(packetBuffer, 673 - 672);
                 }
                 else
                 {
@@ -58,7 +58,7 @@ private:
             {
                 if (readModbusRTUResponse(client, packetBuffer, sizeof(packetBuffer)) > 0)
                 {
-                    inverterData.batteryTemperature = readUInt16(packetBuffer, 586 - 586) / 10;
+                    inverterData.batteryTemperature = (readInt16(packetBuffer, 586 - 586)  - 1000)  / 10;
                     inverterData.soc = readUInt16(packetBuffer, 588 - 586);
                     inverterData.batteryPower = readInt16(packetBuffer, 590 - 586);
                 }
@@ -85,11 +85,11 @@ private:
                 if (readModbusRTUResponse(client, packetBuffer, sizeof(packetBuffer)) > 0)
                 {
                     inverterData.L1Power = readInt16(packetBuffer, 633 - 598);
-                    inverterData.L1Power = readInt16(packetBuffer, 634 - 598);
-                    inverterData.L1Power = readInt16(packetBuffer, 635 - 598);
+                    inverterData.L2Power = readInt16(packetBuffer, 634 - 598);
+                    inverterData.L3Power = readInt16(packetBuffer, 635 - 598);
                     inverterData.inverterPower = readInt16(packetBuffer, 636 - 598);
                     inverterData.loadPower = readInt16(packetBuffer, 653 - 598);
-                    inverterData.feedInPower = readInt16(packetBuffer, 625 - 598);
+                    inverterData.feedInPower = -1 * readInt16(packetBuffer, 625 - 598);
                 }
                 else
                 {
@@ -108,11 +108,11 @@ private:
 
             // module info
             // 541
-            if (sendReadDataRequest(client, sequenceNumber, 541, 541 - 541 + 1, sn))
+            if (sendReadDataRequest(client, sequenceNumber, 541, 1, sn))
             {
                 if (readModbusRTUResponse(client, packetBuffer, sizeof(packetBuffer)) > 0)
                 {
-                    inverterData.inverterTemperature = readUInt16(packetBuffer, 541 - 541) / 10;
+                    inverterData.inverterTemperature = (readInt16(packetBuffer, 0) - 1000) / 10;
                 }
                 else
                 {
@@ -136,11 +136,11 @@ private:
                 if (readModbusRTUResponse(client, packetBuffer, sizeof(packetBuffer)) > 0)
                 {
                     inverterData.pvToday = readUInt16(packetBuffer, 529 - 514) / 10.0f;
-                    inverterData.pvTotal = readUInt32(packetBuffer, 534 - 514) / 10.0f;
+                    inverterData.pvTotal = readUInt16(packetBuffer, 534 - 514) / 10.0f;
                     inverterData.loadToday = readUInt16(packetBuffer, 526 - 514) / 10.0f;
                     inverterData.loadTotal = readUInt32(packetBuffer, 527 - 514) / 10.0f;
-                    inverterData.batteryChargedToday = readUInt32(packetBuffer, 514 - 514) / 10.0f;
-                    inverterData.batteryDischargedToday = readUInt32(packetBuffer, 515 - 514) / 10.0f;
+                    inverterData.batteryChargedToday = readUInt16(packetBuffer, 514 - 514) / 10.0f;
+                    inverterData.batteryDischargedToday = readUInt16(packetBuffer, 515 - 514) / 10.0f;
                     inverterData.gridBuyToday = readUInt16(packetBuffer, 520 - 514) / 10.0f;
                     inverterData.gridBuyTotal = readUInt32(packetBuffer, 522 - 514) / 10.0f;
                     inverterData.gridSellToday = readUInt16(packetBuffer, 521 - 514) / 10.0f;

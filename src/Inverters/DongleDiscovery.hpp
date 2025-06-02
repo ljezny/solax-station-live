@@ -161,8 +161,6 @@ public:
         {
             log_d("Failed to connect to %s", discovery.ssid.c_str());
 
-            clearDonglePassword(discovery.ssid);
-
             WiFi.begin(discovery.ssid.c_str(), SoftAP::getPassword().c_str());
             WiFi.setSleep(false);
 
@@ -364,7 +362,7 @@ private:
         preferences.end();
         return password;
     }
-
+    //do not use, it will delete password and not reconnect
     void clearDonglePassword(String ssid)
     {
         Preferences preferences;

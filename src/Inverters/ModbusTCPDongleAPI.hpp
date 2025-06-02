@@ -16,6 +16,7 @@ typedef struct
     uint16_t address;
     uint16_t length;
     uint8_t data[RX_BUFFER_SIZE];
+    bool isValid = false;
 } ModbusTCPResponse_t;
 
 class ModbusTCPDongleAPI
@@ -111,7 +112,7 @@ protected:
 
         len = client.read(response.data, 1); // read function code
         response.functionCode = response.data[0];
-        if (response.data[0] != 0x03)
+        if (response.data[0] != functionCode)
         {
             log_d("Invalid function code");
             log_d("Unit: %d, Function code: %d", unit, addr);
@@ -123,7 +124,7 @@ protected:
 
         len = client.read(response.data, 1); // read byte count
         if (len != 1)
-        {
+        { 
             log_d("Unable to read client.");
             return response;
         }
@@ -131,9 +132,18 @@ protected:
 
         memset(response.data, 0, RX_BUFFER_SIZE);
         len = client.read(response.data, response.length); // read data
+        int expectedLength = count * 2; // each register is 2 bytes
         if (len != response.length)
         {
             log_d("Unable to read client.");
+            return response;
+        }
+
+        if(len != expectedLength)
+        {
+            log_d("Invalid response length: %d, expected: %d", len, expectedLength);
+            client.read(response.data, RX_BUFFER_SIZE); // clear buffer
+            memset(response.data, 0, RX_BUFFER_SIZE);
             return response;
         }
 
@@ -145,7 +155,7 @@ protected:
             data += String(response.data[i], HEX);
         }
         log_d("Response data: %s", data.c_str());
-
+        response.isValid = true;
         return response;
     }
 

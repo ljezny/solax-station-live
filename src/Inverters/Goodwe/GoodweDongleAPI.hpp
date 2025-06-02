@@ -163,7 +163,7 @@ private:
                                 inverterData.pvTotal = readUInt32(packetBuffer, 91) / 10.0;
                                 inverterData.pvToday = readUInt32(packetBuffer, 93) / 10.0;
                                 inverterData.loadToday = readUInt16(packetBuffer, 105) / 10.0;
-                                inverterData.loadTotal = readUInt32(packetBuffer, 103) / 10.0;
+                                inverterData.loadTotal = readUInt32(packetBuffer, 103) / 10.0; 
                                 inverterData.batteryChargedToday = readUInt16(packetBuffer, 108) / 10.0;
                                 inverterData.batteryDischargedToday = readUInt16(packetBuffer, 111) / 10.0;
                                 inverterData.sn = sn;
