@@ -142,18 +142,22 @@ private:
                                 inverterData.pv2Power = readUInt32(packetBuffer, 9);
                                 inverterData.pv3Power = readUInt32(packetBuffer, 13);
                                 inverterData.pv4Power = readUInt32(packetBuffer, 17);
-                                
+
                                 inverterData.batteryPower -= readInt16(packetBuffer, 83); // TODO: maybe sign readuw(packetBuffer, 84);
                                 // _ac = readsw(packetBuffer, 40);
                                 inverterData.L1Power = readInt16(packetBuffer, 25) + readInt16(packetBuffer, 50);
                                 inverterData.L2Power = readInt16(packetBuffer, 30) + readInt16(packetBuffer, 56);
                                 inverterData.L3Power = readInt16(packetBuffer, 35) + readInt16(packetBuffer, 62);
-                                inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power; //readInt16(packetBuffer, 38); //38 - total inverter power
-                                bool backupConnectedToLoad = readUInt16(packetBuffer, 60) == 0x00; //0x00 - backup is connected to load, 0x01 - inverter disconnects to load
-                                if(backupConnectedToLoad) {
-                                    inverterData.loadPower = readInt16(packetBuffer, 72); //total load power
-                                } else {
-                                    inverterData.loadPower = readInt16(packetBuffer, 70); //total backup load power
+                                inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power; // readInt16(packetBuffer, 38); //38 - total inverter power
+                                bool backupConnectedToLoad = readUInt16(packetBuffer, 60) == 0x00;                               // 0x00 - backup is connected to load, 0x01 - inverter disconnects to load
+                                if (backupConnectedToLoad)
+                                {
+                                    inverterData.loadPower = readInt16(packetBuffer, 72); // total load power
+                                }
+                                else
+                                {
+                                    inverterData.loadPower = readInt16(packetBuffer, 70)    // total backup load power
+                                                             + readInt16(packetBuffer, 72); // total load power
                                 }
                                 inverterData.inverterTemperature = readInt16(packetBuffer, 74) / 10;
                                 inverterData.pvTotal = readUInt32(packetBuffer, 91) / 10.0;
@@ -210,22 +214,24 @@ private:
                             {
                                 inverterData.gridSellTotal = readIEEE754(packetBuffer, 15) / 1000.0f;
                                 inverterData.gridBuyTotal = readIEEE754(packetBuffer, 17) / 1000.0f;
-                                
-                                //debug logging
+
+                                // debug logging
                                 int register25 = readInt32(packetBuffer, 25);
                                 log_d("Register 25: %d", register25);
                                 int register8 = readInt16(packetBuffer, 8);
                                 log_d("Register 8: %d", register8);
-                                //end debug logging
-                                
+                                // end debug logging
+
                                 inverterData.feedInPower = readInt32(packetBuffer, 25);
-                                
+
                                 log_d("Grid sell total: %f", inverterData.gridSellTotal);
                                 log_d("Grid buy total: %f", inverterData.gridBuyTotal);
-                                if(gridBuyTotal == 0) {
+                                if (gridBuyTotal == 0)
+                                {
                                     gridBuyTotal = inverterData.gridBuyTotal;
                                 }
-                                if(gridSellTotal == 0) {
+                                if (gridSellTotal == 0)
+                                {
                                     gridSellTotal = inverterData.gridSellTotal;
                                 }
                                 inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
