@@ -24,7 +24,7 @@ public:
         inverterData.millis = millis();
         ModbusTCPResponse_t response;
 
-        response = sendModbusRequest(100, 800, 12);
+        response = sendModbusRequest(100, 0x03, 800, 12);
         if (response.functionCode == 0x03)
         {
             inverterData.status = DONGLE_STATUS_OK;
@@ -32,7 +32,7 @@ public:
             log_d("SN: %s", inverterData.sn.c_str());
         }
 
-        response = sendModbusRequest(100, 842, 2);
+        response = sendModbusRequest(100, 0x03, 842, 2);
         if (response.functionCode == 0x03)
         {
             inverterData.batteryPower = readInt16(response, 842);
@@ -53,7 +53,7 @@ public:
             lastBatteryPower = inverterData.batteryPower;
         }
 
-        response = sendModbusRequest(100, 808, 15);
+        response = sendModbusRequest(100, 0x03, 808, 15);
         if (response.functionCode == 0x03)
         {
             inverterData.L1Power = max(0, ((int)readUInt16(response, 817)) - readInt16(response, 820));
@@ -70,7 +70,7 @@ public:
             {
                 continue;
             }
-            response = sendModbusRequest(vebusUnits[i], 23, 3);
+            response = sendModbusRequest(vebusUnits[i], 0x03, 23, 3);
             if (response.functionCode == 0x03)
             {
                 // inverterData.L1Power = readUInt16(response, 23) * 10;
@@ -78,7 +78,7 @@ public:
                 // inverterData.L3Power = readUInt16(response, 25) * 10;
                 // inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power - inverterData.feedInPower;
 
-                response = sendModbusRequest(vebusUnits[i], 74, 20);
+                response = sendModbusRequest(vebusUnits[i], 0x03, 74, 20);
                 if (response.functionCode == 0x03)
                 {
                     /*
@@ -126,7 +126,7 @@ public:
                 continue;
             }
 
-            response = sendModbusRequest(solarChargerUnits[i], 3728, 3);
+            response = sendModbusRequest(solarChargerUnits[i], 0x03, 3728, 3);
             if (response.functionCode == 0x03)
             {
                 int pvPower = readUInt16(response, 3730);
@@ -158,13 +158,13 @@ public:
             }
         }
 
-        response = sendModbusRequest(225, 262, 16);
+        response = sendModbusRequest(225, 0x03, 262, 16);
         if (response.functionCode == 0x03)
         {
             inverterData.batteryTemperature = readUInt16(response, 262) / 10;
         }
 
-        response = sendModbusRequest(100, 830, 4);
+        response = sendModbusRequest(100, 0x03, 830, 4);
         if (response.functionCode == 0x03)
         {
             time_t time = readUInt64(response, 830);

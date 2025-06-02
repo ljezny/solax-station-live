@@ -7,6 +7,7 @@
 #include "Inverters/DongleDiscovery.hpp"
 #include "Inverters/Goodwe/GoodweDongleAPI.hpp"
 #include "Inverters/Solax/SolaxDongleAPI.hpp"
+#include "Inverters/Solax/SolaxModbusDongleAPI.hpp"
 #include "Inverters/SofarSolar/SofarSolarDongleAPI.hpp"
 #include "Inverters/Victron/VictronDongleAPI.hpp"
 #include "Shelly/Shelly.hpp"
@@ -215,12 +216,14 @@ void setup()
     if (!psramInit())
     {
         Serial.println("PSRAM 初始化失败！");
-        while (1);ß
+        while (1)
+            ;
+        ß
     }
 #endif
-    //set cpu frequency to 240MHz
+    // set cpu frequency to 240MHz
     setCpuFrequencyMhz(240);
-    
+
     setupLVGL();
     setupWiFi();
 }
@@ -242,6 +245,7 @@ bool discoverDonglesTask()
 InverterData_t loadInverterData(DongleDiscoveryResult_t &discoveryResult)
 {
     static SolaxDongleAPI solaxDongleAPI = SolaxDongleAPI();
+    static SolaxModbusDongleAPI solaxModbusDongleAPI = SolaxModbusDongleAPI();
     static GoodweDongleAPI goodweDongleAPI = GoodweDongleAPI();
     static SofarSolarDongleAPI sofarSolarDongleAPI = SofarSolarDongleAPI();
     static VictronDongleAPI victronDongleAPI = VictronDongleAPI();
@@ -250,8 +254,18 @@ InverterData_t loadInverterData(DongleDiscoveryResult_t &discoveryResult)
     switch (discoveryResult.type)
     {
     case DONGLE_TYPE_SOLAX:
-        d = solaxDongleAPI.loadData(discoveryResult.sn);
-        break;
+    {
+        InverterData_t modbusData = solaxModbusDongleAPI.loadData(discoveryResult.sn);
+        if (modbusData.status == DONGLE_STATUS_OK)
+        {
+            d = modbusData; // use Modbus data if available
+        }
+        else
+        {
+            d = solaxDongleAPI.loadData(discoveryResult.sn);
+        }
+    }
+    break;
     case DONGLE_TYPE_GOODWE:
         d = goodweDongleAPI.loadData(discoveryResult.sn);
         break;
@@ -494,7 +508,7 @@ void updateState()
 
         dongleDiscovery.discoverDongle(false);
         if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
-        {            
+        {
             dongleDiscovery.trySelectPreferedInverterWifiDongleIndex();
         }
 

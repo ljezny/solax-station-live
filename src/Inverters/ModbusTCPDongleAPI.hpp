@@ -39,7 +39,7 @@ protected:
         client.stop();
     }
 
-    ModbusTCPResponse_t sendModbusRequest(uint8_t unit, uint16_t addr, uint8_t count)
+    ModbusTCPResponse_t sendModbusRequest(uint8_t unit, uint8_t functionCode, uint16_t addr, uint8_t count)
     {
         sequenceNumber++;
 
@@ -51,7 +51,7 @@ protected:
             0,
             6,    // length of following
             unit, // unit identifier
-            0x03, // function code
+            functionCode, // function code
             addr >> 8,
             addr & 0xff,
             0,
@@ -180,6 +180,11 @@ protected:
         return ((uint32_t)readUInt16(response, reg)) << 16 | readUInt16(response, reg + 1);
     }
 
+    uint32_t readUInt32LSB(ModbusTCPResponse_t &response, u16_t reg)
+    {
+        return ((uint32_t)readUInt16(response, reg + 1)) << 16 | readUInt16(response, reg);
+    }
+    
     uint64_t readUInt64(ModbusTCPResponse_t &response, u16_t reg)
     {
         return ((uint64_t)readUInt32(response, reg)) << 32 | readUInt32(response, reg + 2);
@@ -190,9 +195,28 @@ protected:
         return ((int32_t)readInt16(response, reg)) << 16 | readInt16(response, reg + 1);
     }
 
+    int32_t readInt32LSB(ModbusTCPResponse_t &response, u16_t reg)
+    {
+        return ((int32_t)readInt16(response, reg + 1)) << 16 | readInt16(response, reg);
+    }
+
     float readIEEE754(ModbusTCPResponse_t &response, u16_t reg)
     {
         uint32_t v = readUInt32(response, reg);
         return *(float *)&v;
     }
+
+    String readString(ModbusTCPResponse_t &response, u16_t reg, uint8_t length)
+    {
+        String str = "";
+        for (uint8_t i = 0; i < length; i++)
+        {
+            uint8_t index = reg - response.address + i;
+            if (index < RX_BUFFER_SIZE)
+            {
+                str += (char)response.data[index];
+            }
+        }
+        return str;
+    } 
 };
