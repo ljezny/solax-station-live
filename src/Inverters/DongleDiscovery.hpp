@@ -34,82 +34,96 @@ public:
                 log_d("Empty SSID");
                 continue;
             }
-            DongleType_t type = getTypeFromSSID(ssid);
-
-            if (type == DONGLE_TYPE_UNKNOWN)
+            DongleType_t supportedTypes[6] = {
+                DONGLE_TYPE_SOLAX,
+                DONGLE_TYPE_GOODWE,
+                DONGLE_TYPE_SOFAR,
+                DONGLE_TYPE_VICTRON,
+                DONGLE_TYPE_DEYE,
+                DONGLE_TYPE_SHELLY,
+            };
+            for (int t = 0; t < 6; t++)
             {
-                log_d("Unknown dongle type");
-                continue;
-            }
-
-            int discoveryIndex = -1;
-
-            // find if existing in sparse array
-            for (int j = 0; j < DONGLE_DISCOVERY_MAX_RESULTS; j++)
-            {
-                if (ssid.equals(discoveries[j].ssid))
+                DongleType_t type = supportedTypes[t];
+                if (!isDongleOfType(ssid, type))
                 {
-                    discoveryIndex = j;
-                    break;
+                    continue; // skip unsupported dongle types
                 }
-            }
+                int discoveryIndex = -1;
 
-            if (discoveryIndex != -1)
-            {
-                log_d("Already discovered this dongle");
-                continue;
-            }
-
-            // find empty slot
-            for (int j = 0; j < DONGLE_DISCOVERY_MAX_RESULTS; j++)
-            {
-                if (discoveries[j].type == DONGLE_TYPE_UNKNOWN)
+                // find if existing in sparse array
+                for (int j = 0; j < DONGLE_DISCOVERY_MAX_RESULTS; j++)
                 {
-                    discoveryIndex = j;
-                    break;
+                    if (ssid.equals(discoveries[j].ssid) && type == discoveries[j].type)
+                    {
+                        discoveryIndex = j;
+                        break;
+                    }
                 }
-            }
 
-            if (discoveryIndex == -1)
-            {
-                log_d("No more space for discovery results");
-                continue;
-            }
-
-            if (discoveries[discoveryIndex].type != DONGLE_TYPE_UNKNOWN)
-            {
-                log_d("Already discovered this dongle");
-                discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i)); // update signal strength
-                continue;
-            }
-
-            discoveries[discoveryIndex].sn = parseDongleSN(ssid);
-            discoveries[discoveryIndex].type = type;
-            discoveries[discoveryIndex].ssid = ssid;
-            discoveries[discoveryIndex].password = "";
-            discoveries[discoveryIndex].requiresPassword = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
-            discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i));
-
-            if (discoveries[discoveryIndex].requiresPassword)
-            {
-                discoveries[discoveryIndex].password = loadDonglePassword(ssid);
-
-                if (discoveries[discoveryIndex].type == DONGLE_TYPE_GOODWE && discoveries[discoveryIndex].password.isEmpty())
+                if (discoveryIndex != -1)
                 {
-                    discoveries[discoveryIndex].password = "12345678";
+                    log_d("Already discovered this dongle");
+                    continue;
                 }
-            }
 
-            // Dalibor Farny - Victron
-            if (discoveries[discoveryIndex].ssid == "venus-HQ22034YWXC-159")
-            {
-                discoveries[discoveryIndex].password = "uarnb5xs";
-            }
+                // find empty slot
+                for (int j = 0; j < DONGLE_DISCOVERY_MAX_RESULTS; j++)
+                {
+                    if (discoveries[j].type == DONGLE_TYPE_UNKNOWN)
+                    {
+                        discoveryIndex = j;
+                        break;
+                    }
+                }
 
-            result = true;
+                if (discoveryIndex == -1)
+                {
+                    log_d("No more space for discovery results");
+                    continue;
+                }
+
+                if (discoveries[discoveryIndex].type != DONGLE_TYPE_UNKNOWN)
+                {
+                    log_d("Already discovered this dongle");
+                    discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i)); // update signal strength
+                    continue;
+                }
+
+                discoveries[discoveryIndex].sn = parseDongleSN(ssid);
+                discoveries[discoveryIndex].type = type;
+                discoveries[discoveryIndex].ssid = ssid;
+                discoveries[discoveryIndex].password = "";
+                discoveries[discoveryIndex].requiresPassword = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
+                discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i));
+
+                if (discoveries[discoveryIndex].requiresPassword)
+                {
+                    discoveries[discoveryIndex].password = loadDonglePassword(ssid);
+
+                    if (discoveries[discoveryIndex].type == DONGLE_TYPE_GOODWE && discoveries[discoveryIndex].password.isEmpty())
+                    {
+                        discoveries[discoveryIndex].password = "12345678";
+                    }
+                }
+
+                // Dalibor Farny - Victron
+                if (discoveries[discoveryIndex].ssid == "venus-HQ22034YWXC-159")
+                {
+                    discoveries[discoveryIndex].password = "uarnb5xs";
+                }
+
+                result = true;
+            }
         }
 
         return true;
+    }
+
+    bool disconnect()
+    {
+        log_d("Disconnecting from WiFi");
+        return WiFi.disconnect();
     }
 
     bool connectToDongle(DongleDiscoveryResult_t &discovery)
@@ -179,7 +193,7 @@ public:
             {
                 continue;
             }
-            if (discoveries[i].type == DONGLE_TYPE_SHELLY) //skip shelly
+            if (discoveries[i].type == DONGLE_TYPE_SHELLY) // skip shelly
             {
                 continue;
             }
@@ -211,6 +225,8 @@ public:
             return "GoodWe";
         case DONGLE_TYPE_SOFAR:
             return "Sofar";
+        case DONGLE_TYPE_DEYE:
+            return "Deye";
         case DONGLE_TYPE_SHELLY:
             return "Shelly";
         case DONGLE_TYPE_VICTRON:
@@ -232,7 +248,7 @@ private:
                 log_d("IP Address: %s", WiFi.localIP().toString().c_str());
                 log_d("RSSI: %d", WiFi.RSSI());
                 log_d("Signal strength: %d%%", wifiSignalPercent(WiFi.RSSI()));
-            
+
                 return true;
             }
             else
@@ -246,36 +262,47 @@ private:
         return false;
     }
 
-    bool isSolaxDongleSSID(String ssid)
+    bool isDongleOfType(String ssid, DongleType_t type)
     {
-        return ssid.startsWith("Wifi_");
-    }
-
-    bool isGoodWeSSID(String ssid)
-    {
-        return ssid.startsWith("Solar-WiFi");
-    }
-
-    bool isSofarSolarSID(String ssid)
-    {
-        return ssid.startsWith("AP_");
+        switch (type)
+        {
+        case DONGLE_TYPE_SOLAX:
+            return ssid.startsWith("Wifi_");
+        case DONGLE_TYPE_GOODWE:
+            return ssid.startsWith("Solar-WiFi");
+        case DONGLE_TYPE_SOFAR:
+            return ssid.startsWith("AP_");
+        case DONGLE_TYPE_SHELLY:
+        {
+            for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
+            {
+                if (ssid.startsWith(supportedModels[i].prefix))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+        case DONGLE_TYPE_VICTRON:
+            return ssid.startsWith("venus-");
+        case DONGLE_TYPE_DEYE:
+            return ssid.startsWith("AP_");
+        default:
+            return false; // Unknown type, do not match
+        }
+        return false; // Default case, should not be reached
     }
 
     bool isShellySSID(String ssid)
     {
-        for(int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
+        for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
         {
-            if(ssid.startsWith(supportedModels[i].prefix))
+            if (ssid.startsWith(supportedModels[i].prefix))
             {
                 return true;
             }
         }
         return false;
-    }
-
-    bool isVictronSSID(String ssid)
-    {
-        return ssid.startsWith("venus-");
     }
 
     String parseDongleSN(String ssid)
@@ -285,37 +312,12 @@ private:
         sn.replace("Solar-WiFi", "");
         sn.replace("AP_", "");
         sn.replace("venus-", "");
-        
-        for(int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
+
+        for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
         {
             sn.replace(supportedModels[i].prefix, "");
         }
         return sn;
-    }
-
-    DongleType_t getTypeFromSSID(String ssid)
-    {
-        if (isSolaxDongleSSID(ssid))
-        {
-            return DONGLE_TYPE_SOLAX;
-        }
-        if (isGoodWeSSID(ssid))
-        {
-            return DONGLE_TYPE_GOODWE;
-        }
-        if (isSofarSolarSID(ssid))
-        {
-            return DONGLE_TYPE_SOFAR;
-        }
-        if (isShellySSID(ssid))
-        {
-            return DONGLE_TYPE_SHELLY;
-        }
-        if (isVictronSSID(ssid))
-        {
-            return DONGLE_TYPE_VICTRON;
-        }
-        return DONGLE_TYPE_UNKNOWN;
     }
 
     int wifiSignalPercent(int rssi)

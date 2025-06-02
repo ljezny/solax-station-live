@@ -53,7 +53,9 @@ public:
             request += body;
             log_d("Request: %s", request.c_str());
             client.write(request.c_str(), request.length());
+            client.flush();
             log_d("Request sent");
+            delay(100); // wait for the server to respond
             unsigned long lastDataTime = millis();
             while (client.connected())
             {

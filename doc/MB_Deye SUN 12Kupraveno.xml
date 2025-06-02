@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Modbus Title="Deye SUN 12Kupraveno" Comment="Deye SUN 12K Inverter" HintText="" Baudrate="9600" Stopbits="1" Channel="9">
+	<Info templateType="7" minVersion="15050304"/>
+	<ModbusCmd Title="PV1 input power" Comment="" HintText="" ModbusAddress="672" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v.2&gt;kW" Analog="true" Sensor="true" SourceValHigh="1000" DestValHigh="1"/>
+	<ModbusCmd Title="PV2 input power" Comment="" HintText="" ModbusAddress="673" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v.2&gt;kW" Analog="true" Sensor="true" SourceValHigh="1000" DestValHigh="1"/>
+	<ModbusCmd Title="DC Voltage 1" Comment="" HintText="" ModbusAddress="676" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v.1&gt;V" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="1"/>
+	<ModbusCmd Title="DC Voltage 2" Comment="" HintText="" ModbusAddress="678" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v.1&gt;V" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="1"/>
+	<ModbusCmd Title="Inverter Output Total Power" Comment="" HintText="DC sourced output power" ModbusAddress="636" ModbusCmd="3" ModbusPollingCycle="0.5" Unit="&lt;v.3&gt;kW" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="0.01"/>
+	<ModbusCmd Title="Grid Side Total Power" Comment="" HintText="AC Grid Input Power" ModbusAddress="625" ModbusCmd="3" ModbusDataType="1" ModbusPollingCycle="5" Unit="&lt;v.3&gt;kW" Analog="true" Sensor="true" SourceValHigh="1000" DestValHigh="1"/>
+	<ModbusCmd Title="Battery power flow" Comment="" HintText="Battery power flow - negative for charging, positive for discharging" ModbusAddress="590" ModbusCmd="3" ModbusDataType="1" ModbusPollingCycle="0.5" Unit="&lt;v.3&gt;kW" Analog="true" Sensor="true" SourceValHigh="1000" DestValHigh="1"/>
+	<ModbusCmd Title="Battery temperature" Comment="" HintText="" ModbusAddress="586" ModbusCmd="3" ModbusDataType="32" ModbusPollingCycle="60" Unit="&lt;v.1&gt;°C" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="1"/>
+	<ModbusCmd Title="Battery Voltage" Comment="" HintText="" ModbusAddress="587" ModbusCmd="3" ModbusPollingCycle="1" Unit="&lt;v.2&gt;V" Analog="true" Sensor="true" SourceValHigh="100" DestValHigh="1"/>
+	<ModbusCmd Title="Battery SOC" Comment="" HintText="Battery State-of-charge" ModbusAddress="588" ModbusCmd="3" ModbusPollingCycle="60" Unit="&lt;v&gt;%" Analog="true" Sensor="true" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="Load Total Power" Comment="" HintText="Total output power on LOAD port" ModbusAddress="653" ModbusCmd="3" ModbusDataType="1" ModbusPollingCycle="1" Unit="&lt;v.3&gt;kW" Analog="true" Sensor="true" SourceValHigh="1000" DestValHigh="1"/>
+	<ModbusCmd Title="Run State" Comment="" HintText="0: Standby
+1: Awlf-Test
+2: Normal
+3: Alarm
+4: Error" ModbusAddress="500" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v&gt;" Analog="true" Sensor="true" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="Battery Total Charge" Comment="" HintText="" ModbusAddress="516" ModbusCmd="3" ModbusDataType="98" ModbusPollingCycle="60" Unit="&lt;v.1&gt;kWh" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="1"/>
+	<ModbusCmd Title="Battery Total Discharge" Comment="" HintText="" ModbusAddress="518" ModbusCmd="3" ModbusDataType="98" ModbusPollingCycle="60" Unit="&lt;v.1&gt;kWh" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="1"/>
+	<ModbusCmd Title="Grid charge" Comment="" HintText="" ModbusAddress="130" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v&gt;" Analog="true" Sensor="true" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="Solar sell" Comment="" HintText="" ModbusAddress="145" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v&gt;" Analog="true" Sensor="true" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="TP1 Grid charge enabled" Comment="" HintText="Time Point 1 Charge battery from grid enabled" ModbusAddress="172" ModbusCmd="3" ModbusPollingCycle="60" Unit="&lt;v&gt;" Analog="true" Sensor="true" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="TP2 Grid charge enabled" Comment="" HintText="Time Point 2 Charge battery from grid enabled" ModbusAddress="173" ModbusCmd="3" ModbusPollingCycle="60" Unit="&lt;v&gt;" Analog="true" Sensor="true" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="TP3 Grid charge enabled" Comment="" HintText="Time Point 3 Charge battery from grid enabled" ModbusAddress="174" ModbusCmd="3" ModbusPollingCycle="60" Unit="&lt;v&gt;" Analog="true" Sensor="true" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="TP4 Grid charge enabled" Comment="" HintText="Time Point 4 Charge battery from grid enabled" ModbusAddress="175" ModbusCmd="3" ModbusPollingCycle="60" Unit="&lt;v&gt;" Analog="true" Sensor="true" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="TP5 Grid charge enabled" Comment="" HintText="Time Point 5 Charge battery from grid enabled" ModbusAddress="176" ModbusCmd="3" ModbusPollingCycle="60" Unit="&lt;v&gt;" Analog="true" Sensor="true" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="TP6 Grid charge enabled" Comment="" HintText="Time Point 6 Charge battery from grid enabled" ModbusAddress="177" ModbusCmd="3" ModbusPollingCycle="60" Unit="&lt;v&gt;" Analog="true" Sensor="true" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="TP1 Capacity" Comment="" HintText="Time Point 1 Battery Capacity (Limit for discharging and grid from charging)" ModbusAddress="166" ModbusCmd="3" ModbusPollingCycle="60" Unit="&lt;v&gt;%" Analog="true" Sensor="true" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="TP2 Capacity" Comment="" HintText="Time Point 2 Battery Capacity (Limit for discharging and grid from charging)" ModbusAddress="167" ModbusCmd="3" ModbusPollingCycle="60" Unit="&lt;v&gt;%" Analog="true" Sensor="true" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="TP3 Capacity" Comment="" HintText="Time Point 3 Battery Capacity (Limit for discharging and grid from charging)" ModbusAddress="168" ModbusCmd="3" ModbusPollingCycle="60" Unit="&lt;v&gt;%" Analog="true" Sensor="true" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="TP4 Capacity" Comment="" HintText="Time Point 4 Battery Capacity (Limit for discharging and grid from charging)" ModbusAddress="169" ModbusCmd="3" ModbusPollingCycle="60" Unit="&lt;v&gt;%" Analog="true" Sensor="true" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="TP5 Capacity" Comment="" HintText="Time Point 5 Battery Capacity (Limit for discharging and grid from charging)" ModbusAddress="170" ModbusCmd="3" ModbusPollingCycle="60" Unit="&lt;v&gt;%" Analog="true" Sensor="true" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="TP6 Capacity" Comment="" HintText="Time Point 6 Battery Capacity (Limit for discharging and grid from charging)" ModbusAddress="171" ModbusCmd="3" ModbusPollingCycle="60" Unit="&lt;v&gt;%" Analog="true" Sensor="true" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="Maximum battery discharging current" Comment="" HintText="" ModbusAddress="109" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Maximum battery charging current" Comment="" HintText="" ModbusAddress="108" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Řízení přetoku" Comment="" HintText="0 - přetok neomezeně povolen vcetne vybijeni baterie
+1- přetok zakázán
+2 - přetok nastaven limitem 
+
+0 : Solární prodej
+1: Nulový export do zátěže
+2: Nulový export do Ct" ModbusAddress="142" ModbusCmd="3" ModbusPollingCycle="2" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Limit výkonu do přetoku" Comment="" HintText="" ModbusAddress="143" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v.1&gt; W" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Grid charge current" Comment="" HintText="" ModbusAddress="128" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Self-check time" Comment="" HintText="" ModbusAddress="233" ModbusCmd="3" ModbusPollingCycle="10" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Discharging current limit" Comment="" HintText="" ModbusAddress="213" ModbusCmd="3" ModbusPollingCycle="10" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Charging current limit" Comment="" HintText="" ModbusAddress="212" ModbusCmd="3" ModbusPollingCycle="10" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Teplota" Comment="" HintText="" ModbusAddress="217" ModbusCmd="3" ModbusPollingCycle="20" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="1"/>
+	<ModbusCmd Title="Nabíjecí napětí BMS" Comment="" HintText="" ModbusAddress="210" ModbusCmd="3" ModbusPollingCycle="20" Unit="&lt;v.1&gt; V" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="0.1"/>
+	<ModbusCmd Title="Proud baterie" Comment="" HintText="" ModbusAddress="591" ModbusCmd="3" ModbusPollingCycle="1" Unit="&lt;v.1&gt; A" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Export limit" Comment="" HintText="" ModbusAddress="104" ModbusCmd="3" ModbusPollingCycle="10" Unit="&lt;v.1&gt; W" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Max solar sell power" Comment="" HintText="" ModbusAddress="340" ModbusCmd="3" ModbusPollingCycle="10" Unit="&lt;v.1&gt;W" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Teplota DC měniče" Comment="" HintText="" ModbusAddress="540" ModbusCmd="3" ModbusPollingCycle="3" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Teplota střídače" Comment="" HintText="" ModbusAddress="541" ModbusCmd="3" ModbusPollingCycle="4" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" DestValLow="-1000" DestValHigh="-1000"/>
+	<ModbusCmd Title="GEN port nastavení" Comment="" HintText="0  only Gen use
+1 only smart load output
+2 only microinverter
+input" ModbusAddress="133" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Napětí baterie BMS" Comment="" HintText="" ModbusAddress="215" ModbusCmd="3" ModbusPollingCycle="1" Unit="&lt;v.2&gt; V" Analog="true" Sensor="true" SourceValHigh="1000" DestValHigh="10"/>
+	<ModbusCmd Title="Real time current BMS" Comment="" HintText="" ModbusAddress="216" ModbusCmd="3" ModbusPollingCycle="1" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="BMS fault" Comment="" HintText="" ModbusAddress="221" ModbusCmd="3" ModbusPollingCycle="2" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="BMS alarm" Comment="" HintText="" ModbusAddress="220" ModbusCmd="3" ModbusPollingCycle="1" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="DC Current 1" Comment="" HintText="" ModbusAddress="677" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v.1&gt;A" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="1"/>
+	<ModbusCmd Title="DC Current 2" Comment="" HintText="" ModbusAddress="679" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v.1&gt;A" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="1"/>
+	<ModbusCmd Title="Fault information word 1" Comment="" HintText="" ModbusAddress="555" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Fault information word 2" Comment="" HintText="" ModbusAddress="556" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Fault information word 3" Comment="" HintText="" ModbusAddress="557" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Fault information word 4" Comment="" HintText="" ModbusAddress="558" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Unbalance load" Comment="" HintText="" ModbusAddress="237" ModbusCmd="3" ModbusPollingCycle="5" Unit="" Analog="false" Sensor="true"/>
+	<ModbusCmd Title="Comm board settings" Comment="" HintText="" ModbusAddress="228" ModbusCmd="3" ModbusPollingCycle="5" Unit="&lt;v.1&gt;" Analog="true" Sensor="true" SourceValHigh="10" DestValHigh="10"/>
+	<ModbusCmd Title="Zapnutí/vypnutí" Comment="" HintText="" ModbusAddress="80" ModbusCmd="3" ModbusPollingCycle="3" Unit="" Analog="false" Sensor="true"/>
+	<ModbusCmd Title="Load first/battery first (0)" Comment="" HintText="" ModbusAddress="141" ModbusCmd="3" ModbusPollingCycle="5" Unit="" Analog="false" Sensor="true"/>
+	<ModbusCmd Title="Grid charge" Comment="" HintText="Charge battery from grid (if enabled in time points)" ModbusAddress="130" ModbusCmd="16" Unit="&lt;v&gt;" Analog="true" Sensor="false" SourceValHigh="100" DestValHigh="100" RepeatRate="3600"/>
+	<ModbusCmd Title="Solar sell" Comment="" HintText="Export PV power to grid" ModbusAddress="145" ModbusCmd="16" Unit="&lt;v&gt;" Analog="true" Sensor="false" SourceValHigh="100" DestValHigh="100" RepeatRate="3600"/>
+	<ModbusCmd Title="TP1 Grid charge enabled" Comment="" HintText="Time Point 1 Charge battery from grid enabled" ModbusAddress="172" ModbusCmd="16" Unit="" Analog="false" Sensor="false"/>
+	<ModbusCmd Title="TP2 Grid charge enabled" Comment="" HintText="Time Point 2 Charge battery from grid enabled" ModbusAddress="173" ModbusCmd="16" Unit="" Analog="false" Sensor="false"/>
+	<ModbusCmd Title="TP3 Grid charge enabled" Comment="" HintText="Time Point 3 Charge battery from grid enabled" ModbusAddress="174" ModbusCmd="16" Unit="" Analog="false" Sensor="false"/>
+	<ModbusCmd Title="TP4 Grid charge enabled" Comment="" HintText="Time Point 4 Charge battery from grid enabled" ModbusAddress="175" ModbusCmd="16" Unit="" Analog="false" Sensor="false"/>
+	<ModbusCmd Title="TP5 Grid charge enabled" Comment="" HintText="Time Point 5 Charge battery from grid enabled" ModbusAddress="176" ModbusCmd="16" Unit="" Analog="false" Sensor="false"/>
+	<ModbusCmd Title="TP6 Grid charge enabled" Comment="" HintText="Time Point 6 Charge battery from grid enabled" ModbusAddress="177" ModbusCmd="16" Unit="" Analog="false" Sensor="false"/>
+	<ModbusCmd Title="TP1 Capacity" Comment="" HintText="Time Point 1 Battery Capacity (Limit for discharging and grid from charging)" ModbusAddress="166" ModbusCmd="16" Unit="&lt;v&gt;%" Analog="true" Sensor="false" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="TP2 Capacity" Comment="" HintText="Time Point 2 Battery Capacity (Limit for discharging and grid from charging)" ModbusAddress="167" ModbusCmd="16" Unit="&lt;v&gt;%" Analog="true" Sensor="false" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="TP3 Capacity" Comment="" HintText="Time Point 3 Battery Capacity (Limit for discharging and grid from charging)" ModbusAddress="168" ModbusCmd="16" Unit="&lt;v&gt;%" Analog="true" Sensor="false" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="TP4 Capacity" Comment="" HintText="Time Point 4 Battery Capacity (Limit for discharging and grid from charging)" ModbusAddress="169" ModbusCmd="16" Unit="&lt;v&gt;%" Analog="true" Sensor="false" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="TP5 Capacity" Comment="" HintText="Time Point 5 Battery Capacity (Limit for discharging and grid from charging)" ModbusAddress="170" ModbusCmd="16" Unit="&lt;v&gt;%" Analog="true" Sensor="false" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="TP6 Capacity" Comment="" HintText="Time Point 6 Battery Capacity (Limit for discharging and grid from charging)" ModbusAddress="171" ModbusCmd="16" Unit="&lt;v&gt;%" Analog="true" Sensor="false" SourceValHigh="100" DestValHigh="100"/>
+	<ModbusCmd Title="Maximum battery discharging current" Comment="" HintText="" ModbusAddress="109" ModbusCmd="16" Unit="&lt;v.1&gt;" Analog="true" Sensor="false" SourceValHigh="10" DestValHigh="10" RepeatRate="3600"/>
+	<ModbusCmd Title="Maximum battery charging current" Comment="" HintText="" ModbusAddress="108" ModbusCmd="16" Unit="&lt;v.1&gt;" Analog="true" Sensor="false" SourceValHigh="10" DestValHigh="10" RepeatRate="3600"/>
+	<ModbusCmd Title="Řízení přetoku" Comment="" HintText="0 : Solární prodej
+1: Nulový export do zátěže
+2: Nulový export do Ct" ModbusAddress="142" ModbusCmd="16" Unit="&lt;v.1&gt;" Analog="true" Sensor="false" SourceValHigh="10" DestValHigh="10" RepeatRate="3600"/>
+	<ModbusCmd Title="Limit výkonu do přetoku" Comment="" HintText="" ModbusAddress="143" ModbusCmd="16" Unit="&lt;v.1&gt;" Analog="true" Sensor="false" SourceValHigh="10" DestValHigh="10" RepeatRate="3600"/>
+	<ModbusCmd Title="Grid charge current" Comment="" HintText="" ModbusAddress="128" ModbusCmd="16" Unit="&lt;v.1&gt;" Analog="true" Sensor="false" SourceValHigh="10" DestValHigh="10" RepeatRate="3600"/>
+	<ModbusCmd Title="Export limit" Comment="" HintText="" ModbusAddress="104" ModbusCmd="16" Unit="&lt;v.1&gt;" Analog="true" Sensor="false" SourceValHigh="10" DestValHigh="10" RepeatRate="3600"/>
+	<ModbusCmd Title="Digitální aktor 1" Comment="" HintText="" ModbusAddress="-1" ModbusCmd="5" Unit="" Analog="false" Sensor="false" RepeatRate="3600"/>
+	<ModbusCmd Title="Max sollar sell power" Comment="" HintText="" ModbusAddress="340" ModbusCmd="16" Unit="&lt;v.1&gt;" Analog="true" Sensor="false" SourceValHigh="10" DestValHigh="10" RepeatRate="3600"/>
+	<ModbusCmd Title="Unbalance load" Comment="" HintText="" ModbusAddress="237" ModbusCmd="16" Unit="" Analog="false" Sensor="false" RepeatRate="3600"/>
+	<ModbusCmd Title="Zapnutí/vypnutí" Comment="" HintText="" ModbusAddress="80" ModbusCmd="16" Unit="" Analog="false" Sensor="false" RepeatRate="3600"/>
+	<ModbusCmd Title="Comm board settings" Comment="" HintText="" ModbusAddress="228" ModbusCmd="16" Unit="&lt;v.1&gt;" Analog="true" Sensor="false" SourceValHigh="10" DestValHigh="10" RepeatRate="3600"/>
+	<ModbusCmd Title="Load first/battery first (0)" Comment="" HintText="" ModbusAddress="141" ModbusCmd="16" Unit="" Analog="false" Sensor="false" RepeatRate="3600"/>
+	<ModbusCmd Title="GEN port nastavení" Comment="" HintText="" ModbusAddress="133" ModbusCmd="6" Unit="&lt;v.1&gt;" Analog="true" Sensor="false" SourceValHigh="10" DestValHigh="10" RepeatRate="3600"/>
+</Modbus>

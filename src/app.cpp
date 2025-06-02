@@ -9,6 +9,7 @@
 #include "Inverters/Solax/SolaxDongleAPI.hpp"
 #include "Inverters/Solax/SolaxModbusDongleAPI.hpp"
 #include "Inverters/SofarSolar/SofarSolarDongleAPI.hpp"
+#include "Inverters/Deye/DeyeDongleAPI.hpp"
 #include "Inverters/Victron/VictronDongleAPI.hpp"
 #include "Shelly/Shelly.hpp"
 #include "utils/UnitFormatter.hpp"
@@ -248,6 +249,7 @@ InverterData_t loadInverterData(DongleDiscoveryResult_t &discoveryResult)
     static SolaxModbusDongleAPI solaxModbusDongleAPI = SolaxModbusDongleAPI();
     static GoodweDongleAPI goodweDongleAPI = GoodweDongleAPI();
     static SofarSolarDongleAPI sofarSolarDongleAPI = SofarSolarDongleAPI();
+    static DeyeDongleAPI deyeDongleAPI = DeyeDongleAPI();
     static VictronDongleAPI victronDongleAPI = VictronDongleAPI();
 
     InverterData_t d;
@@ -271,6 +273,9 @@ InverterData_t loadInverterData(DongleDiscoveryResult_t &discoveryResult)
         break;
     case DONGLE_TYPE_SOFAR:
         d = sofarSolarDongleAPI.loadData(discoveryResult.sn);
+        break;
+    case DONGLE_TYPE_DEYE:
+        d = deyeDongleAPI.loadData(discoveryResult.sn);
         break;
     case DONGLE_TYPE_VICTRON:
         d = victronDongleAPI.loadData(discoveryResult.sn);
@@ -476,6 +481,9 @@ void onLeaving(state_t oldState)
     case BOOT:
         break;
     case STATE_SPLASH:
+        xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+        splashUI.updateText("");
+        xSemaphoreGive(lvgl_mutex);
         break;
     case STATE_WIFI_SETUP:
         break;
@@ -538,6 +546,7 @@ void updateState()
                     xSemaphoreGive(lvgl_mutex);
                     delay(2000);
 
+                    dongleDiscovery.disconnect();
                     moveToState(STATE_WIFI_SETUP);
                 }
             }
@@ -601,6 +610,7 @@ void updateState()
 
         if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
         {
+            dongleDiscovery.disconnect();
             moveToState(STATE_WIFI_SETUP);
         }
 
