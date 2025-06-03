@@ -53,9 +53,10 @@ public:
             return inverterData;
         }
 
-        response = sendModbusRequest(1, 0x04, 0x0, 0x4B - 0x00 + 1);
+        response = sendModbusRequest(1, 0x04, 0x0, 0x54 - 0x00 + 1);
         if (response.isValid)
         {
+            inverterData.inverterPower = readInt16(response, 0x02);
             inverterData.pv1Power = readUInt16(response, 0x0A);
             inverterData.pv2Power = readUInt16(response, 0x0B);
             inverterData.inverterTemperature = readInt16(response, 0x08);
@@ -68,6 +69,9 @@ public:
             inverterData.batteryTemperature = readInt16(response, 0x18);
             inverterData.gridBuyTotal = readUInt32LSB(response, 0x4A) / 100.0f;
             inverterData.gridSellTotal = readUInt32LSB(response, 0x48) / 100.0f;
+            inverterData.loadPower = inverterData.inverterPower - inverterData.feedInPower;
+            inverterData.pvTotal = readUInt32LSB(response, 0x52) / 10.0f;
+            inverterData.pvToday = readUInt16(response, 0x50) / 10.0f;
         }
         else
         {
@@ -77,18 +81,31 @@ public:
             return inverterData;
         }
 
-        response = sendModbusRequest(1, 0x04, 0x90, 0x9A - 0x90 + 2);
+        response = sendModbusRequest(1, 0x04, 0x98, 0x9A - 0x98 + 2);
         if (response.isValid)
-        {
-            inverterData.pvTotal = readUInt32LSB(response, 0x94 - 0x90) / 10.0f;
-            inverterData.pvToday = readUInt16(response, 0x90 - 0x90) / 10.0f;
-            inverterData.gridBuyToday = readUInt32LSB(response, 0x9A - 0x90) / 100.0f;
-            inverterData.gridSellToday = readUInt32LSB(response, 0x98 - 0x90) / 100.0f;
+        {            
+            //inverterData.gridBuyToday = readUInt32LSB(response, 0x9A - 0x98);// / 100.0f;
+            inverterData.gridSellToday = readUInt16(response, 0x98 - 0x98);// / 100.0f;
         }
         else
         {
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             log_d("Failed to read PV data");
+            disconnect();
+            return inverterData;
+        }
+
+        response = sendModbusRequest(1, 0x04, 0x6A, 0x84 - 0x6A + 2);
+        if (response.isValid)
+        {
+            inverterData.L1Power = readUInt16(response, 0x6C - 0x6A);
+            inverterData.L2Power = readUInt16(response, 0x70 - 0x6A);
+            inverterData.L3Power = readUInt16(response, 0x74 - 0x6A);
+        }
+        else
+        {
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            log_d("Failed to read inverter data");
             disconnect();
             return inverterData;
         }

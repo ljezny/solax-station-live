@@ -221,7 +221,7 @@ protected:
         String str = "";
         for (uint8_t i = 0; i < length; i++)
         {
-            uint8_t index = reg - response.address + i;
+            uint8_t index = 2 * (reg - response.address) + i;
             if (index < RX_BUFFER_SIZE)
             {
                 str += (char)response.data[index];
