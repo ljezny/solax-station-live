@@ -257,15 +257,16 @@ InverterData_t loadInverterData(DongleDiscoveryResult_t &discoveryResult)
     {
     case DONGLE_TYPE_SOLAX:
     {
-        InverterData_t modbusData = solaxModbusDongleAPI.loadData(discoveryResult.sn);
-        if (modbusData.status == DONGLE_STATUS_OK)
-        {
-            d = modbusData; // use Modbus data if available
-        }
-        else
-        {
-            d = solaxDongleAPI.loadData(discoveryResult.sn);
-        }
+        d = solaxDongleAPI.loadData(discoveryResult.sn);
+        // InverterData_t modbusData = solaxModbusDongleAPI.loadData(discoveryResult.sn);
+        // if (modbusData.status == DONGLE_STATUS_OK)
+        // {
+        //     d = modbusData; // use Modbus data if available
+        // }
+        // else
+        // {
+        //     d = solaxDongleAPI.loadData(discoveryResult.sn);
+        // }
     }
     break;
     case DONGLE_TYPE_GOODWE:
