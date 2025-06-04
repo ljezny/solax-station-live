@@ -84,8 +84,8 @@ public:
         response = sendModbusRequest(1, 0x04, 0x91, 0x9A - 0x91 + 2);
         if (response.isValid)
         {            
-            inverterData.gridBuyToday = readUInt32LSB(response, 0x9A) / 100.0f;
-            inverterData.gridSellToday = readUInt32LSB(response, 0x98) / 100.0f;
+            inverterData.gridBuyToday = readUInt32LSB(response, 0x98) / 100.0f;
+            inverterData.gridSellToday = readUInt32LSB(response, 0x9A) / 100.0f;
             inverterData.loadToday -= inverterData.gridSellToday; // Adjust load today by grid sell
             inverterData.loadToday += inverterData.gridBuyToday; // Adjust load today by grid buy
             inverterData.pvToday = readUInt16(response, 0x96) / 10.0f;
