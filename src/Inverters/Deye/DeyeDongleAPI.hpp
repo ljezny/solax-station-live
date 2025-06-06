@@ -60,7 +60,7 @@ private:
                 {
                     inverterData.batteryTemperature = (readInt16(packetBuffer, 586 - 586)  - 1000)  / 10;
                     inverterData.soc = readUInt16(packetBuffer, 588 - 586);
-                    inverterData.batteryPower = readInt16(packetBuffer, 590 - 586);
+                    inverterData.batteryPower = -1 * readInt16(packetBuffer, 590 - 586); //Battery power flow - negative for charging, positive for discharging
                 }
                 else
                 {
