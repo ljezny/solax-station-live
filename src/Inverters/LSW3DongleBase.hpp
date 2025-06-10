@@ -8,7 +8,7 @@
 #include <NetworkClient.h>
 #include "Inverters/InverterResult.hpp"
 
-#define READ_TIMEOUT 5000
+#define READ_TIMEOUT 2000
 
 class LSW3DongleBase
 {
@@ -110,11 +110,10 @@ protected:
         }
         request[sizeof(request) - 2] = checksum & 0xff;
 
-        log_d("Sending solarmanv5 request: ");
-        // for (int i = 0; i < sizeof(request); i++)
-        // {
-        //     log_d("%02X ", request[i]);
-        // }
+        log_d("Sending solarmanv5 request. Sequence: %d, SN: %lu, Addr: %d, Len: %d",
+              sequenceNumber, sn, addr, len);
+        
+        client.clear(); // clear rx buffer
 
         size_t requestSize = sizeof(request);
         bool result = client.write(request, requestSize) == requestSize;
@@ -211,6 +210,7 @@ protected:
             // read trailer
             log_d("Unable to read client.");
         }
+        client.clear(); // clear rx buffer
 
         return MODBUS_RTU_FRAME_LENGTH;
     }

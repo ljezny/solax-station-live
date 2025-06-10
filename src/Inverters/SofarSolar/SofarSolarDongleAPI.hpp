@@ -39,10 +39,6 @@ private:
                     inverterData.pv2Power = readUInt16(packetBuffer, 0x589 - 0x586) * 10;
                     inverterData.pv3Power = readUInt16(packetBuffer, 0x58B - 0x586) * 10;
                     inverterData.pv4Power = readUInt16(packetBuffer, 0x58F - 0x586) * 10;
-
-                    // inverterData.feedInPower =
-                    //     readInt16(packetBuffer, 25) + readInt16(packetBuffer, 30) + readInt16(packetBuffer, 35) - readInt16(packetBuffer, 64) - readInt16(packetBuffer, 50) - readInt16(packetBuffer, 66) - readInt16(packetBuffer, 56) - readInt16(packetBuffer, 68) - readInt16(packetBuffer, 62);
-                    // inverterData.loadPower = readInt16(packetBuffer, 72) + readInt16(packetBuffer, 70);
                 }
                 else
                 {
@@ -89,21 +85,8 @@ private:
                 {
                     inverterData.batteryTemperature = readInt16(packetBuffer, 0x607 - 0x607);
                 }
-                else
-                {
-                    disconnect(client);
-                    inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                    return inverterData;
-                }
             }
-            else
-            {
-                log_d("Failed to send request");
-                disconnect(client);
-                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                return inverterData;
-            }
-
+            
             // module info
             // 0x404 - 0x44F
             if (sendReadDataRequest(client, sequenceNumber, 0x418, 0x418 - 0x418 + 1, sn))
@@ -112,20 +95,8 @@ private:
                 {
                     inverterData.inverterTemperature = readInt16(packetBuffer, 0x418 - 0x418);
                 }
-                else
-                {
-                    disconnect(client);
-                    inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                    return inverterData;
-                }
             }
-            else
-            {
-                log_d("Failed to send request");
-                disconnect(client);
-                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                return inverterData;
-            }
+           
 
             // on grid input
             // 0x484 - 0x4BC
