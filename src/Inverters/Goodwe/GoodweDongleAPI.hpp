@@ -60,6 +60,7 @@ private:
 
     bool sendDataRequest(uint16_t addr, uint8_t len)
     {
+        udp.clear(); // clear rx buffer
         if (!udp.beginPacket(IPAddress(10, 10, 100, 253), 8899))
         {
             log_d("Failed to begin packet");
