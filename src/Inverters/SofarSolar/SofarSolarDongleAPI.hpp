@@ -15,7 +15,6 @@ private:
     {
         // https://github.com/wills106/homeassistant-solax-modbus/blob/main/custom_components/solax_modbus/plugin_sofar.py
         InverterData_t inverterData;
-        NetworkClient client;
         log_d("Connecting to dongle...");
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
         log_d("SN: %d", sn);
@@ -159,7 +158,7 @@ private:
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
         logInverterData(inverterData);
 
-        disconnect(client);
+        //disconnect(client); //don't disconnect, we need to keep the connection open for next requests
         return inverterData;
     }
 };

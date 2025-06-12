@@ -257,16 +257,16 @@ InverterData_t loadInverterData(DongleDiscoveryResult_t &discoveryResult)
     {
     case DONGLE_TYPE_SOLAX:
     {
-        d = solaxDongleAPI.loadData(discoveryResult.sn);
-        // InverterData_t modbusData = solaxModbusDongleAPI.loadData(discoveryResult.sn);
-        // if (modbusData.status == DONGLE_STATUS_OK)
-        // {
-        //     d = modbusData; // use Modbus data if available
-        // }
-        // else
-        // {
-        //     d = solaxDongleAPI.loadData(discoveryResult.sn);
-        // }
+        //d = solaxDongleAPI.loadData(discoveryResult.sn);
+        InverterData_t modbusData = solaxModbusDongleAPI.loadData(discoveryResult.sn);
+        if (modbusData.status == DONGLE_STATUS_OK)
+        {
+            d = modbusData; // use Modbus data if available
+        }
+        else
+        {
+            d = solaxDongleAPI.loadData(discoveryResult.sn);
+        }
     }
     break;
     case DONGLE_TYPE_GOODWE:
@@ -331,14 +331,13 @@ bool loadInverterDataTask()
                 if (failures > 60)
                 {
                     failures = 0;
-                    WiFi.disconnect();
+                    dongleDiscovery.disconnect();
                 }
             }
+        } else {
+            dongleDiscovery.disconnect();
         }
-        else
-        {
-            inverterData.status = DONGLE_STATUS_WIFI_DISCONNECTED;
-        }
+        
     }
     return run;
 }
@@ -607,12 +606,6 @@ void updateState()
         if (resetWifiTask())
         {
             break;
-        }
-
-        if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
-        {
-            dongleDiscovery.disconnect();
-            moveToState(STATE_WIFI_SETUP);
         }
 
         break;

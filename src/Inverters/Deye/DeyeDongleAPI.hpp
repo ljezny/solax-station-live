@@ -14,7 +14,6 @@ private:
     InverterData_t readData(String dongleSN)
     {
         InverterData_t inverterData;
-        NetworkClient client;
         log_d("Connecting to dongle...");
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
         log_d("SN: %d", sn);
@@ -163,7 +162,7 @@ private:
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
         logInverterData(inverterData);
 
-        disconnect(client);
+       // disconnect(client); //do not disconnect, we will use the same connection for next request
         return inverterData;
     }
 };
