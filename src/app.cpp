@@ -291,7 +291,7 @@ bool loadInverterDataTask()
     static long lastAttempt = 0;
     bool run = false;
     static int failures = 0;
-    int incrementalDelayTimeOnError = 0;
+    static int incrementalDelayTimeOnError = 0;
     if (lastAttempt == 0 || (millis() - lastAttempt) > (INVERTER_DATA_REFRESH_INTERVAL + incrementalDelayTimeOnError))
     {
         log_d("Loading inverter data");
