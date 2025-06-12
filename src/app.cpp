@@ -291,7 +291,8 @@ bool loadInverterDataTask()
     static long lastAttempt = 0;
     bool run = false;
     static int failures = 0;
-    if (lastAttempt == 0 || millis() - lastAttempt > INVERTER_DATA_REFRESH_INTERVAL)
+    int incrementalDelayTimeOnError = 0;
+    if (lastAttempt == 0 || (millis() - lastAttempt) > (INVERTER_DATA_REFRESH_INTERVAL + incrementalDelayTimeOnError))
     {
         log_d("Loading inverter data");
         lastAttempt = millis();
@@ -313,11 +314,12 @@ bool loadInverterDataTask()
         if (dongleDiscovery.connectToDongle(discoveryResult))
         {
             log_d("Dongle wifi connected.");
-
+            
             InverterData_t d = loadInverterData(discoveryResult);
 
             if (d.status == DONGLE_STATUS_OK)
             {
+                incrementalDelayTimeOnError = 0; // reset additional delay if connection was successful
                 failures = 0;
                 inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.loadPower, inverterData.soc);
@@ -327,14 +329,16 @@ bool loadInverterDataTask()
             else
             {
                 failures++;
+                incrementalDelayTimeOnError += 2000; // increase delay if connection failed
                 log_d("Failed to load data from  dongle. Failures: %d", failures);
-                if (failures > 60)
+                if (failures > 10)
                 {
                     failures = 0;
                     dongleDiscovery.disconnect();
                 }
             }
         } else {
+            incrementalDelayTimeOnError += 5000; // increase delay if connection failed
             dongleDiscovery.disconnect();
         }
         
