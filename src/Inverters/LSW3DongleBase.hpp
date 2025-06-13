@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include <Arduino.h>
 #include <WiFi.h>
 #include <CRC.h>
@@ -13,7 +12,6 @@
 class LSW3DongleBase
 {
 public:
-    
 protected:
     uint8_t sequenceNumber = 0;
 
@@ -41,6 +39,11 @@ protected:
     bool connect(NetworkClient &client)
     {
         client.setTimeout(5000);
+        if (client.connected())
+        {
+            log_d("Already connected");
+            return true;
+        }
         if (!client.connect(IPAddress(10, 10, 100, 254), 8899))
         {
             log_d("Failed to begin packet");
@@ -112,7 +115,7 @@ protected:
 
         log_d("Sending solarmanv5 request. Sequence: %d, SN: %lu, Addr: %d, Len: %d",
               sequenceNumber, sn, addr, len);
-        
+
         client.clear(); // clear rx buffer
 
         size_t requestSize = sizeof(request);
@@ -214,4 +217,7 @@ protected:
 
         return MODBUS_RTU_FRAME_LENGTH;
     }
+
+protected:
+    NetworkClient client;
 };
