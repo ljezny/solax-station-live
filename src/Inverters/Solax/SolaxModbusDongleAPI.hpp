@@ -104,6 +104,15 @@ public:
             inverterData.L1Power = readUInt16(response, 0x6C);
             inverterData.L2Power = readUInt16(response, 0x70);
             inverterData.L3Power = readUInt16(response, 0x74);
+
+            uint16_t offgridL1Power = readUInt16(response, 0x78);
+            uint16_t offgridL2Power = readUInt16(response, 0x7C);
+            uint16_t offgridL3Power = readUInt16(response, 0x80);
+
+            inverterData.inverterPower += offgridL1Power + offgridL2Power + offgridL3Power;
+            inverterData.L1Power += offgridL1Power;
+            inverterData.L2Power += offgridL2Power;
+            inverterData.L3Power += offgridL3Power;
         }
         else
         {
