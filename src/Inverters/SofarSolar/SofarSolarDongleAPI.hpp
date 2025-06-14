@@ -2,7 +2,9 @@
 
 #include "../LSW3DongleBase.hpp"
 
-class SofarSolarDongleAPI: LSW3DongleBase
+#define DELAY_BETWEEN_REQUESTS_MS 300
+
+class SofarSolarDongleAPI : LSW3DongleBase
 {
 public:
     InverterData_t loadData(String sn)
@@ -53,7 +55,7 @@ private:
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
-
+            delay(DELAY_BETWEEN_REQUESTS_MS);
             // battery input
             // 0x0600 - 0x067F
             if (sendReadDataRequest(client, sequenceNumber, 0x667, 2, sn))
@@ -77,7 +79,7 @@ private:
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
-
+            delay(DELAY_BETWEEN_REQUESTS_MS);
             if (sendReadDataRequest(client, sequenceNumber, 0x607, 0x607 - 0x607 + 1, sn))
             {
                 if (readModbusRTUResponse(client, packetBuffer, sizeof(packetBuffer)) > 0)
@@ -85,7 +87,7 @@ private:
                     inverterData.batteryTemperature = readInt16(packetBuffer, 0x607 - 0x607);
                 }
             }
-            
+            delay(DELAY_BETWEEN_REQUESTS_MS);
             // module info
             // 0x404 - 0x44F
             if (sendReadDataRequest(client, sequenceNumber, 0x418, 0x418 - 0x418 + 1, sn))
@@ -95,8 +97,8 @@ private:
                     inverterData.inverterTemperature = readInt16(packetBuffer, 0x418 - 0x418);
                 }
             }
-           
 
+            delay(DELAY_BETWEEN_REQUESTS_MS);
             // on grid input
             // 0x484 - 0x4BC
             if (sendReadDataRequest(client, sequenceNumber, 0x484, 0x4BC - 0x484 + 1, sn))
@@ -123,7 +125,7 @@ private:
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
-
+            delay(DELAY_BETWEEN_REQUESTS_MS);
             // //stats
             // 0x0680 - 0x06BF
             if (sendReadDataRequest(client, sequenceNumber, 0x684, 0x698 - 0x684 + 2, sn))
@@ -147,7 +149,9 @@ private:
                     inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                     return inverterData;
                 }
-            } else {
+            }
+            else
+            {
                 log_d("Failed to send request");
                 disconnect(client);
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
