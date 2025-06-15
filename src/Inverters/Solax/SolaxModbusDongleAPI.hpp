@@ -113,6 +113,9 @@ public:
             inverterData.L1Power += offgridL1Power;
             inverterData.L2Power += offgridL2Power;
             inverterData.L3Power += offgridL3Power;
+
+            inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
+            inverterData.loadPower = inverterData.inverterPower - inverterData.feedInPower;
         }
         else
         {
