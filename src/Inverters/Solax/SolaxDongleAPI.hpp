@@ -92,11 +92,12 @@ public:
                                     inverterData.batteryVoltage = doc["Data"][39].as<int>() / 100.0;
                                     inverterData.batteryTemperature = doc["Data"][105].as<uint8_t>();
                                     inverterData.inverterTemperature = doc["Data"][54].as<uint8_t>();
-                                    inverterData.L1Power = ((int16_t)doc["Data"][6].as<uint16_t>());
-                                    inverterData.L2Power = ((int16_t)doc["Data"][7].as<uint16_t>());
-                                    inverterData.L3Power = ((int16_t)doc["Data"][8].as<uint16_t>());
-                                    inverterData.inverterPower = ((int16_t)doc["Data"][9].as<uint16_t>());
-                                    inverterData.loadPower = read16BitSigned(doc["Data"][47].as<uint16_t>());
+                                    inverterData.L1Power = ((int16_t)doc["Data"][6].as<uint16_t>()) + ((int16_t)doc["Data"][29].as<uint16_t>());
+                                    inverterData.L2Power = ((int16_t)doc["Data"][7].as<uint16_t>()) + ((int16_t)doc["Data"][30].as<uint16_t>());
+                                    inverterData.L3Power = ((int16_t)doc["Data"][8].as<uint16_t>())+ ((int16_t)doc["Data"][31].as<uint16_t>());
+                                    inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
+                                    inverterData.feedInPower = read16BitSigned(doc["Data"][34].as<uint16_t>());
+                                    inverterData.loadPower = inverterData.inverterPower - inverterData.feedInPower;
                                     inverterData.soc = doc["Data"][103].as<int>();
                                     if (inverterData.soc == 0 && inverterData.batteryVoltage > 0.0)
                                     { // use battery voltage approximation
@@ -109,8 +110,7 @@ public:
                                         inverterData.socApproximated = true;
                                     }
                                     inverterData.pvToday = doc["Data"][70].as<uint16_t>() / 10.0; // yield is PV inverter output (solar + battery)
-                                    inverterData.pvTotal = ((doc["Data"][69].as<uint32_t>() << 16) + doc["Data"][68].as<uint16_t>()) / 10.0;
-                                    inverterData.feedInPower = read16BitSigned(doc["Data"][34].as<uint16_t>());
+                                    inverterData.pvTotal = ((doc["Data"][69].as<uint32_t>() << 16) + doc["Data"][68].as<uint16_t>()) / 10.0;                                    
                                     inverterData.gridSellToday = doc["Data"][90].as<uint16_t>() / 100.0;
                                     inverterData.gridBuyToday = doc["Data"][92].as<uint16_t>() / 100.0;
                                     inverterData.gridSellTotal = ((doc["Data"][87].as<uint32_t>() << 16) + doc["Data"][86].as<uint16_t>()) / 100.0;
