@@ -538,7 +538,16 @@ void updateState()
                 splashUI.updateText("Loading data... ");
                 xSemaphoreGive(lvgl_mutex);
 
-                inverterData = loadInverterData(dongleDiscovery.discoveries[dongleDiscovery.preferedInverterWifiDongleIndex]);
+                for(int retry = 0; retry < 3; retry++)
+                {
+                    inverterData = loadInverterData(dongleDiscovery.discoveries[dongleDiscovery.preferedInverterWifiDongleIndex]);
+                    if(inverterData.status == DONGLE_STATUS_OK)
+                    {
+                        break;
+                    }
+                    delay(2000);
+                }
+                
                 if (inverterData.status == DONGLE_STATUS_OK)
                 {
                     moveToState(STATE_DASHBOARD);
