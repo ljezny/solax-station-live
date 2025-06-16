@@ -153,7 +153,6 @@ protected:
 
     bool isGen5(String sn)
     {
-        // Check if the serial number starts with "S5" or "S6" for Gen5 dongles
-        return sn.startsWith("H35");
+        return sn.startsWith("H35") || sn.startsWith("H3B");
     }
 };
