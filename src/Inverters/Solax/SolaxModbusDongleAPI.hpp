@@ -10,6 +10,8 @@ public:
     {
     }
 
+    
+
     InverterData_t loadData(String sn)
     {
         InverterData_t inverterData;
@@ -60,6 +62,10 @@ public:
             inverterData.pv1Power = readUInt16(response, 0x0A);
             inverterData.pv2Power = readUInt16(response, 0x0B);
             inverterData.inverterTemperature = readInt16(response, 0x08);
+            if(isGen5(inverterData.sn))
+            {
+                inverterData.inverterTemperature /= 10;
+            }
             inverterData.soc = readUInt16(response, 0x1C);
             inverterData.batteryPower = readInt16(response, 0x16);
             inverterData.batteryVoltage = readInt16(response, 0x14) / 10.0f;
@@ -124,6 +130,8 @@ public:
             disconnect();
             return inverterData;
         }
+
+
         logInverterData(inverterData);
         return inverterData; // Placeholder for actual implementation
     }
@@ -141,5 +149,11 @@ protected:
         {
             return IPAddress(5, 8, 8, 8);
         }
+    }
+
+    bool isGen5(String sn)
+    {
+        // Check if the serial number starts with "S5" or "S6" for Gen5 dongles
+        return sn.startsWith("H35");
     }
 };
