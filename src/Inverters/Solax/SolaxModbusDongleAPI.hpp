@@ -10,8 +10,6 @@ public:
     {
     }
 
-    
-
     InverterData_t loadData(String sn)
     {
         InverterData_t inverterData;
@@ -23,15 +21,12 @@ public:
             return inverterData;
         }
 
-        if (!client.connected())
+        if (!connect(getIp(), 502))
         {
-            if (!connect(getIp(), 502))
-            {
-                log_d("Failed to connect to Solax Modbus dongle");
-                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                disconnect();
-                return inverterData;
-            }
+            log_d("Failed to connect to Solax Modbus dongle");
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            disconnect();
+            return inverterData;
         }
 
         inverterData.millis = millis();
@@ -62,7 +57,7 @@ public:
             inverterData.pv1Power = readUInt16(response, 0x0A);
             inverterData.pv2Power = readUInt16(response, 0x0B);
             inverterData.inverterTemperature = readInt16(response, 0x08);
-            if(isGen5(inverterData.sn))
+            if (isGen5(inverterData.sn))
             {
                 inverterData.inverterTemperature /= 10;
             }
@@ -89,11 +84,11 @@ public:
 
         response = sendModbusRequest(1, 0x04, 0x91, 0x9A - 0x91 + 2);
         if (response.isValid)
-        {            
+        {
             inverterData.gridBuyToday = readUInt32LSB(response, 0x98) / 100.0f;
             inverterData.gridSellToday = readUInt32LSB(response, 0x9A) / 100.0f;
             inverterData.loadToday -= inverterData.gridSellToday; // Adjust load today by grid sell
-            inverterData.loadToday += inverterData.gridBuyToday; // Adjust load today by grid buy
+            inverterData.loadToday += inverterData.gridBuyToday;  // Adjust load today by grid buy
             inverterData.pvToday = readUInt16(response, 0x96) / 10.0f;
         }
         else
@@ -131,8 +126,8 @@ public:
             return inverterData;
         }
 
-
         logInverterData(inverterData);
+        disconnect();
         return inverterData; // Placeholder for actual implementation
     }
 
