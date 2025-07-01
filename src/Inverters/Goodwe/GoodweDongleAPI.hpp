@@ -23,16 +23,28 @@ private:
 
     ModbusResponse sendRunningDataRequestPacket()
     {
+        if(tcpChannel.isConnected())
+        {
+            return tcpChannel.sendModbusRequest(0xF7, 0x03, 35100, 125);
+        }
         return rtuChannel.sendDataRequest(IPAddress(10, 10, 100, 253), 8899, 35100, 125);
     }
 
     ModbusResponse sendBMSInfoRequestPacket()
     {
+        if(tcpChannel.isConnected())
+        {
+            return tcpChannel.sendModbusRequest(0xF7, 0x03, 37000, 8);
+        }
         return rtuChannel.sendDataRequest(IPAddress(10, 10, 100, 253), 8899, 37000, 8);
     }
 
     ModbusResponse sendSmartMeterRequestPacket()
     {
+        if(tcpChannel.isConnected())
+        {
+            return tcpChannel.sendModbusRequest(0xF7, 0x03, 8899, 44);
+        }
         return rtuChannel.sendDataRequest(IPAddress(10, 10, 100, 253), 8899, 36000, 44);
     }
 
@@ -40,7 +52,7 @@ private:
     {
         InverterData_t inverterData;
         log_d("Connecting to dongle...");
-        if (rtuChannel.connect())
+        if (tcpChannel.connect(IPAddress(10, 10, 100, 253), 502) || rtuChannel.connect())
         {
             log_d("Connected.");
             ModbusResponse response;
@@ -143,6 +155,7 @@ private:
             }
         }
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
+        tcpChannel.disconnect();
         rtuChannel.disconnect();
         logInverterData(inverterData);
         return inverterData;

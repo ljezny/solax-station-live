@@ -12,6 +12,11 @@ public:
     ModbusTCP()
     {
     }
+    
+    bool isConnected()
+    {
+        return client.connected();
+    }
 
     bool connect(IPAddress ip, uint16_t port)
     {
