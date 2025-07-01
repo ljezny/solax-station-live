@@ -102,13 +102,13 @@ public:
         response = sendModbusRequest(1, 0x04, 0x6A, 0x84 - 0x6A + 2);
         if (response.isValid)
         {
-            inverterData.L1Power = readUInt16(response, 0x6C);
-            inverterData.L2Power = readUInt16(response, 0x70);
-            inverterData.L3Power = readUInt16(response, 0x74);
+            inverterData.L1Power = readInt16(response, 0x6C);
+            inverterData.L2Power = readInt16(response, 0x70);
+            inverterData.L3Power = readInt16(response, 0x74);
 
-            uint16_t offgridL1Power = readUInt16(response, 0x78);
-            uint16_t offgridL2Power = readUInt16(response, 0x7C);
-            uint16_t offgridL3Power = readUInt16(response, 0x80);
+            uint16_t offgridL1Power = readInt16(response, 0x78);
+            uint16_t offgridL2Power = readInt16(response, 0x7C);
+            uint16_t offgridL3Power = readInt16(response, 0x80);
 
             inverterData.inverterPower += offgridL1Power + offgridL2Power + offgridL3Power;
             inverterData.L1Power += offgridL1Power;
