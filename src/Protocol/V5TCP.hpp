@@ -9,12 +9,28 @@
 
 #define READ_TIMEOUT 2000
 
-class LSW3DongleBase
+class V5TCP
 {
-public:
-protected:
+private:
+    NetworkClient client;
     uint8_t sequenceNumber = 0;
 
+    bool awaitPacket(int timeout)
+    {
+        unsigned long start = millis();
+        while (millis() - start < timeout)
+        {
+            int packetSize = client.available();
+            if (packetSize)
+            {
+                return true;
+            }
+            delay(10);
+        }
+        return false;
+    }
+
+public:
     uint16_t readUInt16(byte *buf, byte reg)
     {
         return (buf[3 + reg * 2] << 8 | buf[3 + reg * 2 + 1]);
@@ -36,7 +52,7 @@ protected:
         return *(float *)&v;
     }
 
-    bool connect(NetworkClient &client)
+    bool connect()
     {
         client.setTimeout(5000);
         if (client.connected())
@@ -52,12 +68,12 @@ protected:
         return true;
     }
 
-    void disconnect(NetworkClient &client)
+    void disconnect()
     {
         client.stop();
     }
 
-    bool sendReadDataRequest(NetworkClient &client, uint8_t sequenceNumber, uint16_t addr, uint8_t len, uint32_t sn)
+    bool sendReadDataRequest(uint16_t addr, uint8_t len, uint32_t sn)
     {
         sequenceNumber++;
 
@@ -123,24 +139,9 @@ protected:
         return result;
     }
 
-    bool awaitPacket(NetworkClient &client, int timeout)
+    int readModbusRTUResponse(byte *packetBuffer, size_t bufferLength)
     {
-        unsigned long start = millis();
-        while (millis() - start < timeout)
-        {
-            int packetSize = client.available();
-            if (packetSize)
-            {
-                return true;
-            }
-            delay(10);
-        }
-        return false;
-    }
-
-    int readModbusRTUResponse(NetworkClient &client, byte *packetBuffer, size_t bufferLength)
-    {
-        if (!awaitPacket(client, READ_TIMEOUT))
+        if (!awaitPacket(READ_TIMEOUT))
         {
             log_d("Response timeout");
             return -1;
@@ -217,7 +218,4 @@ protected:
 
         return MODBUS_RTU_FRAME_LENGTH;
     }
-
-protected:
-    NetworkClient client;
 };

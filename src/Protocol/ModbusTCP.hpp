@@ -1,34 +1,17 @@
 #pragma once
 
 #include <Arduino.h>
-#include "InverterResult.hpp"
 #include <CRC.h>
 #include <CRC16.h>
 #include <NetworkClient.h>
+#include "ModbusResponse.hpp"
 
-#define RX_BUFFER_SIZE 259
-
-typedef struct
-{
-    uint16_t sequenceNumber;
-    uint16_t unit;
-    uint8_t functionCode;
-    uint16_t address;
-    uint16_t length;
-    uint8_t data[RX_BUFFER_SIZE];
-    bool isValid = false;
-} ModbusTCPResponse_t;
-
-class ModbusTCPDongleAPI
+class ModbusTCP
 {
 public:
-    ModbusTCPDongleAPI()
+    ModbusTCP()
     {
     }
-
-protected:
-    NetworkClient client;
-    uint16_t sequenceNumber;
 
     bool connect(IPAddress ip, uint16_t port)
     {
@@ -40,7 +23,7 @@ protected:
         client.stop();
     }
 
-    ModbusTCPResponse_t sendModbusRequest(uint8_t unit, uint8_t functionCode, uint16_t addr, uint8_t count)
+    ModbusResponse sendModbusRequest(uint8_t unit, uint8_t functionCode, uint16_t addr, uint8_t count)
     {
         sequenceNumber++;
 
@@ -50,15 +33,15 @@ protected:
             0,
             0,
             0,
-            6,    // length of following
-            unit, // unit identifier
+            6,            // length of following
+            unit,         // unit identifier
             functionCode, // function code
             addr >> 8,
             addr & 0xff,
             0,
             count};
 
-        ModbusTCPResponse_t response;
+        ModbusResponse response;
         response.sequenceNumber = sequenceNumber;
 
         int len = client.write(request, sizeof(request));
@@ -73,7 +56,7 @@ protected:
             log_d("Response timeout");
             return response;
         }
-        
+
         response.address = addr;
 
         memset(response.data, 0, RX_BUFFER_SIZE);
@@ -88,14 +71,14 @@ protected:
             return response;
         }
         response.sequenceNumber = sequenceNumberReceived;
-        
+
         len = client.read(response.data, 2);
         if (len != 2)
         {
             log_d("Unable to read client.");
             return response;
         }
-        
+
         len = client.read(response.data, 2); // read length
         if (len != 2)
         {
@@ -124,7 +107,7 @@ protected:
 
         len = client.read(response.data, 1); // read byte count
         if (len != 1)
-        { 
+        {
             log_d("Unable to read client.");
             return response;
         }
@@ -132,14 +115,14 @@ protected:
 
         memset(response.data, 0, RX_BUFFER_SIZE);
         len = client.read(response.data, response.length); // read data
-        int expectedLength = count * 2; // each register is 2 bytes
+        int expectedLength = count * 2;                    // each register is 2 bytes
         if (len != response.length)
         {
             log_d("Unable to read client.");
             return response;
         }
 
-        if(len != expectedLength)
+        if (len != expectedLength)
         {
             log_d("Invalid response length: %d, expected: %d", len, expectedLength);
             client.read(response.data, RX_BUFFER_SIZE); // clear buffer
@@ -147,7 +130,7 @@ protected:
             return response;
         }
 
-        //log response data as hex
+        // log response data as hex
         log_d("Request address: %d", addr);
         String data = "";
         for (int i = 0; i < response.length; i++)
@@ -158,6 +141,10 @@ protected:
         response.isValid = true;
         return response;
     }
+
+private:
+    NetworkClient client;
+    uint16_t sequenceNumber;
 
     bool awaitResponse(int timeout)
     {
@@ -173,60 +160,4 @@ protected:
         }
         return false;
     }
-
-    uint16_t readUInt16(ModbusTCPResponse_t &response, u16_t reg)
-    {
-        uint8_t index = reg - response.address;
-        return (response.data[index * 2] << 8 | response.data[index * 2 + 1]);
-    }
-
-    int16_t readInt16(ModbusTCPResponse_t &response, u16_t reg)
-    {
-        return readUInt16(response, reg);
-    }
-
-    uint32_t readUInt32(ModbusTCPResponse_t &response, u16_t reg)
-    {
-        return ((uint32_t)readUInt16(response, reg)) << 16 | readUInt16(response, reg + 1);
-    }
-
-    uint32_t readUInt32LSB(ModbusTCPResponse_t &response, u16_t reg)
-    {
-        return ((uint32_t)readUInt16(response, reg + 1)) << 16 | readUInt16(response, reg);
-    }
-    
-    uint64_t readUInt64(ModbusTCPResponse_t &response, u16_t reg)
-    {
-        return ((uint64_t)readUInt32(response, reg)) << 32 | readUInt32(response, reg + 2);
-    }
-
-    int32_t readInt32(ModbusTCPResponse_t &response, u16_t reg)
-    {
-        return ((int32_t)readInt16(response, reg)) << 16 | readInt16(response, reg + 1);
-    }
-
-    int32_t readInt32LSB(ModbusTCPResponse_t &response, u16_t reg)
-    {
-        return ((int32_t)readInt16(response, reg + 1)) << 16 | readInt16(response, reg);
-    }
-
-    float readIEEE754(ModbusTCPResponse_t &response, u16_t reg)
-    {
-        uint32_t v = readUInt32(response, reg);
-        return *(float *)&v;
-    }
-
-    String readString(ModbusTCPResponse_t &response, u16_t reg, uint8_t length)
-    {
-        String str = "";
-        for (uint8_t i = 0; i < length; i++)
-        {
-            uint8_t index = 2 * (reg - response.address) + i;
-            if (index < RX_BUFFER_SIZE)
-            {
-                str += (char)response.data[index];
-            }
-        }
-        return str;
-    } 
 };

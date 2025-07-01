@@ -1,10 +1,38 @@
 #pragma once
 
 #include <Arduino.h>
-#include "../ModbusTCPDongleAPI.hpp"
+#include "../../Protocol/ModbusTCP.hpp"
 
-class VictronDongleAPI : public ModbusTCPDongleAPI
+class VictronDongleAPI
 {
+private:
+    double pvTotal = 0;
+    double batteryDischargedToday = 0; // in Wh
+    double batteryChargedToday = 0;    // in Wh
+    double gridBuyTotal = 0;
+    double gridSellTotal = 0;
+    double loadTotal = 0;
+    double lastBatteryPower = 0;
+    time_t lastBatteryPowerTime = 0;
+    int day = -1;
+    uint8_t solarChargerUnits[100] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                                      11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+                                      31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
+                                      44, 45, 46, 100, 101, 204, 205, 206, 207, 208, 209,
+                                      210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
+                                      221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231,
+                                      232, 233, 234, 235, 236, 237, 238, 239, 242, 243, 245,
+                                      246, 247};
+    uint8_t vebusUnits[100] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                               11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+                               31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
+                               44, 45, 46, 100, 101, 204, 205, 206, 207, 208, 209,
+                               210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
+                               221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231,
+                               232, 233, 234, 235, 236, 237, 238, 239, 242, 243, 245,
+                               246, 247};
+    ModbusTCP channel;
+
 public:
     VictronDongleAPI()
     {
@@ -14,7 +42,7 @@ public:
     {
         InverterData_t inverterData;
 
-        if (!connect(IPAddress(172, 24, 24, 1), 502))
+        if (!channel.connect(IPAddress(172, 24, 24, 1), 502))
         {
             log_d("Failed to connect to Victron dongle");
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
@@ -22,9 +50,9 @@ public:
         }
 
         inverterData.millis = millis();
-        ModbusTCPResponse_t response;
+        ModbusResponse response;
 
-        response = sendModbusRequest(100, 0x03, 800, 12);
+        response = channel.sendModbusRequest(100, 0x03, 800, 12);
         if (response.functionCode == 0x03)
         {
             inverterData.status = DONGLE_STATUS_OK;
@@ -32,11 +60,11 @@ public:
             log_d("SN: %s", inverterData.sn.c_str());
         }
 
-        response = sendModbusRequest(100, 0x03, 842, 2);
+        response = channel.sendModbusRequest(100, 0x03, 842, 2);
         if (response.functionCode == 0x03)
         {
-            inverterData.batteryPower = readInt16(response, 842);
-            inverterData.soc = readUInt16(response, 843);
+            inverterData.batteryPower = response.readInt16(842);
+            inverterData.soc = response.readUInt16(843);
 
             if (lastBatteryPowerTime != 0)
             {
@@ -53,15 +81,15 @@ public:
             lastBatteryPower = inverterData.batteryPower;
         }
 
-        response = sendModbusRequest(100, 0x03, 808, 15);
+        response = channel.sendModbusRequest(100, 0x03, 808, 15);
         if (response.functionCode == 0x03)
         {
-            inverterData.L1Power = max(0, ((int)readUInt16(response, 817)) - readInt16(response, 820));
-            inverterData.L2Power = max(0, ((int)readUInt16(response, 818)) - readInt16(response, 821));
-            inverterData.L3Power = max(0, ((int)readUInt16(response, 819)) - readInt16(response, 822));
-            inverterData.loadPower = readUInt16(response, 817) + readUInt16(response, 818) + readUInt16(response, 819);
+            inverterData.L1Power = max(0, ((int)response.readUInt16(817)) - response.readInt16(820));
+            inverterData.L2Power = max(0, ((int)response.readUInt16(818)) - response.readInt16(821));
+            inverterData.L3Power = max(0, ((int)response.readUInt16(819)) - response.readInt16(822));
+            inverterData.loadPower = response.readUInt16(817) + response.readUInt16(818) + response.readUInt16(819);
             inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
-            inverterData.feedInPower = -1 * (readInt16(response, 820) + readInt16(response, 821) + readInt16(response, 822));
+            inverterData.feedInPower = -1 * (response.readInt16(820) + response.readInt16(821) + response.readInt16(822));
         }
 
         for (int i = 0; i < sizeof(vebusUnits); i++)
@@ -70,15 +98,15 @@ public:
             {
                 continue;
             }
-            response = sendModbusRequest(vebusUnits[i], 0x03, 23, 3);
+            response = channel.sendModbusRequest(vebusUnits[i], 0x03, 23, 3);
             if (response.functionCode == 0x03)
             {
-                // inverterData.L1Power = readUInt16(response, 23) * 10;
-                // inverterData.L2Power = readUInt16(response, 24) * 10;
-                // inverterData.L3Power = readUInt16(response, 25) * 10;
+                // inverterData.L1Power = readUInt16(23) * 10;
+                // inverterData.L2Power = readUInt16(24) * 10;
+                // inverterData.L3Power = readUInt16(25) * 10;
                 // inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power - inverterData.feedInPower;
 
-                response = sendModbusRequest(vebusUnits[i], 0x03, 74, 20);
+                response = channel.sendModbusRequest(vebusUnits[i], 0x03, 74, 20);
                 if (response.functionCode == 0x03)
                 {
                     /*
@@ -93,22 +121,22 @@ public:
                     Energy from battery to AC-out	90
                     Energy from AC-out to battery (typically from PV-inverter)	92
                     */
-                    double energyACIn1ToACOut = readUInt32(response, 74) / 100.0;
-                    double energyACIn1ToBattery = readUInt32(response, 76) / 100.0;
-                    double energyACIn2ToACOut = readUInt32(response, 78) / 100.0;
-                    double energyACIn2ToBattery = readUInt32(response, 80) / 100.0;
-                    double energyACOutToACIn1 = readUInt32(response, 82) / 100.0;
-                    double energyACOutToACIn2 = readUInt32(response, 84) / 100.0;
-                    double energyBatteryToACIn1 = readUInt32(response, 86) / 100.0;
-                    double energyBatteryToACIn2 = readUInt32(response, 88) / 100.0;
-                    double energyBatteryToACOut = readUInt32(response, 90) / 100.0;
-                    double energyACOutToBattery = readUInt32(response, 92) / 100.0;
-                
+                    double energyACIn1ToACOut = response.readUInt32(74) / 100.0;
+                    double energyACIn1ToBattery = response.readUInt32(76) / 100.0;
+                    double energyACIn2ToACOut = response.readUInt32(78) / 100.0;
+                    double energyACIn2ToBattery = response.readUInt32(80) / 100.0;
+                    double energyACOutToACIn1 = response.readUInt32(82) / 100.0;
+                    double energyACOutToACIn2 = response.readUInt32(84) / 100.0;
+                    double energyBatteryToACIn1 = response.readUInt32(86) / 100.0;
+                    double energyBatteryToACIn2 = response.readUInt32(88) / 100.0;
+                    double energyBatteryToACOut = response.readUInt32(90) / 100.0;
+                    double energyACOutToBattery = response.readUInt32(92) / 100.0;
+
                     inverterData.gridBuyTotal = energyACIn1ToACOut + energyACIn1ToBattery; // total grid use
                     inverterData.gridSellTotal = energyBatteryToACIn1;
                     inverterData.batteryChargedTotal = energyACIn1ToBattery;
                     inverterData.batteryDischargedTotal = energyBatteryToACOut; // it seems that it is battery + solar
-                    // inverterData.pvTotal = readUInt32(response, 90) / 100.0;
+                    // inverterData.pvTotal = readUInt32(90) / 100.0;
                     inverterData.loadTotal = energyACIn1ToACOut + energyBatteryToACOut;
                 }
             }
@@ -126,11 +154,11 @@ public:
                 continue;
             }
 
-            response = sendModbusRequest(solarChargerUnits[i], 0x03, 3728, 3);
+            response = channel.sendModbusRequest(solarChargerUnits[i], 0x03, 3728, 3);
             if (response.functionCode == 0x03)
             {
-                int pvPower = readUInt16(response, 3730);
-                int pvTotal = readUInt32(response, 3728);
+                int pvPower = response.readUInt16(3730);
+                int pvTotal = response.readUInt32(3728);
                 switch (solarChargerIndex)
                 {
                 case 0:
@@ -158,16 +186,16 @@ public:
             }
         }
 
-        response = sendModbusRequest(225, 0x03, 262, 16);
+        response = channel.sendModbusRequest(225, 0x03, 262, 16);
         if (response.functionCode == 0x03)
         {
-            inverterData.batteryTemperature = readUInt16(response, 262) / 10;
+            inverterData.batteryTemperature = response.readUInt16(262) / 10;
         }
 
-        response = sendModbusRequest(100, 0x03, 830, 4);
+        response = channel.sendModbusRequest(100, 0x03, 830, 4);
         if (response.functionCode == 0x03)
         {
-            time_t time = readUInt64(response, 830);
+            time_t time = response.readUInt64(830);
 
             log_d("Time: %s", ctime(&time));
             log_d("Day: %d", day);
@@ -212,35 +240,8 @@ public:
         }
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
         logInverterData(inverterData);
-        disconnect();
+        channel.disconnect();
 
         return inverterData;
     }
-
-private:
-    double pvTotal = 0;
-    double batteryDischargedToday = 0; // in Wh
-    double batteryChargedToday = 0;    // in Wh
-    double gridBuyTotal = 0;
-    double gridSellTotal = 0;
-    double loadTotal = 0;
-    double lastBatteryPower = 0;
-    time_t lastBatteryPowerTime = 0;
-    int day = -1;
-    uint8_t solarChargerUnits[100] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                                      11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-                                      31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
-                                      44, 45, 46, 100, 101, 204, 205, 206, 207, 208, 209,
-                                      210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
-                                      221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231,
-                                      232, 233, 234, 235, 236, 237, 238, 239, 242, 243, 245,
-                                      246, 247};
-    uint8_t vebusUnits[100] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                               11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
-                               31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
-                               44, 45, 46, 100, 101, 204, 205, 206, 207, 208, 209,
-                               210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220,
-                               221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231,
-                               232, 233, 234, 235, 236, 237, 238, 239, 242, 243, 245,
-                               246, 247};
 };
