@@ -45,6 +45,11 @@ public:
     {
         return readUInt16(buf, reg) << 16 | readUInt16(buf, reg + 1);
     }
+    
+    int32_t readInt32(byte *buf, byte reg)
+    {
+        return readInt16(buf, reg) << 16 | readUInt16(buf, reg + 1);
+    }
 
     float readIEEE754(byte *buf, byte reg)
     {

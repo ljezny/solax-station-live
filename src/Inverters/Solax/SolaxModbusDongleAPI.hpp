@@ -103,13 +103,13 @@ public:
         response = channel.sendModbusRequest(1, 0x04, 0x6A, 0x84 - 0x6A + 2);
         if (response.isValid)
         {
-            inverterData.L1Power = response.readUInt16(0x6C);
-            inverterData.L2Power = response.readUInt16(0x70);
-            inverterData.L3Power = response.readUInt16(0x74);
+            inverterData.L1Power = response.readInt16(0x6C);
+            inverterData.L2Power = response.readInt16(0x70);
+            inverterData.L3Power = response.readInt16(0x74);
 
-            uint16_t offgridL1Power = response.readUInt16(0x78);
-            uint16_t offgridL2Power = response.readUInt16(0x7C);
-            uint16_t offgridL3Power = response.readUInt16(0x80);
+            uint16_t offgridL1Power = response.readInt16(0x78);
+            uint16_t offgridL2Power = response.readInt16(0x7C);
+            uint16_t offgridL3Power = response.readInt16(0x80);
 
             inverterData.inverterPower += offgridL1Power + offgridL2Power + offgridL3Power;
             inverterData.L1Power += offgridL1Power;
@@ -126,7 +126,6 @@ public:
             channel.disconnect();
             return inverterData;
         }
-
 
         logInverterData(inverterData);
         channel.disconnect();

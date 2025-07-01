@@ -12,6 +12,17 @@ public:
 
 private:
     V5TCP channel;
+
+    uint16_t readUInt16_H10(byte *buf, byte reg)
+    {
+        return ((buf[3 + reg * 2] << 8) * 10) | buf[3 + reg * 2 + 1];
+    }
+
+    int16_t readInt16_H10(byte *buf, byte reg)
+    {
+        return ((buf[3 + reg * 2] << 8) * 10) | buf[3 + reg * 2 + 1];
+    }
+
     InverterData_t readData(String dongleSN)
     {
         InverterData_t inverterData;
@@ -28,14 +39,48 @@ private:
             // pv input
             // 672-673
             // but we need only few
-            if (channel.sendReadDataRequest(672, 673 - 672 + 1, sn))
+            bool isV104 = false;
+            if (channel.sendReadDataRequest(0, 8 - 0 + 1, sn))
             {
                 if (channel.readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
                 {
                     inverterData.status = DONGLE_STATUS_OK;
                     inverterData.millis = millis();
-                    inverterData.pv1Power = channel.readUInt16(packetBuffer, 672 - 672);
-                    inverterData.pv2Power = channel.readUInt16(packetBuffer, 673 - 672);
+                    uint16_t deviceType = channel.readUInt16(packetBuffer, 0);
+                    log_d("Device type: %s", String(deviceType, HEX));
+                    uint16_t commProtoVer = channel.readUInt16(packetBuffer, 2);
+                    log_d("Comm protocol version: %s", String(commProtoVer, HEX));
+                    isV104 = (commProtoVer >= 0x0104);
+                    String inverterSN = channel.readString(packetBuffer, 3, 10);
+                    log_d("Inverter SN: %s", inverterSN.c_str());
+                    inverterData.sn = inverterSN;
+                }
+                else
+                {
+                    disconnect(client);
+                    inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                    return inverterData;
+                }
+            }
+            else
+            {
+                log_d("Failed to send request");
+                disconnect(client);
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                return inverterData;
+            }
+
+            // pv input
+            // 672-673
+            // but we need only few
+            if (channel.sendReadDataRequest(672, 673 - 672 + 1, sn))
+            {
+                if (readModbusRTUResponse(client, packetBuffer, sizeof(packetBuffer)) > 0)
+                {
+                    inverterData.pv1Power = isV104 ? readUInt16_H10(packetBuffer, 672 - 672) : readUInt16(packetBuffer, 672 - 672);
+                    inverterData.pv2Power = isV104 ? readUInt16_H10(packetBuffer, 673 - 672) : readUInt16(packetBuffer, 673 - 672);
+                    inverterData.pv3Power = isV104 ? readUInt16_H10(packetBuffer, 674 - 672) : readUInt16(packetBuffer, 674 - 672);
+                    inverterData.pv4Power = isV104 ? readUInt16_H10(packetBuffer, 675 - 672) : readUInt16(packetBuffer, 675 - 672);
                 }
                 else
                 {
@@ -58,9 +103,10 @@ private:
             {
                 if (channel.readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
                 {
-                    inverterData.batteryTemperature = (channel.readInt16(packetBuffer, 586 - 586)  - 1000)  / 10;
+                    inverterData.batteryTemperature = (channel.readInt16(packetBuffer, 586 - 586) - 1000) / 10;
                     inverterData.soc = channel.readUInt16(packetBuffer, 588 - 586);
-                    inverterData.batteryPower = -1 * channel.readInt16(packetBuffer, 590 - 586); //Battery power flow - negative for charging, positive for discharging
+                    inverterData.batteryTemperature = (readInt16(packetBuffer, 586 - 586) - 1000) / 10;
+                    inverterData.batteryPower = isV104 ? -1 * readInt16_H10(packetBuffer, 590 - 586) : -1 * channel.readInt16(packetBuffer, 590 - 586); // Battery power flow - negative for charging, positive for discharging
                 }
                 else
                 {
@@ -76,7 +122,6 @@ private:
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
-
 
             // phase and power
             // 598 - 655
@@ -152,7 +197,9 @@ private:
                     inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                     return inverterData;
                 }
-            } else {
+            }
+            else
+            {
                 log_d("Failed to send request");
                 channel.disconnect();
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
@@ -163,7 +210,7 @@ private:
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
         logInverterData(inverterData);
 
-       // disconnect(client); //do not disconnect, we will use the same connection for next request
+        // disconnect(client); //do not disconnect, we will use the same connection for next request
         return inverterData;
     }
 };
