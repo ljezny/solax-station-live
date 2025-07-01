@@ -57,7 +57,7 @@ private:
                 }
                 else
                 {
-                    disconnect(client);
+                    channel.disconnect();
                     inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                     return inverterData;
                 }
@@ -65,7 +65,7 @@ private:
             else
             {
                 log_d("Failed to send request");
-                disconnect(client);
+                channel.disconnect();
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
@@ -75,12 +75,12 @@ private:
             // but we need only few
             if (channel.sendReadDataRequest(672, 673 - 672 + 1, sn))
             {
-                if (readModbusRTUResponse(client, packetBuffer, sizeof(packetBuffer)) > 0)
+                if (channel.readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
                 {
-                    inverterData.pv1Power = isV104 ? readUInt16_H10(packetBuffer, 672 - 672) : readUInt16(packetBuffer, 672 - 672);
-                    inverterData.pv2Power = isV104 ? readUInt16_H10(packetBuffer, 673 - 672) : readUInt16(packetBuffer, 673 - 672);
-                    inverterData.pv3Power = isV104 ? readUInt16_H10(packetBuffer, 674 - 672) : readUInt16(packetBuffer, 674 - 672);
-                    inverterData.pv4Power = isV104 ? readUInt16_H10(packetBuffer, 675 - 672) : readUInt16(packetBuffer, 675 - 672);
+                    inverterData.pv1Power = isV104 ? readUInt16_H10(packetBuffer, 672 - 672) : channel.readUInt16(packetBuffer, 672 - 672);
+                    inverterData.pv2Power = isV104 ? readUInt16_H10(packetBuffer, 673 - 672) : channel.readUInt16(packetBuffer, 673 - 672);
+                    inverterData.pv3Power = isV104 ? readUInt16_H10(packetBuffer, 674 - 672) : channel.readUInt16(packetBuffer, 674 - 672);
+                    inverterData.pv4Power = isV104 ? readUInt16_H10(packetBuffer, 675 - 672) : channel.readUInt16(packetBuffer, 675 - 672);
                 }
                 else
                 {
@@ -105,7 +105,7 @@ private:
                 {
                     inverterData.batteryTemperature = (channel.readInt16(packetBuffer, 586 - 586) - 1000) / 10;
                     inverterData.soc = channel.readUInt16(packetBuffer, 588 - 586);
-                    inverterData.batteryTemperature = (readInt16(packetBuffer, 586 - 586) - 1000) / 10;
+                    inverterData.batteryTemperature = (channel.readInt16(packetBuffer, 586 - 586) - 1000) / 10;
                     inverterData.batteryPower = isV104 ? -1 * readInt16_H10(packetBuffer, 590 - 586) : -1 * channel.readInt16(packetBuffer, 590 - 586); // Battery power flow - negative for charging, positive for discharging
                 }
                 else

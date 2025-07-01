@@ -45,7 +45,7 @@ public:
     {
         return readUInt16(buf, reg) << 16 | readUInt16(buf, reg + 1);
     }
-    
+
     int32_t readInt32(byte *buf, byte reg)
     {
         return readInt16(buf, reg) << 16 | readUInt16(buf, reg + 1);
@@ -55,6 +55,20 @@ public:
     {
         uint32_t v = readUInt32(buf, reg);
         return *(float *)&v;
+    }
+
+    String readString(byte *buf, byte reg, uint8_t length)
+    {
+        String str = "";
+        for (uint8_t i = 0; i < length; i++)
+        {
+            uint8_t index = 3 + reg * 2 + i; // 3 is the offset for the header
+            if (index < RX_BUFFER_SIZE)
+            {
+                str += (char)buf[index];
+            }
+        }
+        return str;
     }
 
     bool connect()
