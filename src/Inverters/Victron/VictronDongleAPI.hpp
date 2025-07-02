@@ -23,6 +23,7 @@ private:
                                       221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231,
                                       232, 233, 234, 235, 236, 237, 238, 239, 242, 243, 245,
                                       246, 247};
+    bool solarChargerUnitsInitialized = false;
     uint8_t vebusUnits[100] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                                11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
                                31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
@@ -31,6 +32,8 @@ private:
                                221, 222, 223, 224, 225, 226, 227, 228, 229, 230, 231,
                                232, 233, 234, 235, 236, 237, 238, 239, 242, 243, 245,
                                246, 247};
+    bool vebusUnitsInitialized = false;
+
     ModbusTCP channel;
 
 public:
@@ -46,6 +49,7 @@ public:
         {
             log_d("Failed to connect to Victron dongle");
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            channel.disconnect();
             return inverterData;
         }
 
@@ -53,7 +57,7 @@ public:
         ModbusResponse response;
 
         response = channel.sendModbusRequest(100, 0x03, 800, 12);
-        if (response.functionCode == 0x03)
+        if (response.isValid)
         {
             inverterData.status = DONGLE_STATUS_OK;
             inverterData.sn = String((char *)response.data);
@@ -61,7 +65,7 @@ public:
         }
 
         response = channel.sendModbusRequest(100, 0x03, 842, 2);
-        if (response.functionCode == 0x03)
+        if (response.isValid)
         {
             inverterData.batteryPower = response.readInt16(842);
             inverterData.soc = response.readUInt16(843);
@@ -82,7 +86,7 @@ public:
         }
 
         response = channel.sendModbusRequest(100, 0x03, 808, 15);
-        if (response.functionCode == 0x03)
+        if (response.isValid)
         {
             inverterData.L1Power = max(0, ((int)response.readUInt16(817)) - response.readInt16(820));
             inverterData.L2Power = max(0, ((int)response.readUInt16(818)) - response.readInt16(821));
@@ -99,7 +103,7 @@ public:
                 continue;
             }
             response = channel.sendModbusRequest(vebusUnits[i], 0x03, 23, 3);
-            if (response.functionCode == 0x03)
+            if (response.isValid)
             {
                 // inverterData.L1Power = readUInt16(23) * 10;
                 // inverterData.L2Power = readUInt16(24) * 10;
@@ -107,7 +111,7 @@ public:
                 // inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power - inverterData.feedInPower;
 
                 response = channel.sendModbusRequest(vebusUnits[i], 0x03, 74, 20);
-                if (response.functionCode == 0x03)
+                if (response.isValid)
                 {
                     /*
                     Energy from AC-In 1 to AC-out	74
@@ -142,9 +146,13 @@ public:
             }
             else
             {
-                vebusUnits[i] = 0;
+                if (!vebusUnitsInitialized)
+                {
+                    vebusUnits[i] = 0;    
+                }                
             }
         }
+        vebusUnitsInitialized = true;
 
         int solarChargerIndex = 0;
         for (int i = 0; i < sizeof(solarChargerUnits); i++)
@@ -155,7 +163,7 @@ public:
             }
 
             response = channel.sendModbusRequest(solarChargerUnits[i], 0x03, 3728, 3);
-            if (response.functionCode == 0x03)
+            if (response.isValid)
             {
                 int pvPower = response.readUInt16(3730);
                 int pvTotal = response.readUInt32(3728);
@@ -182,18 +190,22 @@ public:
             }
             else
             {
-                solarChargerUnits[i] = 0;
+                if (!solarChargerUnitsInitialized)
+                {
+                    solarChargerUnits[i] = 0;
+                }
             }
         }
+        solarChargerUnitsInitialized = true;
 
         response = channel.sendModbusRequest(225, 0x03, 262, 16);
-        if (response.functionCode == 0x03)
+        if (response.isValid)
         {
             inverterData.batteryTemperature = response.readUInt16(262) / 10;
         }
 
         response = channel.sendModbusRequest(100, 0x03, 830, 4);
-        if (response.functionCode == 0x03)
+        if (response.isValid)
         {
             time_t time = response.readUInt64(830);
 
