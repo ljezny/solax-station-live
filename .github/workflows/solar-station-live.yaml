@@ -24,7 +24,7 @@ jobs:
       - name: Install PlatformIO Core
         run: pip install --upgrade platformio
       - name: Build PlatformIO Project
-        run: PLATFORMIO_BUILD_FLAGS="-DDEBUG=0 -DDEMO=0" pio run -e solar-station-live -e solar-station-live-advance
+        run: PLATFORMIO_BUILD_FLAGS="-DDEBUG=0 -DDEMO=0" pio run -e solar-station-live -e solar-station-live-advance --verbose
       - name: Archive
         uses: actions/upload-artifact@v4
         with:
