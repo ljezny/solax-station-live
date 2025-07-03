@@ -9,7 +9,7 @@ class SolaxModbusDongleAPI
 public:
     SolaxModbusDongleAPI()
     {
-    }    
+    }
 
     InverterData_t loadData(String sn)
     {
@@ -58,7 +58,7 @@ public:
             inverterData.pv1Power = response.readUInt16(0x0A);
             inverterData.pv2Power = response.readUInt16(0x0B);
             inverterData.inverterTemperature = response.readInt16(0x08);
-            if(isGen5(inverterData.sn))
+            if (isGen5(inverterData.sn))
             {
                 inverterData.inverterTemperature /= 10;
             }
@@ -85,11 +85,11 @@ public:
 
         response = channel.sendModbusRequest(1, 0x04, 0x91, 0x9A - 0x91 + 2);
         if (response.isValid)
-        {            
+        {
             inverterData.gridBuyToday = response.readUInt32LSB(0x98) / 100.0f;
             inverterData.gridSellToday = response.readUInt32LSB(0x9A) / 100.0f;
             inverterData.loadToday -= inverterData.gridSellToday; // Adjust load today by grid sell
-            inverterData.loadToday += inverterData.gridBuyToday; // Adjust load today by grid buy
+            inverterData.loadToday += inverterData.gridBuyToday;  // Adjust load today by grid buy
             inverterData.pvToday = response.readUInt16(0x96) / 10.0f;
         }
         else
@@ -125,6 +125,22 @@ public:
             log_d("Failed to read inverter data");
             channel.disconnect();
             return inverterData;
+        }
+
+        if (isGen5(sn))
+        {
+            response = channel.sendModbusRequest(1, 0x04, 0x0124, 1);
+            if (response.isValid)
+            {
+                inverterData.pv3Power = response.readInt16(0x0124);
+            }
+            else
+            {
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                log_d("Failed to read inverter data");
+                channel.disconnect();
+                return inverterData;
+            }
         }
 
         logInverterData(inverterData);
