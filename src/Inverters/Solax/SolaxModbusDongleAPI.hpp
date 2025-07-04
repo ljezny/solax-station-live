@@ -127,20 +127,17 @@ public:
             return inverterData;
         }
 
-        if (isGen5(sn))
+        response = channel.sendModbusRequest(1, 0x04, 0x0124, 1);
+        if (response.isValid)
         {
-            response = channel.sendModbusRequest(1, 0x04, 0x0124, 1);
-            if (response.isValid)
-            {
-                inverterData.pv3Power = response.readInt16(0x0124);
-            }
-            else
-            {
-                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                log_d("Failed to read inverter data");
-                channel.disconnect();
-                return inverterData;
-            }
+            inverterData.pv3Power = response.readInt16(0x0124);
+        }
+        else
+        {
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            log_d("Failed to read inverter data");
+            channel.disconnect();
+            return inverterData;
         }
 
         logInverterData(inverterData);
