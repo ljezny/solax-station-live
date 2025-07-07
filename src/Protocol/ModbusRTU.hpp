@@ -83,7 +83,7 @@ public:
             return response;
         }
 
-        c = crc16(response.data + 2, len - 2, 0x8005, 0xFFFF, 0, true, true);
+        c = crc16(response.data + 2, respLen - 2, 0x8005, 0xFFFF, 0, true, true);
         if (c != 0)
         {
             log_d("CRC error: %04X", c);
