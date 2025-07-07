@@ -92,13 +92,18 @@ public:
             return response;
         }
 
+        response.unit = response.data[0];
+        response.functionCode = response.data[1];
         response.address = addr;
-        //shift data 7 bytes (header)
-        for (int i = 0; i < respLen - 7; i++)
+        response.length = response.data[2];
+        log_d("Response: unit=%d, functionCode=%d, address=%d, length=%d", response.unit, response.functionCode, response.address, response.length);
+        //shift data N bytes (header)
+        int skip = 5;
+        for (int i = 0; i < respLen - skip; i++)
         {
-            response.data[i] = response.data[i + 7];
+            response.data[i] = response.data[i + skip];
         }
-        response.length = respLen - 7;
+        response.length -= skip;
         response.isValid = true;
         log_d("Received response: %d bytes", response.length);
         return response;

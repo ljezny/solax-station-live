@@ -64,7 +64,6 @@ static void draw_event_cb(lv_event_t *e)
         }
         else if (dsc->id == LV_CHART_AXIS_SECONDARY_Y)
         {
-            log_d("Secondary Y axis value: %d", dsc->value);
             lv_snprintf(dsc->text, dsc->text_length, "%d\nkW", (int) round(dsc->value / 1000.0f));
         }
         else if (dsc->id == LV_CHART_AXIS_PRIMARY_X)
