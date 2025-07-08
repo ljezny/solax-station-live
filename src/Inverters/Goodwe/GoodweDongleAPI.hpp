@@ -43,7 +43,7 @@ private:
     {
         if(tcpChannel.isConnected())
         {
-            return tcpChannel.sendModbusRequest(0xF7, 0x03, 8899, 44);
+            return tcpChannel.sendModbusRequest(0xF7, 0x03, 36000, 44);
         }
         return rtuChannel.sendDataRequest(IPAddress(10, 10, 100, 253), 8899, 36000, 44);
     }
