@@ -5,7 +5,7 @@
 
 #include "ui.h"
 
-lv_obj_t *ui_WifiSetup = NULL;lv_obj_t *ui_Container12 = NULL;lv_obj_t *ui_Container16 = NULL;lv_obj_t *ui_wifiContainer = NULL;lv_obj_t *ui_Label1 = NULL;lv_obj_t *ui_wifiDongleRoller = NULL;lv_obj_t *ui_wifiPasswordContainer = NULL;lv_obj_t *ui_Label2 = NULL;lv_obj_t *ui_wifiPassword = NULL;lv_obj_t *ui_Container15 = NULL;lv_obj_t *ui_dongleTypeContainer = NULL;lv_obj_t *ui_Label5 = NULL;lv_obj_t *ui_dongleType = NULL;lv_obj_t *ui_dongleIPContainer = NULL;lv_obj_t *ui_Label4 = NULL;lv_obj_t *ui_dongleIP = NULL;lv_obj_t *ui_wifiSetupCompleteButton = NULL;lv_obj_t *ui_Label3 = NULL;lv_obj_t *ui_Keyboard2 = NULL;
+lv_obj_t *ui_WifiSetup = NULL;lv_obj_t *ui_Container12 = NULL;lv_obj_t *ui_Container16 = NULL;lv_obj_t *ui_wifiContainer = NULL;lv_obj_t *ui_Label1 = NULL;lv_obj_t *ui_wifiDongleRoller = NULL;lv_obj_t *ui_wifiPasswordContainer = NULL;lv_obj_t *ui_Label2 = NULL;lv_obj_t *ui_wifiPassword = NULL;lv_obj_t *ui_Container15 = NULL;lv_obj_t *ui_dongleTypeContainer = NULL;lv_obj_t *ui_Label5 = NULL;lv_obj_t *ui_connectionTypeDropdown = NULL;lv_obj_t *ui_dongleIPContainer = NULL;lv_obj_t *ui_Label4 = NULL;lv_obj_t *ui_inverterIP = NULL;lv_obj_t *ui_wifiSetupCompleteButton = NULL;lv_obj_t *ui_Label3 = NULL;lv_obj_t *ui_Keyboard2 = NULL;
 // event funtions
 
 // build funtions
@@ -23,6 +23,8 @@ ui_Container12 = lv_obj_create(ui_WifiSetup);
 lv_obj_remove_style_all(ui_Container12);
 lv_obj_set_width( ui_Container12, lv_pct(100));
 lv_obj_set_flex_grow( ui_Container12, 2);
+lv_obj_set_x( ui_Container12, 1 );
+lv_obj_set_y( ui_Container12, 1 );
 lv_obj_set_align( ui_Container12, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container12,LV_FLEX_FLOW_ROW);
 lv_obj_set_flex_align(ui_Container12, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
@@ -60,7 +62,7 @@ ui_Label1 = lv_label_create(ui_wifiContainer);
 lv_obj_set_width( ui_Label1, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_Label1, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_Label1, LV_ALIGN_CENTER );
-lv_label_set_text(ui_Label1,"Wifi dongle:");
+lv_label_set_text(ui_Label1,"Select Wi-Fi:");
 
 ui_wifiDongleRoller = lv_roller_create(ui_wifiContainer);
 lv_roller_set_options( ui_wifiDongleRoller, "SOLAX - SX12345678\nSOLAX - SX12345678\nGoodWe - Solar_1234567", LV_ROLLER_MODE_NORMAL );
@@ -85,7 +87,7 @@ ui_Label2 = lv_label_create(ui_wifiPasswordContainer);
 lv_obj_set_width( ui_Label2, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_Label2, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_Label2, LV_ALIGN_CENTER );
-lv_label_set_text(ui_Label2,"WiFi password:");
+lv_label_set_text(ui_Label2,"Wi-Fi password:");
 
 ui_wifiPassword = lv_textarea_create(ui_wifiPasswordContainer);
 lv_obj_set_width( ui_wifiPassword, lv_pct(100));
@@ -122,14 +124,14 @@ ui_Label5 = lv_label_create(ui_dongleTypeContainer);
 lv_obj_set_width( ui_Label5, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_Label5, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_Label5, LV_ALIGN_CENTER );
-lv_label_set_text(ui_Label5,"Connection Type:");
+lv_label_set_text(ui_Label5,"Inverter type:");
 
-ui_dongleType = lv_dropdown_create(ui_dongleTypeContainer);
-lv_dropdown_set_options( ui_dongleType, "SOLAX\nVictron\nGoodWe\nSofar Solar\nDEYE" );
-lv_obj_set_width( ui_dongleType, lv_pct(100));
-lv_obj_set_height( ui_dongleType, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_align( ui_dongleType, LV_ALIGN_CENTER );
-lv_obj_add_flag( ui_dongleType, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
+ui_connectionTypeDropdown = lv_dropdown_create(ui_dongleTypeContainer);
+lv_dropdown_set_options( ui_connectionTypeDropdown, "SOLAX\nVictron\nGoodWe\nSofar Solar\nDEYE" );
+lv_obj_set_width( ui_connectionTypeDropdown, lv_pct(100));
+lv_obj_set_height( ui_connectionTypeDropdown, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( ui_connectionTypeDropdown, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_connectionTypeDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
 
 ui_dongleIPContainer = lv_obj_create(ui_Container15);
 lv_obj_remove_style_all(ui_dongleIPContainer);
@@ -146,14 +148,14 @@ ui_Label4 = lv_label_create(ui_dongleIPContainer);
 lv_obj_set_width( ui_Label4, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_Label4, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_Label4, LV_ALIGN_CENTER );
-lv_label_set_text(ui_Label4,"Dongle IP:");
+lv_label_set_text(ui_Label4,"Inverter IP address:");
 
-ui_dongleIP = lv_textarea_create(ui_dongleIPContainer);
-lv_obj_set_width( ui_dongleIP, lv_pct(100));
-lv_obj_set_height( ui_dongleIP, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_align( ui_dongleIP, LV_ALIGN_CENTER );
-lv_textarea_set_max_length(ui_dongleIP,16);
-lv_textarea_set_placeholder_text(ui_dongleIP,"Leave empty for autodetect ...");
+ui_inverterIP = lv_textarea_create(ui_dongleIPContainer);
+lv_obj_set_width( ui_inverterIP, lv_pct(100));
+lv_obj_set_height( ui_inverterIP, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( ui_inverterIP, LV_ALIGN_CENTER );
+lv_textarea_set_max_length(ui_inverterIP,16);
+lv_textarea_set_placeholder_text(ui_inverterIP,"Leave empty for autodetect ...");
 
 ui_wifiSetupCompleteButton = lv_btn_create(ui_Container15);
 lv_obj_set_height( ui_wifiSetupCompleteButton, 50);
@@ -198,10 +200,10 @@ ui_wifiPassword= NULL;
 ui_Container15= NULL;
 ui_dongleTypeContainer= NULL;
 ui_Label5= NULL;
-ui_dongleType= NULL;
+ui_connectionTypeDropdown= NULL;
 ui_dongleIPContainer= NULL;
 ui_Label4= NULL;
-ui_dongleIP= NULL;
+ui_inverterIP= NULL;
 ui_wifiSetupCompleteButton= NULL;
 ui_Label3= NULL;
 ui_Keyboard2= NULL;

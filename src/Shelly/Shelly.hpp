@@ -91,6 +91,18 @@ public:
         }
     }
 
+    bool isShellySSID(String ssid)
+    {
+        for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
+        {
+            if (ssid.startsWith(supportedModels[i].prefix))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     void pairShelly(String shellySSId, String ssid, String password)
     {
         WiFi.begin(shellySSId.c_str());
@@ -517,11 +529,14 @@ private:
             int step = 0;
             int percent = (shellyPair.lastState.isOn ? shellyPair.lastState.percent : 0);
 
-            //be more precise with dimmer with 70-90% range
+            // be more precise with dimmer with 70-90% range
             int multiplier = 1;
-            if(percent > 90) {
+            if (percent > 90)
+            {
                 multiplier = 3;
-            } else if(percent < 70) {
+            }
+            else if (percent < 70)
+            {
                 multiplier = 5;
             }
 

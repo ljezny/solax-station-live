@@ -16,19 +16,21 @@
 typedef struct
 {
     char password[32] = {0};
-    char dongleIp[16] = {0}; // IP address of the dongle, if available
+    char dongleIp[16] = {0};                                // IP address of the dongle, if available
+    ConnectionType_t connectionType = CONNECTION_TYPE_NONE; // Type of the dongle
 } DongleInfo_t;
 
-class DongleDiscovery
+class WiFiDiscovery
 {
 public:
-    DongleDiscoveryResult_t discoveries[DONGLE_DISCOVERY_MAX_RESULTS];
+    WiFiDiscoveryResult_t discoveries[DONGLE_DISCOVERY_MAX_RESULTS];
     int preferedInverterWifiDongleIndex = -1;
 
-    void discoverDongle(bool fast = false)
+    void scanWiFi(bool fast = false)
     {
+        memset(discoveries, 0, sizeof(discoveries));
+
         int found = WiFi.scanNetworks(false, false, false, fast ? 100 : 300);
-        bool isSupported = false;
         for (int i = 0; i < found; i++)
         {
             log_d("Found network: %s", WiFi.SSID(i).c_str());
@@ -38,90 +40,33 @@ public:
                 log_d("Empty SSID");
                 continue;
             }
-            DongleType_t supportedTypes[7] = {
-                DONGLE_TYPE_SOLAX,
-                DONGLE_TYPE_GOODWE,
-                DONGLE_TYPE_SOFAR,
-                DONGLE_TYPE_VICTRON,
-                DONGLE_TYPE_DEYE,
-                DONGLE_TYPE_SHELLY,
-                DONGLE_TYPE_UNKNOWN,
-            };
-            for (int t = 0; t < 7; t++)
+            DongleInfo_t dongleInfo;
+            loadDongleInfo(ssid, dongleInfo);
+            discoveries[i].type = dongleInfo.connectionType;
+            if( discoveries[i].type == CONNECTION_TYPE_NONE)
             {
-                DongleType_t type = supportedTypes[t];
-                if (!isDongleOfType(ssid, type))
-                {
-                    continue; // skip unsupported dongle types
-                }
-                isSupported = true;
-                int discoveryIndex = -1;
+                discoveries[i].type = preferredConnectionType(ssid);
+            }
+            discoveries[i].inverterIP = dongleInfo.dongleIp;
+            discoveries[i].ssid = ssid;
+            discoveries[i].password = dongleInfo.password;
+            discoveries[i].requiresPassword = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
+            discoveries[i].signalPercent = wifiSignalPercent(WiFi.RSSI(i));
 
-                // find if existing in sparse array
-                for (int j = 0; j < DONGLE_DISCOVERY_MAX_RESULTS; j++)
-                {
-                    if (ssid.equals(discoveries[j].ssid) && type == discoveries[j].type)
-                    {
-                        discoveryIndex = j;
-                        break;
-                    }
-                }
+            if (discoveries[i].requiresPassword)
+            {
+                discoveries[i].password = dongleInfo.password;
 
-                if (discoveryIndex != -1)
+                if (discoveries[i].type == CONNECTION_TYPE_GOODWE && discoveries[i].password.isEmpty())
                 {
-                    log_d("Already discovered this dongle");
-                    continue;
+                    discoveries[i].password = "12345678";
                 }
+            }
 
-                // find empty slot
-                for (int j = 0; j < DONGLE_DISCOVERY_MAX_RESULTS; j++)
-                {
-                    if (discoveries[j].type == DONGLE_TYPE_NONE)
-                    {
-                        discoveryIndex = j;
-                        break;
-                    }
-                }
-
-                if (discoveryIndex == -1)
-                {
-                    log_d("No more space for discovery results");
-                    continue;
-                }
-
-                if (discoveries[discoveryIndex].type != DONGLE_TYPE_NONE)
-                {
-                    log_d("Already discovered this dongle");
-                    discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i)); // update signal strength
-                    continue;
-                }
-                
-                if (type != DONGLE_TYPE_UNKNOWN)
-                {
-                    discoveries[discoveryIndex].sn = parseDongleSN(ssid);
-                }
-                discoveries[discoveryIndex].type = type;
-                discoveries[discoveryIndex].ssid = ssid;
-                discoveries[discoveryIndex].password = "";
-                discoveries[discoveryIndex].requiresPassword = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
-                discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i));
-                DongleInfo_t dongleInfo;
-                loadDongleInfo(ssid, dongleInfo);
-                if (discoveries[discoveryIndex].requiresPassword)
-                {
-                    discoveries[discoveryIndex].password = dongleInfo.password;
-
-                    if (discoveries[discoveryIndex].type == DONGLE_TYPE_GOODWE && discoveries[discoveryIndex].password.isEmpty())
-                    {
-                        discoveries[discoveryIndex].password = "12345678";
-                    }
-                }
-
-                // Dalibor Farny - Victron
-                if (discoveries[discoveryIndex].ssid == "venus-HQ22034YWXC-159")
-                {
-                    discoveries[discoveryIndex].password = "uarnb5xs";
-                }
+            // Dalibor Farny - Victron
+            if (discoveries[i].ssid == "venus-HQ22034YWXC-159")
+            {
+                discoveries[i].password = "uarnb5xs";
             }
         }
     }
@@ -132,9 +77,9 @@ public:
         return WiFi.disconnect();
     }
 
-    bool connectToDongle(DongleDiscoveryResult_t &discovery)
+    bool connectToDongle(WiFiDiscoveryResult_t &discovery)
     {
-        if (discovery.type == DONGLE_TYPE_NONE)
+        if (discovery.type == CONNECTION_TYPE_NONE)
         {
             return false;
         }
@@ -200,11 +145,7 @@ public:
         int preferred = -1;
         for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
         {
-            if (discoveries[i].type == DONGLE_TYPE_NONE)
-            {
-                continue;
-            }
-            if (discoveries[i].type == DONGLE_TYPE_SHELLY) // skip shelly
+            if (discoveries[i].type == CONNECTION_TYPE_NONE)
             {
                 continue;
             }
@@ -226,24 +167,22 @@ public:
         this->preferedInverterWifiDongleIndex = preferred;
     }
 
-    String getDongleTypeName(DongleType_t type)
+    String getDongleTypeName(ConnectionType_t type)
     {
         switch (type)
         {
-        case DONGLE_TYPE_SOLAX:
+        case CONNECTION_TYPE_SOLAX:
             return "Solax";
-        case DONGLE_TYPE_GOODWE:
+        case CONNECTION_TYPE_GOODWE:
             return "GoodWe";
-        case DONGLE_TYPE_SOFAR:
+        case CONNECTION_TYPE_SOFAR:
             return "Sofar";
-        case DONGLE_TYPE_DEYE:
-            return "Deye";
-        case DONGLE_TYPE_SHELLY:
-            return "Shelly";
-        case DONGLE_TYPE_VICTRON:
+        case CONNECTION_TYPE_DEYE:
+            return "DEYE";
+        case CONNECTION_TYPE_VICTRON:
             return "Victron";
         default:
-            return "";
+            return "Unknown";
         }
     }
 
@@ -273,49 +212,32 @@ private:
         return false;
     }
 
-    bool isDongleOfType(String ssid, DongleType_t type)
+    ConnectionType_t preferredConnectionType(String ssid)
     {
-        switch (type)
+        if (ssid.startsWith("Wifi_"))
         {
-        case DONGLE_TYPE_SOLAX:
-            return ssid.startsWith("Wifi_");
-        case DONGLE_TYPE_GOODWE:
-            return ssid.startsWith("Solar-WiFi");
-        case DONGLE_TYPE_SOFAR:
-            return ssid.startsWith("AP_");
-        case DONGLE_TYPE_SHELLY:
+            return CONNECTION_TYPE_SOLAX;
+        }
+        else if (ssid.startsWith("Solar-WiFi"))
         {
-            for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
-            {
-                if (ssid.startsWith(supportedModels[i].prefix))
-                {
-                    return true;
-                }
-            }
-            return false;
+            return CONNECTION_TYPE_GOODWE;
         }
-        case DONGLE_TYPE_VICTRON:
-            return ssid.startsWith("venus-");
-        case DONGLE_TYPE_DEYE:
-            return ssid.startsWith("AP_");
-        case DONGLE_TYPE_UNKNOWN:
-            return true;
-        default:
-            return false; // Unknown type, do not match
-        }
-        return false; // Default case, should not be reached
-    }
-
-    bool isShellySSID(String ssid)
-    {
-        for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
+        else if (ssid.startsWith("AP_"))
         {
-            if (ssid.startsWith(supportedModels[i].prefix))
-            {
-                return true;
-            }
+            return CONNECTION_TYPE_SOFAR;
         }
-        return false;
+        else if (ssid.startsWith("venus-"))
+        {
+            return CONNECTION_TYPE_VICTRON;
+        }
+        else if (ssid.startsWith("Deye-"))
+        {
+            return CONNECTION_TYPE_DEYE;
+        }
+        else
+        {
+            return CONNECTION_TYPE_NONE;
+        }
     }
 
     String parseDongleSN(String ssid)
