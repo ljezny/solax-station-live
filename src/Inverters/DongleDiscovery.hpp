@@ -9,9 +9,15 @@
 #include "utils/SoftAP.hpp"
 #include "Shelly/Shelly.hpp"
 
-#define DONGLE_DISCOVERY_MAX_RESULTS 10
+#define DONGLE_DISCOVERY_MAX_RESULTS 32
 
-#define DONGLE_DISCOVERY_PREFERENCES_KEY "dongleDiscovery"
+#define DONGLE_DISCOVERY_PREFERENCES_KEY "dongle_storage"
+
+typedef struct
+{
+    char password[32] = {0};
+    char dongleIp[16] = {0}; // IP address of the dongle, if available
+} DongleInfo_t;
 
 class DongleDiscovery
 {
@@ -19,12 +25,10 @@ public:
     DongleDiscoveryResult_t discoveries[DONGLE_DISCOVERY_MAX_RESULTS];
     int preferedInverterWifiDongleIndex = -1;
 
-    bool discoverDongle(bool fast = false)
+    void discoverDongle(bool fast = false)
     {
-        bool result = false;
-
         int found = WiFi.scanNetworks(false, false, false, fast ? 100 : 300);
-
+        bool isSupported = false;
         for (int i = 0; i < found; i++)
         {
             log_d("Found network: %s", WiFi.SSID(i).c_str());
@@ -34,21 +38,23 @@ public:
                 log_d("Empty SSID");
                 continue;
             }
-            DongleType_t supportedTypes[6] = {
+            DongleType_t supportedTypes[7] = {
                 DONGLE_TYPE_SOLAX,
                 DONGLE_TYPE_GOODWE,
                 DONGLE_TYPE_SOFAR,
                 DONGLE_TYPE_VICTRON,
                 DONGLE_TYPE_DEYE,
                 DONGLE_TYPE_SHELLY,
+                DONGLE_TYPE_UNKNOWN,
             };
-            for (int t = 0; t < 6; t++)
+            for (int t = 0; t < 7; t++)
             {
                 DongleType_t type = supportedTypes[t];
                 if (!isDongleOfType(ssid, type))
                 {
                     continue; // skip unsupported dongle types
                 }
+                isSupported = true;
                 int discoveryIndex = -1;
 
                 // find if existing in sparse array
@@ -70,7 +76,7 @@ public:
                 // find empty slot
                 for (int j = 0; j < DONGLE_DISCOVERY_MAX_RESULTS; j++)
                 {
-                    if (discoveries[j].type == DONGLE_TYPE_UNKNOWN)
+                    if (discoveries[j].type == DONGLE_TYPE_NONE)
                     {
                         discoveryIndex = j;
                         break;
@@ -83,23 +89,27 @@ public:
                     continue;
                 }
 
-                if (discoveries[discoveryIndex].type != DONGLE_TYPE_UNKNOWN)
+                if (discoveries[discoveryIndex].type != DONGLE_TYPE_NONE)
                 {
                     log_d("Already discovered this dongle");
                     discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i)); // update signal strength
                     continue;
                 }
-
-                discoveries[discoveryIndex].sn = parseDongleSN(ssid);
+                
+                if (type != DONGLE_TYPE_UNKNOWN)
+                {
+                    discoveries[discoveryIndex].sn = parseDongleSN(ssid);
+                }
                 discoveries[discoveryIndex].type = type;
                 discoveries[discoveryIndex].ssid = ssid;
                 discoveries[discoveryIndex].password = "";
                 discoveries[discoveryIndex].requiresPassword = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
                 discoveries[discoveryIndex].signalPercent = wifiSignalPercent(WiFi.RSSI(i));
-
+                DongleInfo_t dongleInfo;
+                loadDongleInfo(ssid, dongleInfo);
                 if (discoveries[discoveryIndex].requiresPassword)
                 {
-                    discoveries[discoveryIndex].password = loadDonglePassword(ssid);
+                    discoveries[discoveryIndex].password = dongleInfo.password;
 
                     if (discoveries[discoveryIndex].type == DONGLE_TYPE_GOODWE && discoveries[discoveryIndex].password.isEmpty())
                     {
@@ -112,12 +122,8 @@ public:
                 {
                     discoveries[discoveryIndex].password = "uarnb5xs";
                 }
-
-                result = true;
             }
         }
-
-        return true;
     }
 
     bool disconnect()
@@ -128,7 +134,7 @@ public:
 
     bool connectToDongle(DongleDiscoveryResult_t &discovery)
     {
-        if (discovery.type == DONGLE_TYPE_UNKNOWN)
+        if (discovery.type == DONGLE_TYPE_NONE)
         {
             return false;
         }
@@ -155,7 +161,10 @@ public:
         {
             log_d("Connected to %s", discovery.ssid.c_str());
 
-            saveDonglePassword(discovery.ssid, discovery.password);
+            DongleInfo_t dongleInfo;
+            loadDongleInfo(discovery.ssid, dongleInfo);
+            strcpy(dongleInfo.password, discovery.password.c_str());
+            saveDongleInfo(discovery.ssid, dongleInfo);
         }
         else
         {
@@ -169,7 +178,11 @@ public:
             if (connectionResult)
             {
                 log_d("Connected to %s with default password", discovery.ssid.c_str());
-                saveDonglePassword(discovery.ssid, SoftAP::getPassword());
+
+                DongleInfo_t dongleInfo;
+                loadDongleInfo(discovery.ssid, dongleInfo);
+                strcpy(dongleInfo.password, SoftAP::getPassword().c_str());
+                saveDongleInfo(discovery.ssid, dongleInfo);
             }
         }
 
@@ -187,7 +200,7 @@ public:
         int preferred = -1;
         for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
         {
-            if (discoveries[i].type == DONGLE_TYPE_UNKNOWN)
+            if (discoveries[i].type == DONGLE_TYPE_NONE)
             {
                 continue;
             }
@@ -230,7 +243,7 @@ public:
         case DONGLE_TYPE_VICTRON:
             return "Victron";
         default:
-            return "Unknown";
+            return "";
         }
     }
 
@@ -285,6 +298,8 @@ private:
             return ssid.startsWith("venus-");
         case DONGLE_TYPE_DEYE:
             return ssid.startsWith("AP_");
+        case DONGLE_TYPE_UNKNOWN:
+            return true;
         default:
             return false; // Unknown type, do not match
         }
@@ -346,28 +361,39 @@ private:
         return result;
     }
 
-    void saveDonglePassword(String ssid, String password)
+    void saveDongleInfo(String ssid, DongleInfo_t &info)
     {
         Preferences preferences;
         preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, false);
-        preferences.putString(hashString(ssid).c_str(), password);
+        preferences.putBytes(hashString(ssid).c_str(), (void *)&info, sizeof(DongleInfo_t));
         preferences.end();
     }
 
-    String loadDonglePassword(String ssid)
+    bool loadDongleInfo(String ssid, DongleInfo_t &info)
     {
         Preferences preferences;
         preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, true);
-        String password = preferences.getString(hashString(ssid).c_str(), "");
+        String key = hashString(ssid);
+        bool result = false;
+        if (!preferences.isKey(key.c_str()))
+        {
+            log_d("No dongle info found for %s", ssid.c_str());
+        }
+        else
+        {
+            size_t len = preferences.getBytesLength(key.c_str());
+            if (len == sizeof(DongleInfo_t))
+            {
+                preferences.getBytes(key.c_str(), (void *)&info, sizeof(DongleInfo_t));
+                result = true;
+                log_d("Loaded dongle info for %s", ssid.c_str());
+            }
+            else
+            {
+                log_d("Dongle info for %s has invalid length: %d", ssid.c_str(), len);
+            }
+        }
         preferences.end();
-        return password;
-    }
-    //do not use, it will delete password and not reconnect
-    void clearDonglePassword(String ssid)
-    {
-        Preferences preferences;
-        preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, false);
-        preferences.remove(hashString(ssid).c_str());
-        preferences.end();
+        return result;
     }
 };

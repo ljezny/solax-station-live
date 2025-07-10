@@ -34,7 +34,7 @@ public:
             }
             options += dongleDiscovery.getDongleTypeName(dongleDiscovery.discoveries[i].type);
             options += " - ";
-            options += dongleDiscovery.discoveries[i].sn;
+            options += dongleDiscovery.discoveries[i].sn.isEmpty() ? dongleDiscovery.discoveries[i].ssid : dongleDiscovery.discoveries[i].sn;
             options += " (";
             options += dongleDiscovery.discoveries[i].signalPercent;
             options += "%)";
