@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <lvgl.h>
 #include "ui/ui.h"
-#include "Inverters/DongleDiscovery.hpp"
+#include "Inverters/WiFiDiscovery.hpp"
 
 static void wifiSetupCompleteHandler(lv_event_t *e);
 static void wifiRollerHandler(lv_event_t *e);
@@ -97,9 +97,9 @@ public:
         {
             ConnectionType_t selectedType = (ConnectionType_t)connectionTypeSelectedIndex;
             int wifiSelectedIndex = lv_roller_get_selected(ui_wifiDongleRoller);
-            if( wifiSelectedIndex >= 0 && wifiSelectedIndex < DONGLE_DISCOVERY_MAX_RESULTS)
+            if (wifiSelectedIndex >= 0 && wifiSelectedIndex < DONGLE_DISCOVERY_MAX_RESULTS)
             {
-                dongleDiscovery.discoveries[wifiSelectedIndex].type = (ConnectionType_t) connectionTypeSelectedIndex;
+                dongleDiscovery.discoveries[wifiSelectedIndex].type = (ConnectionType_t)connectionTypeSelectedIndex;
             }
         }
     }
@@ -123,7 +123,10 @@ static void wifiRollerHandler(lv_event_t *e)
     if (code == LV_EVENT_VALUE_CHANGED)
     {
         WiFiSetupUI *ui = (WiFiSetupUI *)lv_event_get_user_data(e);
-        ui->onWiFiRollerChanged();
+        if (ui)
+        {
+            ui->onWiFiRollerChanged();
+        }
     }
 }
 
@@ -133,6 +136,9 @@ static void connectionTypeHandler(lv_event_t *e)
     if (code == LV_EVENT_VALUE_CHANGED)
     {
         WiFiSetupUI *ui = (WiFiSetupUI *)lv_event_get_user_data(e);
-        ui->onConnectionTypeChanged();
+        if (ui)
+        {
+            ui->onConnectionTypeChanged();
+        }
     }
 }

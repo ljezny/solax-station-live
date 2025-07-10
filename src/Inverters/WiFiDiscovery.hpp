@@ -5,7 +5,7 @@
 #include <HTTPClient.h>
 #include <Preferences.h>
 
-#include "DongleResult.hpp"
+#include "WiFiResult.hpp"
 #include "utils/SoftAP.hpp"
 #include "Shelly/Shelly.hpp"
 

@@ -4,7 +4,7 @@
 #include <SPI.h>
 #include "consts.h"
 #include "ui/ui.h"
-#include "Inverters/DongleDiscovery.hpp"
+#include "Inverters/WiFiDiscovery.hpp"
 #include "Inverters/Goodwe/GoodweDongleAPI.hpp"
 #include "Inverters/Solax/SolaxModbusDongleAPI.hpp"
 #include "Inverters/SofarSolar/SofarSolarDongleAPI.hpp"
