@@ -19081,7 +19081,7 @@
                           {
                             "nid": 1030,
                             "strtype": "LABEL/Text",
-                            "strval": "Wifi dongle:",
+                            "strval": "Select Wi-Fi:",
                             "InheritedType": 10
                           },
                           {
@@ -19393,8 +19393,7 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "CONTAINER",
-                    "tree_closed": true
+                    "saved_objtypeKey": "CONTAINER"
                   },
                   {
                     "guid": "GUID43722399-686505S271454191",
@@ -19523,7 +19522,7 @@
                           {
                             "nid": 1030,
                             "strtype": "LABEL/Text",
-                            "strval": "WiFi password:",
+                            "strval": "Wi-Fi password:",
                             "InheritedType": 10
                           },
                           {
@@ -19870,8 +19869,7 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "CONTAINER",
-                    "tree_closed": true
+                    "saved_objtypeKey": "CONTAINER"
                   }
                 ],
                 "dont_export": false,
@@ -20154,7 +20152,7 @@
                           {
                             "nid": 1030,
                             "strtype": "LABEL/Text",
-                            "strval": "Connection Type:",
+                            "strval": "Inverter type:",
                             "InheritedType": 10
                           },
                           {
@@ -20632,7 +20630,7 @@
                           {
                             "nid": 1030,
                             "strtype": "LABEL/Text",
-                            "strval": "Dongle IP:",
+                            "strval": "Inverter IP address:",
                             "InheritedType": 10
                           },
                           {
@@ -21440,8 +21438,8 @@
                 "flags": 17,
                 "strtype": "OBJECT/Position",
                 "intarray": [
-                  0,
-                  0
+                  1,
+                  1
                 ],
                 "InheritedType": 7
               },
@@ -21870,7 +21868,7 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 711,
+    "backup_cnt": 712,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",
