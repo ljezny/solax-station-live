@@ -7,21 +7,27 @@
 class SofarSolarDongleAPI
 {
 public:
-    InverterData_t loadData(String sn)
+    InverterData_t loadData(String ipAddress, String sn)
     {
-        return readData(sn);
+        return readData(ipAddress, sn);
     }
 
 private:
     V5TCP channel;
-    InverterData_t readData(String dongleSN)
+    InverterData_t readData(String ipAddress, String dongleSN)
     {
+        IPAddress ip = IPAddress(ipAddress.c_str());
+        if(ip == IPAddress(0, 0, 0, 0))
+        {
+            ip = IPAddress(10, 10, 100, 254); // default IP
+        }
+        
         // https://github.com/wills106/homeassistant-solax-modbus/blob/main/custom_components/solax_modbus/plugin_sofar.py
         InverterData_t inverterData;
         log_d("Connecting to dongle...");
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
         log_d("SN: %d", sn);
-        if (channel.connect())
+        if (channel.connect(ip))
         {
             log_d("Connected.");
             byte packetBuffer[1024];

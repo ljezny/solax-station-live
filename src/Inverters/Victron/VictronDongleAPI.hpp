@@ -41,11 +41,15 @@ public:
     {
     }
 
-    InverterData_t loadData(String sn)
+    InverterData_t loadData(String ipAddress)
     {
         InverterData_t inverterData;
-
-        if (!channel.connect(IPAddress(172, 24, 24, 1), 502))
+        IPAddress ip = IPAddress(ipAddress.c_str());
+        if (ip == IPAddress(0, 0, 0, 0))
+        {
+            ip = IPAddress(172, 24, 24, 1); // Default Victron dongle IP
+        }
+        if (!channel.connect(ip, 502))
         {
             log_d("Failed to connect to Victron dongle");
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
@@ -148,8 +152,8 @@ public:
             {
                 if (!vebusUnitsInitialized)
                 {
-                    vebusUnits[i] = 0;    
-                }                
+                    vebusUnits[i] = 0;
+                }
             }
         }
         vebusUnitsInitialized = true;

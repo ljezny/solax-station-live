@@ -8,9 +8,9 @@
 class GoodweDongleAPI
 {
 public:
-    InverterData_t loadData(String sn)
+    InverterData_t loadData(String ipAddress)
     {
-        return readData(sn);
+        return readData(ipAddress);
     }
 
 private:
@@ -21,44 +21,60 @@ private:
     double gridSellTotal = 0;
     int day = -1;
 
-    ModbusResponse sendRunningDataRequestPacket()
+    ModbusResponse sendSNDataRequestPacket(IPAddress ip)
     {
-        if(tcpChannel.isConnected())
+        if (tcpChannel.isConnected())
+        {
+            return tcpChannel.sendModbusRequest(0xF7, 0x03, 35003, 8);
+        }
+        return rtuChannel.sendDataRequest(ip, 8899, 35003, 8);
+    }
+
+    ModbusResponse sendRunningDataRequestPacket(IPAddress ip)
+    {
+        if (tcpChannel.isConnected())
         {
             return tcpChannel.sendModbusRequest(0xF7, 0x03, 35100, 125);
         }
-        return rtuChannel.sendDataRequest(IPAddress(10, 10, 100, 253), 8899, 35100, 125);
+        return rtuChannel.sendDataRequest(ip, 8899, 35100, 125);
     }
 
-    ModbusResponse sendBMSInfoRequestPacket()
+    ModbusResponse sendBMSInfoRequestPacket(IPAddress ip)
     {
-        if(tcpChannel.isConnected())
+        if (tcpChannel.isConnected())
         {
             return tcpChannel.sendModbusRequest(0xF7, 0x03, 37000, 8);
         }
-        return rtuChannel.sendDataRequest(IPAddress(10, 10, 100, 253), 8899, 37000, 8);
+        return rtuChannel.sendDataRequest(ip, 8899, 37000, 8);
     }
 
-    ModbusResponse sendSmartMeterRequestPacket()
+    ModbusResponse sendSmartMeterRequestPacket(IPAddress ip)
     {
-        if(tcpChannel.isConnected())
+        if (tcpChannel.isConnected())
         {
             return tcpChannel.sendModbusRequest(0xF7, 0x03, 36000, 44);
         }
-        return rtuChannel.sendDataRequest(IPAddress(10, 10, 100, 253), 8899, 36000, 44);
+        return rtuChannel.sendDataRequest(ip, 8899, 36000, 44);
     }
 
-    InverterData_t readData(String sn)
+    InverterData_t readData(String ipAddress)
     {
+        IPAddress ip = IPAddress(ipAddress.c_str());
+        if (ip == IPAddress(0, 0, 0, 0))
+        {
+            ip = IPAddress(10, 10, 100, 253);
+        }
+
         InverterData_t inverterData;
         log_d("Connecting to dongle...");
-        if (tcpChannel.connect(IPAddress(10, 10, 100, 253), 502) || rtuChannel.connect())
+        if (tcpChannel.connect(ip, 502) || rtuChannel.connect())
         {
             log_d("Connected.");
             ModbusResponse response;
+
             for (int i = 0; i < 3; i++)
             {
-                response = sendRunningDataRequestPacket();
+                response = sendRunningDataRequestPacket(ip);
                 if (response.isValid)
                 {
                     inverterData.status = DONGLE_STATUS_OK;
@@ -74,7 +90,7 @@ private:
                     inverterData.L2Power = response.readInt16(35100 + 30) + response.readInt16(35100 + 56);
                     inverterData.L3Power = response.readInt16(35100 + 35) + response.readInt16(35100 + 62);
                     inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power; // readInt16(38); //38 - total inverter power
-                    bool backupConnectedToLoad = response.readUInt16(35100 + 60) == 0x00;                                    // 0x00 - backup is connected to load, 0x01 - inverter disconnects to load
+                    bool backupConnectedToLoad = response.readUInt16(35100 + 60) == 0x00;                            // 0x00 - backup is connected to load, 0x01 - inverter disconnects to load
                     if (backupConnectedToLoad)
                     {
                         inverterData.loadPower = response.readInt16(35100 + 72); // total load power
@@ -91,7 +107,6 @@ private:
                     inverterData.loadTotal = response.readUInt32(35100 + 103) / 10.0;
                     inverterData.batteryChargedToday = response.readUInt16(35100 + 108) / 10.0;
                     inverterData.batteryDischargedToday = response.readUInt16(35100 + 111) / 10.0;
-                    inverterData.sn = sn;
                     logInverterData(inverterData);
 
                     // this is a hack - Goodwe returns incorrect day values for grid sell/buy
@@ -110,8 +125,19 @@ private:
             }
 
             for (int i = 0; i < 3; i++)
+            {
+                response = sendSNDataRequestPacket(ip);
+                if (response.isValid)
+                {
+                    inverterData.sn = response.readString(35003, 8);
+                    log_d("Dongle SN: %s", inverterData.sn.c_str());
+                    break;
+                }
+            }
+            
+            for (int i = 0; i < 3; i++)
             { // it is UDP so retries are needed
-                response = sendSmartMeterRequestPacket();
+                response = sendSmartMeterRequestPacket(ip);
                 if (response.isValid)
                 {
                     inverterData.gridSellTotal = response.readIEEE754(36000 + 15) / 1000.0f;
@@ -144,7 +170,7 @@ private:
 
             for (int i = 0; i < 3; i++)
             { // it is UDP so retries are needed
-                response = sendBMSInfoRequestPacket();
+                response = sendBMSInfoRequestPacket(ip);
                 if (response.isValid)
                 {
 

@@ -57,6 +57,8 @@ SplashUI splashUI;
 WiFiSetupUI wifiSetupUI(dongleDiscovery);
 DashboardUI dashboardUI;
 
+WiFiDiscoveryResult_t wifiDiscoveryResult;
+
 typedef enum
 {
     BOOT,
@@ -218,7 +220,7 @@ void setup()
         Serial.println("PSRAM 初始化失败！");
         while (1)
             ;
-        ß
+        
     }
 #endif
     // set cpu frequency to 240MHz
@@ -254,16 +256,16 @@ InverterData_t loadInverterData(WiFiDiscoveryResult_t &discoveryResult)
     switch (discoveryResult.type)
     {
     case CONNECTION_TYPE_SOLAX:
-        d = solaxModbusDongleAPI.loadData(discoveryResult.sn);
+        d = solaxModbusDongleAPI.loadData(discoveryResult.inverterIP);
         break;
     case CONNECTION_TYPE_GOODWE:
-        d = goodweDongleAPI.loadData(discoveryResult.sn);
+        d = goodweDongleAPI.loadData(discoveryResult.inverterIP);
         break;
     case CONNECTION_TYPE_SOFAR:
-        d = sofarSolarDongleAPI.loadData(discoveryResult.sn);
+        d = sofarSolarDongleAPI.loadData(discoveryResult.inverterIP, discoveryResult.sn);
         break;
     case CONNECTION_TYPE_DEYE:
-        d = deyeDongleAPI.loadData(discoveryResult.sn);
+        d = deyeDongleAPI.loadData(discoveryResult.inverterIP, discoveryResult.sn);
         break;
     case CONNECTION_TYPE_VICTRON:
         d = victronDongleAPI.loadData(discoveryResult.sn);
@@ -291,18 +293,11 @@ bool loadInverterDataTask()
         return run;
 #endif
 
-        if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
-        {
-            return run;
-        }
-
-        WiFiDiscoveryResult_t &discoveryResult = dongleDiscovery.discoveries[dongleDiscovery.preferedInverterWifiDongleIndex];
-
-        if (dongleDiscovery.connectToDongle(discoveryResult))
+        if (dongleDiscovery.connectToDongle(wifiDiscoveryResult))
         {
             log_d("Dongle wifi connected.");
 
-            InverterData_t d = loadInverterData(discoveryResult);
+            InverterData_t d = loadInverterData(wifiDiscoveryResult);
 
             if (d.status == DONGLE_STATUS_OK)
             {
@@ -349,7 +344,7 @@ bool pairShellyTask()
                 {
                     if (shellyAPI.setWiFiSTA(dongleDiscovery.discoveries[i].ssid, softAP.getSSID(), softAP.getPassword()))
                     {
-                        //TODO: test it
+                        // TODO: test it
                     }
                     WiFi.disconnect();
                 }
@@ -498,29 +493,36 @@ void updateState()
     switch (state)
     {
     case BOOT:
+    {
+        dongleDiscovery.scanWiFi();
+        String lastConnectedSSID = dongleDiscovery.loadLastConnectedSSID();
+        if (!lastConnectedSSID.isEmpty())
+        {
+            WiFiDiscoveryResult_t lastConnectedResult = dongleDiscovery.getDiscoveryResult(lastConnectedSSID);
+            if (lastConnectedResult.type != CONNECTION_TYPE_NONE)
+            {
+                wifiDiscoveryResult = lastConnectedResult;
+                log_d("Last connected SSID: %s, type: %d", lastConnectedResult.ssid.c_str(), lastConnectedResult.type);
+                moveToState(STATE_SPLASH);
+            }
+        }
+
         moveToState(STATE_SPLASH);
-        break;
+    }
+    break;
     case STATE_SPLASH:
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         splashUI.update(softAP.getESPIdHex(), String(VERSION_NUMBER));
         splashUI.updateText("Discovering dongles...");
         xSemaphoreGive(lvgl_mutex);
 
-        dongleDiscovery.scanWiFi(false);
-        if (dongleDiscovery.preferedInverterWifiDongleIndex == -1)
+        if (wifiDiscoveryResult.type != CONNECTION_TYPE_NONE)
         {
-            dongleDiscovery.trySelectPreferedInverterWifiDongleIndex();
-        }
-
-        if (dongleDiscovery.preferedInverterWifiDongleIndex != -1)
-        {
-            WiFiDiscoveryResult_t &discoveryResult = dongleDiscovery.discoveries[dongleDiscovery.preferedInverterWifiDongleIndex];
-
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-            splashUI.updateText("Connecting... " + discoveryResult.ssid);
+            splashUI.updateText("Connecting... " + wifiDiscoveryResult.ssid);
             xSemaphoreGive(lvgl_mutex);
 
-            if (dongleDiscovery.connectToDongle(discoveryResult))
+            if (dongleDiscovery.connectToDongle(wifiDiscoveryResult))
             {
                 xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
                 splashUI.updateText("Loading data... ");
@@ -528,7 +530,7 @@ void updateState()
 
                 for (int retry = 0; retry < 3; retry++)
                 {
-                    inverterData = loadInverterData(dongleDiscovery.discoveries[dongleDiscovery.preferedInverterWifiDongleIndex]);
+                    inverterData = loadInverterData(wifiDiscoveryResult);
                     if (inverterData.status == DONGLE_STATUS_OK)
                     {
                         break;
@@ -567,8 +569,9 @@ void updateState()
         }
         break;
     case STATE_WIFI_SETUP:
-        if (wifiSetupUI.complete)
+        if (wifiSetupUI.result.type != CONNECTION_TYPE_NONE)
         {
+            wifiDiscoveryResult = wifiSetupUI.result;
             moveToState(STATE_SPLASH);
         }
 #if DEMO

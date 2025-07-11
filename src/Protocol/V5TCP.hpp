@@ -71,7 +71,7 @@ public:
         return str;
     }
 
-    bool connect()
+    bool connect(IPAddress ip)
     {
         client.setTimeout(5000);
         if (client.connected())
@@ -79,7 +79,7 @@ public:
             log_d("Already connected");
             return true;
         }
-        if (!client.connect(IPAddress(10, 10, 100, 254), 8899))
+        if (!client.connect(ip, 8899))
         {
             log_d("Failed to begin packet");
             return false;

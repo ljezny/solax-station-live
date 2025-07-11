@@ -11,7 +11,7 @@ public:
     {
     }
 
-    InverterData_t loadData(String sn)
+    InverterData_t loadData(String ipAddress)
     {
         InverterData_t inverterData;
 
@@ -22,7 +22,7 @@ public:
             return inverterData;
         }
 
-        if (!channel.connect(getIp(), 502))
+        if (!channel.connect(getIp(ipAddress), 502))
         {
             log_d("Failed to connect to Solax Modbus dongle");
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
@@ -149,16 +149,22 @@ protected:
     ModbusTCP channel;
     bool isSupportedDongle = true;
 
-    IPAddress getIp()
+    IPAddress getIp(String ipAddress)
     {
-        if (WiFi.localIP()[0] == 192)
+        IPAddress ip = IPAddress(ipAddress.c_str());
+        
+        if (ip == IPAddress(0, 0, 0, 0))
         {
-            return IPAddress(192, 168, 10, 10);
+            if (WiFi.localIP()[0] == 192)
+            {
+                return IPAddress(192, 168, 10, 10);
+            }
+            else
+            {
+                return IPAddress(5, 8, 8, 8);
+            }
         }
-        else
-        {
-            return IPAddress(5, 8, 8, 8);
-        }
+        return ip;
     }
 
     bool isGen5(String sn)

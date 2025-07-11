@@ -5,7 +5,7 @@
 
 #include "ui.h"
 
-lv_obj_t *ui_WifiSetup = NULL;lv_obj_t *ui_Container12 = NULL;lv_obj_t *ui_Container16 = NULL;lv_obj_t *ui_wifiContainer = NULL;lv_obj_t *ui_Label1 = NULL;lv_obj_t *ui_wifiDongleRoller = NULL;lv_obj_t *ui_wifiPasswordContainer = NULL;lv_obj_t *ui_Label2 = NULL;lv_obj_t *ui_wifiPassword = NULL;lv_obj_t *ui_Container15 = NULL;lv_obj_t *ui_dongleTypeContainer = NULL;lv_obj_t *ui_Label5 = NULL;lv_obj_t *ui_connectionTypeDropdown = NULL;lv_obj_t *ui_dongleIPContainer = NULL;lv_obj_t *ui_Label4 = NULL;lv_obj_t *ui_inverterIP = NULL;lv_obj_t *ui_wifiSetupCompleteButton = NULL;lv_obj_t *ui_Label3 = NULL;lv_obj_t *ui_Keyboard2 = NULL;
+lv_obj_t *ui_WifiSetup = NULL;lv_obj_t *ui_Container12 = NULL;lv_obj_t *ui_Container16 = NULL;lv_obj_t *ui_wifiContainer = NULL;lv_obj_t *ui_Label1 = NULL;lv_obj_t *ui_wifiDropdown = NULL;lv_obj_t *ui_wifiPasswordContainer = NULL;lv_obj_t *ui_Label2 = NULL;lv_obj_t *ui_wifiPassword = NULL;lv_obj_t *ui_wifiSetupCompleteButton = NULL;lv_obj_t *ui_Label3 = NULL;lv_obj_t *ui_Container15 = NULL;lv_obj_t *ui_dongleTypeContainer = NULL;lv_obj_t *ui_Label5 = NULL;lv_obj_t *ui_connectionTypeDropdown = NULL;lv_obj_t *ui_dongleIPContainer = NULL;lv_obj_t *ui_Label4 = NULL;lv_obj_t *ui_inverterIP = NULL;lv_obj_t *ui_inverterSNContainer = NULL;lv_obj_t *ui_inverterSNLabel = NULL;lv_obj_t *ui_inverterSN = NULL;lv_obj_t *ui_keyboard = NULL;
 // event funtions
 
 // build funtions
@@ -16,25 +16,23 @@ ui_WifiSetup = lv_obj_create(NULL);
 lv_obj_clear_flag( ui_WifiSetup, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 lv_obj_set_flex_flow(ui_WifiSetup,LV_FLEX_FLOW_COLUMN);
 lv_obj_set_flex_align(ui_WifiSetup, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-lv_obj_set_style_pad_row(ui_WifiSetup, 32, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_column(ui_WifiSetup, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Container12 = lv_obj_create(ui_WifiSetup);
 lv_obj_remove_style_all(ui_Container12);
 lv_obj_set_width( ui_Container12, lv_pct(100));
-lv_obj_set_flex_grow( ui_Container12, 2);
+lv_obj_set_flex_grow( ui_Container12, 1);
 lv_obj_set_x( ui_Container12, 1 );
 lv_obj_set_y( ui_Container12, 1 );
 lv_obj_set_align( ui_Container12, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container12,LV_FLEX_FLOW_ROW);
 lv_obj_set_flex_align(ui_Container12, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 lv_obj_clear_flag( ui_Container12, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_obj_set_style_pad_left(ui_Container12, 24, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_right(ui_Container12, 24, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_top(ui_Container12, 24, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_bottom(ui_Container12, 24, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_left(ui_Container12, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_right(ui_Container12, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_top(ui_Container12, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_Container12, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_row(ui_Container12, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_column(ui_Container12, 24, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_column(ui_Container12, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Container16 = lv_obj_create(ui_Container12);
 lv_obj_remove_style_all(ui_Container16);
@@ -44,18 +42,18 @@ lv_obj_set_align( ui_Container16, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container16,LV_FLEX_FLOW_COLUMN);
 lv_obj_set_flex_align(ui_Container16, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 lv_obj_clear_flag( ui_Container16, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_obj_set_style_pad_row(ui_Container16, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_row(ui_Container16, 16, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_Container16, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_wifiContainer = lv_obj_create(ui_Container16);
 lv_obj_remove_style_all(ui_wifiContainer);
 lv_obj_set_width( ui_wifiContainer, lv_pct(100));
-lv_obj_set_flex_grow( ui_wifiContainer, 1);
+lv_obj_set_height( ui_wifiContainer, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_wifiContainer, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_wifiContainer,LV_FLEX_FLOW_COLUMN);
 lv_obj_set_flex_align(ui_wifiContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 lv_obj_clear_flag( ui_wifiContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_obj_set_style_pad_row(ui_wifiContainer, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_row(ui_wifiContainer, 6, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_wifiContainer, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Label1 = lv_label_create(ui_wifiContainer);
@@ -64,13 +62,12 @@ lv_obj_set_height( ui_Label1, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_Label1, LV_ALIGN_CENTER );
 lv_label_set_text(ui_Label1,"Select Wi-Fi:");
 
-ui_wifiDongleRoller = lv_roller_create(ui_wifiContainer);
-lv_roller_set_options( ui_wifiDongleRoller, "SOLAX - SX12345678\nSOLAX - SX12345678\nGoodWe - Solar_1234567", LV_ROLLER_MODE_NORMAL );
-lv_obj_set_width( ui_wifiDongleRoller, lv_pct(100));
-lv_obj_set_flex_grow( ui_wifiDongleRoller, 1);
-lv_obj_set_x( ui_wifiDongleRoller, -1 );
-lv_obj_set_y( ui_wifiDongleRoller, 0 );
-lv_obj_set_align( ui_wifiDongleRoller, LV_ALIGN_CENTER );
+ui_wifiDropdown = lv_dropdown_create(ui_wifiContainer);
+lv_dropdown_set_options( ui_wifiDropdown, "SOLAX - SX12345678\nSOLAX - SX12345678\nGoodWe - Solar_1234567" );
+lv_obj_set_width( ui_wifiDropdown, lv_pct(100));
+lv_obj_set_height( ui_wifiDropdown, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( ui_wifiDropdown, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_wifiDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
 
 ui_wifiPasswordContainer = lv_obj_create(ui_Container16);
 lv_obj_remove_style_all(ui_wifiPasswordContainer);
@@ -80,7 +77,7 @@ lv_obj_set_align( ui_wifiPasswordContainer, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_wifiPasswordContainer,LV_FLEX_FLOW_COLUMN);
 lv_obj_set_flex_align(ui_wifiPasswordContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 lv_obj_clear_flag( ui_wifiPasswordContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_obj_set_style_pad_row(ui_wifiPasswordContainer, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_row(ui_wifiPasswordContainer, 6, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_wifiPasswordContainer, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Label2 = lv_label_create(ui_wifiPasswordContainer);
@@ -95,6 +92,22 @@ lv_obj_set_height( ui_wifiPassword, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_wifiPassword, LV_ALIGN_CENTER );
 lv_textarea_set_max_length(ui_wifiPassword,32);
 lv_textarea_set_placeholder_text(ui_wifiPassword,"Placeholder...");
+lv_textarea_set_one_line(ui_wifiPassword,true);
+
+ui_wifiSetupCompleteButton = lv_btn_create(ui_Container16);
+lv_obj_set_height( ui_wifiSetupCompleteButton, 50);
+lv_obj_set_width( ui_wifiSetupCompleteButton, lv_pct(100));
+lv_obj_set_x( ui_wifiSetupCompleteButton, 348 );
+lv_obj_set_y( ui_wifiSetupCompleteButton, -393 );
+lv_obj_set_align( ui_wifiSetupCompleteButton, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_wifiSetupCompleteButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
+lv_obj_clear_flag( ui_wifiSetupCompleteButton, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+ui_Label3 = lv_label_create(ui_wifiSetupCompleteButton);
+lv_obj_set_width( ui_Label3, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( ui_Label3, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( ui_Label3, LV_ALIGN_CENTER );
+lv_label_set_text(ui_Label3,"OK");
 
 ui_Container15 = lv_obj_create(ui_Container12);
 lv_obj_remove_style_all(ui_Container15);
@@ -106,7 +119,7 @@ lv_obj_set_align( ui_Container15, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container15,LV_FLEX_FLOW_COLUMN);
 lv_obj_set_flex_align(ui_Container15, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 lv_obj_clear_flag( ui_Container15, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_obj_set_style_pad_row(ui_Container15, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_row(ui_Container15, 16, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_Container15, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_dongleTypeContainer = lv_obj_create(ui_Container15);
@@ -117,7 +130,7 @@ lv_obj_set_align( ui_dongleTypeContainer, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_dongleTypeContainer,LV_FLEX_FLOW_COLUMN);
 lv_obj_set_flex_align(ui_dongleTypeContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 lv_obj_clear_flag( ui_dongleTypeContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_obj_set_style_pad_row(ui_dongleTypeContainer, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_row(ui_dongleTypeContainer, 6, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_dongleTypeContainer, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Label5 = lv_label_create(ui_dongleTypeContainer);
@@ -141,7 +154,7 @@ lv_obj_set_align( ui_dongleIPContainer, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_dongleIPContainer,LV_FLEX_FLOW_COLUMN);
 lv_obj_set_flex_align(ui_dongleIPContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 lv_obj_clear_flag( ui_dongleIPContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_obj_set_style_pad_row(ui_dongleIPContainer, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_row(ui_dongleIPContainer, 6, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_dongleIPContainer, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Label4 = lv_label_create(ui_dongleIPContainer);
@@ -156,30 +169,41 @@ lv_obj_set_height( ui_inverterIP, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_inverterIP, LV_ALIGN_CENTER );
 lv_textarea_set_max_length(ui_inverterIP,16);
 lv_textarea_set_placeholder_text(ui_inverterIP,"Leave empty for autodetect ...");
+lv_textarea_set_one_line(ui_inverterIP,true);
 
-ui_wifiSetupCompleteButton = lv_btn_create(ui_Container15);
-lv_obj_set_height( ui_wifiSetupCompleteButton, 50);
-lv_obj_set_width( ui_wifiSetupCompleteButton, lv_pct(100));
-lv_obj_set_x( ui_wifiSetupCompleteButton, 348 );
-lv_obj_set_y( ui_wifiSetupCompleteButton, -393 );
-lv_obj_set_align( ui_wifiSetupCompleteButton, LV_ALIGN_CENTER );
-lv_obj_add_flag( ui_wifiSetupCompleteButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
-lv_obj_clear_flag( ui_wifiSetupCompleteButton, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+ui_inverterSNContainer = lv_obj_create(ui_Container15);
+lv_obj_remove_style_all(ui_inverterSNContainer);
+lv_obj_set_width( ui_inverterSNContainer, lv_pct(100));
+lv_obj_set_height( ui_inverterSNContainer, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( ui_inverterSNContainer, LV_ALIGN_CENTER );
+lv_obj_set_flex_flow(ui_inverterSNContainer,LV_FLEX_FLOW_COLUMN);
+lv_obj_set_flex_align(ui_inverterSNContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+lv_obj_clear_flag( ui_inverterSNContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+lv_obj_set_style_pad_row(ui_inverterSNContainer, 6, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_column(ui_inverterSNContainer, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-ui_Label3 = lv_label_create(ui_wifiSetupCompleteButton);
-lv_obj_set_width( ui_Label3, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_Label3, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_align( ui_Label3, LV_ALIGN_CENTER );
-lv_label_set_text(ui_Label3,"OK");
+ui_inverterSNLabel = lv_label_create(ui_inverterSNContainer);
+lv_obj_set_width( ui_inverterSNLabel, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( ui_inverterSNLabel, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( ui_inverterSNLabel, LV_ALIGN_CENTER );
+lv_label_set_text(ui_inverterSNLabel,"Inverter SN:");
 
-ui_Keyboard2 = lv_keyboard_create(ui_WifiSetup);
-lv_obj_set_height( ui_Keyboard2, 180);
-lv_obj_set_width( ui_Keyboard2, lv_pct(100));
-lv_obj_set_x( ui_Keyboard2, -165 );
-lv_obj_set_y( ui_Keyboard2, 36 );
-lv_obj_set_align( ui_Keyboard2, LV_ALIGN_CENTER );
+ui_inverterSN = lv_textarea_create(ui_inverterSNContainer);
+lv_obj_set_width( ui_inverterSN, lv_pct(100));
+lv_obj_set_height( ui_inverterSN, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( ui_inverterSN, LV_ALIGN_CENTER );
+lv_textarea_set_max_length(ui_inverterSN,16);
+lv_textarea_set_placeholder_text(ui_inverterSN,"Leave empty for autodetect ...");
+lv_textarea_set_one_line(ui_inverterSN,true);
 
-lv_keyboard_set_textarea(ui_Keyboard2,ui_wifiPassword);
+ui_keyboard = lv_keyboard_create(ui_WifiSetup);
+lv_obj_set_height( ui_keyboard, 220);
+lv_obj_set_width( ui_keyboard, lv_pct(100));
+lv_obj_set_x( ui_keyboard, -165 );
+lv_obj_set_y( ui_keyboard, 36 );
+lv_obj_set_align( ui_keyboard, LV_ALIGN_CENTER );
+
+lv_keyboard_set_textarea(ui_keyboard,ui_wifiPassword);
 
 }
 
@@ -193,10 +217,12 @@ ui_Container12= NULL;
 ui_Container16= NULL;
 ui_wifiContainer= NULL;
 ui_Label1= NULL;
-ui_wifiDongleRoller= NULL;
+ui_wifiDropdown= NULL;
 ui_wifiPasswordContainer= NULL;
 ui_Label2= NULL;
 ui_wifiPassword= NULL;
+ui_wifiSetupCompleteButton= NULL;
+ui_Label3= NULL;
 ui_Container15= NULL;
 ui_dongleTypeContainer= NULL;
 ui_Label5= NULL;
@@ -204,8 +230,9 @@ ui_connectionTypeDropdown= NULL;
 ui_dongleIPContainer= NULL;
 ui_Label4= NULL;
 ui_inverterIP= NULL;
-ui_wifiSetupCompleteButton= NULL;
-ui_Label3= NULL;
-ui_Keyboard2= NULL;
+ui_inverterSNContainer= NULL;
+ui_inverterSNLabel= NULL;
+ui_inverterSN= NULL;
+ui_keyboard= NULL;
 
 }

@@ -5,9 +5,9 @@
 class DeyeDongleAPI
 {
 public:
-    InverterData_t loadData(String sn)
+    InverterData_t loadData(String ipAddress, String dongleSN)
     {
-        return readData(sn);
+        return readData(ipAddress, dongleSN);
     }
 
 private:
@@ -23,13 +23,19 @@ private:
         return ((buf[3 + reg * 2] << 8) * 10) | buf[3 + reg * 2 + 1];
     }
 
-    InverterData_t readData(String dongleSN)
+    InverterData_t readData(String ipAddress, String dongleSN)
     {
+        IPAddress ip = IPAddress(ipAddress.c_str());
+        if(ip == IPAddress(0, 0, 0, 0))
+        {
+            ip = IPAddress(10, 10, 100, 254); // default IP
+        }
+
         InverterData_t inverterData;
         log_d("Connecting to dongle...");
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
         log_d("SN: %d", sn);
-        if (channel.connect())
+        if (channel.connect(ip))
         {
             log_d("Connected.");
             byte packetBuffer[1024];
