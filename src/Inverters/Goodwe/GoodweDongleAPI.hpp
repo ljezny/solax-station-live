@@ -16,7 +16,7 @@ public:
 private:
     ModbusRTU rtuChannel;
     ModbusTCP tcpChannel;
-
+    IPAddress ip = IPAddress(0, 0, 0, 0); // default IP address
     double gridBuyTotal = 0;
     double gridSellTotal = 0;
     int day = -1;
@@ -59,10 +59,17 @@ private:
 
     InverterData_t readData(String ipAddress)
     {
-        IPAddress ip = IPAddress(ipAddress.c_str());
         if (ip == IPAddress(0, 0, 0, 0))
         {
-            ip = IPAddress(10, 10, 100, 253);
+            ip = IPAddress(ipAddress.c_str());
+            if (ip == IPAddress(0, 0, 0, 0))
+            {
+                ip = discoverDongleIP();
+                if (ip == IPAddress(0, 0, 0, 0))
+                {
+                    ip = IPAddress(10, 10, 100, 253);
+                }
+            }
         }
 
         InverterData_t inverterData;
@@ -134,7 +141,7 @@ private:
                     break;
                 }
             }
-            
+
             for (int i = 0; i < 3; i++)
             { // it is UDP so retries are needed
                 response = sendSmartMeterRequestPacket(ip);
@@ -184,6 +191,45 @@ private:
         tcpChannel.disconnect();
         rtuChannel.disconnect();
         logInverterData(inverterData);
+
+        if (inverterData.status != DONGLE_STATUS_OK)
+        {
+            log_d("Failed to read data from dongle, status: %d", inverterData.status);
+            ip = IPAddress(0, 0, 0, 0); // reset IP address to force discovery next time
+        }
+
         return inverterData;
+    }
+
+    IPAddress discoverDongleIP()
+    {
+        IPAddress dongleIP;
+        WiFiUDP udp;
+        String message = "WIFIKIT-214028-READ";
+        udp.beginPacket(IPAddress(255, 255, 255, 255), 48899);
+        udp.write((const uint8_t *)message.c_str(), (size_t)message.length());
+        udp.endPacket();
+
+        unsigned long start = millis();
+        while (millis() - start < 3000)
+        {
+            int packetSize = udp.parsePacket();
+            if (packetSize)
+            {
+                // On success, the inverter responses with it's IP address (as a text string) followed by it's WiFi AP name.
+                char d[128] = {0};
+                udp.read(d, sizeof(d));
+
+                log_d("Received IP address: %s", String(d).c_str());
+                int indexOfComma = String(d).indexOf(',');
+                String ip = String(d).substring(0, indexOfComma);
+                log_d("Parsed IP address: %s", ip.c_str());
+                dongleIP.fromString(ip);
+                log_d("Dongle IP: %s", dongleIP.toString());
+                break;
+            }
+        }
+        udp.stop();
+        return dongleIP;
     }
 };
