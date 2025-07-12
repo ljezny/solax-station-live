@@ -27,6 +27,7 @@ public:
             log_d("Failed to connect to Solax Modbus dongle");
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             channel.disconnect();
+            ip = IPAddress(0, 0, 0, 0); // Reset IP address
             return inverterData;
         }
 
@@ -148,22 +149,52 @@ public:
 protected:
     ModbusTCP channel;
     bool isSupportedDongle = true;
-
+    IPAddress ip;
     IPAddress getIp(String ipAddress)
     {
-        IPAddress ip = IPAddress(ipAddress.c_str());
-        
+        if(ip == IPAddress(0, 0, 0, 0)) {
+            ip = IPAddress(ipAddress.c_str());
+        }
+
         if (ip == IPAddress(0, 0, 0, 0))
         {
-            if (WiFi.localIP()[0] == 192)
+            mdns_result_t *results = NULL;
+            mdns_init();
+            esp_err_t err = mdns_query_ptr("_pocketseries", "_tcp", 5000, 20, &results);
+            if (err == ESP_OK)
             {
-                return IPAddress(192, 168, 10, 10);
+                if (results)
+                {
+                    mdns_result_t *r = results;
+                    while (r)
+                    {
+                        log_d("Found result: %s, type: %s, proto: %s, hostname: %s, port: %d",
+                              r->instance_name, r->service_type, r->proto, r->hostname, r->port);
+                        ip = r->addr->addr.u_addr.ip4.addr;
+                        break;
+
+                        r = r->next;
+                    }
+                    mdns_query_results_free(results);
+                }
+                else
+                {
+                    log_d("No results found for _pocketseries._tcp");
+                }
             }
-            else
+            if (ip == IPAddress(0, 0, 0, 0))
             {
-                return IPAddress(5, 8, 8, 8);
+                if (WiFi.localIP()[0] == 192)
+                {
+                    ip = IPAddress(192, 168, 10, 10);
+                }
+                else
+                {
+                    ip = IPAddress(5, 8, 8, 8);
+                }
             }
         }
+        log_d("Using IP: %s", ip.toString().c_str());
         return ip;
     }
 
