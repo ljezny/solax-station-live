@@ -17,7 +17,7 @@ typedef struct
 {
     char password[32] = {0};
     char dongleIp[16] = {0};                                // IP address of the dongle, if available
-    char sn[32] = {0};                                    // Serial number of the dongle, if available
+    char sn[32] = {0};                                      // Serial number of the dongle, if available
     ConnectionType_t connectionType = CONNECTION_TYPE_NONE; // Type of the dongle
 } DongleInfo_t;
 
@@ -112,13 +112,7 @@ public:
 
     bool connectToDongle(WiFiDiscoveryResult_t &discovery)
     {
-        if (discovery.type == CONNECTION_TYPE_NONE)
-        {
-            return false;
-        }
-
         log_d("Connecting to dongle: %s", discovery.ssid.c_str());
-        storeLastConnectedSSID(discovery.ssid);
 
         if (WiFi.SSID() == discovery.ssid)
         {
@@ -150,7 +144,7 @@ public:
             dongleInfo.connectionType = discovery.type;
             saveDongleInfo(discovery.ssid, dongleInfo);
         }
-        
+
         return connectionResult;
     }
 
@@ -161,6 +155,18 @@ public:
         String ssid = preferences.getString("ssid", "");
         preferences.end();
         return ssid;
+    }
+
+    void storeLastConnectedSSID(const String &ssid)
+    {
+        Preferences preferences;
+        preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, false);
+        String storedssid = preferences.getString("ssid", "");
+        if (storedssid != ssid)
+        {
+            preferences.putString("ssid", ssid);
+        }
+        preferences.end();
     }
 
     // void trySelectPreferedInverterWifiDongleIndex()
@@ -354,13 +360,5 @@ private:
         }
         preferences.end();
         return result;
-    }
-
-    void storeLastConnectedSSID(const String &ssid)
-    {
-        Preferences preferences;
-        preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, false);
-        preferences.putString("ssid", ssid);
-        preferences.end();
     }
 };

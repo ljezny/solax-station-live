@@ -129,6 +129,7 @@ private:
                     }
                     break;
                 }
+                delay(i * 300); // wait before retrying
             }
 
             for (int i = 0; i < 3; i++)
@@ -140,6 +141,7 @@ private:
                     log_d("Dongle SN: %s", inverterData.sn.c_str());
                     break;
                 }
+                delay(i * 300); // wait before retrying
             }
 
             for (int i = 0; i < 3; i++)
@@ -173,6 +175,7 @@ private:
                     inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
                     break;
                 }
+                delay(i * 300); // wait before retrying
             }
 
             for (int i = 0; i < 3; i++)
@@ -185,6 +188,7 @@ private:
                     inverterData.soc = response.readUInt16(37000 + 7);
                     break;
                 }
+                delay(i * 300); // wait before retrying
             }
         }
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
