@@ -296,7 +296,7 @@ bool loadInverterDataTask()
         if (dongleDiscovery.connectToDongle(wifiDiscoveryResult))
         {
             log_d("Dongle wifi connected.");
-
+            
             InverterData_t d = loadInverterData(wifiDiscoveryResult);
 
             if (d.status == DONGLE_STATUS_OK)
@@ -307,6 +307,8 @@ bool loadInverterDataTask()
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.loadPower, inverterData.soc);
                 shellyMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
                 uiMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
+
+                dongleDiscovery.storeLastConnectedSSID(wifiDiscoveryResult.ssid);
             }
             else
             {
@@ -338,6 +340,11 @@ bool pairShellyTask()
         log_d("Pairing Shelly");
         for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
         {
+            if(dongleDiscovery.discoveries[i].ssid.isEmpty())
+            {
+                continue;
+            }
+            log_d("Checking SSID: %s", dongleDiscovery.discoveries[i].ssid.c_str());
             if (shellyAPI.isShellySSID(dongleDiscovery.discoveries[i].ssid))
             {
                 if (dongleDiscovery.connectToDongle(dongleDiscovery.discoveries[i]))
