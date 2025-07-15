@@ -11,7 +11,7 @@
 
 #define DONGLE_DISCOVERY_MAX_RESULTS 32
 
-#define DONGLE_DISCOVERY_PREFERENCES_KEY "dongleinfo"
+#define DONGLE_DISCOVERY_PREFERENCES_KEY "discovery"
 
 typedef struct
 {
@@ -172,10 +172,10 @@ public:
     WiFiDiscoveryResult_t getAutoconnectDongle()
     {
         WiFiDiscoveryResult_t autoconnectDongle;
-        String lastConnectedSSID = dongleDiscovery.loadLastConnectedSSID();
+        String lastConnectedSSID = loadLastConnectedSSID();
         if (!lastConnectedSSID.isEmpty())
         {
-            WiFiDiscoveryResult_t lastConnectedResult = dongleDiscovery.getDiscoveryResult(lastConnectedSSID);
+            WiFiDiscoveryResult_t lastConnectedResult = getDiscoveryResult(lastConnectedSSID);
             if (lastConnectedResult.type != CONNECTION_TYPE_NONE)
             {
                 autoconnectDongle = lastConnectedResult;
@@ -257,6 +257,9 @@ private:
     {
         if (ssid.startsWith("Wifi_"))
         {
+            if(ssid.startsWith("Wifi_SQ")) { //seems to be a wallbox dongle, ignore it
+                return CONNECTION_TYPE_NONE;
+            }
             return CONNECTION_TYPE_SOLAX;
         }
         else if (ssid.startsWith("Solar-WiFi"))
