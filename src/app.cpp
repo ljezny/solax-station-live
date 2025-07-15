@@ -268,7 +268,7 @@ InverterData_t loadInverterData(WiFiDiscoveryResult_t &discoveryResult)
         d = deyeDongleAPI.loadData(discoveryResult.inverterIP, discoveryResult.sn);
         break;
     case CONNECTION_TYPE_VICTRON:
-        d = victronDongleAPI.loadData(discoveryResult.sn);
+        d = victronDongleAPI.loadData(discoveryResult.inverterIP);
         break;
     }
 

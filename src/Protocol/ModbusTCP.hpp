@@ -18,6 +18,11 @@ public:
         return client.connected();
     }
 
+    bool connect(String hostName, uint16_t port)
+    {
+        return client.connect(hostName.c_str(), port);
+    }
+
     bool connect(IPAddress ip, uint16_t port)
     {
         return client.connect(ip, port);

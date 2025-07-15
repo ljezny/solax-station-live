@@ -44,17 +44,26 @@ public:
     InverterData_t loadData(String ipAddress)
     {
         InverterData_t inverterData;
-        IPAddress ip = IPAddress(ipAddress.c_str());
-        if (ip == IPAddress(0, 0, 0, 0))
+        IPAddress ip;
+        if (!ipAddress.isEmpty())
         {
-            ip = IPAddress(172, 24, 24, 1); // Default Victron dongle IP
+            if (!channel.connect(IPAddress(ipAddress.c_str()), 502))
+            {
+                log_d("Failed to connect to Victron dongle");
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                channel.disconnect();
+                return inverterData;
+            }
         }
-        if (!channel.connect(ip, 502))
+        else
         {
-            log_d("Failed to connect to Victron dongle");
-            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-            channel.disconnect();
-            return inverterData;
+            if (!channel.connect(String("venus.local"), 502))
+            {
+                log_d("Failed to connect to Victron dongle");
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                channel.disconnect();
+                return inverterData;
+            }
         }
 
         inverterData.millis = millis();
