@@ -502,19 +502,16 @@ void updateState()
     case BOOT:
     {
         dongleDiscovery.scanWiFi();
-        String lastConnectedSSID = dongleDiscovery.loadLastConnectedSSID();
-        if (!lastConnectedSSID.isEmpty())
+        wifiDiscoveryResult = dongleDiscovery.getAutoconnectDongle();
+        if(wifiDiscoveryResult.type != CONNECTION_TYPE_NONE)
         {
-            WiFiDiscoveryResult_t lastConnectedResult = dongleDiscovery.getDiscoveryResult(lastConnectedSSID);
-            if (lastConnectedResult.type != CONNECTION_TYPE_NONE)
-            {
-                wifiDiscoveryResult = lastConnectedResult;
-                log_d("Last connected SSID: %s, type: %d", lastConnectedResult.ssid.c_str(), lastConnectedResult.type);
-                moveToState(STATE_SPLASH);
-            }
+            log_d("Autoconnect dongle found: %s, type: %d", wifiDiscoveryResult.ssid.c_str(), wifiDiscoveryResult.type);
+            moveToState(STATE_SPLASH);
         }
-
-        moveToState(STATE_SPLASH);
+        else
+        {
+            moveToState(STATE_WIFI_SETUP);
+        }
     }
     break;
     case STATE_SPLASH:

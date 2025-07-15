@@ -61,7 +61,11 @@ private:
     {
         if (ip == IPAddress(0, 0, 0, 0))
         {
-            ip = IPAddress(ipAddress.c_str());
+            if (!ipAddress.isEmpty())
+            {
+                ip = IPAddress(ipAddress.c_str());
+            }
+
             if (ip == IPAddress(0, 0, 0, 0))
             {
                 ip = discoverDongleIP();

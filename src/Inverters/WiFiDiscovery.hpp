@@ -169,38 +169,44 @@ public:
         preferences.end();
     }
 
-    // void trySelectPreferedInverterWifiDongleIndex()
-    // {
-    //     if (preferedInverterWifiDongleIndex != -1)
-    //     {
-    //         return;
-    //     }
+    WiFiDiscoveryResult_t getAutoconnectDongle()
+    {
+        WiFiDiscoveryResult_t autoconnectDongle;
+        String lastConnectedSSID = dongleDiscovery.loadLastConnectedSSID();
+        if (!lastConnectedSSID.isEmpty())
+        {
+            WiFiDiscoveryResult_t lastConnectedResult = dongleDiscovery.getDiscoveryResult(lastConnectedSSID);
+            if (lastConnectedResult.type != CONNECTION_TYPE_NONE)
+            {
+                autoconnectDongle = lastConnectedResult;
+            }
+        } else {
+            // try to find a prefered dongle
+            int foundCount = 0;
+            for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
+            {
+                if (discoveries[i].type != CONNECTION_TYPE_NONE && !discoveries[i].ssid.isEmpty() && 
+                    (!discoveries[i].requiresPassword || (discoveries[i].requiresPassword && !discoveries[i].password.isEmpty())))
+                {
+                    autoconnectDongle = discoveries[i];
+                    foundCount++;
+                }
+            }
 
-    //     // select first found inverter dongle, but only when there is only one
-    //     int preferred = -1;
-    //     for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
-    //     {
-    //         if (discoveries[i].type == CONNECTION_TYPE_NONE)
-    //         {
-    //             continue;
-    //         }
-    //         if (!discoveries[i].requiresPassword || (discoveries[i].requiresPassword && !discoveries[i].password.isEmpty()))
-    //         {
-    //             log_d("Prefered dongle: %s", discoveries[i].ssid.c_str());
-    //             if (preferred == -1)
-    //             {
-    //                 preferred = i;
-    //             }
-    //             else
-    //             {
-    //                 log_d("Multiple dongles found, no prefered one");
-    //                 preferred = -1;
-    //                 break;
-    //             }
-    //         }
-    //     }
-    //     this->preferedInverterWifiDongleIndex = preferred;
-    // }
+            if(foundCount > 1)
+            {
+                log_d("Multiple prefered dongles found, no autoconnect");
+                autoconnectDongle.type = CONNECTION_TYPE_NONE;
+            }
+            else if(foundCount == 0)
+            {
+                log_d("No prefered dongle found, no autoconnect");
+                autoconnectDongle.type = CONNECTION_TYPE_NONE;
+            }
+        }
+
+        return autoconnectDongle;
+    }
 
     String getDongleTypeName(ConnectionType_t type)
     {

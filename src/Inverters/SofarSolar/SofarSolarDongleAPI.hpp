@@ -14,12 +14,24 @@ public:
 
 private:
     V5TCP channel;
+    IPAddress ip;
     InverterData_t readData(String ipAddress, String dongleSN)
     {
-        IPAddress ip = IPAddress(ipAddress.c_str());
-        if(ip == IPAddress(0, 0, 0, 0))
+        if (ip == IPAddress(0, 0, 0, 0))
         {
-            ip = IPAddress(10, 10, 100, 254); // default IP
+            if (!ipAddress.isEmpty())
+            {
+                ip = IPAddress(ipAddress.c_str());
+            }
+
+            if (ip == IPAddress(0, 0, 0, 0))
+            {
+                ip = discoverDongleIP();
+                if (ip == IPAddress(0, 0, 0, 0))
+                {
+                    ip = IPAddress(10, 10, 100, 254); // default IP
+                }
+            }
         }
         
         // https://github.com/wills106/homeassistant-solax-modbus/blob/main/custom_components/solax_modbus/plugin_sofar.py
@@ -171,5 +183,37 @@ private:
 
         channel.disconnect(); //don't disconnect, we need to keep the connection open for next requests
         return inverterData;
+    }
+
+    IPAddress discoverDongleIP()
+    {
+        IPAddress dongleIP;
+        WiFiUDP udp;
+        String message = "WIFIKIT-214028-READ";
+        udp.beginPacket(IPAddress(255, 255, 255, 255), 48899);
+        udp.write((const uint8_t *)message.c_str(), (size_t)message.length());
+        udp.endPacket();
+
+        unsigned long start = millis();
+        while (millis() - start < 3000)
+        {
+            int packetSize = udp.parsePacket();
+            if (packetSize)
+            {
+                // On success, the inverter responses with it's IP address (as a text string) followed by it's WiFi AP name.
+                char d[128] = {0};
+                udp.read(d, sizeof(d));
+
+                log_d("Received IP address: %s", String(d).c_str());
+                int indexOfComma = String(d).indexOf(',');
+                String ip = String(d).substring(0, indexOfComma);
+                log_d("Parsed IP address: %s", ip.c_str());
+                dongleIP.fromString(ip);
+                log_d("Dongle IP: %s", dongleIP.toString());
+                break;
+            }
+        }
+        udp.stop();
+        return dongleIP;
     }
 };
