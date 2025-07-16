@@ -94,6 +94,11 @@ public:
 
     bool sendReadDataRequest(uint16_t addr, uint8_t len, uint32_t sn)
     {
+        if(sn == 0)
+        {
+            log_d("SN is zero, cannot send request");
+            return false;
+        }
         sequenceNumber++;
 
         byte modbusRTURequest[] = {0x1, 0x03, 0, 0, 0, 0, 0, 0};

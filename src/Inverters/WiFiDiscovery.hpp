@@ -66,6 +66,10 @@ public:
             }
             discoveries[j].inverterIP = dongleInfo.dongleIp;
             discoveries[j].sn = dongleInfo.sn;
+            if (discoveries[j].sn.isEmpty() && discoveries[j].type != CONNECTION_TYPE_NONE)
+            {
+                discoveries[j].sn = parseDongleSN(ssid);
+            }
             discoveries[j].ssid = ssid;
             discoveries[j].password = dongleInfo.password;
             discoveries[j].requiresPassword = WiFi.encryptionType(i) != WIFI_AUTH_OPEN;
@@ -148,6 +152,65 @@ public:
         return connectionResult;
     }
 
+    WiFiDiscoveryResult_t getAutoconnectDongle()
+    {
+        WiFiDiscoveryResult_t autoconnectDongle;
+        String lastConnectedSSID = loadLastConnectedSSID();
+        if (!lastConnectedSSID.isEmpty())
+        {
+            WiFiDiscoveryResult_t lastConnectedResult = getDiscoveryResult(lastConnectedSSID);
+            if (lastConnectedResult.type != CONNECTION_TYPE_NONE)
+            {
+                autoconnectDongle = lastConnectedResult;
+            }
+        }
+        else
+        {
+            // try to find a prefered dongle
+            int foundCount = 0;
+            for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
+            {
+                if (discoveries[i].type != CONNECTION_TYPE_NONE && !discoveries[i].ssid.isEmpty() &&
+                    (!discoveries[i].requiresPassword || (discoveries[i].requiresPassword && !discoveries[i].password.isEmpty())))
+                {
+                    autoconnectDongle = discoveries[i];
+                    foundCount++;
+                }
+            }
+
+            if (foundCount > 1)
+            {
+                log_d("Multiple prefered dongles found, no autoconnect");
+                autoconnectDongle.type = CONNECTION_TYPE_NONE;
+            }
+            else if (foundCount == 0)
+            {
+                log_d("No prefered dongle found, no autoconnect");
+                autoconnectDongle.type = CONNECTION_TYPE_NONE;
+            }
+        }
+
+        return autoconnectDongle;
+    }
+
+    bool isValid(WiFiDiscoveryResult_t &result)
+    {
+        bool isValid = true;
+        isValid &= result.type != CONNECTION_TYPE_NONE;
+        
+        if (result.requiresPassword)
+        {
+            isValid &= !result.password.isEmpty();
+        }
+
+        if (result.type == CONNECTION_TYPE_DEYE || result.type == CONNECTION_TYPE_SOFAR)
+        {
+            isValid &= !result.sn.isEmpty();
+        }
+
+        return isValid;
+    }
+
     String loadLastConnectedSSID()
     {
         Preferences preferences;
@@ -167,45 +230,6 @@ public:
             preferences.putString("ssid", ssid);
         }
         preferences.end();
-    }
-
-    WiFiDiscoveryResult_t getAutoconnectDongle()
-    {
-        WiFiDiscoveryResult_t autoconnectDongle;
-        String lastConnectedSSID = dongleDiscovery.loadLastConnectedSSID();
-        if (!lastConnectedSSID.isEmpty())
-        {
-            WiFiDiscoveryResult_t lastConnectedResult = dongleDiscovery.getDiscoveryResult(lastConnectedSSID);
-            if (lastConnectedResult.type != CONNECTION_TYPE_NONE)
-            {
-                autoconnectDongle = lastConnectedResult;
-            }
-        } else {
-            // try to find a prefered dongle
-            int foundCount = 0;
-            for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
-            {
-                if (discoveries[i].type != CONNECTION_TYPE_NONE && !discoveries[i].ssid.isEmpty() && 
-                    (!discoveries[i].requiresPassword || (discoveries[i].requiresPassword && !discoveries[i].password.isEmpty())))
-                {
-                    autoconnectDongle = discoveries[i];
-                    foundCount++;
-                }
-            }
-
-            if(foundCount > 1)
-            {
-                log_d("Multiple prefered dongles found, no autoconnect");
-                autoconnectDongle.type = CONNECTION_TYPE_NONE;
-            }
-            else if(foundCount == 0)
-            {
-                log_d("No prefered dongle found, no autoconnect");
-                autoconnectDongle.type = CONNECTION_TYPE_NONE;
-            }
-        }
-
-        return autoconnectDongle;
     }
 
     String getDongleTypeName(ConnectionType_t type)

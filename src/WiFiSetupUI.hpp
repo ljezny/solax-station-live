@@ -44,7 +44,6 @@ public:
         lv_obj_add_event_cb(ui_wifiPassword, onTextChangedHandler, LV_EVENT_VALUE_CHANGED, this);
         lv_obj_add_event_cb(ui_inverterIP, onTextChangedHandler, LV_EVENT_VALUE_CHANGED, this);
         lv_obj_add_event_cb(ui_inverterSN, onTextChangedHandler, LV_EVENT_VALUE_CHANGED, this);
-        
 
         String connectionTypeOptions = "";
 
@@ -75,7 +74,7 @@ public:
         lv_dropdown_set_options(ui_wifiDropdown, wifiOptions.c_str());
         lv_dropdown_set_selected(ui_wifiDropdown, 0);
         onWiFiRollerChanged();
-       
+
         String lastConnectedSSID = dongleDiscovery.loadLastConnectedSSID();
         if (!lastConnectedSSID.isEmpty())
         {
@@ -89,20 +88,27 @@ public:
                 }
             }
         }
+
+        setCompleteButtonVisibility();
     }
-    
+
     void setCompleteButtonVisibility()
     {
-        // int selectedIndex = lv_dropdown_get_selected(ui_connectionTypeDropdown);
-        // bool isVisible = selectedIndex >= 0 && selectedIndex < sizeof(connectionTypes) / sizeof(ConnectionType_t);
-        // if (isVisible)
-        // {
-        //     lv_obj_clear_flag(ui_wifiSetupCompleteButton, LV_OBJ_FLAG_HIDDEN);
-        // }
-        // else
-        // {
-        //     lv_obj_add_flag(ui_wifiSetupCompleteButton, LV_OBJ_FLAG_HIDDEN);
-        // }
+        bool isVisible = false;
+
+        int selectedIndex = lv_dropdown_get_selected(ui_wifiDropdown);
+        if (selectedIndex >= 0 && selectedIndex < DONGLE_DISCOVERY_MAX_RESULTS)
+        {
+            isVisible = dongleDiscovery.isValid(dongleDiscovery.discoveries[selectedIndex]);
+        }
+        if (isVisible)
+        {
+            lv_obj_clear_flag(ui_wifiSetupCompleteButton, LV_OBJ_FLAG_HIDDEN);
+        }
+        else
+        {
+            lv_obj_add_flag(ui_wifiSetupCompleteButton, LV_OBJ_FLAG_HIDDEN);
+        }
     }
 
     void onCompleteClick()
@@ -162,7 +168,8 @@ public:
         else if (obj == ui_inverterIP)
         {
             lv_keyboard_set_mode(ui_keyboard, LV_KEYBOARD_MODE_NUMBER);
-        } else if (obj == ui_inverterSN)
+        }
+        else if (obj == ui_inverterSN)
         {
             lv_keyboard_set_mode(ui_keyboard, LV_KEYBOARD_MODE_TEXT_LOWER);
         }
@@ -187,7 +194,8 @@ public:
             {
                 dongleDiscovery.discoveries[selectedIndex].inverterIP = lv_textarea_get_text(ui_inverterIP);
             }
-        } else if (obj == ui_inverterSN)
+        }
+        else if (obj == ui_inverterSN)
         {
             int selectedIndex = lv_dropdown_get_selected(ui_wifiDropdown);
             if (selectedIndex >= 0 && selectedIndex < DONGLE_DISCOVERY_MAX_RESULTS)
@@ -214,7 +222,6 @@ static void wifiSetupCompleteHandler(lv_event_t *e)
 
 static void wifiRollerHandler(lv_event_t *e)
 {
-    log_d("WiFi roller changed");
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_VALUE_CHANGED)
     {
@@ -241,7 +248,6 @@ static void connectionTypeHandler(lv_event_t *e)
 
 static void onFocusHandler(lv_event_t *e)
 {
-    log_d("Focus changed on object");
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_FOCUSED)
     {
@@ -258,7 +264,6 @@ static void onFocusHandler(lv_event_t *e)
 
 static void onTextChangedHandler(lv_event_t *e)
 {
-    log_d("Text changed on object");
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_VALUE_CHANGED)
     {
