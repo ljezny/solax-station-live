@@ -9,7 +9,9 @@
             style="color: #ff0000;">LIVE</span></strong> si heslo uloží.</p>
 
 <h2>Aktualizace firmware</h2>
-<p><span style="color: #ff0000;">Neprovádějte aktualizaci bez předchozí konzultace. Firmware nepřináší žádné nové funkce, pouze opravy reportovaných chyb a podporu nových střídačů. Pokud zařízení funguje, není důvod k aktualizaci.</span></p>
+<p><span style="color: #ff0000;">Neprovádějte aktualizaci bez předchozí konzultace. Firmware nepřináší žádné nové
+        funkce, pouze opravy reportovaných chyb a podporu nových střídačů. Pokud zařízení funguje, není důvod k
+        aktualizaci.</span></p>
 <p>Nejprve se mrkněte jakou máte verzi <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong>
 <p>Pokud máte vzadu RESET tlačítko, jedná se o 2. generaci. Firmware pro 1. a 2. generaci jsou jiné (jiný ovladač
     displaye). Nicméně pokud omylem přehrajete špatný firmware, nahrátím správného se to opraví - nic nepokazíte.</p>
@@ -55,8 +57,117 @@
     střídač tuto denní statistiku neeviduje. <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> si
     ji počítá sám z celkových statistik a proto se zobrazí až po půlnoci.</p>
 
-<h1>Podporované střídače</h1>
+<h1>Propojení se střídačem</h1>
+<p>Stanice se připojí automaticky, pokud nalezne právě jeden podporovaný dongle a má k němu veškéré potřebné údaje. Po
+    restartu stanice tedy připojení obnoví.</p>
+<p>V případě, že stanice se nedokáže rozhodnout nebo se spojení nezdaří, zobrazí se nastavovací obrazovka.</p>
+<p>Stanice se může se střídačem propojit napřímo - připojí se přímo na wifi dongle - nebo lze stanici připojit do Vaší
+    WiFi sítě a tam si střídač nalezne (nebo se připojí na zadanou IP adresu).</p>
+<h2>Přímé propojení</h2>
+<p>V následující tabulce je uvedeno, co je pro který střídač potřeba vyplnit.</p>
+<table style="border-spacing: 15px; border-collapse: separate;">
+    <thead>
+        <tr>
+            <th>Připojení</th>
+            <th>WiFi</th>
+            <th>Heslo</th>
+            <th>IP</th>
+            <th>Sériové číslo</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Solax</td>
+            <td>Wifi_XXXXXX</td>
+            <td>Nechat prázdné</td>
+            <td>Nechat prázdné</td>
+            <td>Ignorováno</td>
+        </tr>
+        <tr>
+            <td>GoodWe</td>
+            <td>SolarWifiXXXXXX</td>
+            <td>Výchozí: 12345678</td>
+            <td>Nechat prázdné</td>
+            <td>Ignorováno</td>
+        </tr>
+        <tr>
+            <td>Victron</td>
+            <td>venus-XXXXXX</td>
+            <td>Dle donglu</td>
+            <td>Nechat prázdné</td>
+            <td>Ignorováno</td>
+        </tr>
+        <tr>
+            <td>Sofar</td>
+            <td>AP_XXXXXX</td>
+            <td>Nechat prázdné</td>
+            <td>Nechat prázdné</td>
+            <td>SN donglu: XXXXXX</td>
+        </tr>
+        <tr>
+            <td>DEYE</td>
+            <td>AP_XXXXXX</td>
+            <td>Nechat prázdné</td>
+            <td>Nechat prázdné</td>
+            <td>SN donglu: XXXXXX</td>
+        </tr>
+    </tbody>
+</table>
+<h2>Propojení přes domácí WiFi</h2>
+<p>Pokud chcete stanici připojit do domácí WiFi sítě, zadejte název a heslo k WiFi síti. Stanice se pak připojí
+    do
+    domácí sítě a následně si střídač najde sám.</p>
+<p>V následující tabulce je uvedeno, co je pro který střídač potřeba vyplnit.</p>
+<table style="border-spacing: 15px; border-collapse: separate;">
+    <thead>
+        <tr>
+            <th>Připojení</th>
+            <th>WiFi</th>
+            <th>Heslo</th>
+            <th>IP měniče</th>
+            <th>SN měniče</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Solax</td>
+            <td>Vaše WiFi</td>
+            <td>Vaše heslo</td>
+            <td>Nechat prázdné nebo zadat IP</td>
+            <td>Ignorováno</td>
+        </tr>
+        <tr>
+            <td>GoodWe</td>
+            <td>Vaše WiFi</td>
+            <td>Vaše heslo</td>
+            <td>Nechat prázdné nebo zadat IP</td>
+            <td>Ignorováno</td>
+        </tr>
+        <tr>
+            <td>Victron</td>
+            <td>Vaše WiFi</td>
+            <td>Vaše heslo</td>
+            <td>Nechat prázdné nebo zadat IP</td>
+            <td>Ignorováno</td>
+        </tr>
+        <tr>
+            <td>Sofar</td>
+            <td>Vaše WiFi</td>
+            <td>Vaše heslo</td>
+            <td>Nechat prázdné nebo zadat IP</td>
+            <td>SN donglu (XXXXXX z AP_XXXXXX), slouží jako heslo</td>
+        </tr>
+        <tr>
+            <td>DEYE</td>
+            <td>Vaše WiFi</td>
+            <td>Vaše heslo</td>
+            <td>Nechat prázdné nebo zadat IP</td>
+            <td>SN donglu (XXXXXX z AP_XXXXXX), slouží jako heslo</td>
+        </tr>
+    </tbody>
+</table>
 
+<h1>Podporované střídače</h1>
 <h2>SOLAX</h2>
 <p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> se standardně automaticky připojuje
     ke
@@ -77,7 +188,7 @@
     <li>Zkontrolujte dostupnost WiFi sítě <em>SolarWifiXXXXXX</em> (XXXXXX odpovídá sériovému číslu donglu).
         Výchozí
         heslo k této síti je <strong>12345678</strong>.</li>
-    <li>Pokud se dongle nehlásí, resetujte jej krátkým stiskem tlačítka a vyčkejte cca 3 minuty na jeho restart.
+    <li>Pokud se dongle nehlásí, resetujte jej krátkým stiskem tlačítka (1s) a vyčkejte cca 3 minuty na jeho restart.
     </li>
 </ol>
 
@@ -88,6 +199,7 @@
 <p>Pro správné fungování je nutné aktivovat <strong>Modbus TCP</strong> v menu zařízení (Menu -> Settings ->
     Services ->
     Modbus TCP).</p>
+
 
 <h1>SOLAR PLUG</h1>
 <p>Všechny zásuvky SOLAR PLUG jsou plně kompatibilní. Po připojení do sítě jsou automaticky detekovány a zobrazí
@@ -111,6 +223,7 @@
     domácnosti.
     Jakmile je baterie domácnosti nabitá nebo jsou přetoky, začne stanice postupně kaskádově spínat jednotlivé zásuvky.
     Zásuvky jsou pak zapnuty minimálně 5 minut.</p>
-<p>Zásuvku lze zapnout tlačítkem, pak se vyřadí její automatické ovládání. Pak je potřeba opět tlačítkem zásuvku vypnout a tím se aktivuje automatické ovládání.</p>
+<p>Zásuvku lze zapnout tlačítkem, pak se vyřadí její automatické ovládání. Pak je potřeba opět tlačítkem zásuvku vypnout
+    a tím se aktivuje automatické ovládání.</p>
 <p>Při zapnuté zásuvce může dojít k čerpání elektřiny z baterie, ale je to maximálně uvedenou dobu 5 minut. Při
     hraničních výkonech FVE dochází k cyklickému vypínání zásuvek a tím maximalizaci využití energie z FVE.</p>

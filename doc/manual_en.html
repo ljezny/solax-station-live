@@ -58,6 +58,117 @@
             style="color: #ff0000;">LIVE</span></strong> calculates it itself from the overall statistics and therefore
     it appears only after midnight.</p>
 
+<h1>Inverter Connection</h1>
+<p>The station connects automatically if it detects exactly one supported dongle and all required data. After reboot, it
+    will reconnect.</p>
+<p>If it can’t decide or connection fails, a setup screen appears.</p>
+<p>The station can connect to the inverter directly (via the dongle’s Wi‑Fi) or it can join your home Wi‑Fi, allowing
+    the inverter to connect (or you can specify its IP).</p>
+
+<h2>Direct connection</h2>
+<p>The table below shows the fields required for each inverter.</p>
+<table style="border-spacing: 15px; border-collapse: separate;">
+    <thead>
+        <tr>
+            <th>Type</th>
+            <th>WiFi</th>
+            <th>Password</th>
+            <th>IP</th>
+            <th>Serial No.</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Solax</td>
+            <td>Wifi_XXXXXX</td>
+            <td>Leave blank</td>
+            <td>Leave blank</td>
+            <td>Ignored</td>
+        </tr>
+        <tr>
+            <td>GoodWe</td>
+            <td>SolarWifiXXXXXX</td>
+            <td>Default: 12345678</td>
+            <td>Leave blank</td>
+            <td>Ignored</td>
+        </tr>
+        <tr>
+            <td>Victron</td>
+            <td>venus-XXXXXX</td>
+            <td>From dongle</td>
+            <td>Leave blank</td>
+            <td>Ignored</td>
+        </tr>
+        <tr>
+            <td>Sofar</td>
+            <td>AP_XXXXXX</td>
+            <td>Leave blank</td>
+            <td>Leave blank</td>
+            <td>Dongle SN: XXXXXX</td>
+        </tr>
+        <tr>
+            <td>DEYE</td>
+            <td>AP_XXXXXX</td>
+            <td>Leave blank</td>
+            <td>Leave blank</td>
+            <td>Dongle SN: XXXXXX</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Home Wi‑Fi connection</h2>
+<p>To connect via your home network, enter your Wi‑Fi name and password. The station joins your network, then finds the
+    inverter automatically.</p>
+<p>The required fields for each inverter are listed below.</p>
+<table style="border-spacing: 15px; border-collapse: separate;">
+    <thead>
+        <tr>
+            <th>Type</th>
+            <th>WiFi</th>
+            <th>Password</th>
+            <th>Inverter IP</th>
+            <th>Serial No.</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Solax</td>
+            <td>Your WiFi</td>
+            <td>Your password</td>
+            <td>Leave blank or enter IP</td>
+            <td>Ignored</td>
+        </tr>
+        <tr>
+            <td>GoodWe</td>
+            <td>Your WiFi</td>
+            <td>Your password</td>
+            <td>Leave blank or enter IP</td>
+            <td>Ignored</td>
+        </tr>
+        <tr>
+            <td>Victron</td>
+            <td>Your WiFi</td>
+            <td>Your password</td>
+            <td>Leave blank or enter IP</td>
+            <td>Ignored</td>
+        </tr>
+        <tr>
+            <td>Sofar</td>
+            <td>Your WiFi</td>
+            <td>Your password</td>
+            <td>Leave blank or enter IP</td>
+            <td>Dongle SN (XXXXXX from AP_XXXXXX), used as auth</td>
+        </tr>
+        <tr>
+            <td>DEYE</td>
+            <td>Your WiFi</td>
+            <td>Your password</td>
+            <td>Leave blank or enter IP</td>
+            <td>Dongle SN (XXXXXX from AP_XXXXXX), used as auth</td>
+        </tr>
+    </tbody>
+</table>
+
 <h1>Supported Inverters</h1>
 
 <h2>SOLAX</h2>
@@ -91,20 +202,30 @@
     -> Services ->
     Modbus TCP).</p>
 
-    <h1>SOLAR PLUG</h1>
-    <p>All SOLAR PLUG outlets and relays are fully compatible.</p>
-    <p>We always deliver the outlet already in pairing mode. Just plug the outlet into the power, and the station will find and connect it automatically.</p>
-    <p>If for some reason you need to put the outlet into pairing mode, you can trigger this at any time by holding the button on the outlet for 10 seconds (the blue indicator will light up).</p>
-    <p>Pairing the outlet may take several minutes. If you want to speed it up, you can restart the station. But even then, the outlet will be found.</p>
-    <p>The paired outlet is not connected to your home network or the internet. It is exclusively controlled by the <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> station. Therefore, it cannot be connected to the original Shelly app.</p>
-    <p>During configuration, the indicators change:</p>
-    <ul>
-        <li><strong>Blue:</strong> active pairing mode</li>
-        <li><strong>Red:</strong> configuration in progress</li>
-        <li><strong>Orange:</strong> device is successfully connected and active.</li>
-    </ul>
-    <p>After successful pairing, the outlet will appear in the home consumption overview.</p>
-    <h2>Switching the Outlet</h2>
-    <p>The <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> station automatically switches the outlets according to internal rules. <strong>You don’t set anything manually.</strong> The energy balance is monitored and the charged home battery is given priority. Once the home battery is charged or surplus power is available, the station will gradually switch on the individual outlets in a cascading manner. The outlets will then remain on for at least 5 minutes.</p>
-    <p>When an outlet is switched on, electricity may be drawn from the battery, but only for a maximum of 5 minutes. In cases of borderline output from the photovoltaic system (FVE), the outlets are cyclically switched off, thus maximizing the utilization of energy from the photovoltaic system.</p>
-    
+<h1>SOLAR PLUG</h1>
+<p>All SOLAR PLUG outlets and relays are fully compatible.</p>
+<p>We always deliver the outlet already in pairing mode. Just plug the outlet into the power, and the station will find
+    and connect it automatically.</p>
+<p>If for some reason you need to put the outlet into pairing mode, you can trigger this at any time by holding the
+    button on the outlet for 10 seconds (the blue indicator will light up).</p>
+<p>Pairing the outlet may take several minutes. If you want to speed it up, you can restart the station. But even then,
+    the outlet will be found.</p>
+<p>The paired outlet is not connected to your home network or the internet. It is exclusively controlled by the
+    <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> station. Therefore, it cannot be connected
+    to the original Shelly app.</p>
+<p>During configuration, the indicators change:</p>
+<ul>
+    <li><strong>Blue:</strong> active pairing mode</li>
+    <li><strong>Red:</strong> configuration in progress</li>
+    <li><strong>Orange:</strong> device is successfully connected and active.</li>
+</ul>
+<p>After successful pairing, the outlet will appear in the home consumption overview.</p>
+<h2>Switching the Outlet</h2>
+<p>The <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> station automatically switches the
+    outlets according to internal rules. <strong>You don’t set anything manually.</strong> The energy balance is
+    monitored and the charged home battery is given priority. Once the home battery is charged or surplus power is
+    available, the station will gradually switch on the individual outlets in a cascading manner. The outlets will then
+    remain on for at least 5 minutes.</p>
+<p>When an outlet is switched on, electricity may be drawn from the battery, but only for a maximum of 5 minutes. In
+    cases of borderline output from the photovoltaic system (FVE), the outlets are cyclically switched off, thus
+    maximizing the utilization of energy from the photovoltaic system.</p>

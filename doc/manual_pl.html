@@ -58,6 +58,116 @@
     inwerter tej dziennej statystyki nie rejestruje. <strong>SOLAR STATION <span
             style="color: #ff0000;">LIVE</span></strong> oblicza ją sam z ogólnych statystyk i dlatego wyświetla się
     dopiero po północy.</p>
+<h1>Połączenie ze falownikiem</h1>
+<p>Stacja łączy się automatycznie, jeśli wykryje dokładnie jeden obsługiwany dongle i ma wszystkie dane. Po restarcie
+    połączenie zostanie przywrócone.</p>
+<p>Jeśli stacja nie może wybrać lub połączenie się nie powiedzie, pojawi się ekran konfiguracji.</p>
+<p>Stacja może połączyć się bezpośrednio z falownikiem (przez Wi‑Fi dongle) lub podłączyć się do domowego Wi‑Fi, wtedy
+    falownik zostanie znaleziony (lub możesz podać jego IP).</p>
+
+<h2>Połączenie bezpośrednie</h2>
+<p>Poniżej tabela z wymaganymi polami dla każdego falownika.</p>
+<table style="border-spacing: 15px; border-collapse: separate;">
+    <thead>
+        <tr>
+            <th>Typ</th>
+            <th>WiFi</th>
+            <th>Hasło</th>
+            <th>IP</th>
+            <th>Nr seryjny</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Solax</td>
+            <td>Wifi_XXXXXX</td>
+            <td>Pozostaw puste</td>
+            <td>Pozostaw puste</td>
+            <td>Ignorowane</td>
+        </tr>
+        <tr>
+            <td>GoodWe</td>
+            <td>SolarWifiXXXXXX</td>
+            <td>Domyślne: 12345678</td>
+            <td>Pozostaw puste</td>
+            <td>Ignorowane</td>
+        </tr>
+        <tr>
+            <td>Victron</td>
+            <td>venus-XXXXXX</td>
+            <td>Z dongla</td>
+            <td>Pozostaw puste</td>
+            <td>Ignorowane</td>
+        </tr>
+        <tr>
+            <td>Sofar</td>
+            <td>AP_XXXXXX</td>
+            <td>Pozostaw puste</td>
+            <td>Pozostaw puste</td>
+            <td>SN dongla: XXXXXX</td>
+        </tr>
+        <tr>
+            <td>DEYE</td>
+            <td>AP_XXXXXX</td>
+            <td>Pozostaw puste</td>
+            <td>Pozostaw puste</td>
+            <td>SN dongla: XXXXXX</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Połączenie przez domowe Wi‑Fi</h2>
+<p>Aby połączyć stację z domową siecią, wpisz nazwę Wi‑Fi i hasło. Stacja połączy się z siecią, a falownik zostanie
+    znaleziony automatycznie.</p>
+<p>Poniżej wymagane pola dla każdego falownika.</p>
+<table style="border-spacing: 15px; border-collapse: separate;">
+    <thead>
+        <tr>
+            <th>Typ</th>
+            <th>WiFi</th>
+            <th>Hasło</th>
+            <th>IP falownika</th>
+            <th>Nr seryjny</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Solax</td>
+            <td>Twoje WiFi</td>
+            <td>Twoje hasło</td>
+            <td>Pozostaw puste lub wpisz IP</td>
+            <td>Ignorowane</td>
+        </tr>
+        <tr>
+            <td>GoodWe</td>
+            <td>Twoje WiFi</td>
+            <td>Twoje hasło</td>
+            <td>Pozostaw puste lub wpisz IP</td>
+            <td>Ignorowane</td>
+        </tr>
+        <tr>
+            <td>Victron</td>
+            <td>Twoje WiFi</td>
+            <td>Twoje hasło</td>
+            <td>Pozostaw puste lub wpisz IP</td>
+            <td>Ignorowane</td>
+        </tr>
+        <tr>
+            <td>Sofar</td>
+            <td>Twoje WiFi</td>
+            <td>Twoje hasło</td>
+            <td>Pozostaw puste lub wpisz IP</td>
+            <td>SN dongla (XXXXXX z AP_XXXXXX), służy jako klucz</td>
+        </tr>
+        <tr>
+            <td>DEYE</td>
+            <td>Twoje WiFi</td>
+            <td>Twoje hasło</td>
+            <td>Pozostaw puste lub wpisz IP</td>
+            <td>SN dongla (XXXXXX z AP_XXXXXX), służy jako klucz</td>
+        </tr>
+    </tbody>
+</table>
 
 <h1>Obsługiwane inwertery</h1>
 

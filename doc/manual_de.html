@@ -64,6 +64,116 @@
     dass der Wechselrichter diese tägliche Statistik nicht erfasst. <strong>SOLAR STATION <span
             style="color: #ff0000;">LIVE</span></strong> berechnet sie selbst aus den Gesamtdaten und wird daher erst
     nach Mitternacht angezeigt.</p>
+<h1>Wechselrichter-Verbindung</h1>
+<p>Die Station verbindet sich automatisch, wenn sie genau einen unterstützten Dongle findet und alle benötigten Daten
+    vorliegen. Nach einem Neustart wird die Verbindung wiederhergestellt.</p>
+<p>Kann sich die Station nicht entscheiden oder schlägt die Verbindung fehl, erscheint der Einstellungsbildschirm.</p>
+<p>Die Station kann direkt mit dem Wechselrichter verbunden werden (über den Dongle-WLAN) oder sie bindet sich in Ihr
+    Heimnetz ein, damit der Wechselrichter sich finden kann (oder Sie geben eine IP an).</p>
+
+<h2>Direktverbindung</h2>
+<p>Die Tabelle zeigt, welche Felder für jeden Wechselrichter erforderlich sind.</p>
+<table style="border-spacing: 15px; border-collapse: separate;">
+    <thead>
+        <tr>
+            <th>Typ</th>
+            <th>WiFi</th>
+            <th>Passwort</th>
+            <th>IP</th>
+            <th>Seriennr.</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Solax</td>
+            <td>Wifi_XXXXXX</td>
+            <td>Freilassen</td>
+            <td>Freilassen</td>
+            <td>Ignoriert</td>
+        </tr>
+        <tr>
+            <td>GoodWe</td>
+            <td>SolarWifiXXXXXX</td>
+            <td>Standard: 12345678</td>
+            <td>Freilassen</td>
+            <td>Ignoriert</td>
+        </tr>
+        <tr>
+            <td>Victron</td>
+            <td>venus-XXXXXX</td>
+            <td>Vom Dongle</td>
+            <td>Freilassen</td>
+            <td>Ignoriert</td>
+        </tr>
+        <tr>
+            <td>Sofar</td>
+            <td>AP_XXXXXX</td>
+            <td>Freilassen</td>
+            <td>Freilassen</td>
+            <td>Dongle SN: XXXXXX</td>
+        </tr>
+        <tr>
+            <td>DEYE</td>
+            <td>AP_XXXXXX</td>
+            <td>Freilassen</td>
+            <td>Freilassen</td>
+            <td>Dongle SN: XXXXXX</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2>Verbindung über Heim‑WLAN</h2>
+<p>Um die Station mit Ihrem Heimnetz zu verbinden, geben Sie WLAN‑Name und Passwort ein. Die Station verbindet sich,
+    danach findet der Wechselrichter selbstständig.</p>
+<p>Die benötigten Felder für jeden Wechselrichter sind unten aufgeführt.</p>
+<table style="border-spacing: 15px; border-collapse: separate;">
+    <thead>
+        <tr>
+            <th>Typ</th>
+            <th>WiFi</th>
+            <th>Passwort</th>
+            <th>Wechselrichter-IP</th>
+            <th>Seriennr.</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Solax</td>
+            <td>Ihr WLAN</td>
+            <td>Ihr Passwort</td>
+            <td>Freilassen oder IP eingeben</td>
+            <td>Ignoriert</td>
+        </tr>
+        <tr>
+            <td>GoodWe</td>
+            <td>Ihr WLAN</td>
+            <td>Ihr Passwort</td>
+            <td>Freilassen oder IP eingeben</td>
+            <td>Ignoriert</td>
+        </tr>
+        <tr>
+            <td>Victron</td>
+            <td>Ihr WLAN</td>
+            <td>Ihr Passwort</td>
+            <td>Freilassen oder IP eingeben</td>
+            <td>Ignoriert</td>
+        </tr>
+        <tr>
+            <td>Sofar</td>
+            <td>Ihr WLAN</td>
+            <td>Ihr Passwort</td>
+            <td>Freilassen oder IP eingeben</td>
+            <td>Dongle‑SN (XXXXXX von AP_XXXXXX), dient als Auth</td>
+        </tr>
+        <tr>
+            <td>DEYE</td>
+            <td>Ihr WLAN</td>
+            <td>Ihr Passwort</td>
+            <td>Freilassen oder IP eingeben</td>
+            <td>Dongle‑SN (XXXXXX von AP_XXXXXX), dient als Auth</td>
+        </tr>
+    </tbody>
+</table>
 
 <h1>Unterstützte Wechselrichter</h1>
 
