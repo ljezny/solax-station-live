@@ -11,7 +11,7 @@
 
 #define DONGLE_DISCOVERY_MAX_RESULTS 32
 
-#define DONGLE_DISCOVERY_PREFERENCES_KEY "dongleinfo"
+#define DONGLE_DISCOVERY_PREFERENCES_KEY "discovery"
 
 typedef struct
 {
@@ -281,6 +281,9 @@ private:
     {
         if (ssid.startsWith("Wifi_"))
         {
+            if(ssid.startsWith("Wifi_SQ")) { //seems to be a wallbox dongle, ignore it
+                return CONNECTION_TYPE_NONE;
+            }
             return CONNECTION_TYPE_SOLAX;
         }
         else if (ssid.startsWith("Solar-WiFi"))
