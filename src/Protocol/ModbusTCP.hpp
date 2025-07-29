@@ -1,18 +1,14 @@
 #pragma once
 
 #include <Arduino.h>
-#include <CRC.h>
-#include <CRC16.h>
 #include <NetworkClient.h>
 #include "ModbusResponse.hpp"
 
 class ModbusTCP
 {
 public:
-    ModbusTCP()
-    {
-    }
-    
+    ModbusTCP() : sequenceNumber(0) {}
+
     bool isConnected()
     {
         return client.connected();
@@ -35,120 +31,112 @@ public:
 
     ModbusResponse sendModbusRequest(uint8_t unit, uint8_t functionCode, uint16_t addr, uint8_t count)
     {
+        if (functionCode < 1 || functionCode > 4) {
+            log_d("Unsupported function code: %d", functionCode);
+            ModbusResponse response;
+            response.sequenceNumber = sequenceNumber;
+            response.address = addr;
+            return response;
+        }
+
         sequenceNumber++;
 
-        byte request[] = {
-            sequenceNumber >> 8,
-            sequenceNumber & 0xff,
-            0,
-            0,
-            0,
-            6,            // length of following
-            unit,         // unit identifier
-            functionCode, // function code
-            addr >> 8,
-            addr & 0xff,
-            0,
-            count};
+        uint8_t request[] = {
+            static_cast<uint8_t>(sequenceNumber >> 8),
+            static_cast<uint8_t>(sequenceNumber & 0xFF),
+            0, 0, // Protocol ID
+            0, 6, // Length
+            unit,
+            functionCode,
+            static_cast<uint8_t>(addr >> 8),
+            static_cast<uint8_t>(addr & 0xFF),
+            0, // High byte for count
+            count
+        };
 
         ModbusResponse response;
         response.sequenceNumber = sequenceNumber;
+        response.address = addr;
 
         int len = client.write(request, sizeof(request));
-        if (len != sizeof(request))
-        {
+        if (len != sizeof(request)) {
             log_d("Failed to send request");
             return response;
         }
 
-        if (!awaitResponse(5000))
-        {
-            log_d("Response timeout");
+        uint8_t header[6];
+        if (readFully(header, 6, 5000) != 6) {
+            log_d("Response timeout or incomplete header");
             return response;
         }
 
-        response.address = addr;
-
-        memset(response.data, 0, RX_BUFFER_SIZE);
-
-        len = client.read(response.data, 2);
-        uint16_t sequenceNumberReceived = response.data[0] << 8 | response.data[1];
-        if (sequenceNumberReceived != sequenceNumber)
-        {
-            log_d("Expected sequence number %d, but got %d", sequenceNumber, sequenceNumberReceived);
-            client.read(response.data, RX_BUFFER_SIZE); // clear buffer
-            memset(response.data, 0, RX_BUFFER_SIZE);
-            return response;
-        }
-        response.sequenceNumber = sequenceNumberReceived;
-
-        len = client.read(response.data, 2);
-        if (len != 2)
-        {
-            log_d("Unable to read client.");
+        uint16_t receivedSequence = (header[0] << 8) | header[1];
+        if (receivedSequence != sequenceNumber) {
+            log_d("Expected sequence number %d, but got %d", sequenceNumber, receivedSequence);
+            flushInput();
             return response;
         }
 
-        len = client.read(response.data, 2); // read length
-        if (len != 2)
-        {
-            log_d("Unable to read client.");
+        uint16_t protocolId = (header[2] << 8) | header[3];
+        if (protocolId != 0) {
+            log_d("Invalid protocol ID: %d", protocolId);
+            flushInput();
             return response;
         }
 
-        len = client.read(response.data, 1); // read unit identifier
-        if (len != 1)
-        {
-            log_d("Unable to read client.");
+        uint16_t responseLength = (header[4] << 8) | header[5];
+        if (responseLength < 3 || responseLength > RX_BUFFER_SIZE) {
+            log_d("Invalid response length: %d", responseLength);
+            flushInput();
             return response;
         }
 
-        len = client.read(response.data, 1); // read function code
-        response.functionCode = response.data[0];
-        if (response.data[0] != functionCode)
-        {
-            log_d("Invalid function code");
-            log_d("Unit: %d, Function code: %d", unit, addr);
-            log_d("Returned function code: %d", response.data[0]);
-            client.read(response.data, RX_BUFFER_SIZE); // clear buffer
-            memset(response.data, 0, RX_BUFFER_SIZE);
+        uint8_t body[RX_BUFFER_SIZE];
+        if (readFully(body, responseLength, 5000) != responseLength) {
+            log_d("Incomplete body read");
             return response;
         }
 
-        len = client.read(response.data, 1); // read byte count
-        if (len != 1)
-        {
-            log_d("Unable to read client.");
-            return response;
-        }
-        response.length = response.data[0];
+        // Ignore unit ID for now, but it's body[0]
+        uint8_t receivedFunctionCode = body[1];
+        response.functionCode = receivedFunctionCode;
 
-        memset(response.data, 0, RX_BUFFER_SIZE);
-        len = client.read(response.data, response.length); // read data
-        int expectedLength = count * 2;                    // each register is 2 bytes
-        if (len != response.length)
-        {
-            log_d("Unable to read client.");
-            return response;
+        if (receivedFunctionCode == functionCode) {
+            uint8_t byteCount = body[2];
+            int expectedByteCount;
+            if (functionCode == 1 || functionCode == 2) {
+                expectedByteCount = (count + 7) / 8;
+            } else { // 3 or 4
+                expectedByteCount = count * 2;
+            }
+
+            if (byteCount != expectedByteCount || responseLength != 3 + byteCount) {
+                log_d("Invalid byte count: %d, expected: %d", byteCount, expectedByteCount);
+                return response;
+            }
+
+            memcpy(response.data, body + 3, byteCount);
+            response.length = byteCount;
+            response.isValid = true;
+
+            // Log response data as hex
+            log_d("Request address: %d", addr);
+            String dataHex = "";
+            for (int i = 0; i < response.length; i++) {
+                dataHex += String(response.data[i], HEX);
+            }
+            log_d("Response data: %s", dataHex.c_str());
+        } else if (receivedFunctionCode == functionCode + 0x80) {
+            if (responseLength != 3) {
+                log_d("Invalid exception response length");
+                return response;
+            }
+            uint8_t exceptionCode = body[2];
+            log_d("Modbus exception: code %d", exceptionCode);
+        } else {
+            log_d("Invalid function code: expected %d, got %d", functionCode, receivedFunctionCode);
         }
 
-        if (len != expectedLength)
-        {
-            log_d("Invalid response length: %d, expected: %d", len, expectedLength);
-            client.read(response.data, RX_BUFFER_SIZE); // clear buffer
-            memset(response.data, 0, RX_BUFFER_SIZE);
-            return response;
-        }
-
-        // log response data as hex
-        log_d("Request address: %d", addr);
-        String data = "";
-        for (int i = 0; i < response.length; i++)
-        {
-            data += String(response.data[i], HEX);
-        }
-        log_d("Response data: %s", data.c_str());
-        response.isValid = true;
         return response;
     }
 
@@ -156,18 +144,26 @@ private:
     NetworkClient client;
     uint16_t sequenceNumber;
 
-    bool awaitResponse(int timeout)
-    {
+    int readFully(uint8_t* buf, int len, unsigned long timeoutMs) {
+        int bytesRead = 0;
         unsigned long start = millis();
-        while (millis() - start < timeout)
-        {
-            int packetSize = client.available();
-            if (packetSize)
-            {
-                return true;
+        while (bytesRead < len && (millis() - start) < timeoutMs) {
+            int availableBytes = client.available();
+            if (availableBytes > 0) {
+                int got = client.read(buf + bytesRead, len - bytesRead);
+                if (got > 0) {
+                    bytesRead += got;
+                }
+            } else {
+                delay(1);
             }
-            delay(10);
         }
-        return false;
+        return bytesRead;
+    }
+
+    void flushInput() {
+        while (client.available()) {
+            client.read();
+        }
     }
 };
