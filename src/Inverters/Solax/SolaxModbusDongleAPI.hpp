@@ -22,7 +22,6 @@ public:
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             return inverterData;
         }
-
         if (!readInverterInfo(inverterData) ||
             !readMainInverterData(inverterData) ||
             !readPowerData(inverterData) ||
@@ -43,7 +42,7 @@ protected:
     ModbusTCP channel;
     bool isSupportedDongle;
     IPAddress ip;
-
+    String sn = "";
 private:
     static constexpr uint16_t MODBUS_PORT = 502;
     static constexpr uint8_t UNIT_ID = 1;
@@ -62,6 +61,10 @@ private:
     }
 
     bool readInverterInfo(InverterData_t& data) {
+        if(!sn.isEmpty()) {
+            data.sn = sn;
+            return true;
+        }
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, 0x00, 0x14);
         if (!response.isValid) {
             log_d("Failed to read inverter info");
@@ -69,11 +72,11 @@ private:
         }
 
         data.status = DONGLE_STATUS_OK;
-        data.sn = response.readString(0x00, 14);
+        sn = response.readString(0x00, 14);
         String factoryName = response.readString(0x07, 14);
         String moduleName = response.readString(0x0E, 14);
         log_d("SN: %s, Factory: %s, Module: %s", 
-              data.sn.c_str(), factoryName.c_str(), moduleName.c_str());
+              sn.c_str(), factoryName.c_str(), moduleName.c_str());
         return true;
     }
 
@@ -83,7 +86,7 @@ private:
             log_d("Failed to read main inverter data");
             return false;
         }
-
+        data.status = DONGLE_STATUS_OK;
         data.inverterPower = response.readInt16(0x02);
         data.pv1Power = response.readUInt16(0x0A);
         data.pv2Power = response.readUInt16(0x0B);
