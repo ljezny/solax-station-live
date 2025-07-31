@@ -9,6 +9,7 @@ public:
     SolaxModbusDongleAPI() : isSupportedDongle(true), ip(0, 0, 0, 0) {}
 
     InverterData_t loadData(const String& ipAddress) {
+        ModbusTCP channel;
         InverterData_t inverterData = {};
         inverterData.millis = millis();
 
@@ -18,15 +19,15 @@ public:
             return inverterData;
         }
 
-        if (!connectToDongle(ipAddress)) {
+        if (!connectToDongle(channel, ipAddress)) {
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             return inverterData;
         }
-        if (!readInverterInfo(inverterData) ||
-            !readMainInverterData(inverterData) ||
-            !readPowerData(inverterData) ||
-            !readPhaseData(inverterData) ||
-            !readPV3Power(inverterData)) {
+        if (!readInverterInfo(channel, inverterData) ||
+            !readMainInverterData(channel, inverterData) ||
+            !readPowerData(channel, inverterData) ||
+            !readPhaseData(channel, inverterData) ||
+            !readPV3Power(channel, inverterData)) {
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             channel.disconnect();
             return inverterData;
@@ -39,7 +40,6 @@ public:
     }
 
 protected:
-    ModbusTCP channel;
     bool isSupportedDongle;
     IPAddress ip;
     String sn = "";
@@ -49,7 +49,7 @@ private:
     static constexpr uint8_t FUNCTION_CODE_READ_HOLDING = 0x03;
     static constexpr uint8_t FUNCTION_CODE_READ_INPUT = 0x04;
 
-    bool connectToDongle(const String& ipAddress) {
+    bool connectToDongle(ModbusTCP& channel, const String& ipAddress) {
         IPAddress targetIp = getIp(ipAddress);
         if (!channel.connect(targetIp, MODBUS_PORT)) {
             log_d("Failed to connect to Solax Modbus dongle at %s", targetIp.toString().c_str());
@@ -60,7 +60,7 @@ private:
         return true;
     }
 
-    bool readInverterInfo(InverterData_t& data) {
+    bool readInverterInfo(ModbusTCP& channel, InverterData_t& data) {
         if(!sn.isEmpty()) {
             data.sn = sn;
             return true;
@@ -81,7 +81,7 @@ private:
         return true;
     }
 
-    bool readMainInverterData(InverterData_t& data) {
+    bool readMainInverterData(ModbusTCP& channel, InverterData_t& data) {
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x00, 0x54 + 1);
         if (!response.isValid) {
             log_d("Failed to read main inverter data");
@@ -109,7 +109,7 @@ private:
         return true;
     }
 
-    bool readPowerData(InverterData_t& data) {
+    bool readPowerData(ModbusTCP& channel, InverterData_t& data) {
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x91, 0x9A - 0x91 + 2);
         if (!response.isValid) {
             log_d("Failed to read power data");
@@ -122,7 +122,7 @@ private:
         return true;
     }
 
-    bool readPhaseData(InverterData_t& data) {
+    bool readPhaseData(ModbusTCP& channel, InverterData_t& data) {
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x6A, 0x84 - 0x6A + 2);
         if (!response.isValid) {
             log_d("Failed to read phase data");
@@ -143,7 +143,7 @@ private:
         return true;
     }
 
-    bool readPV3Power(InverterData_t& data) {
+    bool readPV3Power(ModbusTCP& channel, InverterData_t& data) {
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x0124, 1);
         if (!response.isValid) {
             log_d("Failed to read PV3 power");
