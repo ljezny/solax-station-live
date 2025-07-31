@@ -123,12 +123,12 @@ public:
             response.isValid = true;
 
             // Log response data as hex
-            log_d("Request address: %d", addr);
-            String dataHex = "";
-            for (int i = 0; i < response.length; i++) {
-                dataHex += String(response.data[i], HEX);
-            }
-            log_d("Response data: %s", dataHex.c_str());
+            // log_d("Request address: %d", addr);
+            // String dataHex = "";
+            // for (int i = 0; i < response.length; i++) {
+            //     dataHex += String(response.data[i], HEX);
+            // }
+            // log_d("Response data: %s", dataHex.c_str());
         } else if (receivedFunctionCode == functionCode + 0x80) {
             if (responseLength != 3) {
                 log_d("Invalid exception response length");

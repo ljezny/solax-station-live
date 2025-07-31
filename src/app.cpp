@@ -212,7 +212,7 @@ void setupLVGL()
 
 void setup()
 {
-    Serial.begin(115200);
+    Serial.begin(921600);
 #if CONFIG_SPIRAM_SUPPORT
     esp_psram_extram_set_clock_rate(120 * 1000000);
     if (!psramInit())
