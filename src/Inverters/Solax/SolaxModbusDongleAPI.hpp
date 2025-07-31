@@ -199,6 +199,7 @@ private:
             break;
         }
         mdns_query_results_free(results);
+        mdns_free();
         return foundIp;
     }
 
