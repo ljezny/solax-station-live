@@ -73,6 +73,7 @@ private:
 
         data.status = DONGLE_STATUS_OK;
         sn = response.readString(0x00, 14);
+        data.sn = sn;
         String factoryName = response.readString(0x07, 14);
         String moduleName = response.readString(0x0E, 14);
         log_d("SN: %s, Factory: %s, Module: %s", 

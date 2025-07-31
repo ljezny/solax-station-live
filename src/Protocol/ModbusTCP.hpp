@@ -57,7 +57,10 @@ public:
         ModbusResponse response;
         response.sequenceNumber = sequenceNumber;
         response.address = addr;
-
+        if(!isConnected()) {
+            log_d("Not connected, cannot send request");
+            return response;
+        }
         int len = client.write(request, sizeof(request));
         if (len != sizeof(request)) {
             log_d("Failed to send request");
