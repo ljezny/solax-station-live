@@ -1,8 +1,8 @@
 #pragma once
 
 #include <Arduino.h>
-#include <NetworkClient.h>
 #include "ModbusResponse.hpp"
+#include "utils/CustomNetworkClient.hpp"
 
 class ModbusTCP
 {
@@ -16,7 +16,7 @@ public:
 
     bool connect(String hostName, uint16_t port)
     {
-        return client.connect(hostName.c_str(), port);
+        return client.connect(hostName, port);
     }
 
     bool connect(IPAddress ip, uint16_t port)
@@ -76,21 +76,18 @@ public:
         uint16_t receivedSequence = (header[0] << 8) | header[1];
         if (receivedSequence != sequenceNumber) {
             log_d("Expected sequence number %d, but got %d", sequenceNumber, receivedSequence);
-            flushInput();
             return response;
         }
 
         uint16_t protocolId = (header[2] << 8) | header[3];
         if (protocolId != 0) {
             log_d("Invalid protocol ID: %d", protocolId);
-            flushInput();
             return response;
         }
 
         uint16_t responseLength = (header[4] << 8) | header[5];
         if (responseLength < 3 || responseLength > RX_BUFFER_SIZE) {
             log_d("Invalid response length: %d", responseLength);
-            flushInput();
             return response;
         }
 
@@ -144,29 +141,23 @@ public:
     }
 
 private:
-    NetworkClient client;
+    CustomNetworkClient client;
     uint16_t sequenceNumber;
 
     int readFully(uint8_t* buf, int len, unsigned long timeoutMs) {
         int bytesRead = 0;
         unsigned long start = millis();
         while (bytesRead < len && (millis() - start) < timeoutMs) {
-            int availableBytes = client.available();
-            if (availableBytes > 0) {
-                int got = client.read(buf + bytesRead, len - bytesRead);
-                if (got > 0) {
-                    bytesRead += got;
-                }
-            } else {
-                delay(1);
+            int got = client.read(buf + bytesRead, len - bytesRead);
+            if (got < 0) {
+                log_d("Error reading data: %d", got);
+                break;
+            }
+            bytesRead += got;
+            if (bytesRead >= len) {
+                break;
             }
         }
         return bytesRead;
-    }
-
-    void flushInput() {
-        while (client.available()) {
-            client.read();
-        }
     }
 };
