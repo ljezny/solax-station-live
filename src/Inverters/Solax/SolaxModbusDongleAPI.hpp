@@ -4,30 +4,34 @@
 #include <WiFi.h>
 #include "../InverterResult.hpp"
 
-class SolaxModbusDongleAPI {
+class SolaxModbusDongleAPI
+{
 public:
     SolaxModbusDongleAPI() : isSupportedDongle(true), ip(0, 0, 0, 0) {}
 
-    InverterData_t loadData(const String& ipAddress) {
-        ModbusTCP channel;
+    InverterData_t loadData(const String &ipAddress)
+    {
         InverterData_t inverterData = {};
         inverterData.millis = millis();
 
-        if (!isSupportedDongle) {
+        if (!isSupportedDongle)
+        {
             inverterData.status = DONGLE_STATUS_UNSUPPORTED_DONGLE;
             log_d("Unsupported dongle");
             return inverterData;
         }
 
-        if (!connectToDongle(channel, ipAddress)) {
+        if (!connectToDongle(ipAddress))
+        {
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             return inverterData;
         }
-        if (!readInverterInfo(channel, inverterData) ||
-            !readMainInverterData(channel, inverterData) ||
-            !readPowerData(channel, inverterData) ||
-            !readPhaseData(channel, inverterData) ||
-            !readPV3Power(channel, inverterData)) {
+        if (!readInverterInfo(inverterData) ||
+            !readMainInverterData(inverterData) ||
+            !readPowerData(inverterData) ||
+            !readPhaseData(inverterData) ||
+            !readPV3Power(inverterData))
+        {
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             channel.disconnect();
             return inverterData;
@@ -43,15 +47,19 @@ protected:
     bool isSupportedDongle;
     IPAddress ip;
     String sn = "";
+    ModbusTCP channel;
+
 private:
     static constexpr uint16_t MODBUS_PORT = 502;
     static constexpr uint8_t UNIT_ID = 1;
     static constexpr uint8_t FUNCTION_CODE_READ_HOLDING = 0x03;
     static constexpr uint8_t FUNCTION_CODE_READ_INPUT = 0x04;
 
-    bool connectToDongle(ModbusTCP& channel, const String& ipAddress) {
+    bool connectToDongle(const String &ipAddress)
+    {
         IPAddress targetIp = getIp(ipAddress);
-        if (!channel.connect(targetIp, MODBUS_PORT)) {
+        if (!channel.connect(targetIp, MODBUS_PORT))
+        {
             log_d("Failed to connect to Solax Modbus dongle at %s", targetIp.toString().c_str());
             ip = IPAddress(0, 0, 0, 0);
             channel.disconnect();
@@ -60,13 +68,16 @@ private:
         return true;
     }
 
-    bool readInverterInfo(ModbusTCP& channel, InverterData_t& data) {
-        if(!sn.isEmpty()) {
+    bool readInverterInfo(InverterData_t &data)
+    {
+        if (!sn.isEmpty())
+        {
             data.sn = sn;
             return true;
         }
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, 0x00, 0x14);
-        if (!response.isValid) {
+        if (!response.isValid)
+        {
             log_d("Failed to read inverter info");
             return false;
         }
@@ -76,14 +87,16 @@ private:
         data.sn = sn;
         String factoryName = response.readString(0x07, 14);
         String moduleName = response.readString(0x0E, 14);
-        log_d("SN: %s, Factory: %s, Module: %s", 
+        log_d("SN: %s, Factory: %s, Module: %s",
               sn.c_str(), factoryName.c_str(), moduleName.c_str());
         return true;
     }
 
-    bool readMainInverterData(ModbusTCP& channel, InverterData_t& data) {
+    bool readMainInverterData(InverterData_t &data)
+    {
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x00, 0x54 + 1);
-        if (!response.isValid) {
+        if (!response.isValid)
+        {
             log_d("Failed to read main inverter data");
             return false;
         }
@@ -92,7 +105,8 @@ private:
         data.pv1Power = response.readUInt16(0x0A);
         data.pv2Power = response.readUInt16(0x0B);
         data.inverterTemperature = response.readInt16(0x08);
-        if (isGen5(data.sn)) {
+        if (isGen5(data.sn))
+        {
             data.inverterTemperature /= 10;
         }
         data.soc = response.readUInt16(0x1C);
@@ -109,22 +123,26 @@ private:
         return true;
     }
 
-    bool readPowerData(ModbusTCP& channel, InverterData_t& data) {
+    bool readPowerData(InverterData_t &data)
+    {
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x91, 0x9A - 0x91 + 2);
-        if (!response.isValid) {
+        if (!response.isValid)
+        {
             log_d("Failed to read power data");
             return false;
         }
 
-        data.gridBuyToday = response.readUInt32LSB(0x98) / 100.0f;
-        data.gridSellToday = response.readUInt32LSB(0x9A) / 100.0f;
+        data.gridBuyToday = response.readUInt32LSB(0x9A) / 100.0f;
+        data.gridSellToday = response.readUInt32LSB(0x98) / 100.0f;
         data.pvToday = response.readUInt16(0x96) / 10.0f;
         return true;
     }
 
-    bool readPhaseData(ModbusTCP& channel, InverterData_t& data) {
+    bool readPhaseData(InverterData_t &data)
+    {
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x6A, 0x84 - 0x6A + 2);
-        if (!response.isValid) {
+        if (!response.isValid)
+        {
             log_d("Failed to read phase data");
             return false;
         }
@@ -132,20 +150,22 @@ private:
         data.L1Power = response.readInt16(0x6C);
         data.L2Power = response.readInt16(0x70);
         data.L3Power = response.readInt16(0x74);
-        
+
         uint16_t offgridL1Power = response.readInt16(0x78);
         uint16_t offgridL2Power = response.readInt16(0x7C);
         uint16_t offgridL3Power = response.readInt16(0x80);
-        
+
         data.L1Power += offgridL1Power;
         data.L2Power += offgridL2Power;
         data.L3Power += offgridL3Power;
         return true;
     }
 
-    bool readPV3Power(ModbusTCP& channel, InverterData_t& data) {
+    bool readPV3Power(InverterData_t &data)
+    {
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x0124, 1);
-        if (!response.isValid) {
+        if (!response.isValid)
+        {
             log_d("Failed to read PV3 power");
             return false;
         }
@@ -154,46 +174,53 @@ private:
         return true;
     }
 
-    void finalizePowerCalculations(InverterData_t& data) {
+    void finalizePowerCalculations(InverterData_t &data)
+    {
         data.inverterPower = data.L1Power + data.L2Power + data.L3Power;
         data.loadPower = data.inverterPower - data.feedInPower;
         data.loadToday += data.gridBuyToday - data.gridSellToday;
     }
 
-    IPAddress getIp(const String& ipAddress) {
-        if (ip == IPAddress(0, 0, 0, 0)) {
-            if (!ipAddress.isEmpty()) {
+    IPAddress getIp(const String &ipAddress)
+    {
+        if (ip == IPAddress(0, 0, 0, 0))
+        {
+            if (!ipAddress.isEmpty())
+            {
                 ip = IPAddress();
                 ip.fromString(ipAddress);
             }
         }
 
-        if (ip == IPAddress(0, 0, 0, 0)) {
+        if (ip == IPAddress(0, 0, 0, 0))
+        {
             ip = discoverIpViaMDNS();
         }
 
-        if (ip == IPAddress(0, 0, 0, 0)) {
-            ip = (WiFi.localIP()[0] == 192) ? 
-                 IPAddress(192, 168, 10, 10) : 
-                 IPAddress(5, 8, 8, 8);
+        if (ip == IPAddress(0, 0, 0, 0))
+        {
+            ip = (WiFi.localIP()[0] == 192) ? IPAddress(192, 168, 10, 10) : IPAddress(5, 8, 8, 8);
         }
 
         log_d("Using IP: %s", ip.toString().c_str());
         return ip;
     }
 
-    IPAddress discoverIpViaMDNS() {
-        mdns_result_t* results = nullptr;
+    IPAddress discoverIpViaMDNS()
+    {
+        mdns_result_t *results = nullptr;
         mdns_init();
         esp_err_t err = mdns_query_ptr("_pocketseries", "_tcp", 5000, 20, &results);
-        if (err != ESP_OK || !results) {
+        if (err != ESP_OK || !results)
+        {
             log_d("MDNS query failed or no results");
             mdns_query_results_free(results);
             return IPAddress(0, 0, 0, 0);
         }
 
         IPAddress foundIp(0, 0, 0, 0);
-        for (mdns_result_t* r = results; r; r = r->next) {
+        for (mdns_result_t *r = results; r; r = r->next)
+        {
             log_d("Found MDNS: %s, type: %s, proto: %s, hostname: %s, port: %d",
                   r->instance_name, r->service_type, r->proto, r->hostname, r->port);
             foundIp = r->addr->addr.u_addr.ip4.addr;
@@ -204,7 +231,8 @@ private:
         return foundIp;
     }
 
-    bool isGen5(const String& sn) {
+    bool isGen5(const String &sn)
+    {
         return sn.startsWith("H35") || sn.startsWith("H3B");
     }
 };

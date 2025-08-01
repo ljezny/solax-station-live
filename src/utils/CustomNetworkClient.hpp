@@ -43,6 +43,12 @@ public:
         ling.l_linger = 0;
         setsockopt(sock, SOL_SOCKET, SO_LINGER, &ling, sizeof(ling));
 
+        struct timeval timeout;
+        timeout.tv_sec = 10;
+        timeout.tv_usec = 0;
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+        setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+
         err = ::connect(sock, res->ai_addr, res->ai_addrlen);
         freeaddrinfo(res);
         if (err != 0)
@@ -77,6 +83,12 @@ public:
         ling.l_onoff = 1;
         ling.l_linger = 0;
         setsockopt(sock, SOL_SOCKET, SO_LINGER, &ling, sizeof(ling));
+
+        struct timeval timeout;
+        timeout.tv_sec = 10;
+        timeout.tv_usec = 0;
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+        setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
 
         int err = ::connect(sock, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
         if (err != 0)
