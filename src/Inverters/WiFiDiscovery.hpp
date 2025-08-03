@@ -111,7 +111,7 @@ public:
     bool disconnect()
     {
         log_d("Disconnecting from WiFi");
-        return WiFi.disconnect();
+        return WiFi.disconnect(true);
     }
 
     bool connectToDongle(WiFiDiscoveryResult_t &discovery)
@@ -121,7 +121,7 @@ public:
         if (WiFi.SSID() == discovery.ssid)
         {
             log_d("Already connected to %s", discovery.ssid.c_str());
-            return awaitWifiConnection();
+            return true;
         }
         else
         {
