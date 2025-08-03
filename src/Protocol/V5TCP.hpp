@@ -60,7 +60,7 @@ public:
     {
         if (!client.connect(ip, 8899))
         {
-            log_d("Failed to begin packet");
+            log_d("Failed to connect to V5TCP at %s", ip.toString().c_str());
             return false;
         }
         return true;
