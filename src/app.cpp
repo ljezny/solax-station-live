@@ -35,7 +35,7 @@ static lv_color_t disp_draw_buf1[screenWidth * screenHeight / 10];
 static lv_color_t disp_draw_buf2[screenWidth * screenHeight / 10];
 static lv_disp_drv_t disp_drv;
 
-SET_LOOP_TASK_STACK_SIZE(24 * 1024); // use freeStack
+SET_LOOP_TASK_STACK_SIZE(16 * 1024); // use freeStack
 
 WiFiDiscovery dongleDiscovery;
 ShellyAPI shellyAPI;
