@@ -72,6 +72,11 @@ private:
                 }
                 channel.disconnect();
             }
+            else
+            {
+                log_d("Failed to connect to dongle at %s", ip.toString().c_str());
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            }
 
             if (inverterData.status == DONGLE_STATUS_OK)
             {
@@ -112,6 +117,11 @@ private:
                 }
                 channel.disconnect();
             }
+            else
+            {
+                log_d("Failed to connect to dongle at %s", ip.toString().c_str());
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            }
 
             if (inverterData.status == DONGLE_STATUS_OK)
             {
@@ -140,6 +150,12 @@ private:
                 }
                 channel.disconnect();
             }
+            else
+            {
+                log_d("Failed to connect to dongle at %s", ip.toString().c_str());
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            }
+
             if (inverterData.status == DONGLE_STATUS_OK)
             {
                 break; // exit loop if data was read successfully
@@ -168,6 +184,11 @@ private:
                     }
                 }
                 channel.disconnect();
+            }
+            else
+            {
+                log_d("Failed to connect to dongle at %s", ip.toString().c_str());
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             }
 
             if (inverterData.status == DONGLE_STATUS_OK)
@@ -213,6 +234,11 @@ private:
                     inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 }
                 channel.disconnect();
+            }
+            else
+            {
+                log_d("Failed to connect to dongle at %s", ip.toString().c_str());
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             }
             if (inverterData.status == DONGLE_STATUS_OK)
             {
@@ -261,6 +287,15 @@ private:
                     inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 }
                 channel.disconnect();
+            }
+            else
+            {
+                log_d("Failed to connect to dongle at %s", ip.toString().c_str());
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            }
+            if (inverterData.status == DONGLE_STATUS_OK)
+            {
+                break; // exit loop if data was read successfully
             }
         }
 
