@@ -2,8 +2,6 @@
 
 #include "../../Protocol/V5TCP.hpp"
 
-#define DELAY_BETWEEN_REQUESTS_MS 300
-
 class SofarSolarDongleAPI
 {
 public:
@@ -33,17 +31,16 @@ private:
                 }
             }
         }
-        
+
         // https://github.com/wills106/homeassistant-solax-modbus/blob/main/custom_components/solax_modbus/plugin_sofar.py
         InverterData_t inverterData;
         log_d("Connecting to dongle...");
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
         log_d("SN: %d", sn);
+        byte packetBuffer[1024];
         if (channel.connect(ip))
         {
             log_d("Connected.");
-            byte packetBuffer[1024];
-
             inverterData.sn = sn;
 
             // pv input
@@ -74,7 +71,11 @@ private:
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
-            delay(DELAY_BETWEEN_REQUESTS_MS);
+            channel.disconnect();
+        }
+
+        if (channel.connect(ip))
+        {
             // battery input
             // 0x0600 - 0x067F
             if (channel.sendReadDataRequest(0x667, 2, sn))
@@ -98,7 +99,11 @@ private:
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
-            delay(DELAY_BETWEEN_REQUESTS_MS);
+            channel.disconnect();
+        }
+
+        if (channel.connect(ip))
+        {
             if (channel.sendReadDataRequest(0x607, 0x607 - 0x607 + 1, sn))
             {
                 if (channel.readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
@@ -106,18 +111,25 @@ private:
                     inverterData.batteryTemperature = channel.readInt16(packetBuffer, 0x607 - 0x607);
                 }
             }
-            delay(DELAY_BETWEEN_REQUESTS_MS);
+            channel.disconnect();
+        }
+
+        if (channel.connect(ip))
+        {
             // module info
             // 0x404 - 0x44F
-            if (channel.sendReadDataRequest( 0x418, 0x418 - 0x418 + 1, sn))
+            if (channel.sendReadDataRequest(0x418, 0x418 - 0x418 + 1, sn))
             {
                 if (channel.readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
                 {
                     inverterData.inverterTemperature = channel.readInt16(packetBuffer, 0x418 - 0x418);
                 }
             }
+            channel.disconnect();
+        }
 
-            delay(DELAY_BETWEEN_REQUESTS_MS);
+        if (channel.connect(ip))
+        {
             // on grid input
             // 0x484 - 0x4BC
             if (channel.sendReadDataRequest(0x484, 0x4BC - 0x484 + 1, sn))
@@ -144,7 +156,11 @@ private:
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
-            delay(DELAY_BETWEEN_REQUESTS_MS);
+            channel.disconnect();
+        }
+
+        if (channel.connect(ip))
+        {
             // //stats
             // 0x0680 - 0x06BF
             if (channel.sendReadDataRequest(0x684, 0x698 - 0x684 + 2, sn))
@@ -176,16 +192,16 @@ private:
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 return inverterData;
             }
+            channel.disconnect();
         }
 
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
         logInverterData(inverterData);
-
-        channel.disconnect(); //don't disconnect, we need to keep the connection open for next requests
         return inverterData;
     }
 
-    IPAddress discoverDongleIP()
+    IPAddress
+    discoverDongleIP()
     {
         IPAddress dongleIP;
         WiFiUDP udp;

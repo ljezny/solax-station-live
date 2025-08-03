@@ -4,7 +4,7 @@
 #include <WiFi.h>
 #include <CRC.h>
 #include <CRC16.h>
-#include <NetworkClient.h>
+#include "utils/CustomNetworkClient.hpp"
 #include "Inverters/InverterResult.hpp"
 
 #define READ_TIMEOUT 2000
@@ -12,23 +12,8 @@
 class V5TCP
 {
 private:
-    NetworkClient client;
+    CustomNetworkClient client;
     uint8_t sequenceNumber = 0;
-
-    bool awaitPacket(int timeout)
-    {
-        unsigned long start = millis();
-        while (millis() - start < timeout)
-        {
-            int packetSize = client.available();
-            if (packetSize)
-            {
-                return true;
-            }
-            delay(10);
-        }
-        return false;
-    }
 
 public:
     uint16_t readUInt16(byte *buf, byte reg)
@@ -73,12 +58,6 @@ public:
 
     bool connect(IPAddress ip)
     {
-        client.setTimeout(5000);
-        if (client.connected())
-        {
-            log_d("Already connected");
-            return true;
-        }
         if (!client.connect(ip, 8899))
         {
             log_d("Failed to begin packet");
@@ -156,8 +135,6 @@ public:
         log_d("Sending solarmanv5 request. Sequence: %d, SN: %lu, Addr: %d, Len: %d",
               sequenceNumber, sn, addr, len);
 
-        client.clear(); // clear rx buffer
-
         size_t requestSize = sizeof(request);
         bool result = client.write(request, requestSize) == requestSize;
         return result;
@@ -165,11 +142,6 @@ public:
 
     int readModbusRTUResponse(byte *packetBuffer, size_t bufferLength)
     {
-        if (!awaitPacket(READ_TIMEOUT))
-        {
-            log_d("Response timeout");
-            return -1;
-        }
         if (client.read(packetBuffer, 1) != 1)
         {
             log_d("Unable to read client.");
@@ -238,7 +210,6 @@ public:
             // read trailer
             log_d("Unable to read client.");
         }
-        client.clear(); // clear rx buffer
 
         return MODBUS_RTU_FRAME_LENGTH;
     }
