@@ -228,6 +228,8 @@ void setup()
 
     setupLVGL();
     setupWiFi();
+
+    esp_log_level_set("wifi", ESP_LOG_VERBOSE);
 }
 
 bool discoverDonglesTask()
@@ -241,7 +243,7 @@ bool discoverDonglesTask()
         lastAttempt = millis();
         dongleDiscovery.scanWiFi(true);
     }
-    return false;
+    return run;
 }
 
 InverterData_t loadInverterData(WiFiDiscoveryResult_t &discoveryResult)
@@ -251,7 +253,7 @@ InverterData_t loadInverterData(WiFiDiscoveryResult_t &discoveryResult)
     static SofarSolarDongleAPI sofarSolarDongleAPI = SofarSolarDongleAPI();
     static DeyeDongleAPI deyeDongleAPI = DeyeDongleAPI();
     static VictronDongleAPI victronDongleAPI = VictronDongleAPI();
-
+    long millisBefore = millis();
     InverterData_t d;
     switch (discoveryResult.type)
     {
@@ -271,7 +273,7 @@ InverterData_t loadInverterData(WiFiDiscoveryResult_t &discoveryResult)
         d = victronDongleAPI.loadData(discoveryResult.inverterIP);
         break;
     }
-
+    log_d("Inverter data loaded in %d ms", millis() - millisBefore);
     return d;
 }
 
@@ -403,36 +405,6 @@ void logMemory()
     log_d("Free stack: %d", uxTaskGetStackHighWaterMark(NULL));
 }
 
-bool resetWifiTask()
-{
-    static long lastAttempt = 0;
-    bool run = false;
-    if (millis() - lastAttempt > 300000) // every 5 minutes
-    {
-        lastAttempt = millis();
-        run = true;
-        logMemory();
-        if (WiFi.status() == WL_CONNECTED)
-        {
-            log_d("Wifi connected, skipping reset");
-            return run;
-        }
-
-        if (WiFi.scanComplete() == WIFI_SCAN_RUNNING)
-        {
-            log_d("Wifi Scan is running, skipping reset");
-            return run;
-        }
-
-        log_d("Resetting wifi");
-        WiFi.mode(WIFI_OFF);
-        logMemory();
-        delay(5000);
-        softAP.start();
-        logMemory();
-    }
-    return run;
-}
 
 void onEntering(state_t newState)
 {
@@ -502,7 +474,7 @@ void updateState()
     case BOOT:
     {
         dongleDiscovery.scanWiFi();
-        wifiDiscoveryResult = dongleDiscovery.getAutoconnectDongle();
+        //wifiDiscoveryResult = dongleDiscovery.getAutoconnectDongle();
         if(wifiDiscoveryResult.type != CONNECTION_TYPE_NONE)
         {
             log_d("Autoconnect dongle found: %s, type: %d", wifiDiscoveryResult.ssid.c_str(), wifiDiscoveryResult.type);
@@ -611,11 +583,7 @@ void updateState()
         {
             break;
         }
-        if (resetWifiTask())
-        {
-            break;
-        }
-
+        
         break;
     }
 }
