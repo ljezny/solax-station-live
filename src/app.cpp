@@ -400,9 +400,11 @@ bool reloadShellyTask()
 
 void logMemory()
 {
+    log_d("-- Memory Info --");
     log_d("Free heap: %d", ESP.getFreeHeap());
     log_d("Min free heap: %d", ESP.getMinFreeHeap());
     log_d("Min free stack: %d", uxTaskGetStackHighWaterMark(NULL));
+    log_d("-- Memory Info End --");
 }
 
 
