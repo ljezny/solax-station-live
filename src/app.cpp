@@ -474,7 +474,7 @@ void updateState()
     case BOOT:
     {
         dongleDiscovery.scanWiFi();
-        //wifiDiscoveryResult = dongleDiscovery.getAutoconnectDongle();
+        wifiDiscoveryResult = dongleDiscovery.getAutoconnectDongle();
         if(wifiDiscoveryResult.type != CONNECTION_TYPE_NONE)
         {
             log_d("Autoconnect dongle found: %s, type: %d", wifiDiscoveryResult.ssid.c_str(), wifiDiscoveryResult.type);
