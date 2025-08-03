@@ -402,7 +402,7 @@ void logMemory()
 {
     log_d("Free heap: %d", ESP.getFreeHeap());
     log_d("Min free heap: %d", ESP.getMinFreeHeap());
-    log_d("Free stack: %d", uxTaskGetStackHighWaterMark(NULL));
+    log_d("Min free stack: %d", uxTaskGetStackHighWaterMark(NULL));
 }
 
 
@@ -435,8 +435,7 @@ void onEntering(state_t newState)
         }
         xSemaphoreGive(lvgl_mutex);
         break;
-    }
-    logMemory();
+    }    
 }
 
 void onLeaving(state_t oldState)
@@ -592,4 +591,6 @@ void loop()
 {
     updateState();
     delay(1000);
+    
+    logMemory();
 }

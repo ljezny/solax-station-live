@@ -64,7 +64,7 @@ static void draw_event_cb(lv_event_t *e)
         }
         else if (dsc->id == LV_CHART_AXIS_SECONDARY_Y)
         {
-            lv_snprintf(dsc->text, dsc->text_length, "%d\nkW", (int) round(dsc->value / 1000.0f));
+            lv_snprintf(dsc->text, dsc->text_length, "%d\nkW", (int)round(dsc->value / 1000.0f));
         }
         else if (dsc->id == LV_CHART_AXIS_PRIMARY_X)
         {
@@ -102,6 +102,7 @@ class DashboardUI
 {
 private:
     bool isDarkMode = false;
+
 public:
     const int UI_REFRESH_PERIOD_MS = 5000;
     void show()
@@ -118,7 +119,8 @@ public:
 
     void update(InverterData_t &inverterData, InverterData_t &previousInverterData, MedianPowerSampler &uiMedianPowerSampler, ShellyResult_t &shellyResult, ShellyResult_t &previousShellyResult, SolarChartDataProvider &solarChartDataProvider, int wifiSignalPercent)
     {
-        if(uiMedianPowerSampler.hasValidSamples()) {
+        if (uiMedianPowerSampler.hasValidSamples())
+        {
             isDarkMode = uiMedianPowerSampler.getMedianPVPower() == 0;
             uiMedianPowerSampler.resetSamples();
         }
@@ -339,18 +341,26 @@ public:
         // lv_label_set_text(ui_shellyPowerLabel, format(POWER, shellyResult.totalPower).value.c_str());
         shellyPowerTextAnimator.animate(ui_shellyPowerLabel, previousShellyResult.totalPower, shellyResult.totalPower);
         lv_label_set_text(ui_shellyPowerUnitLabel, format(POWER, shellyResult.totalPower).unit.c_str());
-        if(shellyResult.maxPercent > 0) {
+        if (shellyResult.maxPercent > 0)
+        {
             int uiPercent = shellyResult.maxPercent;
-            if(uiPercent < 60) {
+            if (uiPercent < 60)
+            {
                 uiPercent = 10;
-            } else if(uiPercent > 90) {
+            }
+            else if (uiPercent > 90)
+            {
                 uiPercent = 100;
-            } else {
+            }
+            else
+            {
                 uiPercent = map(uiPercent, 60, 90, 10, 100);
             }
 
             lv_label_set_text_fmt(ui_shellyCountLabel, "%d%% / %d / %d", uiPercent, shellyResult.activeCount, shellyResult.pairedCount);
-        } else {
+        }
+        else
+        {
             lv_label_set_text_fmt(ui_shellyCountLabel, "%d / %d", shellyResult.activeCount, shellyResult.pairedCount);
         }
 
@@ -363,11 +373,14 @@ public:
         case DONGLE_STATUS_OK:
             lv_obj_set_style_text_color(ui_statusLabel, lv_palette_main(LV_PALETTE_GREY), 0);
             lv_label_set_text_fmt(ui_statusLabel, "%s %d%%", inverterData.sn.c_str(), wifiSignalPercent);
-            
+
             lv_label_set_text(ui_dongleFWVersion, inverterData.dongleFWVersion.c_str());
-            if(inverterData.dongleFWVersion.isEmpty()) {
+            if (inverterData.dongleFWVersion.isEmpty())
+            {
                 lv_obj_add_flag(ui_dongleFWVersion, LV_OBJ_FLAG_HIDDEN);
-            } else {
+            }
+            else
+            {
                 lv_obj_clear_flag(ui_dongleFWVersion, LV_OBJ_FLAG_HIDDEN);
             }
             break;
@@ -405,6 +418,34 @@ public:
         lv_obj_set_style_text_color(ui_Dashboard, isDarkMode ? white : black, 0);
     }
 
+    ~DashboardUI()
+    {
+        if (pvAnimator != NULL)
+        {
+            delete pvAnimator;
+            pvAnimator = NULL;
+        }
+        if (batteryAnimator != NULL)
+        {
+            delete batteryAnimator;
+            batteryAnimator = NULL;
+        }
+        if (gridAnimator != NULL)
+        {
+            delete gridAnimator;
+            gridAnimator = NULL;
+        }
+        if (loadAnimator != NULL)
+        {
+            delete loadAnimator;
+            loadAnimator = NULL;
+        }
+        if (shellyAnimator != NULL)
+        {
+            delete shellyAnimator;
+            shellyAnimator = NULL;
+        }
+    }
 private:
     int const UI_TEXT_CHANGE_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS;
     int const UI_BACKGROUND_ANIMATION_DURATION = 2000;
@@ -426,6 +467,12 @@ private:
     UIBackgroundAnimator pvBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
     UIBackgroundAnimator batteryBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
     UIBackgroundAnimator gridBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
+
+    UIBallAnimator *pvAnimator = NULL;
+    UIBallAnimator *batteryAnimator = NULL;
+    UIBallAnimator *gridAnimator = NULL;
+    UIBallAnimator *loadAnimator = NULL;
+    UIBallAnimator *shellyAnimator = NULL;
 
     void updateChart(InverterData_t &inverterData, SolarChartDataProvider &solarChartDataProvider)
     {
@@ -469,12 +516,6 @@ private:
 
     void updateFlowAnimations(InverterData_t inverterData, ShellyResult_t shellyResult)
     {
-        static UIBallAnimator *pvAnimator = NULL;
-        static UIBallAnimator *batteryAnimator = NULL;
-        static UIBallAnimator *gridAnimator = NULL;
-        static UIBallAnimator *loadAnimator = NULL;
-        static UIBallAnimator *shellyAnimator = NULL;
-
         int duration = UI_REFRESH_PERIOD_MS / 3;
         int offsetY = 15;
         int offsetX = 30;
@@ -534,15 +575,5 @@ private:
             loadAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_loadColor, (inverterData.loadPower / 1000) + 1);
             loadAnimator->run(ui_inverterContainer, ui_loadContainer, duration, duration, 1, -offsetX, offsetY);
         }
-        // if (shellyAnimator != NULL)
-        // {
-        //     delete shellyAnimator;
-        //     shellyAnimator = NULL;
-        // }
-        // if (shellyResult.totalPower > 0)
-        // { // TODO: check if shelly is on
-        //     shellyAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_pvColor, (shellyResult.totalPower / 1000) + 1);
-        //     shellyAnimator->run(ui_loadContainer, ui_shellyContainer, duration, duration, 1, 0, 0);
-        // }
     }
 };
