@@ -102,7 +102,7 @@ public:
         }
         return false;
     }
-    
+
     void pairShelly(String shellySSId, String ssid, String password)
     {
         WiFi.begin(shellySSId.c_str());
@@ -180,7 +180,7 @@ public:
         return false;
     }
 
-    void queryMDNS()
+    void queryMDNS(IPAddress softAPIP, IPAddress softAPSubnet)
     {
         mdns_result_t *results = NULL;
 
@@ -201,11 +201,20 @@ public:
         if (mdns_query_async_get_results(mdnsSearch, 1000, &results, &numResult))
         {
             mdns_result_t *r = results;
-
+            log_d("Retrieved %d results from mDNS", numResult);
+            log_d("SoftAP IP: %s, Subnet: %s", softAPIP.toString().c_str(), softAPSubnet.toString().c_str());
             while (r)
             {
                 String hostname = r->hostname;
                 log_d("Found service: %s", hostname.c_str());
+
+                IPAddress ipAddress = r->addr->addr.u_addr.ip4.addr;
+                // check if IP is in the same subnet as softAP
+                if ((uint32_t)ipAddress == ((uint32_t)softAPIP & (uint32_t)softAPSubnet))
+                {
+                    log_d("Found Shelly on softAP subnet: %s", hostname.c_str());
+                }
+
                 hostname.toLowerCase();
                 for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
                 {

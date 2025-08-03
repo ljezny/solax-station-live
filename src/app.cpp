@@ -371,7 +371,7 @@ bool reloadShellyTask()
     if (shellyAPI.getPairedCount() < softAP.getNumberOfConnectedDevices())
     {
         log_d("Connected devices: %d, paired devices: %d", softAP.getNumberOfConnectedDevices(), shellyAPI.getPairedCount());
-        shellyAPI.queryMDNS();
+        shellyAPI.queryMDNS(WiFi.softAPIP(), WiFi.softAPSubnetMask());
     }
     static long lastAttempt = 0;
     bool run = false;
