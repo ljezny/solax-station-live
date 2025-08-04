@@ -28,8 +28,6 @@ public:
 
     void scanWiFi(bool fast = false)
     {
-        memset(discoveries, 0, sizeof(discoveries));
-
         int found = WiFi.scanNetworks(false, false, false, fast ? 100 : 300);
         int j = 0;
         for (int i = 0; i < found; i++)
