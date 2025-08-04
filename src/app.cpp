@@ -220,7 +220,6 @@ void setup()
         Serial.println("PSRAM 初始化失败！");
         while (1)
             ;
-        
     }
 #endif
     // set cpu frequency to 240MHz
@@ -353,7 +352,7 @@ bool pairShellyTask()
                 {
                     if (shellyAPI.setWiFiSTA(dongleDiscovery.discoveries[i].ssid, softAP.getSSID(), softAP.getPassword()))
                     {
-                        // TODO: test it
+                        dongleDiscovery.discoveries[i].ssid = ""; // clear SSID to avoid reconnecting
                     }
                     WiFi.disconnect();
                 }
