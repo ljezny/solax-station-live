@@ -10735,6 +10735,208 @@
                         "deepid": 781969925,
                         "children": [
                           {
+                            "guid": "GUID24855827-709491S2254216",
+                            "deepid": 1687219245,
+                            "dont_export": false,
+                            "locked": false,
+                            "properties": [
+                              {
+                                "nid": 10,
+                                "strtype": "OBJECT/Name",
+                                "strval": "inverterPowerBar1",
+                                "InheritedType": 10
+                              },
+                              {
+                                "nid": 20,
+                                "strtype": "OBJECT/Layout",
+                                "InheritedType": 1
+                              },
+                              {
+                                "Flow": 0,
+                                "Wrap": false,
+                                "Reversed": false,
+                                "MainAlignment": 0,
+                                "CrossAlignment": 0,
+                                "TrackAlignment": 0,
+                                "LayoutType": 0,
+                                "nid": 30,
+                                "strtype": "OBJECT/Layout_type",
+                                "strval": "No_layout",
+                                "InheritedType": 13
+                              },
+                              {
+                                "nid": 40,
+                                "strtype": "OBJECT/Transform",
+                                "InheritedType": 1
+                              },
+                              {
+                                "nid": 50,
+                                "flags": 17,
+                                "strtype": "OBJECT/Position",
+                                "intarray": [
+                                  -280,
+                                  -54
+                                ],
+                                "InheritedType": 7
+                              },
+                              {
+                                "nid": 60,
+                                "flags": 18,
+                                "strtype": "OBJECT/Size",
+                                "intarray": [
+                                  46,
+                                  10
+                                ],
+                                "InheritedType": 7
+                              },
+                              {
+                                "nid": 70,
+                                "strtype": "OBJECT/Align",
+                                "strval": "CENTER",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 90,
+                                "flags": 1048576,
+                                "strtype": "OBJECT/Flags",
+                                "InheritedType": 1
+                              },
+                              {
+                                "nid": 110,
+                                "strtype": "OBJECT/Clickable",
+                                "strval": "False",
+                                "InheritedType": 2
+                              },
+                              {
+                                "nid": 225,
+                                "flags": 1048576,
+                                "strtype": "OBJECT/Scrolling",
+                                "InheritedType": 1
+                              },
+                              {
+                                "nid": 300,
+                                "strtype": "OBJECT/Scrollbar_mode",
+                                "strval": "AUTO",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 310,
+                                "strtype": "OBJECT/Scroll_direction",
+                                "strval": "ALL",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 314,
+                                "strtype": "OBJECT/Scroll_snap_x",
+                                "strval": "NONE",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 315,
+                                "strtype": "OBJECT/Scroll_snap_y",
+                                "strval": "NONE",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 320,
+                                "flags": 1048576,
+                                "strtype": "OBJECT/States",
+                                "InheritedType": 1
+                              },
+                              {
+                                "nid": 1010,
+                                "strtype": "BAR/Bar",
+                                "InheritedType": 1
+                              },
+                              {
+                                "nid": 1020,
+                                "strtype": "BAR/Range",
+                                "intarray": [
+                                  0,
+                                  2400
+                                ],
+                                "InheritedType": 7
+                              },
+                              {
+                                "nid": 1030,
+                                "strtype": "BAR/Value",
+                                "integer": 1626,
+                                "InheritedType": 6
+                              },
+                              {
+                                "nid": 1040,
+                                "strtype": "BAR/Mode",
+                                "strval": "NORMAL",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 1050,
+                                "strtype": "BAR/Value_start",
+                                "InheritedType": 6
+                              },
+                              {
+                                "part": "lv.PART.MAIN",
+                                "childs": [
+                                  {
+                                    "nid": 10000,
+                                    "strtype": "_style/StyleState",
+                                    "strval": "DEFAULT",
+                                    "childs": [
+                                      {
+                                        "nid": 10520,
+                                        "strtype": "_style/Bg_Color",
+                                        "strval": "inverterColor",
+                                        "integer": 681623078,
+                                        "intarray": [
+                                          211,
+                                          211,
+                                          211,
+                                          255
+                                        ],
+                                        "InheritedType": 7
+                                      }
+                                    ],
+                                    "InheritedType": 1
+                                  }
+                                ],
+                                "nid": 1060,
+                                "strtype": "BAR/Style_main",
+                                "strval": "lv.PART.MAIN, Rectangle, Pad, Anim1, Transform",
+                                "InheritedType": 11
+                              },
+                              {
+                                "part": "lv.PART.INDICATOR",
+                                "childs": [
+                                  {
+                                    "nid": 10000,
+                                    "strtype": "_style/StyleState",
+                                    "strval": "DEFAULT",
+                                    "childs": [
+                                      {
+                                        "nid": 10520,
+                                        "strtype": "_style/Bg_Color",
+                                        "intarray": [
+                                          0,
+                                          0,
+                                          0,
+                                          255
+                                        ],
+                                        "InheritedType": 7
+                                      }
+                                    ],
+                                    "InheritedType": 1
+                                  }
+                                ],
+                                "nid": 1070,
+                                "strtype": "BAR/Style_indicator",
+                                "strval": "lv.PART.INDICATOR, Rectangle",
+                                "InheritedType": 11
+                              }
+                            ],
+                            "saved_objtypeKey": "BAR",
+                            "tree_closed": true
+                          },
+                          {
                             "guid": "GUID65687400-206979S71693235",
                             "deepid": 1859050602,
                             "dont_export": false,
@@ -10781,7 +10983,7 @@
                               },
                               {
                                 "nid": 952260400,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
                                   1,
@@ -10856,7 +11058,7 @@
                               {
                                 "nid": 421400223,
                                 "strtype": "LABEL/Text",
-                                "strval": "625",
+                                "strval": "1625",
                                 "InheritedType": 10
                               },
                               {
@@ -10876,7 +11078,7 @@
                                       {
                                         "nid": -384585210,
                                         "strtype": "_style/Text_Align",
-                                        "strval": "CENTER",
+                                        "strval": "RIGHT",
                                         "InheritedType": 3
                                       },
                                       {
@@ -11076,7 +11278,7 @@
                             "Wrap": false,
                             "Reversed": false,
                             "MainAlignment": 1,
-                            "CrossAlignment": 0,
+                            "CrossAlignment": 1,
                             "TrackAlignment": 0,
                             "LayoutType": 1,
                             "nid": -779504048,
@@ -11101,7 +11303,7 @@
                           },
                           {
                             "nid": -1613600741,
-                            "flags": 51,
+                            "flags": 50,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -11211,6 +11413,187 @@
                         "deepid": 781969925,
                         "children": [
                           {
+                            "guid": "GUID50549771-709493S1144216",
+                            "deepid": -255928288,
+                            "dont_export": false,
+                            "locked": false,
+                            "properties": [
+                              {
+                                "nid": 10,
+                                "strtype": "OBJECT/Name",
+                                "strval": "inverterPowerBar2",
+                                "InheritedType": 10
+                              },
+                              {
+                                "nid": 20,
+                                "strtype": "OBJECT/Layout",
+                                "InheritedType": 1
+                              },
+                              {
+                                "Flow": 0,
+                                "Wrap": false,
+                                "Reversed": false,
+                                "MainAlignment": 0,
+                                "CrossAlignment": 0,
+                                "TrackAlignment": 0,
+                                "LayoutType": 0,
+                                "nid": 30,
+                                "strtype": "OBJECT/Layout_type",
+                                "strval": "No_layout",
+                                "InheritedType": 13
+                              },
+                              {
+                                "nid": 40,
+                                "strtype": "OBJECT/Transform",
+                                "InheritedType": 1
+                              },
+                              {
+                                "nid": 50,
+                                "flags": 17,
+                                "strtype": "OBJECT/Position",
+                                "intarray": [
+                                  0,
+                                  0
+                                ],
+                                "InheritedType": 7
+                              },
+                              {
+                                "nid": 60,
+                                "flags": 18,
+                                "strtype": "OBJECT/Size",
+                                "intarray": [
+                                  46,
+                                  10
+                                ],
+                                "InheritedType": 7
+                              },
+                              {
+                                "nid": 70,
+                                "strtype": "OBJECT/Align",
+                                "strval": "CENTER",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 90,
+                                "flags": 1048576,
+                                "strtype": "OBJECT/Flags",
+                                "InheritedType": 1
+                              },
+                              {
+                                "nid": 110,
+                                "strtype": "OBJECT/Clickable",
+                                "strval": "False",
+                                "InheritedType": 2
+                              },
+                              {
+                                "nid": 225,
+                                "flags": 1048576,
+                                "strtype": "OBJECT/Scrolling",
+                                "InheritedType": 1
+                              },
+                              {
+                                "nid": 300,
+                                "strtype": "OBJECT/Scrollbar_mode",
+                                "strval": "AUTO",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 310,
+                                "strtype": "OBJECT/Scroll_direction",
+                                "strval": "ALL",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 314,
+                                "strtype": "OBJECT/Scroll_snap_x",
+                                "strval": "NONE",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 315,
+                                "strtype": "OBJECT/Scroll_snap_y",
+                                "strval": "NONE",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 320,
+                                "flags": 1048576,
+                                "strtype": "OBJECT/States",
+                                "InheritedType": 1
+                              },
+                              {
+                                "nid": 1010,
+                                "strtype": "BAR/Bar",
+                                "InheritedType": 1
+                              },
+                              {
+                                "nid": 1020,
+                                "strtype": "BAR/Range",
+                                "intarray": [
+                                  0,
+                                  2400
+                                ],
+                                "InheritedType": 7
+                              },
+                              {
+                                "nid": 1030,
+                                "strtype": "BAR/Value",
+                                "integer": 25,
+                                "InheritedType": 6
+                              },
+                              {
+                                "nid": 1040,
+                                "strtype": "BAR/Mode",
+                                "strval": "NORMAL",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 1050,
+                                "strtype": "BAR/Value_start",
+                                "InheritedType": 6
+                              },
+                              {
+                                "part": "lv.PART.MAIN",
+                                "childs": [
+                                  {
+                                    "nid": 10000,
+                                    "strtype": "_style/StyleState",
+                                    "strval": "DEFAULT",
+                                    "childs": [
+                                      {
+                                        "nid": 10520,
+                                        "strtype": "_style/Bg_Color",
+                                        "strval": "inverterColor",
+                                        "integer": 681623078,
+                                        "intarray": [
+                                          211,
+                                          211,
+                                          211,
+                                          255
+                                        ],
+                                        "InheritedType": 7
+                                      }
+                                    ],
+                                    "InheritedType": 1
+                                  }
+                                ],
+                                "nid": 1060,
+                                "strtype": "BAR/Style_main",
+                                "strval": "lv.PART.MAIN, Rectangle, Pad, Anim1, Transform",
+                                "InheritedType": 11
+                              },
+                              {
+                                "part": "lv.PART.INDICATOR",
+                                "childs": [],
+                                "nid": 1070,
+                                "strtype": "BAR/Style_indicator",
+                                "strval": "lv.PART.INDICATOR, Rectangle",
+                                "InheritedType": 11
+                              }
+                            ],
+                            "saved_objtypeKey": "BAR"
+                          },
+                          {
                             "guid": "GUID79664717-209770S239083235",
                             "deepid": 1859050602,
                             "dont_export": false,
@@ -11257,7 +11640,7 @@
                               },
                               {
                                 "nid": 1640049178,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
                                   1,
@@ -11352,7 +11735,7 @@
                                       {
                                         "nid": 832344995,
                                         "strtype": "_style/Text_Align",
-                                        "strval": "CENTER",
+                                        "strval": "RIGHT",
                                         "InheritedType": 3
                                       },
                                       {
@@ -11552,7 +11935,7 @@
                             "Wrap": false,
                             "Reversed": false,
                             "MainAlignment": 1,
-                            "CrossAlignment": 0,
+                            "CrossAlignment": 1,
                             "TrackAlignment": 0,
                             "LayoutType": 1,
                             "nid": -1290163627,
@@ -11577,7 +11960,7 @@
                           },
                           {
                             "nid": -1410438976,
-                            "flags": 51,
+                            "flags": 50,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -11687,6 +12070,187 @@
                         "deepid": 781969925,
                         "children": [
                           {
+                            "guid": "GUID6650252-709495S49114216",
+                            "deepid": -1562915947,
+                            "dont_export": false,
+                            "locked": false,
+                            "properties": [
+                              {
+                                "nid": 10,
+                                "strtype": "OBJECT/Name",
+                                "strval": "inverterPowerBar3",
+                                "InheritedType": 10
+                              },
+                              {
+                                "nid": 20,
+                                "strtype": "OBJECT/Layout",
+                                "InheritedType": 1
+                              },
+                              {
+                                "Flow": 0,
+                                "Wrap": false,
+                                "Reversed": false,
+                                "MainAlignment": 0,
+                                "CrossAlignment": 0,
+                                "TrackAlignment": 0,
+                                "LayoutType": 0,
+                                "nid": 30,
+                                "strtype": "OBJECT/Layout_type",
+                                "strval": "No_layout",
+                                "InheritedType": 13
+                              },
+                              {
+                                "nid": 40,
+                                "strtype": "OBJECT/Transform",
+                                "InheritedType": 1
+                              },
+                              {
+                                "nid": 50,
+                                "flags": 17,
+                                "strtype": "OBJECT/Position",
+                                "intarray": [
+                                  0,
+                                  0
+                                ],
+                                "InheritedType": 7
+                              },
+                              {
+                                "nid": 60,
+                                "flags": 18,
+                                "strtype": "OBJECT/Size",
+                                "intarray": [
+                                  46,
+                                  10
+                                ],
+                                "InheritedType": 7
+                              },
+                              {
+                                "nid": 70,
+                                "strtype": "OBJECT/Align",
+                                "strval": "CENTER",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 90,
+                                "flags": 1048576,
+                                "strtype": "OBJECT/Flags",
+                                "InheritedType": 1
+                              },
+                              {
+                                "nid": 110,
+                                "strtype": "OBJECT/Clickable",
+                                "strval": "False",
+                                "InheritedType": 2
+                              },
+                              {
+                                "nid": 225,
+                                "flags": 1048576,
+                                "strtype": "OBJECT/Scrolling",
+                                "InheritedType": 1
+                              },
+                              {
+                                "nid": 300,
+                                "strtype": "OBJECT/Scrollbar_mode",
+                                "strval": "AUTO",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 310,
+                                "strtype": "OBJECT/Scroll_direction",
+                                "strval": "ALL",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 314,
+                                "strtype": "OBJECT/Scroll_snap_x",
+                                "strval": "NONE",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 315,
+                                "strtype": "OBJECT/Scroll_snap_y",
+                                "strval": "NONE",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 320,
+                                "flags": 1048576,
+                                "strtype": "OBJECT/States",
+                                "InheritedType": 1
+                              },
+                              {
+                                "nid": 1010,
+                                "strtype": "BAR/Bar",
+                                "InheritedType": 1
+                              },
+                              {
+                                "nid": 1020,
+                                "strtype": "BAR/Range",
+                                "intarray": [
+                                  0,
+                                  2400
+                                ],
+                                "InheritedType": 7
+                              },
+                              {
+                                "nid": 1030,
+                                "strtype": "BAR/Value",
+                                "integer": 25,
+                                "InheritedType": 6
+                              },
+                              {
+                                "nid": 1040,
+                                "strtype": "BAR/Mode",
+                                "strval": "NORMAL",
+                                "InheritedType": 3
+                              },
+                              {
+                                "nid": 1050,
+                                "strtype": "BAR/Value_start",
+                                "InheritedType": 6
+                              },
+                              {
+                                "part": "lv.PART.MAIN",
+                                "childs": [
+                                  {
+                                    "nid": 10000,
+                                    "strtype": "_style/StyleState",
+                                    "strval": "DEFAULT",
+                                    "childs": [
+                                      {
+                                        "nid": 10520,
+                                        "strtype": "_style/Bg_Color",
+                                        "strval": "inverterColor",
+                                        "integer": 681623078,
+                                        "intarray": [
+                                          211,
+                                          211,
+                                          211,
+                                          255
+                                        ],
+                                        "InheritedType": 7
+                                      }
+                                    ],
+                                    "InheritedType": 1
+                                  }
+                                ],
+                                "nid": 1060,
+                                "strtype": "BAR/Style_main",
+                                "strval": "lv.PART.MAIN, Rectangle, Pad, Anim1, Transform",
+                                "InheritedType": 11
+                              },
+                              {
+                                "part": "lv.PART.INDICATOR",
+                                "childs": [],
+                                "nid": 1070,
+                                "strtype": "BAR/Style_indicator",
+                                "strval": "lv.PART.INDICATOR, Rectangle",
+                                "InheritedType": 11
+                              }
+                            ],
+                            "saved_objtypeKey": "BAR"
+                          },
+                          {
                             "guid": "GUID48108533-211975S335263235",
                             "deepid": 1859050602,
                             "dont_export": false,
@@ -11733,7 +12297,7 @@
                               },
                               {
                                 "nid": -1520379099,
-                                "flags": 51,
+                                "flags": 54,
                                 "strtype": "OBJECT/Size",
                                 "intarray": [
                                   1,
@@ -11828,7 +12392,7 @@
                                       {
                                         "nid": -1413926395,
                                         "strtype": "_style/Text_Align",
-                                        "strval": "CENTER",
+                                        "strval": "RIGHT",
                                         "InheritedType": 3
                                       },
                                       {
@@ -11847,8 +12411,7 @@
                                 "InheritedType": 11
                               }
                             ],
-                            "saved_objtypeKey": "LABEL",
-                            "tree_closed": true
+                            "saved_objtypeKey": "LABEL"
                           },
                           {
                             "guid": "GUID61676149-212561S335273235",
@@ -12028,7 +12591,7 @@
                             "Wrap": false,
                             "Reversed": false,
                             "MainAlignment": 1,
-                            "CrossAlignment": 0,
+                            "CrossAlignment": 1,
                             "TrackAlignment": 0,
                             "LayoutType": 1,
                             "nid": -1255200943,
@@ -12053,7 +12616,7 @@
                           },
                           {
                             "nid": -896643611,
-                            "flags": 51,
+                            "flags": 50,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -12203,7 +12766,7 @@
                       },
                       {
                         "nid": 1020436193,
-                        "flags": 51,
+                        "flags": 50,
                         "strtype": "OBJECT/Size",
                         "intarray": [
                           100,
@@ -22519,7 +23082,7 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 733,
+    "backup_cnt": 738,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",
