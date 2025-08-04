@@ -66,9 +66,9 @@
 	//#define LV_MEM_CUSTOM_REALLOC(ptr, size) heap_caps_realloc(ptr, size, MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT)
 	
 	#define LV_MEM_CUSTOM_INCLUDE <esp_heap_caps.h>   /*Header for the dynamic memory function*/
-	#define LV_MEM_CUSTOM_ALLOC(size) heap_caps_malloc(size, MALLOC_CAP_8BIT)
+	#define LV_MEM_CUSTOM_ALLOC(size) heap_caps_malloc(size, MALLOC_CAP_SPIRAM)
 	#define LV_MEM_CUSTOM_FREE(ptr) heap_caps_free(ptr)
-	#define LV_MEM_CUSTOM_REALLOC(ptr, size) heap_caps_realloc(ptr, size, MALLOC_CAP_8BIT)
+	#define LV_MEM_CUSTOM_REALLOC(ptr, size) heap_caps_realloc(ptr, size, MALLOC_CAP_SPIRAM)
 	
 //	#define LV_MEM_CUSTOM_INCLUDE <stdlib.h>   /*Header for the dynamic memory function*/
 //    #define LV_MEM_CUSTOM_ALLOC   malloc
