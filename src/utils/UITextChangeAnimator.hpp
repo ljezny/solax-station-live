@@ -46,6 +46,9 @@ class UITextChangeAnimator {
         }
 
         void animate(lv_obj_t *label, int32_t from, int32_t to) {
+            if (variables.to == to) {
+                return; // No change needed
+            }
             variables.label = label;
             variables.from = from;
             variables.to = to;

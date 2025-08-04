@@ -110,6 +110,21 @@ public:
         lv_scr_load(ui_Dashboard);
 
         lv_obj_add_event_cb(ui_Chart1, draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
+
+        pvAnimator.setup(ui_LeftContainer, _ui_theme_color_pvColor);
+        batteryAnimator.setup(ui_LeftContainer, _ui_theme_color_batteryColor);
+        gridAnimator.setup(ui_LeftContainer, _ui_theme_color_gridColor);
+        loadAnimator.setup(ui_LeftContainer, _ui_theme_color_loadColor);
+
+        //remove demo chart series from designer
+        while (lv_chart_get_series_next(ui_Chart1, NULL))
+        {
+            lv_chart_remove_series(ui_Chart1, lv_chart_get_series_next(ui_Chart1, NULL));
+        }
+
+        pvPowerSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_pvColor[0]), LV_CHART_AXIS_SECONDARY_Y);
+        acPowerSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_loadColor[0]), LV_CHART_AXIS_SECONDARY_Y);
+        socSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_batteryColor[0]), LV_CHART_AXIS_PRIMARY_Y);
     }
 
     int getSelfUsePowerPercent(InverterData_t &inverterData)
@@ -266,7 +281,6 @@ public:
             lv_obj_set_style_text_color(ui_batteryTemperatureUnitLabel, white, 0);
         }
 
-        // lv_label_set_text(ui_selfUsePercentLabel, String(selfUsePowerPercent).c_str());
         selfUsePercentTextAnimator.animate(ui_selfUsePercentLabel, getSelfUsePowerPercent(previousInverterData), getSelfUsePowerPercent(inverterData));
         if (getSelfUsePowerPercent(inverterData) > 50)
         {
@@ -338,7 +352,6 @@ public:
         {
             lv_obj_add_flag(ui_shellyContainer, LV_OBJ_FLAG_HIDDEN);
         }
-        // lv_label_set_text(ui_shellyPowerLabel, format(POWER, shellyResult.totalPower).value.c_str());
         shellyPowerTextAnimator.animate(ui_shellyPowerLabel, previousShellyResult.totalPower, shellyResult.totalPower);
         lv_label_set_text(ui_shellyPowerUnitLabel, format(POWER, shellyResult.totalPower).unit.c_str());
         if (shellyResult.maxPercent > 0)
@@ -420,32 +433,8 @@ public:
 
     ~DashboardUI()
     {
-        if (pvAnimator != NULL)
-        {
-            delete pvAnimator;
-            pvAnimator = NULL;
-        }
-        if (batteryAnimator != NULL)
-        {
-            delete batteryAnimator;
-            batteryAnimator = NULL;
-        }
-        if (gridAnimator != NULL)
-        {
-            delete gridAnimator;
-            gridAnimator = NULL;
-        }
-        if (loadAnimator != NULL)
-        {
-            delete loadAnimator;
-            loadAnimator = NULL;
-        }
-        if (shellyAnimator != NULL)
-        {
-            delete shellyAnimator;
-            shellyAnimator = NULL;
-        }
     }
+
 private:
     int const UI_TEXT_CHANGE_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS;
     int const UI_BACKGROUND_ANIMATION_DURATION = 2000;
@@ -468,34 +457,29 @@ private:
     UIBackgroundAnimator batteryBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
     UIBackgroundAnimator gridBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
 
-    UIBallAnimator *pvAnimator = NULL;
-    UIBallAnimator *batteryAnimator = NULL;
-    UIBallAnimator *gridAnimator = NULL;
-    UIBallAnimator *loadAnimator = NULL;
-    UIBallAnimator *shellyAnimator = NULL;
+    UIBallAnimator pvAnimator;
+    UIBallAnimator batteryAnimator;
+    UIBallAnimator gridAnimator;
+    UIBallAnimator loadAnimator;
+    UIBallAnimator shellyAnimator;
+
+    lv_chart_series_t *pvPowerSeries;
+    lv_chart_series_t *acPowerSeries;
+    lv_chart_series_t *socSeries;
 
     void updateChart(InverterData_t &inverterData, SolarChartDataProvider &solarChartDataProvider)
     {
-        while (lv_chart_get_series_next(ui_Chart1, NULL))
-        {
-            lv_chart_remove_series(ui_Chart1, lv_chart_get_series_next(ui_Chart1, NULL));
-        }
-
-        lv_chart_series_t *pvPowerSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_pvColor[0]), LV_CHART_AXIS_SECONDARY_Y);
-        lv_chart_series_t *acPowerSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_loadColor[0]), LV_CHART_AXIS_SECONDARY_Y);
-        lv_chart_series_t *socSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_batteryColor[0]), LV_CHART_AXIS_PRIMARY_Y);
-
         uint32_t i;
+
+        pvPowerSeries->start_point = 0;
+        acPowerSeries->start_point = 0;
+        socSeries->start_point = 0;
 
         float maxPower = 5000.0f;
         int c = 0;
         for (i = 0; i < CHART_SAMPLES_PER_DAY; i++)
         {
             SolarChartDataItem_t item = solarChartDataProvider.getData()[CHART_SAMPLES_PER_DAY - i - 1];
-            if (item.samples == 0)
-            {
-                continue;
-            }
 
             lv_chart_set_next_value(ui_Chart1, pvPowerSeries, item.pvPower);
             lv_chart_set_next_value(ui_Chart1, acPowerSeries, item.loadPower);
@@ -519,61 +503,56 @@ private:
         int duration = UI_REFRESH_PERIOD_MS / 3;
         int offsetY = 15;
         int offsetX = 30;
-        if (pvAnimator != NULL)
-        {
-            delete pvAnimator;
-            pvAnimator = NULL;
-        }
+
         if ((inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power) > 0)
         {
-            pvAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_pvColor, ((inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power) / 1000) + 1);
-            pvAnimator->run(ui_pvContainer, ui_inverterContainer, duration, 0, 0, -offsetX, -offsetY);
+            pvAnimator.run(ui_pvContainer, ui_inverterContainer, duration, 0, 0, ((inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power) / 1000) + 1, -offsetX, -offsetY);
+        }
+        else
+        {
+            pvAnimator.hide();
         }
 
-        if (batteryAnimator != NULL)
-        {
-            delete batteryAnimator;
-            batteryAnimator = NULL;
-        }
         if (inverterData.hasBattery)
         {
             if (inverterData.batteryPower > 0)
             {
-                batteryAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_batteryColor, (inverterData.batteryPower / 1000) + 1);
-                batteryAnimator->run(ui_inverterContainer, ui_batteryContainer, duration, duration, 1, offsetX, -offsetY);
+                batteryAnimator.run(ui_inverterContainer, ui_batteryContainer, duration, duration, 1, (inverterData.batteryPower / 1000) + 1, offsetX, -offsetY);
             }
             else if (inverterData.batteryPower < 0)
             {
-                batteryAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_batteryColor, (abs(inverterData.batteryPower) / 1000) + 1);
-                batteryAnimator->run(ui_batteryContainer, ui_inverterContainer, duration, 0, 0, offsetX, -offsetY);
+                batteryAnimator.run(ui_batteryContainer, ui_inverterContainer, duration, 0, 0, (abs(inverterData.batteryPower) / 1000) + 1, offsetX, -offsetY);
+            }
+            else
+            {
+                batteryAnimator.hide();
             }
         }
-        if (gridAnimator != NULL)
+        else
         {
-            delete gridAnimator;
-            gridAnimator = NULL;
+            batteryAnimator.hide();
         }
 
         if (inverterData.feedInPower > 0)
         {
-            gridAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_gridColor, (inverterData.feedInPower / 1000) + 1);
-            gridAnimator->run(ui_inverterContainer, ui_gridContainer, duration, duration, 1, offsetX, offsetY);
+            gridAnimator.run(ui_inverterContainer, ui_gridContainer, duration, duration, 1, (inverterData.feedInPower / 1000) + 1, offsetX, offsetY);
         }
         else if (inverterData.feedInPower < 0)
         {
-            gridAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_gridColor, (abs(inverterData.feedInPower) / 1000) + 1);
-            gridAnimator->run(ui_gridContainer, ui_inverterContainer, duration, 0, 0, offsetX, offsetY);
+            gridAnimator.run(ui_gridContainer, ui_inverterContainer, duration, 0, 0, (abs(inverterData.feedInPower) / 1000) + 1, offsetX, offsetY);
+        }
+        else
+        {
+            gridAnimator.hide();
         }
 
-        if (loadAnimator != NULL)
-        {
-            delete loadAnimator;
-            loadAnimator = NULL;
-        }
         if (inverterData.loadPower > 0)
         {
-            loadAnimator = new UIBallAnimator(ui_LeftContainer, _ui_theme_color_loadColor, (inverterData.loadPower / 1000) + 1);
-            loadAnimator->run(ui_inverterContainer, ui_loadContainer, duration, duration, 1, -offsetX, offsetY);
+            loadAnimator.run(ui_inverterContainer, ui_loadContainer, duration, duration, 1, (inverterData.loadPower / 1000) + 1, -offsetX, offsetY);
+        }
+        else
+        {
+            loadAnimator.hide();
         }
     }
 };
