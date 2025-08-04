@@ -359,7 +359,11 @@ bool pairShellyTask()
                 }
             }
         }
-
+        if (shellyAPI.getPairedCount() < softAP.getNumberOfConnectedDevices())
+        {
+            log_d("Connected devices: %d, paired devices: %d", softAP.getNumberOfConnectedDevices(), shellyAPI.getPairedCount());
+            shellyAPI.queryMDNS(WiFi.softAPIP(), WiFi.softAPSubnetMask());
+        }
         lastAttempt = millis();
         run = true;
     }
@@ -368,11 +372,6 @@ bool pairShellyTask()
 
 bool reloadShellyTask()
 {
-    if (shellyAPI.getPairedCount() < softAP.getNumberOfConnectedDevices())
-    {
-        log_d("Connected devices: %d, paired devices: %d", softAP.getNumberOfConnectedDevices(), shellyAPI.getPairedCount());
-        shellyAPI.queryMDNS(WiFi.softAPIP(), WiFi.softAPSubnetMask());
-    }
     static long lastAttempt = 0;
     bool run = false;
     if (lastAttempt == 0 || millis() - lastAttempt > SHELLY_REFRESH_INTERVAL)
@@ -400,13 +399,14 @@ bool reloadShellyTask()
 
 void logMemory()
 {
+    xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
     log_d("-- Memory Info --");
     log_d("Free heap: %d", ESP.getFreeHeap());
     log_d("Min free heap: %d", ESP.getMinFreeHeap());
     log_d("Min free stack: %d", uxTaskGetStackHighWaterMark(NULL));
     log_d("-- Memory Info End --");
+    xSemaphoreGive(lvgl_mutex);
 }
-
 
 void onEntering(state_t newState)
 {
@@ -567,24 +567,28 @@ void updateState()
             previousInverterData.millis = millis(); // this ensures that if we dont have new data, we will use the old data
             backlightResolver.resolve(inverterData);
         }
-        // only one task per state update
-        if (loadInverterDataTask())
+        else
         {
-            break;
+            // only one task per state update
+            if (loadInverterDataTask())
+            {
+                break;
+            }
+            if (discoverDonglesTask())
+            {
+                break;
+            }
+            if (pairShellyTask())
+            {
+                break;
+            }
+            if (reloadShellyTask())
+            {
+                break;
+            }
+            logMemory();
         }
-        if (discoverDonglesTask())
-        {
-            break;
-        }
-        if (pairShellyTask())
-        {
-            break;
-        }
-        if (reloadShellyTask())
-        {
-            break;
-        }
-        
+
         break;
     }
 }
@@ -592,7 +596,5 @@ void updateState()
 void loop()
 {
     updateState();
-    delay(1000);
-    
-    logMemory();
+    delay(500);
 }

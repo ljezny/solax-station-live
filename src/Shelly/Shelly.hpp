@@ -184,70 +184,64 @@ public:
     {
         mdns_result_t *results = NULL;
 
-        if (mdnsSearch == NULL)
+        if (mdns_init() != ESP_OK)
         {
-            if (mdns_init() != ESP_OK)
-            {
-                log_e("Failed starting MDNS");
-            }
-            mdnsSearch = mdns_query_async_new(NULL, "_http", "_tcp", MDNS_TYPE_PTR, 30000, 20, NULL);
-            if (mdnsSearch == NULL)
-            {
-                log_e("Failed to start mDNS search");
-                return;
-            }
+            log_e("Failed starting MDNS");
+            return;
         }
-        uint8_t numResult = 0;
-        if (mdns_query_async_get_results(mdnsSearch, 1000, &results, &numResult))
+
+        if (mdns_query_ptr("_http", "_tcp", 2000, 20, &results) != ESP_OK)
         {
-            mdns_result_t *r = results;
-            log_d("Retrieved %d results from mDNS", numResult);
-            log_d("SoftAP IP: %s, Subnet: %s", softAPIP.toString().c_str(), softAPSubnet.toString().c_str());
-            while (r)
-            {
-                String hostname = r->hostname;
-                log_d("Found service: %s", hostname.c_str());
-
-                IPAddress ipAddress = r->addr->addr.u_addr.ip4.addr;
-                // check if IP is in the same subnet as softAP
-                if ((uint32_t)ipAddress == ((uint32_t)softAPIP & (uint32_t)softAPSubnet))
-                {
-                    log_d("Found Shelly on softAP subnet: %s", hostname.c_str());
-                }
-
-                hostname.toLowerCase();
-                for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
-                {
-                    String prefix = supportedModels[i].prefix;
-                    prefix.toLowerCase();
-                    if (hostname.startsWith(prefix))
-                    {
-                        log_d("Found Shelly: %s model: %s", hostname.c_str(), supportedModels[i].prefix.c_str());
-                        String idText = hostname.substring(prefix.length());
-                        unsigned long long shellyId = strtoull(idText.c_str(), NULL, 16);
-                        for (int j = 0; j < MAX_SHELLY_PAIRS; j++)
-                        {
-                            log_d("Checking Shelly %s", String(pairs[j].shellyId, HEX).c_str());
-                            if (pairs[j].shellyId == 0 || pairs[j].shellyId == shellyId)
-                            {
-                                pairs[j].shellyId = shellyId;
-                                pairs[j].ip = r->addr->addr.u_addr.ip4.addr;
-                                pairs[j].model = supportedModels[i].model;
-                                log_d("Paired Shelly %s", String(shellyId, HEX).c_str());
-                                break;
-                            }
-                        }
-                        break;
-                    }
-                }
-                r = r->next;
-            }
-            mdns_query_results_free(results);
-            mdns_query_async_delete(mdnsSearch);
-            mdnsSearch = NULL;
-
+            log_e("Failed to query MDNS");
             mdns_free();
+            return;
         }
+
+        uint8_t numResult = 0;
+
+        mdns_result_t *r = results;
+        log_d("SoftAP IP: %s, Subnet: %s", softAPIP.toString().c_str(), softAPSubnet.toString().c_str());
+        while (r)
+        {
+            String hostname = r->hostname;
+            log_d("Found service: %s", hostname.c_str());
+
+            IPAddress ipAddress = r->addr->addr.u_addr.ip4.addr;
+            // check if IP is in the same subnet as softAP
+            if ((uint32_t)ipAddress == ((uint32_t)softAPIP & (uint32_t)softAPSubnet))
+            {
+                log_d("Found Shelly on softAP subnet: %s", hostname.c_str());
+            }
+
+            hostname.toLowerCase();
+            for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
+            {
+                String prefix = supportedModels[i].prefix;
+                prefix.toLowerCase();
+                if (hostname.startsWith(prefix))
+                {
+                    log_d("Found Shelly: %s model: %s", hostname.c_str(), supportedModels[i].prefix.c_str());
+                    String idText = hostname.substring(prefix.length());
+                    unsigned long long shellyId = strtoull(idText.c_str(), NULL, 16);
+                    for (int j = 0; j < MAX_SHELLY_PAIRS; j++)
+                    {
+                        log_d("Checking Shelly %s", String(pairs[j].shellyId, HEX).c_str());
+                        if (pairs[j].shellyId == 0 || pairs[j].shellyId == shellyId)
+                        {
+                            pairs[j].shellyId = shellyId;
+                            pairs[j].ip = r->addr->addr.u_addr.ip4.addr;
+                            pairs[j].model = supportedModels[i].model;
+                            log_d("Paired Shelly %s", String(shellyId, HEX).c_str());
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+            r = r->next;
+        }
+        mdns_query_results_free(results);        
+        mdns_free();
     }
 
     ShellyResult_t getState()
