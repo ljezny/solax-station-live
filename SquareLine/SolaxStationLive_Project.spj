@@ -12530,7 +12530,7 @@
                               255,
                               255,
                               255,
-                              255
+                              192
                             ],
                             "InheritedType": 7
                           },
@@ -12717,6 +12717,26 @@
                           255,
                           255,
                           255
+                        ],
+                        "InheritedType": 7
+                      },
+                      {
+                        "nid": 10910,
+                        "strtype": "_style/Shadow_Color",
+                        "intarray": [
+                          0,
+                          0,
+                          0,
+                          64
+                        ],
+                        "InheritedType": 7
+                      },
+                      {
+                        "nid": 10920,
+                        "strtype": "_style/Shadow_params",
+                        "intarray": [
+                          32,
+                          0
                         ],
                         "InheritedType": 7
                       },
@@ -17983,6 +18003,26 @@
                             "InheritedType": 7
                           },
                           {
+                            "nid": 10910,
+                            "strtype": "_style/Shadow_Color",
+                            "intarray": [
+                              0,
+                              0,
+                              0,
+                              64
+                            ],
+                            "InheritedType": 7
+                          },
+                          {
+                            "nid": 10920,
+                            "strtype": "_style/Shadow_params",
+                            "intarray": [
+                              32,
+                              0
+                            ],
+                            "InheritedType": 7
+                          },
+                          {
                             "nid": 1474568411,
                             "strtype": "_style/Padding",
                             "intarray": [
@@ -18563,6 +18603,26 @@
                             "InheritedType": 7
                           },
                           {
+                            "nid": 10910,
+                            "strtype": "_style/Shadow_Color",
+                            "intarray": [
+                              0,
+                              0,
+                              0,
+                              64
+                            ],
+                            "InheritedType": 7
+                          },
+                          {
+                            "nid": 10920,
+                            "strtype": "_style/Shadow_params",
+                            "intarray": [
+                              32,
+                              0
+                            ],
+                            "InheritedType": 7
+                          },
+                          {
                             "nid": 1767154577,
                             "strtype": "_style/Padding",
                             "intarray": [
@@ -18654,7 +18714,6 @@
               },
               {
                 "nid": -377154674,
-                "flags": 1048576,
                 "strtype": "OBJECT/Flags",
                 "InheritedType": 1
               },
@@ -18662,6 +18721,12 @@
                 "nid": 573733149,
                 "strtype": "OBJECT/Clickable",
                 "strval": "False",
+                "InheritedType": 2
+              },
+              {
+                "nid": 180,
+                "strtype": "OBJECT/Overflow_visible",
+                "strval": "True",
                 "InheritedType": 2
               },
               {
@@ -22364,7 +22429,7 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 723,
+    "backup_cnt": 729,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",
