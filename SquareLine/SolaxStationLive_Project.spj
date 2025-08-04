@@ -3993,6 +3993,28 @@
                             "InheritedType": 3
                           },
                           {
+                            "nid": 10910,
+                            "strtype": "_style/Shadow_Color",
+                            "strval": "pvColor",
+                            "integer": -436202122,
+                            "intarray": [
+                              255,
+                              212,
+                              0,
+                              255
+                            ],
+                            "InheritedType": 7
+                          },
+                          {
+                            "nid": 10920,
+                            "strtype": "_style/Shadow_params",
+                            "intarray": [
+                              32,
+                              0
+                            ],
+                            "InheritedType": 7
+                          },
+                          {
                             "nid": 1526945242,
                             "strtype": "_style/Padding",
                             "intarray": [
@@ -6083,6 +6105,28 @@
                             "InheritedType": 3
                           },
                           {
+                            "nid": 10910,
+                            "strtype": "_style/Shadow_Color",
+                            "strval": "batteryColor",
+                            "integer": -644687784,
+                            "intarray": [
+                              119,
+                              158,
+                              203,
+                              255
+                            ],
+                            "InheritedType": 7
+                          },
+                          {
+                            "nid": 10920,
+                            "strtype": "_style/Shadow_params",
+                            "intarray": [
+                              32,
+                              0
+                            ],
+                            "InheritedType": 7
+                          },
+                          {
                             "nid": -990832772,
                             "strtype": "_style/Padding",
                             "intarray": [
@@ -7822,6 +7866,28 @@
                             "InheritedType": 3
                           },
                           {
+                            "nid": 10910,
+                            "strtype": "_style/Shadow_Color",
+                            "strval": "loadColor",
+                            "integer": 1646890208,
+                            "intarray": [
+                              3,
+                              173,
+                              54,
+                              255
+                            ],
+                            "InheritedType": 7
+                          },
+                          {
+                            "nid": 10920,
+                            "strtype": "_style/Shadow_params",
+                            "intarray": [
+                              32,
+                              0
+                            ],
+                            "InheritedType": 7
+                          },
+                          {
                             "nid": -496705144,
                             "strtype": "_style/Padding",
                             "intarray": [
@@ -8777,6 +8843,28 @@
                             "strtype": "_style/Border side",
                             "strval": "FULL",
                             "InheritedType": 3
+                          },
+                          {
+                            "nid": 10910,
+                            "strtype": "_style/Shadow_Color",
+                            "strval": "gridColor",
+                            "integer": -222477374,
+                            "intarray": [
+                              194,
+                              89,
+                              100,
+                              255
+                            ],
+                            "InheritedType": 7
+                          },
+                          {
+                            "nid": 10920,
+                            "strtype": "_style/Shadow_params",
+                            "intarray": [
+                              32,
+                              0
+                            ],
+                            "InheritedType": 7
                           },
                           {
                             "nid": -378719654,
@@ -12408,7 +12496,7 @@
                     "flags": 50,
                     "strtype": "OBJECT/Size",
                     "intarray": [
-                      38,
+                      42,
                       1
                     ],
                     "InheritedType": 7
@@ -12524,21 +12612,23 @@
                             "InheritedType": 3
                           },
                           {
-                            "nid": 922201299,
-                            "strtype": "_style/Outline_Color",
+                            "nid": 10910,
+                            "strtype": "_style/Shadow_Color",
+                            "strval": "inverterColor",
+                            "integer": 681623078,
                             "intarray": [
-                              255,
-                              255,
-                              255,
-                              192
+                              211,
+                              211,
+                              211,
+                              255
                             ],
                             "InheritedType": 7
                           },
                           {
-                            "nid": -2081873211,
-                            "strtype": "_style/Outline_params",
+                            "nid": 10920,
+                            "strtype": "_style/Shadow_params",
                             "intarray": [
-                              12,
+                              32,
                               0
                             ],
                             "InheritedType": 7
@@ -12547,10 +12637,10 @@
                             "nid": -320038663,
                             "strtype": "_style/Padding",
                             "intarray": [
-                              12,
-                              12,
-                              12,
-                              12
+                              16,
+                              16,
+                              16,
+                              16
                             ],
                             "InheritedType": 7
                           },
@@ -22429,7 +22519,7 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 729,
+    "backup_cnt": 733,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",
