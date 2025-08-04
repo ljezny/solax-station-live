@@ -25,6 +25,8 @@ class UIBackgroundAnimator {
             lv_anim_init(&anim);
             lv_anim_set_time(&anim, duration);
             lv_anim_set_exec_cb(&anim, (lv_anim_exec_xcb_t)animation_set_bg_color);
+            lv_anim_set_var(&anim, &variables);            
+            lv_anim_set_values(&anim, 0, 255);
         }
 
         ~UIBackgroundAnimator() {
@@ -33,10 +35,12 @@ class UIBackgroundAnimator {
 
         void animate(lv_obj_t *obj, lv_color_t endColor) {
             variables.obj = obj;
+            lv_color_t currentColor = lv_obj_get_style_bg_color(obj, 0);
+            if (currentColor.full == endColor.full) {
+                return; // No need to animate if the color is already the same
+            }
             variables.startColor = lv_obj_get_style_bg_color(obj, 0); 
             variables.endColor = endColor;
-            lv_anim_set_var(&anim, &variables);            
-            lv_anim_set_values(&anim, 0, 255);
             lv_anim_start(&anim);
         }
 };
