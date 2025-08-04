@@ -190,7 +190,7 @@ public:
             return;
         }
 
-        if (mdns_query_ptr("_http", "_tcp", 2000, 20, &results) != ESP_OK)
+        if (mdns_query_ptr("_http", "_tcp", 3000, 20, &results) != ESP_OK)
         {
             log_e("Failed to query MDNS");
             mdns_free();
