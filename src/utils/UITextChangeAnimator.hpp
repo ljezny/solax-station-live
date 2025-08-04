@@ -8,8 +8,8 @@
 struct UITextChangeAnimatorVariables {
     lv_obj_t *label;
     Unit_t unit;
-    int32_t from;
-    int32_t to;
+    int32_t from = -1;
+    int32_t to = -1;
 };
 
 void animation_set_text(UITextChangeAnimatorVariables *variables, int32_t value) {
