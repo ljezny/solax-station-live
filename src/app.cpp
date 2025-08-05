@@ -155,7 +155,7 @@ void lvglTimerTask(void *param)
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         lv_timer_handler();
         xSemaphoreGive(lvgl_mutex);
-        vTaskDelay(5);
+        vTaskDelay(10);
     }
 }
 

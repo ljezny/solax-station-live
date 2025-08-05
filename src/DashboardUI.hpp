@@ -238,18 +238,21 @@ public:
         pvBackgroundAnimator.animate(ui_pvContainer, ((inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power) > 0) ? lv_color_hex(_ui_theme_color_pvColor[0]) : containerBackground);
         lv_label_set_text(ui_inverterPowerUnitLabel, format(POWER, inverterData.inverterPower).unit.c_str());
         inverterPowerL1TextAnimator.animate(ui_inverterPowerL1Label, previousInverterData.L1Power, inverterData.L1Power);
+        //lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.L1Power).value.c_str());
         lv_label_set_text(ui_inverterPowerL1UnitLabel, format(POWER, inverterData.L1Power).unit.c_str());
         lv_bar_set_value(ui_inverterPowerBar1, min(2400, inverterData.L1Power), LV_ANIM_ON);
         lv_obj_set_style_bg_color(ui_inverterPowerBar1, l1PercentUsage > 50 ? red : textColor, LV_PART_INDICATOR);
         lv_obj_set_style_text_color(ui_inverterPowerL1Label, l1PercentUsage > 50 ? red : textColor, 0);
         lv_obj_set_style_text_color(ui_inverterPowerL1UnitLabel, l1PercentUsage > 50 ? red : textColor, 0);
         inverterPowerL2TextAnimator.animate(ui_inverterPowerL2Label, previousInverterData.L2Power, inverterData.L2Power);
+        //lv_label_set_text(ui_inverterPowerL2Label, format(POWER, inverterData.L2Power).value.c_str());
         lv_label_set_text(ui_inverterPowerL2UnitLabel, format(POWER, inverterData.L2Power).unit.c_str());
         lv_bar_set_value(ui_inverterPowerBar2, min(2400, inverterData.L2Power), LV_ANIM_ON);
         lv_obj_set_style_bg_color(ui_inverterPowerBar2, l2PercentUsage > 50 ? red : textColor, LV_PART_INDICATOR);
         lv_obj_set_style_text_color(ui_inverterPowerL2Label, l2PercentUsage > 50 ? red : textColor, 0);
         lv_obj_set_style_text_color(ui_inverterPowerL2UnitLabel, l2PercentUsage > 50 ? red : textColor, 0);
         inverterPowerL3TextAnimator.animate(ui_inverterPowerL3Label, previousInverterData.L3Power, inverterData.L3Power);
+        //lv_label_set_text(ui_inverterPowerL3Label, format(POWER, inverterData.L3Power).value.c_str());
         lv_label_set_text(ui_inverterPowerL3UnitLabel, format(POWER, inverterData.L3Power).unit.c_str());
         lv_bar_set_value(ui_inverterPowerBar3, min(2400, inverterData.L3Power), LV_ANIM_ON);
         lv_obj_set_style_bg_color(ui_inverterPowerBar3, l3PercentUsage > 50 ? red : textColor, LV_PART_INDICATOR);
@@ -530,7 +533,7 @@ private:
 
     void updateFlowAnimations(InverterData_t inverterData, ShellyResult_t shellyResult)
     {
-        int duration = UI_REFRESH_PERIOD_MS / 3;
+        int duration = UI_REFRESH_PERIOD_MS / 2;
         int offsetY = 15;
         int offsetX = 30;
 
