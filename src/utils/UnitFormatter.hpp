@@ -54,3 +54,27 @@ FormattedUnit_t format(Unit_t unit, float value, float limitingFactor = 1.0f, bo
     formattedUnit.formatted = formattedUnit.value + space + formattedUnit.unit;
     return formattedUnit;
 }
+
+String formatTimeSpan(int seconds) {
+    //return 2d 3h 4m
+    int days = seconds / (24 * 3600);
+    seconds %= (24 * 3600);
+    int hours = seconds / 3600;
+    seconds %= 3600;
+    int minutes = seconds / 60;
+    seconds %= 60;
+    String result;
+    if (days > 0) {
+        result += String(days) + "d ";
+    }
+    if (hours > 0) {
+        result += String(hours) + "h ";
+    }
+    if (minutes > 0) {
+        result += String(minutes) + "m ";
+    }
+    if (seconds > 0 && result.isEmpty()) {
+        result += String(seconds) + "s";
+    }
+    return result;
+}

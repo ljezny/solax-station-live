@@ -39,6 +39,8 @@ extern lv_obj_t *ui_batteryContainer;
 extern lv_obj_t *ui_Container23;
 extern lv_obj_t *ui_socLabel;
 extern lv_obj_t *ui_socLabel1;
+extern lv_obj_t *ui_Container17;
+extern lv_obj_t *ui_batteryTimeLabel;
 extern lv_obj_t *ui_Container24;
 extern lv_obj_t *ui_Container2;
 extern lv_obj_t *ui_batteryPowerLabel;

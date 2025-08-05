@@ -21,6 +21,9 @@ typedef struct
     int pv3Power = 0;
     int pv4Power = 0;
     int soc = 0;
+    int minSoc = 0;
+    int maxSoc = 100;
+    uint16_t batteryCapacityWh = 0; // in Wh
     bool socApproximated = false;
     int16_t batteryPower = 0;
     float batteryVoltage = 0.0f;

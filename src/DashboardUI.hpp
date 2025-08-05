@@ -116,7 +116,7 @@ public:
         gridAnimator.setup(ui_LeftContainer, _ui_theme_color_gridColor);
         loadAnimator.setup(ui_LeftContainer, _ui_theme_color_loadColor);
 
-        //remove demo chart series from designer
+        // remove demo chart series from designer
         while (lv_chart_get_series_next(ui_Chart1, NULL))
         {
             lv_chart_remove_series(ui_Chart1, lv_chart_get_series_next(ui_Chart1, NULL));
@@ -264,6 +264,30 @@ public:
 
         batteryPowerTextAnimator.animate(ui_batteryPowerLabel, abs(previousInverterData.batteryPower), abs(inverterData.batteryPower));
         batteryBackgroundAnimator.animate(ui_batteryContainer, ((inverterData.batteryPower) < 0) ? lv_color_hex(_ui_theme_color_batteryColor[0]) : containerBackground);
+
+        if (inverterData.batteryCapacityWh > 0)
+        {
+            if (inverterData.batteryPower != 0)
+            {
+                int secondsRemaining = (3600 * inverterData.batteryCapacityWh) / abs(inverterData.batteryPower); // convert Wh to seconds
+                if (inverterData.batteryPower < 0)                                                               // discharging
+                {
+                    lv_label_set_text_fmt(ui_batteryTimeLabel, "%s - %d%%", formatTimeSpan(secondsRemaining).c_str(), inverterData.minSoc);
+                }
+                else if (inverterData.batteryPower > 0)
+                {
+                    lv_label_set_text_fmt(ui_batteryTimeLabel, "%s - %d%%", formatTimeSpan(secondsRemaining).c_str(), inverterData.maxSoc);
+                }
+            }
+            else
+            {
+                lv_label_set_text(ui_batteryTimeLabel, "");
+            }
+        }
+        else
+        {
+            lv_label_set_text(ui_batteryTimeLabel, "");
+        }
 
         lv_label_set_text(ui_batteryPowerUnitLabel, format(POWER, abs(inverterData.batteryPower)).unit.c_str());
         lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d", inverterData.batteryTemperature);
