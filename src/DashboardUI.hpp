@@ -513,7 +513,10 @@ private:
         for (i = 0; i < CHART_SAMPLES_PER_DAY; i++)
         {
             SolarChartDataItem_t item = solarChartDataProvider.getData()[CHART_SAMPLES_PER_DAY - i - 1];
-
+            if (item.samples == 0)
+            {
+                continue;
+            }
             lv_chart_set_next_value(ui_Chart1, pvPowerSeries, item.pvPower);
             lv_chart_set_next_value(ui_Chart1, acPowerSeries, item.loadPower);
             if (inverterData.hasBattery)
