@@ -4,7 +4,7 @@
 #include <lvgl.h>
 #include "ui/ui.h"
 
-#define BALLS_RADIUS 16
+#define BALLS_RADIUS 8
 #define MAX_BALLS_COUNT 8
 typedef struct UIBallAnimationItem
 {
@@ -31,9 +31,9 @@ public:
             lv_obj_clear_flag(items[i].ball, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
             lv_obj_set_style_radius(items[i].ball, radius / 2, LV_PART_MAIN | LV_STATE_DEFAULT);
             ui_object_set_themeable_style_property(items[i].ball, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR, color);
-            ui_object_set_themeable_style_property(items[i].ball, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_SHADOW_COLOR, color);
+            //ui_object_set_themeable_style_property(items[i].ball, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_SHADOW_COLOR, color);
             //lv_obj_set_style_shadow_opa(items[i].ball, 64, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_shadow_width(items[i].ball, 32, LV_PART_MAIN | LV_STATE_DEFAULT);
+           // lv_obj_set_style_shadow_width(items[i].ball, 8, LV_PART_MAIN | LV_STATE_DEFAULT);
 
             // ui_object_set_themeable_style_property(items[i].ball, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA, _ui_theme_alpha_pvColor);
             lv_obj_set_style_bg_opa(items[i].ball, opa, LV_PART_MAIN | LV_STATE_DEFAULT);
