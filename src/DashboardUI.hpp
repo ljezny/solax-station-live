@@ -272,13 +272,17 @@ public:
         {
             if (inverterData.batteryPower != 0)
             {
-                int secondsRemaining = (3600 * inverterData.batteryCapacityWh) / abs(inverterData.batteryPower); // convert Wh to seconds
-                if (inverterData.batteryPower < 0)                                                               // discharging
+                
+                if (inverterData.batteryPower < 0)                                                               
                 {
+                    int capacityRemainingWh = (inverterData.soc - inverterData.minSoc) * inverterData.batteryCapacityWh / 100;
+                    int secondsRemaining = (3600 * capacityRemainingWh) / abs(inverterData.batteryPower);
                     lv_label_set_text_fmt(ui_batteryTimeLabel, "%s - %d%%", formatTimeSpan(secondsRemaining).c_str(), inverterData.minSoc);
                 }
                 else if (inverterData.batteryPower > 0)
                 {
+                    int availableCapacityWh = (inverterData.maxSoc - inverterData.soc) * inverterData.batteryCapacityWh / 100;
+                    int secondsRemaining = (3600 * availableCapacityWh) / inverterData.batteryPower;
                     lv_label_set_text_fmt(ui_batteryTimeLabel, "%s - %d%%", formatTimeSpan(secondsRemaining).c_str(), inverterData.maxSoc);
                 }
             }
@@ -517,6 +521,7 @@ private:
             {
                 continue;
             }
+           
             lv_chart_set_next_value(ui_Chart1, pvPowerSeries, item.pvPower);
             lv_chart_set_next_value(ui_Chart1, acPowerSeries, item.loadPower);
             if (inverterData.hasBattery)
