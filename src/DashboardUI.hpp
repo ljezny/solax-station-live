@@ -270,7 +270,7 @@ public:
 
         if (inverterData.batteryCapacityWh > 0)
         {
-            if (inverterData.batteryPower != 0)
+            if (abs(inverterData.batteryPower) > 100)
             {
                 
                 if (inverterData.batteryPower < 0)                                                               
