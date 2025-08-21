@@ -101,16 +101,23 @@ private:
                     inverterData.L2Power = response.readInt16(35100 + 30) + response.readInt16(35100 + 56);
                     inverterData.L3Power = response.readInt16(35100 + 35) + response.readInt16(35100 + 62);
                     inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power; // readInt16(38); //38 - total inverter power
-                    bool backupConnectedToLoad = response.readUInt16(35100 + 60) == 0x00;                            // 0x00 - backup is connected to load, 0x01 - inverter disconnects to load
-                    if (backupConnectedToLoad)
+                    inverterData.loadPower = response.readInt16(35100 + 72);                                         // total load power
+
+                    if (response.readUInt16(35100 + 37) == 1) //load mode R
                     {
-                        inverterData.loadPower = response.readInt16(35100 + 72); // total load power
+                        inverterData.loadPower += response.readInt16(35100 + 38);
                     }
-                    else
+
+                    if (response.readUInt16(35100 + 42) == 1) //load mode S
                     {
-                        inverterData.loadPower = response.readInt16(35100 + 70)    // total backup load power
-                                                 + response.readInt16(35100 + 72); // total load power
+                        inverterData.loadPower += response.readInt16(35100 + 43);
                     }
+
+                    if (response.readUInt16(35100 + 47) == 1) //load mode T
+                    {
+                        inverterData.loadPower += response.readInt16(35100 + 48);
+                    }
+
                     inverterData.inverterTemperature = response.readInt16(35100 + 74) / 10;
                     inverterData.pvTotal = response.readUInt32(35100 + 91) / 10.0;
                     inverterData.pvToday = response.readUInt32(35100 + 93) / 10.0;
