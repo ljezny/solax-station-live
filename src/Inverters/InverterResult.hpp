@@ -82,12 +82,3 @@ void logInverterData(InverterData_t& inverterData) {
     log_d("PV Total: %f", inverterData.pvTotal);
     log_d("Has Battery: %d", inverterData.hasBattery);
 } 
-
-typedef struct
-{
-    DongleStatus_t status = DONGLE_STATUS_UNKNOWN;
-    String sn;
-    bool isConnected = false;
-    bool isCharging = false;
-    int power = 0;
-} WallboxData_t;

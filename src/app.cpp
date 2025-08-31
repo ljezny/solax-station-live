@@ -10,6 +10,7 @@
 #include "Inverters/SofarSolar/SofarSolarDongleAPI.hpp"
 #include "Inverters/Deye/DeyeDongleAPI.hpp"
 #include "Inverters/Victron/VictronDongleAPI.hpp"
+#include "Wallbox/EcoVolterProV2.hpp"
 #include "Shelly/Shelly.hpp"
 #include "utils/UnitFormatter.hpp"
 #include "utils/SolarChartDataProvider.hpp"
@@ -21,9 +22,12 @@
 #include "utils/SoftAP.hpp"
 #include "utils/ShellyRuleResolver.hpp"
 #include "utils/MedianPowerSampler.hpp"
-#define UI_REFRESH_INTERVAL 5000 // Define the UI refresh interval in milliseconds
-#define INVERTER_DATA_REFRESH_INTERVAL 5000 //Seems that 3s is problematic for some dongles (GoodWe), so we use 5s
+#define UI_REFRESH_INTERVAL 5000            // Define the UI refresh interval in milliseconds
+#define INVERTER_DATA_REFRESH_INTERVAL 5000 // Seems that 3s is problematic for some dongles (GoodWe), so we use 5s
 #define SHELLY_REFRESH_INTERVAL 3000
+
+#define ECOVOLTER_DISCOVERY_REFRESH_INTERVAL 30000
+#define ECOVOLTER_STATUS_REFRESH_INTERVAL 5000
 
 #include "gfx_conf.h"
 #include "Touch/Touch.hpp"
@@ -45,7 +49,7 @@ Touch touch;
 
 InverterData_t inverterData;
 InverterData_t previousInverterData;
-WallboxData_t wallboxData;
+WallboxResult_t wallboxData;
 ShellyResult_t shellyResult;
 ShellyResult_t previousShellyResult;
 SolarChartDataProvider solarChartDataProvider;
@@ -297,7 +301,7 @@ bool loadInverterDataTask()
         if (dongleDiscovery.connectToDongle(wifiDiscoveryResult))
         {
             log_d("Dongle wifi connected.");
-            
+
             InverterData_t d = loadInverterData(wifiDiscoveryResult);
 
             if (d.status == DONGLE_STATUS_OK)
@@ -341,7 +345,7 @@ bool pairShellyTask()
         log_d("Pairing Shelly");
         for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
         {
-            if(dongleDiscovery.discoveries[i].ssid.isEmpty())
+            if (dongleDiscovery.discoveries[i].ssid.isEmpty())
             {
                 continue;
             }
@@ -396,6 +400,34 @@ bool reloadShellyTask()
     return run;
 }
 
+bool loadEcoVolterTask()
+{
+    static long lastAttempt = 0;
+    static EcoVolterProAPIV2 ecoVolterAPI;
+    bool run = false;
+    int period = ecoVolterAPI.isDiscovered() ? ECOVOLTER_STATUS_REFRESH_INTERVAL : ECOVOLTER_DISCOVERY_REFRESH_INTERVAL;
+    if (lastAttempt == 0 || millis() - lastAttempt > period)
+    {
+        if (!ecoVolterAPI.isDiscovered())
+        {
+            ecoVolterAPI.queryMDNS();
+        }
+        if (ecoVolterAPI.isDiscovered())
+        {
+            log_d("Loading EcoVolter data");
+            wallboxData = ecoVolterAPI.getStatus();
+        }
+        lastAttempt = millis();
+        run = true;
+    }
+    return run;
+}
+
+void syncTime() {
+    //use ntp arduino
+    configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+}
+
 void logMemory()
 {
     xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
@@ -433,10 +465,12 @@ void onEntering(state_t newState)
             previousShellyResult = shellyResult;
             previousInverterData = inverterData;
             previousInverterData.millis = 0;
+
+            syncTime();
         }
         xSemaphoreGive(lvgl_mutex);
         break;
-    }    
+    }
 }
 
 void onLeaving(state_t oldState)
@@ -475,7 +509,7 @@ void updateState()
     {
         dongleDiscovery.scanWiFi();
         wifiDiscoveryResult = dongleDiscovery.getAutoconnectDongle();
-        if(wifiDiscoveryResult.type != CONNECTION_TYPE_NONE)
+        if (wifiDiscoveryResult.type != CONNECTION_TYPE_NONE)
         {
             log_d("Autoconnect dongle found: %s, type: %d", wifiDiscoveryResult.ssid.c_str(), wifiDiscoveryResult.type);
             moveToState(STATE_SPLASH);
@@ -582,6 +616,10 @@ void updateState()
                 break;
             }
             if (reloadShellyTask())
+            {
+                break;
+            }
+            if (loadEcoVolterTask())
             {
                 break;
             }

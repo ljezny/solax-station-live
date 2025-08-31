@@ -35,7 +35,9 @@
         "map": "cpp",
         "forward_list": "cpp",
         "regex": "cpp",
-        "set": "cpp"
+        "set": "cpp",
+        "cstddef": "cpp",
+        "format": "cpp"
     },
     "cmake.sourceDirectory": "/Users/lukasjezny/solax-station-live/src/ui"
 }
