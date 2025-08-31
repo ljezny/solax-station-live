@@ -166,6 +166,17 @@ public:
         int l1PercentUsage = totalPhasePower > 0 ? (100 * inverterData.L1Power) / totalPhasePower : 0;
         int l2PercentUsage = totalPhasePower > 0 ? (100 * inverterData.L2Power) / totalPhasePower : 0;
         int l3PercentUsage = totalPhasePower > 0 ? (100 * inverterData.L3Power) / totalPhasePower : 0;
+        bool hasPhases = inverterData.L1Power > 0 || inverterData.L2Power > 0 || inverterData.L3Power > 0;
+
+        if (hasPhases)
+        {
+            // show inverter phase container
+            lv_obj_clear_flag(ui_inverterPhasesContainer, LV_OBJ_FLAG_HIDDEN);
+        }
+        else
+        {
+            lv_obj_add_flag(ui_inverterPhasesContainer, LV_OBJ_FLAG_HIDDEN);
+        }
 
         lv_color_t black = lv_color_make(0, 0, 0);
         lv_color_t white = lv_color_make(255, 255, 255);
@@ -419,7 +430,7 @@ public:
         wallboxPowerTextAnimator.animate(ui_wallboxPowerLabel, previousWallboxResult.chargingPower, wallboxResult.chargingPower);
         lv_label_set_text(ui_wallboxPowerUnitLabel, format(POWER, wallboxResult.chargingPower).unit.c_str());
         wallboxBackgroundAnimator.animate(ui_wallboxContainer, wallboxResult.chargingPower > 0 ? orange : containerBackground);
-        if(wallboxResult.evConnected) {
+        if(wallboxResult.updated > 0) {
             //show container
             lv_obj_clear_flag(ui_wallboxContainer, LV_OBJ_FLAG_HIDDEN);
         } else {

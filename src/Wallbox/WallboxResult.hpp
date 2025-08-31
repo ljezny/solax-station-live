@@ -4,7 +4,7 @@
 
 typedef struct WallboxResult
 {
-    time_t updated = 0;
+    long updated = 0;
     bool evConnected = false;
     int chargingPower = 0;
     int chargingCurrent = 0;

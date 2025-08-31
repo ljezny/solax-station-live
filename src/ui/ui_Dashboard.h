@@ -79,7 +79,7 @@ extern lv_obj_t *ui_inverterTemperatureUnitLabel;
 extern lv_obj_t *ui_Container26;
 extern lv_obj_t *ui_inverterPowerLabel;
 extern lv_obj_t *ui_inverterPowerUnitLabel;
-extern lv_obj_t *ui_Container33;
+extern lv_obj_t *ui_inverterPhasesContainer;
 extern lv_obj_t *ui_Container29;
 extern lv_obj_t *ui_inverterPowerBar1;
 extern lv_obj_t *ui_inverterPowerL1Label;

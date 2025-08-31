@@ -27,8 +27,8 @@
 #define INVERTER_DATA_REFRESH_INTERVAL 5000 // Seems that 3s is problematic for some dongles (GoodWe), so we use 5s
 #define SHELLY_REFRESH_INTERVAL 3000
 
-#define ECOVOLTER_DISCOVERY_REFRESH_INTERVAL 30000
-#define ECOVOLTER_STATUS_REFRESH_INTERVAL 5000
+#define WALLBOX_DISCOVERY_REFRESH_INTERVAL 30000
+#define WALLBOX_STATUS_REFRESH_INTERVAL 5000
 
 #include "gfx_conf.h"
 #include "Touch/Touch.hpp"
@@ -44,6 +44,8 @@ SET_LOOP_TASK_STACK_SIZE(16 * 1024); // use freeStack
 
 WiFiDiscovery dongleDiscovery;
 ShellyAPI shellyAPI;
+EcoVolterProAPIV2 ecoVolterAPI;
+SolaxWallboxLocalAPI solaxWallboxAPI;
 BacklightResolver backlightResolver;
 SoftAP softAP;
 Touch touch;
@@ -405,9 +407,8 @@ bool reloadShellyTask()
 bool loadEcoVolterTask()
 {
     static long lastAttempt = 0;
-    static EcoVolterProAPIV2 ecoVolterAPI;
     bool run = false;
-    int period = ecoVolterAPI.isDiscovered() ? ECOVOLTER_STATUS_REFRESH_INTERVAL : ECOVOLTER_DISCOVERY_REFRESH_INTERVAL;
+    int period = ecoVolterAPI.isDiscovered() ? WALLBOX_STATUS_REFRESH_INTERVAL : WALLBOX_DISCOVERY_REFRESH_INTERVAL;
     if (lastAttempt == 0 || millis() - lastAttempt > period)
     {
         if (!ecoVolterAPI.isDiscovered())
@@ -425,11 +426,11 @@ bool loadEcoVolterTask()
     return run;
 }
 
-bool loadSolaxWallboxTask(){
+bool loadSolaxWallboxTask()
+{
     static long lastAttempt = 0;
-    static SolaxWallboxLocalAPI solaxWallboxAPI;
     bool run = false;
-    int period = solaxWallboxAPI.isDiscovered() ? ECOVOLTER_STATUS_REFRESH_INTERVAL : ECOVOLTER_DISCOVERY_REFRESH_INTERVAL;
+    int period = solaxWallboxAPI.isDiscovered() ? WALLBOX_STATUS_REFRESH_INTERVAL : WALLBOX_DISCOVERY_REFRESH_INTERVAL;
     if (lastAttempt == 0 || millis() - lastAttempt > period)
     {
         if (!solaxWallboxAPI.isDiscovered())
@@ -447,8 +448,9 @@ bool loadSolaxWallboxTask(){
     return run;
 }
 
-void syncTime() {
-    //use ntp arduino
+void syncTime()
+{
+    // use ntp arduino
     configTime(0, 0, "pool.ntp.org", "time.nist.gov");
 }
 
@@ -649,9 +651,15 @@ void updateState()
             {
                 break;
             }
-            if(loadSolaxWallboxTask()){
-                break;
+            
+            if (!ecoVolterAPI.isDiscovered()) //ecovolter has priority
+            {
+                if (loadSolaxWallboxTask())
+                {
+                    break;
+                }
             }
+
             logMemory();
         }
 
