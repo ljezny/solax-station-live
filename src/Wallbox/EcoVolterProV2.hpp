@@ -82,7 +82,7 @@ public:
                 DynamicJsonDocument doc(2048);
                 deserializeJson(doc, payload);
 
-                result.updated = time(NULL);
+                result.updated = millis();
                 result.chargingEnergy = doc["chargedEnergy"].as<float>();
                 result.chargingPower = doc["actualPower"].as<int>() * 1000.0f;
                 result.chargingCurrent = doc["currentL1"].as<int>();

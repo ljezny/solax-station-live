@@ -34,7 +34,7 @@ LV_IMG_DECLARE( ui_img_1279321064);   // assets/eco-battery.png
 LV_IMG_DECLARE( ui_img_564643105);   // assets/eco-house-3.png
 LV_IMG_DECLARE( ui_img_960241876);   // assets/power-plant.png
 LV_IMG_DECLARE( ui_img_1061873486);   // assets/solar-inverter.png
-LV_IMG_DECLARE( ui_img_1215525481);   // assets/electric-car.png
+LV_IMG_DECLARE( ui_img_ev_png);   // assets/ev.png
 LV_IMG_DECLARE( ui_img_performance_png);   // assets/performance.png
 
 // FONTS

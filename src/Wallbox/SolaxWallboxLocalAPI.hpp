@@ -27,13 +27,12 @@ public:
     {
         WallboxResult_t result;
         result.updated = 0;
-        SolaxWallboxInfo_t wbInfo = getWallboxInfo();
-        if (wbInfo.ip != IPAddress(0, 0, 0, 0))
+        if (wallboxInfo.ip != IPAddress(0, 0, 0, 0))
         {
             HTTPClient client;
-            if (client.begin(wbInfo.ip.toString(), 80))
+            if (client.begin(wallboxInfo.ip.toString(), 80))
             {
-                int httpCode = client.POST("optType=ReadRealTimeData&pwd=" + wbInfo.sn);
+                int httpCode = client.POST("optType=ReadRealTimeData&pwd=" + wallboxInfo.sn);
                 if (httpCode == HTTP_CODE_OK)
                 {
                     String payload = client.getString();
@@ -62,6 +61,7 @@ public:
                             result.chargingEnergy = doc["Data"][12].as<int>() / 10.f; // Convert Wh to kWh
                             result.chargingCurrent = doc["Data"][5].as<int>() / 100;
                             result.chargingControlEnabled = false;
+                            result.updated = millis();
                         }
                         else
                         {
@@ -81,13 +81,26 @@ public:
             }
             else
             {
-                log_d("Failed to connect to wallbox dongle at %s", wbInfo.ip.toString().c_str());
+                log_d("Failed to connect to wallbox dongle at %s", wallboxInfo.ip.toString().c_str());
             }
         }
         return result;
     }
+    
+    bool isDiscovered() const
+    {
+        return wallboxInfo.ip != IPAddress(0, 0, 0, 0);
+    }
+
+    bool discoverWallbox()
+    {
+        wallboxInfo = getWallboxInfo();
+        return isDiscovered();
+    }
 
 private:
+    SolaxWallboxInfo_t wallboxInfo;
+
     SolaxWallboxInfo_t getWallboxInfo()
     {
         uint32_t ip = 0;

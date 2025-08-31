@@ -11,6 +11,7 @@
 #include "Inverters/Deye/DeyeDongleAPI.hpp"
 #include "Inverters/Victron/VictronDongleAPI.hpp"
 #include "Wallbox/EcoVolterProV2.hpp"
+#include "Wallbox/SolaxWallboxLocalAPI.hpp"
 #include "Shelly/Shelly.hpp"
 #include "utils/UnitFormatter.hpp"
 #include "utils/SolarChartDataProvider.hpp"
@@ -50,6 +51,7 @@ Touch touch;
 InverterData_t inverterData;
 InverterData_t previousInverterData;
 WallboxResult_t wallboxData;
+WallboxResult_t previousWallboxData;
 ShellyResult_t shellyResult;
 ShellyResult_t previousShellyResult;
 SolarChartDataProvider solarChartDataProvider;
@@ -423,6 +425,28 @@ bool loadEcoVolterTask()
     return run;
 }
 
+bool loadSolaxWallboxTask(){
+    static long lastAttempt = 0;
+    static SolaxWallboxLocalAPI solaxWallboxAPI;
+    bool run = false;
+    int period = solaxWallboxAPI.isDiscovered() ? ECOVOLTER_STATUS_REFRESH_INTERVAL : ECOVOLTER_DISCOVERY_REFRESH_INTERVAL;
+    if (lastAttempt == 0 || millis() - lastAttempt > period)
+    {
+        if (!solaxWallboxAPI.isDiscovered())
+        {
+            solaxWallboxAPI.discoverWallbox();
+        }
+        if (solaxWallboxAPI.isDiscovered())
+        {
+            log_d("Loading Solax Wallbox data");
+            wallboxData = solaxWallboxAPI.getStatus();
+        }
+        lastAttempt = millis();
+        run = true;
+    }
+    return run;
+}
+
 void syncTime() {
     //use ntp arduino
     configTime(0, 0, "pool.ntp.org", "time.nist.gov");
@@ -461,9 +485,10 @@ void onEntering(state_t newState)
         dashboardUI.show();
         if (inverterData.status == DONGLE_STATUS_OK)
         {
-            dashboardUI.update(inverterData, inverterData, uiMedianPowerSampler, shellyResult, shellyResult, solarChartDataProvider, wifiSignalPercent());
+            dashboardUI.update(inverterData, inverterData, uiMedianPowerSampler, shellyResult, shellyResult, wallboxData, wallboxData, solarChartDataProvider, wifiSignalPercent());
             previousShellyResult = shellyResult;
             previousInverterData = inverterData;
+            previousWallboxData = wallboxData;
             previousInverterData.millis = 0;
 
             syncTime();
@@ -592,11 +617,12 @@ void updateState()
         if ((millis() - previousInverterData.millis) > UI_REFRESH_INTERVAL)
         {
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-            dashboardUI.update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, uiMedianPowerSampler, shellyResult, previousShellyResult, solarChartDataProvider, wifiSignalPercent());
+            dashboardUI.update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, uiMedianPowerSampler, shellyResult, previousShellyResult, wallboxData, previousWallboxData, solarChartDataProvider, wifiSignalPercent());
             xSemaphoreGive(lvgl_mutex);
 
             previousShellyResult = shellyResult;
             previousInverterData = inverterData;
+            previousWallboxData = wallboxData;
             previousInverterData.millis = millis(); // this ensures that if we dont have new data, we will use the old data
             backlightResolver.resolve(inverterData);
         }
@@ -621,6 +647,9 @@ void updateState()
             }
             if (loadEcoVolterTask())
             {
+                break;
+            }
+            if(loadSolaxWallboxTask()){
                 break;
             }
             logMemory();

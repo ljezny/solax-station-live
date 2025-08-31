@@ -131,8 +131,8 @@ public:
     {
         return constrain(inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0, 0, 100);
     }
-
-    void update(InverterData_t &inverterData, InverterData_t &previousInverterData, MedianPowerSampler &uiMedianPowerSampler, ShellyResult_t &shellyResult, ShellyResult_t &previousShellyResult, SolarChartDataProvider &solarChartDataProvider, int wifiSignalPercent)
+    
+    void update(InverterData_t &inverterData, InverterData_t &previousInverterData, MedianPowerSampler &uiMedianPowerSampler, ShellyResult_t &shellyResult, ShellyResult_t &previousShellyResult, WallboxResult_t &wallboxResult, WallboxResult_t &previousWallboxResult, SolarChartDataProvider &solarChartDataProvider, int wifiSignalPercent)
     {
         if (uiMedianPowerSampler.hasValidSamples())
         {
@@ -170,8 +170,9 @@ public:
         lv_color_t black = lv_color_make(0, 0, 0);
         lv_color_t white = lv_color_make(255, 255, 255);
         lv_color_t red = lv_color_hex(0xAB2328);
-        lv_color_t orange = lv_color_hex(0xFFD400);
+        lv_color_t orange = lv_color_hex(0xFFAA00);
         lv_color_t green = lv_color_hex(0x03AD36);
+    
         lv_color_t textColor = isDarkMode ? white : black;
         lv_color_t containerBackground = isDarkMode ? black : white;
 
@@ -352,6 +353,7 @@ public:
         lv_label_set_text(ui_batteryDischargedTodayUnitLabel, (format(ENERGY, inverterData.batteryDischargedToday * 1000.0, 1).unit).c_str());
         lv_label_set_text(ui_loadTodayLabel, format(ENERGY, inverterData.loadToday * 1000.0, 1).value.c_str());
         lv_label_set_text(ui_loadTodayUnitLabel, format(ENERGY, inverterData.loadToday * 1000.0, 1).unit.c_str());
+        
 
         lv_label_set_text_fmt(ui_selfUseTodayLabel, "%d", selfUseEnergyTodayPercent);
         if (selfUseEnergyTodayPercent > 50)
@@ -412,6 +414,16 @@ public:
         else
         {
             lv_label_set_text_fmt(ui_shellyCountLabel, "%d / %d", shellyResult.activeCount, shellyResult.pairedCount);
+        }
+
+        wallboxPowerTextAnimator.animate(ui_wallboxPowerLabel, previousWallboxResult.chargingPower, wallboxResult.chargingPower);
+        lv_label_set_text(ui_wallboxPowerUnitLabel, format(POWER, wallboxResult.chargingPower).unit.c_str());
+        wallboxBackgroundAnimator.animate(ui_wallboxContainer, wallboxResult.chargingPower > 0 ? orange : containerBackground);
+        if(wallboxResult.evConnected) {
+            //show container
+            lv_obj_clear_flag(ui_wallboxContainer, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(ui_wallboxContainer, LV_OBJ_FLAG_HIDDEN);
         }
 
         updateChart(inverterData, solarChartDataProvider);
@@ -483,6 +495,7 @@ private:
     UITextChangeAnimator inverterPowerL2TextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
     UITextChangeAnimator inverterPowerL3TextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
     UITextChangeAnimator shellyPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
+    UITextChangeAnimator wallboxPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
     UITextChangeAnimator pvPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
     UITextChangeAnimator pv1PowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
     UITextChangeAnimator pv2PowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
@@ -493,6 +506,7 @@ private:
     UIBackgroundAnimator pvBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
     UIBackgroundAnimator batteryBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
     UIBackgroundAnimator gridBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
+    UIBackgroundAnimator wallboxBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
 
     UIBallAnimator pvAnimator;
     UIBallAnimator batteryAnimator;
@@ -595,5 +609,10 @@ private:
         {
             loadAnimator.hide();
         }
+    }
+
+    void updateWallboxData(WallboxResult_t &wallboxResult, WallboxResult_t &previousWallboxResult)
+    {
+        // Update wallbox data UI elements
     }
 };
