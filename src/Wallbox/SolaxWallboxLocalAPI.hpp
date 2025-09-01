@@ -61,6 +61,7 @@ public:
                             result.chargingEnergy = doc["Data"][12].as<int>() / 10.f; // Convert Wh to kWh
                             result.chargingCurrent = doc["Data"][5].as<int>() / 100;
                             result.chargingControlEnabled = false;
+                            result.phases = 3;
                             result.updated = millis();
                         }
                         else

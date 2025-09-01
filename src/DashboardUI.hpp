@@ -105,6 +105,12 @@ private:
 
 public:
     const int UI_REFRESH_PERIOD_MS = 5000;
+
+    bool isWallboxSmartChecked()
+    {
+        return lv_obj_get_state(ui_wallboxSmartCheckbox) & LV_STATE_CHECKED;
+    }
+
     void show()
     {
         lv_scr_load(ui_Dashboard);
@@ -131,7 +137,7 @@ public:
     {
         return constrain(inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0, 0, 100);
     }
-    
+
     void update(InverterData_t &inverterData, InverterData_t &previousInverterData, MedianPowerSampler &uiMedianPowerSampler, ShellyResult_t &shellyResult, ShellyResult_t &previousShellyResult, WallboxResult_t &wallboxResult, WallboxResult_t &previousWallboxResult, SolarChartDataProvider &solarChartDataProvider, int wifiSignalPercent)
     {
         if (uiMedianPowerSampler.hasValidSamples())
@@ -183,7 +189,7 @@ public:
         lv_color_t red = lv_color_hex(0xAB2328);
         lv_color_t orange = lv_color_hex(0xFFAA00);
         lv_color_t green = lv_color_hex(0x03AD36);
-    
+
         lv_color_t textColor = isDarkMode ? white : black;
         lv_color_t containerBackground = isDarkMode ? black : white;
 
@@ -250,21 +256,21 @@ public:
         pvBackgroundAnimator.animate(ui_pvContainer, ((inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power) > 0) ? lv_color_hex(_ui_theme_color_pvColor[0]) : containerBackground);
         lv_label_set_text(ui_inverterPowerUnitLabel, format(POWER, inverterData.inverterPower).unit.c_str());
         inverterPowerL1TextAnimator.animate(ui_inverterPowerL1Label, previousInverterData.L1Power, inverterData.L1Power);
-        //lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.L1Power).value.c_str());
+        // lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.L1Power).value.c_str());
         lv_label_set_text(ui_inverterPowerL1UnitLabel, format(POWER, inverterData.L1Power).unit.c_str());
         lv_bar_set_value(ui_inverterPowerBar1, min(2400, inverterData.L1Power), LV_ANIM_ON);
         lv_obj_set_style_bg_color(ui_inverterPowerBar1, l1PercentUsage > 50 ? red : textColor, LV_PART_INDICATOR);
         lv_obj_set_style_text_color(ui_inverterPowerL1Label, l1PercentUsage > 50 ? red : textColor, 0);
         lv_obj_set_style_text_color(ui_inverterPowerL1UnitLabel, l1PercentUsage > 50 ? red : textColor, 0);
         inverterPowerL2TextAnimator.animate(ui_inverterPowerL2Label, previousInverterData.L2Power, inverterData.L2Power);
-        //lv_label_set_text(ui_inverterPowerL2Label, format(POWER, inverterData.L2Power).value.c_str());
+        // lv_label_set_text(ui_inverterPowerL2Label, format(POWER, inverterData.L2Power).value.c_str());
         lv_label_set_text(ui_inverterPowerL2UnitLabel, format(POWER, inverterData.L2Power).unit.c_str());
         lv_bar_set_value(ui_inverterPowerBar2, min(2400, inverterData.L2Power), LV_ANIM_ON);
         lv_obj_set_style_bg_color(ui_inverterPowerBar2, l2PercentUsage > 50 ? red : textColor, LV_PART_INDICATOR);
         lv_obj_set_style_text_color(ui_inverterPowerL2Label, l2PercentUsage > 50 ? red : textColor, 0);
         lv_obj_set_style_text_color(ui_inverterPowerL2UnitLabel, l2PercentUsage > 50 ? red : textColor, 0);
         inverterPowerL3TextAnimator.animate(ui_inverterPowerL3Label, previousInverterData.L3Power, inverterData.L3Power);
-        //lv_label_set_text(ui_inverterPowerL3Label, format(POWER, inverterData.L3Power).value.c_str());
+        // lv_label_set_text(ui_inverterPowerL3Label, format(POWER, inverterData.L3Power).value.c_str());
         lv_label_set_text(ui_inverterPowerL3UnitLabel, format(POWER, inverterData.L3Power).unit.c_str());
         lv_bar_set_value(ui_inverterPowerBar3, min(2400, inverterData.L3Power), LV_ANIM_ON);
         lv_obj_set_style_bg_color(ui_inverterPowerBar3, l3PercentUsage > 50 ? red : textColor, LV_PART_INDICATOR);
@@ -284,8 +290,8 @@ public:
         {
             if (abs(inverterData.batteryPower) > 100)
             {
-                
-                if (inverterData.batteryPower < 0)                                                               
+
+                if (inverterData.batteryPower < 0)
                 {
                     int capacityRemainingWh = (inverterData.soc - inverterData.minSoc) * inverterData.batteryCapacityWh / 100;
                     int secondsRemaining = (3600 * capacityRemainingWh) / abs(inverterData.batteryPower);
@@ -364,7 +370,6 @@ public:
         lv_label_set_text(ui_batteryDischargedTodayUnitLabel, (format(ENERGY, inverterData.batteryDischargedToday * 1000.0, 1).unit).c_str());
         lv_label_set_text(ui_loadTodayLabel, format(ENERGY, inverterData.loadToday * 1000.0, 1).value.c_str());
         lv_label_set_text(ui_loadTodayUnitLabel, format(ENERGY, inverterData.loadToday * 1000.0, 1).unit.c_str());
-        
 
         lv_label_set_text_fmt(ui_selfUseTodayLabel, "%d", selfUseEnergyTodayPercent);
         if (selfUseEnergyTodayPercent > 50)
@@ -430,6 +435,18 @@ public:
         wallboxPowerTextAnimator.animate(ui_wallboxPowerLabel, previousWallboxResult.chargingPower, wallboxResult.chargingPower);
         lv_label_set_text(ui_wallboxPowerUnitLabel, format(POWER, wallboxResult.chargingPower).unit.c_str());
         wallboxBackgroundAnimator.animate(ui_wallboxContainer, wallboxResult.chargingPower > 0 ? orange : containerBackground);
+        if(wallboxResult.chargingControlEnabled) {
+            //show charging control
+            lv_obj_clear_flag(ui_wallboxSmartCheckbox, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(ui_wallboxSmartCheckbox, LV_OBJ_FLAG_HIDDEN);
+        }
+        if(wallboxResult.evConnected){
+            lv_obj_clear_flag(ui_wallboxPowerContainer, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            lv_obj_add_flag(ui_wallboxPowerContainer, LV_OBJ_FLAG_HIDDEN);
+        }
+
         if(wallboxResult.updated > 0) {
             //show container
             lv_obj_clear_flag(ui_wallboxContainer, LV_OBJ_FLAG_HIDDEN);
@@ -546,7 +563,7 @@ private:
             {
                 continue;
             }
-           
+
             lv_chart_set_next_value(ui_Chart1, pvPowerSeries, item.pvPower);
             lv_chart_set_next_value(ui_Chart1, acPowerSeries, item.loadPower);
             if (inverterData.hasBattery)

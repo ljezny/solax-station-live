@@ -21,14 +21,14 @@
 #include "SplashUI.hpp"
 #include "WiFiSetupUI.hpp"
 #include "utils/SoftAP.hpp"
-#include "utils/ShellyRuleResolver.hpp"
+#include "utils/SmartControlRuleResolver.hpp"
 #include "utils/MedianPowerSampler.hpp"
 #define UI_REFRESH_INTERVAL 5000            // Define the UI refresh interval in milliseconds
 #define INVERTER_DATA_REFRESH_INTERVAL 5000 // Seems that 3s is problematic for some dongles (GoodWe), so we use 5s
 #define SHELLY_REFRESH_INTERVAL 3000
 
 #define WALLBOX_DISCOVERY_REFRESH_INTERVAL 30000
-#define WALLBOX_STATUS_REFRESH_INTERVAL 5000
+#define WALLBOX_STATUS_REFRESH_INTERVAL 15000
 
 #include "gfx_conf.h"
 #include "Touch/Touch.hpp"
@@ -58,8 +58,10 @@ ShellyResult_t shellyResult;
 ShellyResult_t previousShellyResult;
 SolarChartDataProvider solarChartDataProvider;
 MedianPowerSampler shellyMedianPowerSampler;
+MedianPowerSampler wallboxMedianPowerSampler;
 MedianPowerSampler uiMedianPowerSampler;
-ShellyRuleResolver shellyRuleResolver(shellyMedianPowerSampler);
+SmartControlRuleResolver shellyRuleResolver(shellyMedianPowerSampler);
+SmartControlRuleResolver wallboxRuleResolver(wallboxMedianPowerSampler);
 
 SplashUI splashUI;
 WiFiSetupUI wifiSetupUI(dongleDiscovery);
@@ -316,7 +318,7 @@ bool loadInverterDataTask()
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.loadPower, inverterData.soc);
                 shellyMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
                 uiMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
-
+                wallboxMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
                 dongleDiscovery.storeLastConnectedSSID(wifiDiscoveryResult.ssid);
             }
             else
@@ -385,14 +387,14 @@ bool reloadShellyTask()
     {
         log_d("Reloading Shelly data");
         shellyResult = shellyAPI.getState();
-        RequestedShellyState_t state = shellyRuleResolver.resolveShellyState();
-        if (state != SHELLY_UNKNOWN)
+        RequestedSmartControlState_t state = shellyRuleResolver.resolveSmartControlState(1500, 100, 500, 100);
+        if (state != SMART_CONTROL_UNKNOWN)
         {
             delay(1000);
             shellyAPI.updateState(state, 5 * 60);
 
             // state should change
-            if ((shellyResult.activeCount == 0 && state > SHELLY_FULL_OFF) || (shellyResult.activeCount > 0 && state < SHELLY_KEEP_CURRENT_STATE))
+            if ((shellyResult.activeCount == 0 && state > SMART_CONTROL_FULL_OFF) || (shellyResult.activeCount > 0 && state < SMART_CONTROL_KEEP_CURRENT_STATE))
             {
                 shellyResult = shellyAPI.getState(); // reload state after update
             }
@@ -424,6 +426,57 @@ bool loadEcoVolterTask()
         run = true;
     }
     return run;
+}
+
+void resolveEcoVolterSmartCharge()
+{
+    log_d("Resolving EcoVolter Smart Charge");
+    bool smartEnabled = false;
+    xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+    smartEnabled = dashboardUI.isWallboxSmartChecked();
+    xSemaphoreGive(lvgl_mutex);
+
+    if (ecoVolterAPI.isDiscovered())
+    {
+        if (smartEnabled)
+        {
+            RequestedSmartControlState_t state = wallboxRuleResolver.resolveSmartControlState(wallboxData.phases * 230 * 6, wallboxData.phases * 230 * 1, 500, 200);
+            if (state != SMART_CONTROL_UNKNOWN)
+            {
+                switch (state)
+                {
+                case SMART_CONTROL_FULL_ON:
+                    log_d("Setting EcoVolter to FULL ON");
+                    ecoVolterAPI.setTargetCurrent(16);
+                    break;
+                case SMART_CONTROL_PARTIAL_ON:
+                    log_d("Setting EcoVolter to PARTIAL ON");
+                    ecoVolterAPI.setTargetCurrent(max(6, (wallboxData.chargingCurrent + 1)));
+                    break;
+                case SMART_CONTROL_KEEP_CURRENT_STATE:
+                    log_d("Keeping EcoVolter current state");
+                    // Do nothing, keep current state
+                    break;
+                case SMART_CONTROL_PARTIAL_OFF:
+                    log_d("Setting EcoVolter to PARTIAL OFF");
+                    ecoVolterAPI.setTargetCurrent(max(6, (wallboxData.chargingCurrent - 1)));
+                    break;
+                case SMART_CONTROL_FULL_OFF:
+                    log_d("Setting EcoVolter to FULL OFF");
+                    ecoVolterAPI.setTargetCurrent(0);
+                    break;
+                }
+            }
+        }
+        else
+        {
+            log_d("Smart control disabled in UI");
+        }
+    }
+    else
+    {
+        log_d("EcoVolter Pro not discovered, cannot resolve smart charge");
+    }
 }
 
 bool loadSolaxWallboxTask()
@@ -649,10 +702,11 @@ void updateState()
             }
             if (loadEcoVolterTask())
             {
+                resolveEcoVolterSmartCharge();
                 break;
             }
-            
-            if (!ecoVolterAPI.isDiscovered()) //ecovolter has priority
+
+            if (!ecoVolterAPI.isDiscovered()) // ecovolter has priority
             {
                 if (loadSolaxWallboxTask())
                 {

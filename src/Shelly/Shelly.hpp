@@ -9,7 +9,7 @@
 #include <ArduinoJson.h>
 #include "../utils/urlencoder.hpp"
 #include <mdns.h>
-#include "utils/ShellyRuleResolver.hpp"
+#include "utils/SmartControlRuleResolver.hpp"
 #include <StreamUtils.h>
 #include <algorithm>
 
@@ -284,7 +284,7 @@ public:
         return result;
     }
 
-    void updateState(RequestedShellyState_t requestedState, int timeoutSec)
+    void updateState(RequestedSmartControlState_t requestedState, int timeoutSec)
     {
         log_d("Updating state to %d", requestedState);
         for (int i = 0; i < MAX_SHELLY_PAIRS; i++)
@@ -301,7 +301,7 @@ public:
 
                         setState(pairs[i], requestedState, timeoutSec);
 
-                        if (!wasOn && requestedState == SHELLY_FULL_ON)
+                        if (!wasOn && requestedState == SMART_CONTROL_FULL_ON)
                         {
                             break; // activete only one relay
                         }
@@ -505,7 +505,7 @@ private:
         return result;
     }
 
-    bool setState(ShellyPair_t shellyPair, RequestedShellyState_t requestedState, int timeoutSec)
+    bool setState(ShellyPair_t shellyPair, RequestedSmartControlState_t requestedState, int timeoutSec)
     {
         bool result = true;
 
@@ -513,7 +513,7 @@ private:
         {
         case PLUG:
         case PLUG_S:
-            if (requestedState == SHELLY_FULL_ON || requestedState >= SHELLY_KEEP_CURRENT_STATE && shellyPair.lastState.isOn)
+            if (requestedState == SMART_CONTROL_FULL_ON || requestedState >= SMART_CONTROL_KEEP_CURRENT_STATE && shellyPair.lastState.isOn)
             {
                 result = setState_Gen1(shellyPair.ip, true, timeoutSec);
             }
@@ -521,7 +521,7 @@ private:
         case PRO1PM:
         case PLUS_PLUG_S:
         case PLUS1PM:
-            if (requestedState == SHELLY_FULL_ON || requestedState >= SHELLY_KEEP_CURRENT_STATE && shellyPair.lastState.isOn)
+            if (requestedState == SMART_CONTROL_FULL_ON || requestedState >= SMART_CONTROL_KEEP_CURRENT_STATE && shellyPair.lastState.isOn)
             {
                 result = setState_Gen2(shellyPair.ip, "relay", 0, true, timeoutSec);
             }
@@ -545,16 +545,16 @@ private:
 
             switch (requestedState)
             {
-            case SHELLY_FULL_OFF:
+            case SMART_CONTROL_FULL_OFF:
                 step = -2;
                 break;
-            case SHELLY_PARTIAL_OFF:
+            case SMART_CONTROL_PARTIAL_OFF:
                 step = -1;
                 break;
-            case SHELLY_FULL_ON:
+            case SMART_CONTROL_FULL_ON:
                 step = 2;
                 break;
-            case SHELLY_PARTIAL_ON:
+            case SMART_CONTROL_PARTIAL_ON:
                 step = 1;
                 break;
             }
@@ -564,7 +564,7 @@ private:
             break;
         }
         case PRO3:
-            if (requestedState == SHELLY_FULL_ON || requestedState >= SHELLY_KEEP_CURRENT_STATE && shellyPair.lastState.isOn)
+            if (requestedState == SMART_CONTROL_FULL_ON || requestedState >= SMART_CONTROL_KEEP_CURRENT_STATE && shellyPair.lastState.isOn)
             {
                 result &= setState_Gen2(shellyPair.ip, "relay", 0, true, timeoutSec);
                 result &= setState_Gen2(shellyPair.ip, "relay", 1, true, timeoutSec);

@@ -18,16 +18,14 @@ public:
     {
     }
 
-    bool setTargetCurrent(String wallboxId, String wallboxApiKey, int targetCurrent)
+    bool setTargetCurrent(int targetCurrent)
     {
         HTTPClient http;
-        wallboxId.toLowerCase();
-        wallboxApiKey.toLowerCase();
 
         bool result = false;
 
         String path = "/api/v1/charger/settings";
-        String url = "http://" + wallboxId + ".local" + path;
+        String url = "http://" + ecoVolterId + ".local" + path;
        
         time_t timestamp = time(NULL);
 
@@ -35,7 +33,7 @@ public:
        
         if (http.begin(url))
         {
-            authorize(http, wallboxId, path, body, wallboxApiKey, timestamp);
+            authorize(http, ecoVolterId, path, body, ecoVolterId, timestamp);
             int httpCode = http.PATCH(body);
             if (httpCode == HTTP_CODE_OK)
             {

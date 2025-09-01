@@ -14053,7 +14053,7 @@
                       {
                         "nid": 1977701797,
                         "strtype": "OBJECT/Name",
-                        "strval": "Container36",
+                        "strval": "wallboxPowerContainer",
                         "InheritedType": 10
                       },
                       {
@@ -14107,7 +14107,6 @@
                       },
                       {
                         "nid": -1911723185,
-                        "flags": 1048576,
                         "strtype": "OBJECT/Flags",
                         "InheritedType": 1
                       },
@@ -14194,8 +14193,7 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "CONTAINER",
-                    "tree_closed": true
+                    "saved_objtypeKey": "CONTAINER"
                   },
                   {
                     "guid": "GUID73121592-76290S5314244",
@@ -14206,7 +14204,7 @@
                       {
                         "nid": 10,
                         "strtype": "OBJECT/Name",
-                        "strval": "Checkbox1",
+                        "strval": "wallboxSmartCheckbox",
                         "InheritedType": 10
                       },
                       {
@@ -14260,7 +14258,6 @@
                       },
                       {
                         "nid": 90,
-                        "flags": 1048576,
                         "strtype": "OBJECT/Flags",
                         "InheritedType": 1
                       },
@@ -14292,12 +14289,6 @@
                         "nid": 320,
                         "strtype": "OBJECT/States",
                         "InheritedType": 1
-                      },
-                      {
-                        "nid": 330,
-                        "strtype": "OBJECT/Checked",
-                        "strval": "True",
-                        "InheritedType": 2
                       },
                       {
                         "nid": 1010,
@@ -14433,7 +14424,7 @@
                     "Reversed": false,
                     "MainAlignment": 1,
                     "CrossAlignment": 1,
-                    "TrackAlignment": 0,
+                    "TrackAlignment": 1,
                     "LayoutType": 1,
                     "nid": 30,
                     "strtype": "OBJECT/Layout_type",
@@ -24477,7 +24468,7 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 777,
+    "backup_cnt": 783,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",

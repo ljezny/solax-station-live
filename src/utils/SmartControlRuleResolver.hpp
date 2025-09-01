@@ -4,34 +4,28 @@
 #include "MedianPowerSampler.hpp"
 typedef enum
 {
-    SHELLY_UNKNOWN = -999,
-    SHELLY_FULL_OFF = -2,
-    SHELLY_PARTIAL_OFF = -1,
-    SHELLY_KEEP_CURRENT_STATE = 0,
-    SHELLY_PARTIAL_ON = 1,
-    SHELLY_FULL_ON = 2
-} RequestedShellyState_t;
+    SMART_CONTROL_UNKNOWN = -999,
+    SMART_CONTROL_FULL_OFF = -2,
+    SMART_CONTROL_PARTIAL_OFF = -1,
+    SMART_CONTROL_KEEP_CURRENT_STATE = 0,
+    SMART_CONTROL_PARTIAL_ON = 1,
+    SMART_CONTROL_FULL_ON = 2
+} RequestedSmartControlState_t;
 
-class ShellyRuleResolver
+class SmartControlRuleResolver
 {
 private:
     MedianPowerSampler &medianPowerSampler;
-
 public:
-    ShellyRuleResolver(MedianPowerSampler &medianPowerSampler) : medianPowerSampler(medianPowerSampler)
+    SmartControlRuleResolver(MedianPowerSampler &medianPowerSampler) : medianPowerSampler(medianPowerSampler)
     {
     }
 
-    RequestedShellyState_t resolveShellyState()
+    RequestedSmartControlState_t resolveSmartControlState(int enablePowerTreshold, int enablePartialPowerTreshold, int disableFullPowerTreshold, int disablePartialPowerTreshold)
     {
-        int enablePowerTreshold = 1500;
-        int enablePartialPowerTreshold = 100;
-        int disableFullPowerTreshold = 500;
-        int disablePartialPowerTreshold = 100;
-
         if (!medianPowerSampler.hasValidSamples())
         {
-            return SHELLY_UNKNOWN;
+            return SMART_CONTROL_UNKNOWN;
         }
 
         int pvPower = medianPowerSampler.getMedianPVPower();
@@ -48,63 +42,63 @@ public:
         if (hasBattery && soc < 80)
         {
             log_d("Battery under limit empty, deactivating");
-            return SHELLY_FULL_OFF;
+            return SMART_CONTROL_FULL_OFF;
         }
 
         if (batteryPower < -disableFullPowerTreshold)
         {
             log_d("Battery discharging, deactivating");
-            return SHELLY_FULL_OFF;
+            return SMART_CONTROL_FULL_OFF;
         }
 
         if (feedInPower < -disableFullPowerTreshold)
         {
             log_d("Grid power, deactivating");
-            return SHELLY_FULL_OFF;
+            return SMART_CONTROL_FULL_OFF;
         }
 
         if (batteryPower < -disablePartialPowerTreshold)
         {
             log_d("Battery discharging, partial deactivating");
-            return SHELLY_PARTIAL_OFF;
+            return SMART_CONTROL_PARTIAL_OFF;
         }
 
         if (feedInPower < -disablePartialPowerTreshold)
         {
             log_d("Grid power, partial deactivating");
-            return SHELLY_PARTIAL_OFF;
+            return SMART_CONTROL_PARTIAL_OFF;
         }
 
         if (soc >= 99)
         {
             log_d("Battery full, activating");
-            return SHELLY_FULL_ON;
+            return SMART_CONTROL_FULL_ON;
         }
 
         if (soc > 90 && batteryPower > enablePowerTreshold)
         {
             log_d("Battery almost full and charging, activating");
-            return SHELLY_FULL_ON;
+            return SMART_CONTROL_FULL_ON;
         }
 
         if (soc > 96 && batteryPower > enablePartialPowerTreshold)
         {
             log_d("Battery almost full and charging, partial activating");
-            return SHELLY_PARTIAL_ON;
+            return SMART_CONTROL_PARTIAL_ON;
         }
 
         if (feedInPower > enablePowerTreshold)
         {
             log_d("Feeding in power, activating");
-            return SHELLY_FULL_ON;
+            return SMART_CONTROL_FULL_ON;
         }
 
         if (feedInPower > enablePartialPowerTreshold)
         {
             log_d("Feeding in power, partial activating");
-            return SHELLY_PARTIAL_ON;
+            return SMART_CONTROL_PARTIAL_ON;
         }
 
-        return SHELLY_KEEP_CURRENT_STATE;
+        return SMART_CONTROL_KEEP_CURRENT_STATE;
     }
 };
