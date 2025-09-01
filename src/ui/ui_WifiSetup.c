@@ -102,6 +102,8 @@ lv_obj_set_y( ui_wifiSetupCompleteButton, -393 );
 lv_obj_set_align( ui_wifiSetupCompleteButton, LV_ALIGN_CENTER );
 lv_obj_add_flag( ui_wifiSetupCompleteButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
 lv_obj_clear_flag( ui_wifiSetupCompleteButton, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+lv_obj_set_style_bg_color(ui_wifiSetupCompleteButton, lv_color_hex(0xFFAA00), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_bg_opa(ui_wifiSetupCompleteButton, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Label3 = lv_label_create(ui_wifiSetupCompleteButton);
 lv_obj_set_width( ui_Label3, LV_SIZE_CONTENT);  /// 1

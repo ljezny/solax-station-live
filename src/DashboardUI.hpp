@@ -10,7 +10,6 @@
 #include "utils/UIBackgroundAnimatior.hpp"
 #include "utils/MedianPowerSampler.hpp"
 
-
 static void draw_event_cb(lv_event_t *e)
 {
     lv_obj_t *obj = lv_event_get_target(e);
@@ -104,19 +103,12 @@ class DashboardUI
 {
 private:
     bool isDarkMode = false;
-
+    long shownMillis = 0;
 public:
     const int UI_REFRESH_PERIOD_MS = 5000;
 
-    bool isWallboxSmartChecked()
+    DashboardUI(void (*onSettingsShow)(lv_event_t *))
     {
-        return lv_obj_get_state(ui_wallboxSmartCheckbox) & LV_STATE_CHECKED;
-    }
-
-    void show(void (*onSettingsShow)(lv_event_t *))
-    {
-        lv_scr_load(ui_Dashboard);
-
         lv_obj_add_event_cb(ui_Chart1, draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
         lv_obj_add_event_cb(ui_settingsButton, onSettingsShow, LV_EVENT_RELEASED, NULL);
 
@@ -136,6 +128,24 @@ public:
         socSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_batteryColor[0]), LV_CHART_AXIS_PRIMARY_Y);
     }
 
+    ~DashboardUI()
+    {
+    }
+
+    bool isWallboxSmartChecked()
+    {
+        return lv_obj_get_state(ui_wallboxSmartCheckbox) & LV_STATE_CHECKED;
+    }
+
+    void show()
+    {
+        lv_scr_load(ui_Dashboard);
+
+        //show settings button
+        lv_obj_clear_flag(ui_settingsButton, LV_OBJ_FLAG_HIDDEN);
+        shownMillis = millis();
+    }
+
     int getSelfUsePowerPercent(InverterData_t &inverterData)
     {
         return constrain(inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0, 0, 100);
@@ -143,6 +153,12 @@ public:
 
     void update(InverterData_t &inverterData, InverterData_t &previousInverterData, MedianPowerSampler &uiMedianPowerSampler, ShellyResult_t &shellyResult, ShellyResult_t &previousShellyResult, WallboxResult_t &wallboxResult, WallboxResult_t &previousWallboxResult, SolarChartDataProvider &solarChartDataProvider, int wifiSignalPercent)
     {
+        //hide settings button after one minute
+        if (millis() - shownMillis > 60000)
+        {
+            lv_obj_add_flag(ui_settingsButton, LV_OBJ_FLAG_HIDDEN);
+        }
+        
         if (uiMedianPowerSampler.hasValidSamples())
         {
             isDarkMode = uiMedianPowerSampler.getMedianPVPower() == 0;
@@ -438,22 +454,31 @@ public:
         wallboxPowerTextAnimator.animate(ui_wallboxPowerLabel, previousWallboxResult.chargingPower, wallboxResult.chargingPower);
         lv_label_set_text(ui_wallboxPowerUnitLabel, format(POWER, wallboxResult.chargingPower).unit.c_str());
         wallboxBackgroundAnimator.animate(ui_wallboxContainer, wallboxResult.chargingPower > 0 ? orange : containerBackground);
-        if(wallboxResult.chargingControlEnabled) {
-            //show charging control
+        if (wallboxResult.chargingControlEnabled)
+        {
+            // show charging control
             lv_obj_clear_flag(ui_wallboxSmartCheckbox, LV_OBJ_FLAG_HIDDEN);
-        } else {
+        }
+        else
+        {
             lv_obj_add_flag(ui_wallboxSmartCheckbox, LV_OBJ_FLAG_HIDDEN);
         }
-        if(wallboxResult.evConnected){
+        if (wallboxResult.evConnected)
+        {
             lv_obj_clear_flag(ui_wallboxPowerContainer, LV_OBJ_FLAG_HIDDEN);
-        } else {
+        }
+        else
+        {
             lv_obj_add_flag(ui_wallboxPowerContainer, LV_OBJ_FLAG_HIDDEN);
         }
 
-        if(wallboxResult.updated > 0) {
-            //show container
+        if (wallboxResult.updated > 0)
+        {
+            // show container
             lv_obj_clear_flag(ui_wallboxContainer, LV_OBJ_FLAG_HIDDEN);
-        } else {
+        }
+        else
+        {
             lv_obj_add_flag(ui_wallboxContainer, LV_OBJ_FLAG_HIDDEN);
         }
 
@@ -509,10 +534,6 @@ public:
         lv_obj_set_style_line_opa(ui_Chart1, isDarkMode ? LV_OPA_20 : LV_OPA_COVER, LV_PART_MAIN);
         lv_obj_set_style_bg_color(ui_loadContainer, isDarkMode ? black : white, 0);
         lv_obj_set_style_text_color(ui_Dashboard, isDarkMode ? white : black, 0);
-    }
-
-    ~DashboardUI()
-    {
     }
 
 private:

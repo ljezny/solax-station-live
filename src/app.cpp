@@ -63,9 +63,9 @@ MedianPowerSampler uiMedianPowerSampler;
 SmartControlRuleResolver shellyRuleResolver(shellyMedianPowerSampler);
 SmartControlRuleResolver wallboxRuleResolver(wallboxMedianPowerSampler);
 
-SplashUI splashUI;
-WiFiSetupUI wifiSetupUI(dongleDiscovery);
-DashboardUI dashboardUI;
+SplashUI *splashUI = NULL;
+WiFiSetupUI *wifiSetupUI = NULL;
+DashboardUI *dashboardUI = NULL;
 
 WiFiDiscoveryResult_t wifiDiscoveryResult;
 
@@ -169,6 +169,12 @@ void lvglTimerTask(void *param)
     }
 }
 
+bool showSettings = false;
+void onSettingsShow(lv_event_t *e)
+{
+    showSettings = true;
+}
+
 void setupWiFi()
 {
     WiFi.persistent(false);
@@ -216,7 +222,9 @@ void setupLVGL()
     lv_indev_drv_register(&indev_drv);
 
     ui_init();
-
+    splashUI = new SplashUI();
+    dashboardUI = new DashboardUI(onSettingsShow);
+    wifiSetupUI = new WiFiSetupUI(dongleDiscovery);
     xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 24 * 1024, NULL, 10, NULL, 0);
 }
 
@@ -433,7 +441,7 @@ void resolveEcoVolterSmartCharge()
     log_d("Resolving EcoVolter Smart Charge");
     bool smartEnabled = false;
     xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-    smartEnabled = dashboardUI.isWallboxSmartChecked();
+    smartEnabled = dashboardUI->isWallboxSmartChecked();
     xSemaphoreGive(lvgl_mutex);
 
     if (ecoVolterAPI.isDiscovered())
@@ -518,11 +526,6 @@ void logMemory()
     xSemaphoreGive(lvgl_mutex);
 }
 
-bool showSettings = false;
-void onSettingsShow(lv_event_t *e) {
-    showSettings = true;
-}
-
 void onEntering(state_t newState)
 {
     log_d("Entering state %d", newState);
@@ -532,20 +535,20 @@ void onEntering(state_t newState)
         break;
     case STATE_SPLASH:
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-        splashUI.show();
+        splashUI->show();
         xSemaphoreGive(lvgl_mutex);
         break;
     case STATE_WIFI_SETUP:
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-        wifiSetupUI.show();
+        wifiSetupUI->show();
         xSemaphoreGive(lvgl_mutex);
         break;
     case STATE_DASHBOARD:
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-        dashboardUI.show(onSettingsShow);
+        dashboardUI->show();
         if (inverterData.status == DONGLE_STATUS_OK)
         {
-            dashboardUI.update(inverterData, inverterData, uiMedianPowerSampler, shellyResult, shellyResult, wallboxData, wallboxData, solarChartDataProvider, wifiSignalPercent());
+            dashboardUI->update(inverterData, inverterData, uiMedianPowerSampler, shellyResult, shellyResult, wallboxData, wallboxData, solarChartDataProvider, wifiSignalPercent());
             previousShellyResult = shellyResult;
             previousInverterData = inverterData;
             previousWallboxData = wallboxData;
@@ -567,7 +570,7 @@ void onLeaving(state_t oldState)
         break;
     case STATE_SPLASH:
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-        splashUI.updateText("");
+        splashUI->updateText("");
         xSemaphoreGive(lvgl_mutex);
         break;
     case STATE_WIFI_SETUP:
@@ -607,20 +610,20 @@ void updateState()
     break;
     case STATE_SPLASH:
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-        splashUI.update(softAP.getESPIdHex(), String(VERSION_NUMBER));
-        splashUI.updateText("Discovering dongles...");
+        splashUI->update(softAP.getESPIdHex(), String(VERSION_NUMBER));
+        splashUI->updateText("Discovering dongles...");
         xSemaphoreGive(lvgl_mutex);
 
         if (wifiDiscoveryResult.type != CONNECTION_TYPE_NONE)
         {
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-            splashUI.updateText("Connecting... " + wifiDiscoveryResult.ssid);
+            splashUI->updateText("Connecting... " + wifiDiscoveryResult.ssid);
             xSemaphoreGive(lvgl_mutex);
 
             if (dongleDiscovery.connectToDongle(wifiDiscoveryResult))
             {
                 xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-                splashUI.updateText("Loading data... ");
+                splashUI->updateText("Loading data... ");
                 xSemaphoreGive(lvgl_mutex);
 
                 for (int retry = 0; retry < 3; retry++)
@@ -640,7 +643,7 @@ void updateState()
                 else
                 {
                     xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-                    splashUI.updateText("Failed to load data :-(");
+                    splashUI->updateText("Failed to load data :-(");
                     xSemaphoreGive(lvgl_mutex);
                     delay(2000);
 
@@ -651,7 +654,7 @@ void updateState()
             else
             {
                 xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-                splashUI.updateText("Failed to connect :-(");
+                splashUI->updateText("Failed to connect :-(");
                 xSemaphoreGive(lvgl_mutex);
                 delay(2000);
 
@@ -664,9 +667,9 @@ void updateState()
         }
         break;
     case STATE_WIFI_SETUP:
-        if (wifiSetupUI.result.type != CONNECTION_TYPE_NONE)
+        if (wifiSetupUI->result.type != CONNECTION_TYPE_NONE)
         {
-            wifiDiscoveryResult = wifiSetupUI.result;
+            wifiDiscoveryResult = wifiSetupUI->result;
             moveToState(STATE_SPLASH);
         }
 #if DEMO
@@ -674,14 +677,15 @@ void updateState()
 #endif
         break;
     case STATE_DASHBOARD:
-        if(showSettings) {
+        if (showSettings)
+        {
             showSettings = false;
             moveToState(STATE_WIFI_SETUP);
         }
         else if ((millis() - previousInverterData.millis) > UI_REFRESH_INTERVAL)
         {
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-            dashboardUI.update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, uiMedianPowerSampler, shellyResult, previousShellyResult, wallboxData, previousWallboxData, solarChartDataProvider, wifiSignalPercent());
+            dashboardUI->update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, uiMedianPowerSampler, shellyResult, previousShellyResult, wallboxData, previousWallboxData, solarChartDataProvider, wifiSignalPercent());
             xSemaphoreGive(lvgl_mutex);
 
             previousShellyResult = shellyResult;
@@ -689,6 +693,8 @@ void updateState()
             previousWallboxData = wallboxData;
             previousInverterData.millis = millis(); // this ensures that if we dont have new data, we will use the old data
             backlightResolver.resolve(inverterData);
+
+            logMemory();
         }
         else
         {
@@ -722,8 +728,6 @@ void updateState()
                     break;
                 }
             }
-
-            logMemory();
         }
 
         break;
