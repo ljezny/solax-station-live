@@ -98,6 +98,7 @@ extern lv_obj_t *ui_Image2;
 extern lv_obj_t *ui_Container36;
 extern lv_obj_t *ui_wallboxPowerLabel;
 extern lv_obj_t *ui_wallboxPowerUnitLabel;
+extern lv_obj_t *ui_Checkbox1;
 extern lv_obj_t *ui_RightContainer;
 extern lv_obj_t *ui_TopRightContainer;
 extern lv_obj_t *ui_pvStatsContainer;
