@@ -518,6 +518,11 @@ void logMemory()
     xSemaphoreGive(lvgl_mutex);
 }
 
+bool showSettings = false;
+void onSettingsShow(lv_event_t *e) {
+    showSettings = true;
+}
+
 void onEntering(state_t newState)
 {
     log_d("Entering state %d", newState);
@@ -537,7 +542,7 @@ void onEntering(state_t newState)
         break;
     case STATE_DASHBOARD:
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-        dashboardUI.show();
+        dashboardUI.show(onSettingsShow);
         if (inverterData.status == DONGLE_STATUS_OK)
         {
             dashboardUI.update(inverterData, inverterData, uiMedianPowerSampler, shellyResult, shellyResult, wallboxData, wallboxData, solarChartDataProvider, wifiSignalPercent());
@@ -669,7 +674,11 @@ void updateState()
 #endif
         break;
     case STATE_DASHBOARD:
-        if ((millis() - previousInverterData.millis) > UI_REFRESH_INTERVAL)
+        if(showSettings) {
+            showSettings = false;
+            moveToState(STATE_WIFI_SETUP);
+        }
+        else if ((millis() - previousInverterData.millis) > UI_REFRESH_INTERVAL)
         {
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
             dashboardUI.update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, uiMedianPowerSampler, shellyResult, previousShellyResult, wallboxData, previousWallboxData, solarChartDataProvider, wifiSignalPercent());
@@ -724,5 +733,5 @@ void updateState()
 void loop()
 {
     updateState();
-    delay(500);
+    delay(50);
 }

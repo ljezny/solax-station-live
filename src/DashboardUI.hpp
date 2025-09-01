@@ -9,6 +9,8 @@
 #include "utils/UITextChangeAnimator.hpp"
 #include "utils/UIBackgroundAnimatior.hpp"
 #include "utils/MedianPowerSampler.hpp"
+
+
 static void draw_event_cb(lv_event_t *e)
 {
     lv_obj_t *obj = lv_event_get_target(e);
@@ -111,11 +113,12 @@ public:
         return lv_obj_get_state(ui_wallboxSmartCheckbox) & LV_STATE_CHECKED;
     }
 
-    void show()
+    void show(void (*onSettingsShow)(lv_event_t *))
     {
         lv_scr_load(ui_Dashboard);
 
         lv_obj_add_event_cb(ui_Chart1, draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
+        lv_obj_add_event_cb(ui_settingsButton, onSettingsShow, LV_EVENT_RELEASED, NULL);
 
         pvAnimator.setup(ui_LeftContainer, _ui_theme_color_pvColor);
         batteryAnimator.setup(ui_LeftContainer, _ui_theme_color_batteryColor);

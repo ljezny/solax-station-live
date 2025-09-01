@@ -36,6 +36,7 @@ LV_IMG_DECLARE( ui_img_960241876);   // assets/power-plant.png
 LV_IMG_DECLARE( ui_img_1061873486);   // assets/solar-inverter.png
 LV_IMG_DECLARE( ui_img_ev_png);   // assets/ev.png
 LV_IMG_DECLARE( ui_img_performance_png);   // assets/performance.png
+LV_IMG_DECLARE( ui_img_settings_png);   // assets/settings.png
 
 // FONTS
 LV_FONT_DECLARE( ui_font_OpenSansExtraSmall);

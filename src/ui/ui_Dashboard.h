@@ -135,6 +135,7 @@ extern lv_obj_t *ui_gridBuyTodayUnitLabel;
 extern lv_obj_t *ui_Image14;
 extern lv_obj_t *ui_RightBottomContainer;
 extern lv_obj_t *ui_Chart1;
+extern lv_obj_t *ui_settingsButton;
 // CUSTOM VARIABLES
 
 #ifdef __cplusplus
