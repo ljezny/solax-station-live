@@ -444,11 +444,11 @@ void resolveEcoVolterSmartCharge()
     smartEnabled = dashboardUI->isWallboxSmartChecked();
     xSemaphoreGive(lvgl_mutex);
 
-    if (ecoVolterAPI.isDiscovered())
+    if (ecoVolterAPI.isDiscovered() && wallboxData.evConnected)
     {
         if (smartEnabled)
         {
-            RequestedSmartControlState_t state = wallboxRuleResolver.resolveSmartControlState(wallboxData.phases * 230 * 6, wallboxData.phases * 230 * 1, 500, 200);
+            RequestedSmartControlState_t state = wallboxRuleResolver.resolveSmartControlState(wallboxData.phases * 230 * 6, wallboxData.phases * 230 * 1, wallboxData.phases * 230 * 3, wallboxData.phases * 230 * 1);
             if (state != SMART_CONTROL_UNKNOWN)
             {
                 switch (state)
