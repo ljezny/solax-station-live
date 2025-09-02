@@ -721,13 +721,13 @@ void updateState()
                 break;
             }
 
-            if (!ecoVolterAPI.isDiscovered()) // ecovolter has priority
-            {
-                if (loadSolaxWallboxTask())
-                {
-                    break;
-                }
-            }
+            // if (!ecoVolterAPI.isDiscovered()) // ecovolter has priority
+            // {
+            //     if (loadSolaxWallboxTask())
+            //     {
+            //         break;
+            //     }
+            // }
         }
 
         break;

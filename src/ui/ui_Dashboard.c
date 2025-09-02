@@ -882,7 +882,7 @@ lv_obj_set_style_pad_row(ui_wallboxContainer, 8, LV_PART_MAIN| LV_STATE_DEFAULT)
 lv_obj_set_style_pad_column(ui_wallboxContainer, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Image2 = lv_img_create(ui_wallboxContainer);
-lv_img_set_src(ui_Image2, &ui_img_ev_png);
+lv_img_set_src(ui_Image2, &ui_img_ecovolter_png);
 lv_obj_set_width( ui_Image2, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_Image2, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_Image2, LV_ALIGN_CENTER );
