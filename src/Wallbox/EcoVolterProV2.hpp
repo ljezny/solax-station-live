@@ -82,19 +82,19 @@ public:
 
                 result.updated = millis();
                 result.chargingEnergy = doc["chargedEnergy"].as<float>();
-                result.chargingPower = doc["actualPower"].as<int>() * 1000.0f;
-                result.chargingCurrent = doc["currentL1"].as<int>();
-                result.maxChargingCurrent = doc["adapterMaxCurrent"].as<int>();
+                result.chargingPower = doc["actualPower"].as<float>() * 1000.0f;
+                result.chargingCurrent = round(doc["currentL1"].as<float>());
+                result.maxChargingCurrent = round(doc["adapterMaxCurrent"].as<float>());
                 result.chargingControlEnabled = !doc["isBoostModeActive"].as<bool>();
                 result.evConnected = doc["isVehicleConnected"].as<bool>();
                 result.phases = doc["isThreePhaseModeActive"].as<bool>() ? 3 : 1;
-                result.voltageL1 = doc["voltageL1"].as<int>();
-                result.voltageL2 = doc["voltageL2"].as<int>();
-                result.voltageL3 = doc["voltageL3"].as<int>();
-                result.currentL1 = doc["currentL1"].as<int>();
-                result.currentL2 = doc["currentL2"].as<int>();
-                result.currentL3 = doc["currentL3"].as<int>();
-                result.temperature = doc["temperatures"]["internal"].as<int>();
+                result.voltageL1 = round(doc["voltageL1"].as<float>());
+                result.voltageL2 = round(doc["voltageL2"].as<float>());
+                result.voltageL3 = round(doc["voltageL3"].as<float>());
+                result.currentL1 = round(doc["currentL1"].as<float>());
+                result.currentL2 = round(doc["currentL2"].as<float>());
+                result.currentL3 = round(doc["currentL3"].as<float>());
+                result.temperature = round(doc["temperatures"]["internal"].as<float>());
                 log_d("EVConnected: %s", String(result.evConnected).c_str());
             }
             else
@@ -127,7 +127,7 @@ public:
             return;
         }
 
-        if (mdns_query_ptr("_http", "_tcp", 2000, 20, &results) != ESP_OK)
+        if (mdns_query_ptr("_http", "_tcp", 3000, 20, &results) != ESP_OK)
         {
             log_e("Failed to query MDNS");
             mdns_free();
