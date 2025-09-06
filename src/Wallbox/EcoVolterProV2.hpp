@@ -20,20 +20,18 @@ public:
 
     bool setTargetCurrent(int targetCurrent)
     {
-        HTTPClient http;
-
         bool result = false;
 
         String path = "/api/v1/charger/settings";
-        String url = "http://" + ecoVolterId + ".local" + path;
-       
+        String url = "http://" + ip.toString() + path;
+
         time_t timestamp = time(NULL);
 
         String body = "{\"timestamp\": " + String(timestamp) + "000" + ",\"targetCurrent\": " + String(targetCurrent) + ",\"isChargingEnable\": " + String(targetCurrent > 0) + "}";
-       
+
         if (http.begin(url))
         {
-            authorize(http, ecoVolterId, path, body, ecoVolterId, timestamp);
+            authorize(http, url, body, ecoVolterId, timestamp);
             int httpCode = http.PATCH(body);
             if (httpCode == HTTP_CODE_OK)
             {
@@ -57,21 +55,19 @@ public:
 
     WallboxResult_t getStatus()
     {
-
-        HTTPClient http;
         WallboxResult_t result;
         result.updated = 0;
 
         log_d("Reloading EcoVolterProV2 data");
 
         String path = "/api/v1/charger/status";
-        String url = "http://" + ecoVolterId + ".local" + path;
+        String url = "http://" + ip.toString() + path;
         log_d("Requesting: %s", url.c_str());
         time_t timestamp = time(NULL);
 
         if (http.begin(url))
         {
-            authorize(http, ecoVolterId, path, "", ecoVolterId, timestamp);
+            authorize(http, url, "", ecoVolterId, timestamp);
             int httpCode = http.GET();
             if (httpCode == HTTP_CODE_OK)
             {
@@ -102,7 +98,6 @@ public:
                 log_d("ERROR: %s", http.errorToString(httpCode));
                 log_d("Response: %s", http.getString());
             }
-
         }
         else
         {
@@ -139,36 +134,49 @@ public:
         mdns_result_t *r = results;
         while (r)
         {
-            String hostname = r->hostname;
-            
+            const char *rawHost = r->hostname;
+            if (!rawHost || !*rawHost)
+            {
+                log_w("mDNS result with null/empty hostname; skipping");
+                continue;
+            }
+            String hostname(rawHost);
+
             log_d("Found service: %s", hostname.c_str());
-            log_d("Found IP: %s", String(r->addr->addr.u_addr.ip4.addr).c_str());
-            log_d("Found instance: %s", String(r->instance_name).c_str());
-            
+
             IPAddress ipAddress = r->addr->addr.u_addr.ip4.addr;
-            if(hostname.startsWith("REVCS")) {
+            log_d("Found IP: %s", ipAddress.toString().c_str());
+            const char *rawInstance = r->instance_name;
+            if (!rawInstance || !*rawInstance)
+            {
+                log_w("mDNS result with null/empty instance name; skipping");
+                continue;
+            }
+            String instanceName(rawInstance);
+            log_d("Found instance: %s", instanceName.c_str());
+
+            if (hostname.startsWith("REVCS"))
+            {
                 log_d("Found REVCS device: %s", hostname.c_str());
                 hostname.toLowerCase();
                 ecoVolterId = hostname;
+                ip = ipAddress;
                 break;
             }
-            
+
             r = r->next;
         }
-        mdns_query_results_free(results);        
+        mdns_query_results_free(results);
         mdns_free();
     }
 
 private:
-
     String ecoVolterId;
-
-    void authorize(HTTPClient &http, String wallboxId, String path, String body, String apiKey, time_t timestamp)
+    IPAddress ip = IPAddress(0, 0, 0, 0);
+    HTTPClient http;
+    void authorize(HTTPClient &http, String url, String body, String apiKey, time_t timestamp)
     {
-        wallboxId.toLowerCase();
         apiKey.toLowerCase();
-
-        String url = "http://" + wallboxId + ".local" + path;
 
         String data = url + "\n" + String(timestamp) + "\n" + body;
         log_d("Data: %s", data.c_str());

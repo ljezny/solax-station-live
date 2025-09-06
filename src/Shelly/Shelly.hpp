@@ -203,7 +203,13 @@ public:
         log_d("SoftAP IP: %s, Subnet: %s", softAPIP.toString().c_str(), softAPSubnet.toString().c_str());
         while (r)
         {
-            String hostname = r->hostname;
+            const char *rawHost = r->hostname;
+            if (!rawHost || !*rawHost)
+            {
+                log_w("mDNS result with null/empty hostname; skipping");
+                continue;
+            }
+            String hostname(rawHost);
             log_d("Found service: %s", hostname.c_str());
 
             IPAddress ipAddress = r->addr->addr.u_addr.ip4.addr;
@@ -240,7 +246,7 @@ public:
             }
             r = r->next;
         }
-        mdns_query_results_free(results);        
+        mdns_query_results_free(results);
         mdns_free();
     }
 
