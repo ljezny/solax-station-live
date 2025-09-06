@@ -138,12 +138,25 @@ public:
             if (!rawHost || !*rawHost)
             {
                 log_w("mDNS result with null/empty hostname; skipping");
+                r = r->next;
                 continue;
             }
             String hostname(rawHost);
 
             log_d("Found service: %s", hostname.c_str());
-
+            // check null
+            if (r->addr == nullptr)
+            {
+                log_w("mDNS result with null address; skipping");
+                r = r->next;
+                continue;
+            }
+            if (r->addr->addr.type != ESP_IPADDR_TYPE_V4)
+            {
+                log_w("mDNS result with non-IPv4 address; skipping");
+                r = r->next;
+                continue;
+            }
             IPAddress ipAddress = r->addr->addr.u_addr.ip4.addr;
             log_d("Found IP: %s", ipAddress.toString().c_str());
             const char *rawInstance = r->instance_name;
@@ -179,13 +192,11 @@ private:
         apiKey.toLowerCase();
 
         String data = url + "\n" + String(timestamp) + "\n" + body;
-        log_d("Data: %s", data.c_str());
         uint8_t hash[SIZE_OF_SHA_256_HASH];
 
         // hmac sha256
         hmac_sha256(hash, apiKey, data);
         String hexHash = dataToHexString(hash, SIZE_OF_SHA_256_HASH);
-        log_d("HMAC: %s", hexHash.c_str());
 
         // add headers
         http.addHeader("Authorization", "HmacSHA256 " + hexHash);
@@ -194,9 +205,6 @@ private:
 
     void hmac_sha256(uint8_t *out, const String key, const String data)
     {
-        log_d("HMAC SHA256");
-        log_d("Key: %s", key.c_str());
-        log_d("Data: %s", data.c_str());
         uint8_t o_key_pad[SIZE_OF_SHA_256_CHUNK];
         uint8_t i_key_pad[SIZE_OF_SHA_256_CHUNK];
         uint8_t temp_hash[SIZE_OF_SHA_256_HASH];

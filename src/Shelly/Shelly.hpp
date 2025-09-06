@@ -207,10 +207,24 @@ public:
             if (!rawHost || !*rawHost)
             {
                 log_w("mDNS result with null/empty hostname; skipping");
+                r = r->next;
                 continue;
             }
             String hostname(rawHost);
             log_d("Found service: %s", hostname.c_str());
+            //check null
+            if (r->addr == nullptr)
+            {
+                log_w("mDNS result with null address; skipping");
+                r = r->next;
+                continue;
+            }
+            if (r->addr->addr.type != ESP_IPADDR_TYPE_V4)
+            {
+                log_w("mDNS result with non-IPv4 address; skipping");
+                r = r->next;
+                continue;
+            }
 
             IPAddress ipAddress = r->addr->addr.u_addr.ip4.addr;
             // check if IP is in the same subnet as softAP
@@ -248,6 +262,7 @@ public:
         }
         mdns_query_results_free(results);
         mdns_free();
+        log_d("Paired Shelly count: %d", getPairedCount());
     }
 
     ShellyResult_t getState()
