@@ -448,14 +448,14 @@ void resolveEcoVolterSmartCharge()
     {
         if (smartEnabled)
         {
-            RequestedSmartControlState_t state = wallboxRuleResolver.resolveSmartControlState(wallboxData.phases * 230 * 6, wallboxData.phases * 230 * 1, wallboxData.phases * 230 * 3, wallboxData.phases * 230 * 1);
+            RequestedSmartControlState_t state = wallboxRuleResolver.resolveSmartControlState(wallboxData.phases * 230 * 6, wallboxData.phases * 230 * 1, wallboxData.phases * 230 * 6, wallboxData.phases * 230 * 1);
             if (state != SMART_CONTROL_UNKNOWN)
             {
                 switch (state)
                 {
                 case SMART_CONTROL_FULL_ON:
                     log_d("Setting EcoVolter to FULL ON");
-                    ecoVolterAPI.setTargetCurrent(16);
+                    ecoVolterAPI.setTargetCurrent(6); //start at low
                     break;
                 case SMART_CONTROL_PARTIAL_ON:
                     log_d("Setting EcoVolter to PARTIAL ON");
