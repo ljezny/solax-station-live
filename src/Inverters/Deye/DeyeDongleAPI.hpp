@@ -32,7 +32,7 @@ private:
                 }
             }
         }
-
+        int powerMultiplier = 1;
         InverterData_t inverterData;
         log_d("Connecting to dongle...");
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
@@ -44,10 +44,6 @@ private:
 
             inverterData.sn = sn;
 
-            // pv input
-            // 672-673
-            // but we need only few
-            bool isV104 = false;
             if (channel.sendReadDataRequest(0, 8 - 0 + 1, sn))
             {
                 if (channel.readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
@@ -56,9 +52,9 @@ private:
                     inverterData.millis = millis();
                     uint16_t deviceType = channel.readUInt16(packetBuffer, 0);
                     log_d("Device type: %s", String(deviceType, HEX));
+                    powerMultiplier = (deviceType == 0x600 || deviceType == 0x601) ? 10 : 1;
                     uint16_t commProtoVer = channel.readUInt16(packetBuffer, 2);
                     log_d("Comm protocol version: %s", String(commProtoVer, HEX));
-                    isV104 = (commProtoVer >= 0x0104);
                     String inverterSN = channel.readString(packetBuffer, 3, 10);
                     log_d("Inverter SN: %s", inverterSN.c_str());
                     inverterData.sn = inverterSN;
@@ -85,10 +81,10 @@ private:
             {
                 if (channel.readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
                 {
-                    inverterData.pv1Power = isV104 ? channel.readUInt16(packetBuffer, 672 - 672) / 10 : channel.readUInt16(packetBuffer, 672 - 672);
-                    inverterData.pv2Power = isV104 ? channel.readUInt16(packetBuffer, 673 - 672) / 10 : channel.readUInt16(packetBuffer, 673 - 672);
-                    inverterData.pv3Power = isV104 ? channel.readUInt16(packetBuffer, 674 - 672) / 10 : channel.readUInt16(packetBuffer, 674 - 672);
-                    inverterData.pv4Power = isV104 ? channel.readUInt16(packetBuffer, 675 - 672) / 10 : channel.readUInt16(packetBuffer, 675 - 672);
+                    inverterData.pv1Power = powerMultiplier * channel.readUInt16(packetBuffer, 672 - 672);
+                    inverterData.pv2Power = powerMultiplier * channel.readUInt16(packetBuffer, 673 - 672);
+                    inverterData.pv3Power = powerMultiplier * channel.readUInt16(packetBuffer, 674 - 672);
+                    inverterData.pv4Power = powerMultiplier * channel.readUInt16(packetBuffer, 675 - 672);
                 }
                 else
                 {
@@ -114,7 +110,7 @@ private:
                     inverterData.batteryTemperature = (channel.readInt16(packetBuffer, 586 - 586) - 1000) / 10;
                     inverterData.soc = channel.readUInt16(packetBuffer, 588 - 586);
                     inverterData.batteryTemperature = (channel.readInt16(packetBuffer, 586 - 586) - 1000) / 10;
-                    inverterData.batteryPower = isV104 ? -1 * channel.readInt16(packetBuffer, 590 - 586) / 10 : -1 * channel.readInt16(packetBuffer, 590 - 586); // Battery power flow - negative for charging, positive for discharging
+                    inverterData.batteryPower =  -1 * powerMultiplier * channel.readInt16(packetBuffer, 590 - 586); // Battery power flow - negative for charging, positive for discharging
                 }
                 else
                 {
