@@ -11,11 +11,34 @@
 
 // http://asnplus.github.io/ev-local-api-docs/#/charger/chargerUpdateSettings
 
+typedef struct
+{
+    time_t updated;
+    int targetCurrent;
+    int maxCurrent;
+} EcoVolterSettings_t;
+
 class EcoVolterProAPIV2
 {
 public:
     EcoVolterProAPIV2()
     {
+    }
+    
+    WallboxResult_t getData() {
+        WallboxResult_t result = getStatus();
+        if(result.updated != 0) {
+            //settings
+            EcoVolterSettings_t settings = getSettings();
+            if(settings.targetCurrent != 0) {
+                result.targetChargingCurrent = settings.targetCurrent;
+            }
+            if(settings.maxCurrent != 0) {
+                result.maxChargingCurrent = settings.maxCurrent;
+            }
+        }
+        logWallboxResult(result);
+        return result;
     }
 
     bool setTargetCurrent(int targetCurrent)
@@ -53,60 +76,7 @@ public:
         return result;
     }
 
-    WallboxResult_t getStatus()
-    {
-        WallboxResult_t result;
-        result.updated = 0;
-
-        log_d("Reloading EcoVolterProV2 data");
-
-        String path = "/api/v1/charger/status";
-        String url = "http://" + ip.toString() + path;
-        log_d("Requesting: %s", url.c_str());
-        time_t timestamp = time(NULL);
-
-        if (http.begin(url))
-        {
-            authorize(http, url, "", ecoVolterId, timestamp);
-            int httpCode = http.GET();
-            if (httpCode == HTTP_CODE_OK)
-            {
-                String payload = http.getString();
-                log_d("Response: %s", payload.c_str());
-                DynamicJsonDocument doc(2048);
-                deserializeJson(doc, payload);
-
-                result.updated = millis();
-                result.chargingEnergy = doc["chargedEnergy"].as<float>();
-                result.chargingPower = doc["actualPower"].as<float>() * 1000.0f;
-                result.chargingCurrent = round(doc["currentL1"].as<float>());
-                result.maxChargingCurrent = round(doc["adapterMaxCurrent"].as<float>());
-                result.chargingControlEnabled = !doc["isBoostModeActive"].as<bool>();
-                result.evConnected = doc["isVehicleConnected"].as<bool>();
-                result.phases = doc["isThreePhaseModeActive"].as<bool>() ? 3 : 1;
-                result.voltageL1 = round(doc["voltageL1"].as<float>());
-                result.voltageL2 = round(doc["voltageL2"].as<float>());
-                result.voltageL3 = round(doc["voltageL3"].as<float>());
-                result.currentL1 = round(doc["currentL1"].as<float>());
-                result.currentL2 = round(doc["currentL2"].as<float>());
-                result.currentL3 = round(doc["currentL3"].as<float>());
-                result.temperature = round(doc["temperatures"]["internal"].as<float>());
-                log_d("EVConnected: %s", String(result.evConnected).c_str());
-            }
-            else
-            {
-                log_d("ERROR: %s", http.errorToString(httpCode));
-                log_d("Response: %s", http.getString());
-            }
-        }
-        else
-        {
-            log_d("Unable to connect.");
-            
-        }
-        http.end();
-        return result;
-    }
+    
     
     void resetDiscovery() {
         ecoVolterId = "";
@@ -250,5 +220,121 @@ private:
         sha_256_write(&sha_ctx, o_key_pad, SIZE_OF_SHA_256_CHUNK);
         sha_256_write(&sha_ctx, temp_hash, SIZE_OF_SHA_256_HASH);
         sha_256_close(&sha_ctx);
+    }
+
+    EcoVolterSettings_t getSettings()
+    {
+        EcoVolterSettings_t result;
+        result.updated = 0;
+
+        log_d("Loading EcoVolterProV2 settings");
+
+        String path = "/api/v1/charger/settings";
+        String url = "http://" + ip.toString() + path;
+        log_d("Requesting: %s", url.c_str());
+        time_t timestamp = time(NULL);
+
+        if (http.begin(url))
+        {
+            authorize(http, url, "", ecoVolterId, timestamp);
+            int httpCode = http.GET();
+            if (httpCode == HTTP_CODE_OK)
+            {
+                String payload = http.getString();
+                log_d("Response: %s", payload.c_str());
+                DynamicJsonDocument doc(1024);
+                deserializeJson(doc, payload);
+
+                result.updated = millis();
+                result.targetCurrent = doc["targetCurrent"].as<int>();
+                result.maxCurrent = doc["maxCurrent"].as<int>();
+            }
+            else
+            {
+                log_d("ERROR: %s", http.errorToString(httpCode).c_str());
+                log_d("Response: %s", http.getString().c_str());
+            }
+        }
+        else
+        {
+            log_d("Unable to connect.");
+        }
+        http.end();
+        return result;
+    }
+    
+    WallboxResult_t getStatus()
+    {
+        WallboxResult_t result;
+        result.updated = 0;
+
+        log_d("Reloading EcoVolterProV2 data");
+
+        String path = "/api/v1/charger/status";
+        String url = "http://" + ip.toString() + path;
+        log_d("Requesting: %s", url.c_str());
+        time_t timestamp = time(NULL);
+
+        if (http.begin(url))
+        {
+            authorize(http, url, "", ecoVolterId, timestamp);
+            int httpCode = http.GET();
+            if (httpCode == HTTP_CODE_OK)
+            {
+                String payload = http.getString();
+                log_d("Response: %s", payload.c_str());
+                DynamicJsonDocument doc(2048);
+                deserializeJson(doc, payload);
+
+                result.updated = millis();
+                result.chargingEnergy = doc["chargedEnergy"].as<float>();
+                result.chargingPower = doc["actualPower"].as<float>() * 1000.0f;
+                result.chargingCurrent = round(doc["currentL1"].as<float>());
+                result.maxChargingCurrent = round(doc["adapterMaxCurrent"].as<float>());
+                result.chargingControlEnabled = !doc["isBoostModeActive"].as<bool>();
+                result.evConnected = doc["isVehicleConnected"].as<bool>();
+                result.phases = doc["isThreePhaseModeActive"].as<bool>() ? 3 : 1;
+                result.voltageL1 = round(doc["voltageL1"].as<float>());
+                result.voltageL2 = round(doc["voltageL2"].as<float>());
+                result.voltageL3 = round(doc["voltageL3"].as<float>());
+                result.currentL1 = round(doc["currentL1"].as<float>());
+                result.currentL2 = round(doc["currentL2"].as<float>());
+                result.currentL3 = round(doc["currentL3"].as<float>());
+                result.temperature = round(doc["temperatures"]["internal"].as<float>());
+                log_d("EVConnected: %s", String(result.evConnected).c_str());
+            }
+            else
+            {
+                log_d("ERROR: %s", http.errorToString(httpCode));
+                log_d("Response: %s", http.getString());
+            }
+        }
+        else
+        {
+            log_d("Unable to connect.");
+            
+        }
+        http.end();
+        return result;
+    }
+
+    void logWallboxResult(WallboxResult_t &result)
+    {
+        log_d("Wallbox updated: %ld", result.updated);
+        log_d("  EV connected: %s", String(result.evConnected).c_str());
+        log_d("  Charging power: %d W", result.chargingPower);
+        log_d("  Charging current: %d A", result.chargingCurrent);
+        log_d("  Max charging current: %d A", result.maxChargingCurrent);
+        log_d("  Target charging current: %d A", result.targetChargingCurrent);
+        log_d("  Charging energy: %.2f kWh", result.chargingEnergy);
+        log_d("  Charging control enabled: %s", String(result.chargingControlEnabled).c_str());
+        log_d("  Phases: %d", result.phases);
+        log_d("  Voltage L1: %d V", result.voltageL1);
+        log_d("  Voltage L2: %d V", result.voltageL2);
+        log_d("  Voltage L3: %d V", result.voltageL3);
+        log_d("  Current L1: %d A", result.currentL1);
+        log_d("  Current L2: %d A", result.currentL2);
+        log_d("  Current L3: %d A", result.currentL3);
+        log_d("  Temperature: %d °C", result.temperature);
     }
 };
