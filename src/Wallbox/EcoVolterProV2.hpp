@@ -102,9 +102,15 @@ public:
         else
         {
             log_d("Unable to connect.");
+            
         }
         http.end();
         return result;
+    }
+    
+    void resetDiscovery() {
+        ecoVolterId = "";
+        ip = IPAddress(0, 0, 0, 0);
     }
 
     bool isDiscovered()

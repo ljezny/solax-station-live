@@ -225,7 +225,7 @@ void setupLVGL()
     splashUI = new SplashUI();
     dashboardUI = new DashboardUI(onSettingsShow);
     wifiSetupUI = new WiFiSetupUI(dongleDiscovery);
-    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 24 * 1024, NULL, 10, NULL, 0);
+    xTaskCreate(lvglTimerTask, "lvglTimerTask", 24 * 1024, NULL, 10, NULL);
 }
 
 void setup()
@@ -429,6 +429,9 @@ bool loadEcoVolterTask()
         {
             log_d("Loading EcoVolter data");
             wallboxData = ecoVolterAPI.getStatus();
+            if(wallboxData.updated == 0) {
+                ecoVolterAPI.resetDiscovery(); // reset discovery if we cannot load data
+            }
         }
         lastAttempt = millis();
         run = true;
@@ -455,7 +458,7 @@ void resolveEcoVolterSmartCharge()
                 {
                 case SMART_CONTROL_FULL_ON:
                     log_d("Setting EcoVolter to FULL ON");
-                    ecoVolterAPI.setTargetCurrent(6); //start at low
+                    ecoVolterAPI.setTargetCurrent(6); // start at low
                     break;
                 case SMART_CONTROL_PARTIAL_ON:
                     log_d("Setting EcoVolter to PARTIAL ON");
@@ -513,6 +516,13 @@ void syncTime()
 {
     // use ntp arduino
     configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+    struct tm timeinfo;
+    if (!getLocalTime(&timeinfo, 5000))
+    {
+        log_e("Failed to obtain time");
+        return;
+    }
+    log_d("Current time: %s", asctime(&timeinfo));
 }
 
 void logMemory()
@@ -553,8 +563,6 @@ void onEntering(state_t newState)
             previousInverterData = inverterData;
             previousWallboxData = wallboxData;
             previousInverterData.millis = 0;
-
-            syncTime();
         }
         xSemaphoreGive(lvgl_mutex);
         break;
@@ -625,6 +633,8 @@ void updateState()
                 xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
                 splashUI->updateText("Loading data... ");
                 xSemaphoreGive(lvgl_mutex);
+
+                syncTime();
 
                 for (int retry = 0; retry < 3; retry++)
                 {
