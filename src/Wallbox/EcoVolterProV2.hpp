@@ -160,8 +160,8 @@ public:
     }
 
 private:
-    String ecoVolterId = "REVCS01C00000021";
-    IPAddress ip = IPAddress(192,168,182,62);
+    String ecoVolterId;
+    IPAddress ip = IPAddress(0, 0, 0, 0);
     HTTPClient http;
     void authorize(HTTPClient &http, String url, String body, String apiKey, time_t timestamp)
     {
