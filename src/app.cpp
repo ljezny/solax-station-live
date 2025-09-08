@@ -428,7 +428,7 @@ bool loadEcoVolterTask()
         if (ecoVolterAPI.isDiscovered())
         {
             log_d("Loading EcoVolter data");
-            wallboxData = ecoVolterAPI.getStatus();
+            wallboxData = ecoVolterAPI.getData();
             if(wallboxData.updated == 0) {
                 ecoVolterAPI.resetDiscovery(); // reset discovery if we cannot load data
             }
