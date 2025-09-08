@@ -538,7 +538,7 @@ public:
 
 private:
     int const UI_TEXT_CHANGE_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS;
-    int const UI_BACKGROUND_ANIMATION_DURATION = 2000;
+    int const UI_BACKGROUND_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS / 3;
     UITextChangeAnimator loadPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
     UITextChangeAnimator feedInPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
     UITextChangeAnimator batteryPowerTextAnimator = UITextChangeAnimator(POWER, UI_TEXT_CHANGE_ANIMATION_DURATION);
@@ -607,13 +607,13 @@ private:
 
     void updateFlowAnimations(InverterData_t inverterData, ShellyResult_t shellyResult)
     {
-        int duration = UI_REFRESH_PERIOD_MS / 2;
+        int duration = UI_REFRESH_PERIOD_MS / 3;
         int offsetY = 15;
         int offsetX = 30;
 
         if ((inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power) > 0)
         {
-            pvAnimator.run(ui_pvContainer, ui_inverterContainer, duration, 0, 0, ((inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power) / 1000) + 1, -offsetX, -offsetY);
+            pvAnimator.run(ui_pvContainer, ui_inverterContainer, duration, UI_BACKGROUND_ANIMATION_DURATION + 0, 0, ((inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power) / 1000) + 1, -offsetX, -offsetY);
         }
         else
         {
@@ -624,11 +624,11 @@ private:
         {
             if (inverterData.batteryPower > 0)
             {
-                batteryAnimator.run(ui_inverterContainer, ui_batteryContainer, duration, duration, 1, (inverterData.batteryPower / 1000) + 1, offsetX, -offsetY);
+                batteryAnimator.run(ui_inverterContainer, ui_batteryContainer, duration,UI_BACKGROUND_ANIMATION_DURATION + duration, 1, (inverterData.batteryPower / 1000) + 1, offsetX, -offsetY);
             }
             else if (inverterData.batteryPower < 0)
             {
-                batteryAnimator.run(ui_batteryContainer, ui_inverterContainer, duration, 0, 0, (abs(inverterData.batteryPower) / 1000) + 1, offsetX, -offsetY);
+                batteryAnimator.run(ui_batteryContainer, ui_inverterContainer, duration, UI_BACKGROUND_ANIMATION_DURATION + 0, 0, (abs(inverterData.batteryPower) / 1000) + 1, offsetX, -offsetY);
             }
             else
             {
@@ -642,11 +642,11 @@ private:
 
         if (inverterData.feedInPower > 0)
         {
-            gridAnimator.run(ui_inverterContainer, ui_gridContainer, duration, duration, 1, (inverterData.feedInPower / 1000) + 1, offsetX, offsetY);
+            gridAnimator.run(ui_inverterContainer, ui_gridContainer, duration, UI_BACKGROUND_ANIMATION_DURATION + duration, 1, (inverterData.feedInPower / 1000) + 1, offsetX, offsetY);
         }
         else if (inverterData.feedInPower < 0)
         {
-            gridAnimator.run(ui_gridContainer, ui_inverterContainer, duration, 0, 0, (abs(inverterData.feedInPower) / 1000) + 1, offsetX, offsetY);
+            gridAnimator.run(ui_gridContainer, ui_inverterContainer, duration, UI_BACKGROUND_ANIMATION_DURATION + 0, 0, (abs(inverterData.feedInPower) / 1000) + 1, offsetX, offsetY);
         }
         else
         {
@@ -655,7 +655,7 @@ private:
 
         if (inverterData.loadPower > 0)
         {
-            loadAnimator.run(ui_inverterContainer, ui_loadContainer, duration, duration, 1, (inverterData.loadPower / 1000) + 1, -offsetX, offsetY);
+            loadAnimator.run(ui_inverterContainer, ui_loadContainer, duration, UI_BACKGROUND_ANIMATION_DURATION + duration, 1, (inverterData.loadPower / 1000) + 1, -offsetX, offsetY);
         }
         else
         {

@@ -308,7 +308,7 @@ bool loadInverterDataTask()
 #if DEMO
         inverterData = createRandomMockData();
         solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
-        dongleDiscovery.preferedInverterWifiDongleIndex = 0;
+        //dongleDiscovery.preferedInverterWifiDongleIndex = 0;
         return run;
 #endif
 
@@ -418,6 +418,7 @@ bool loadEcoVolterTask()
 {
     static long lastAttempt = 0;
     bool run = false;
+    static int failureCounter = 0;
     int period = ecoVolterAPI.isDiscovered() ? WALLBOX_STATUS_REFRESH_INTERVAL : WALLBOX_DISCOVERY_REFRESH_INTERVAL;
     if (lastAttempt == 0 || millis() - lastAttempt > period)
     {
@@ -428,9 +429,15 @@ bool loadEcoVolterTask()
         if (ecoVolterAPI.isDiscovered())
         {
             log_d("Loading EcoVolter data");
-            wallboxData = ecoVolterAPI.getStatus();
+            wallboxData = ecoVolterAPI.getData();
             if(wallboxData.updated == 0) {
-                ecoVolterAPI.resetDiscovery(); // reset discovery if we cannot load data
+                failureCounter++;
+                if(failureCounter >= 3) {
+                    failureCounter = 0;
+                    ecoVolterAPI.resetDiscovery(); // reset discovery if we cannot load data
+                }
+            } else {
+                failureCounter = 0;
             }
         }
         lastAttempt = millis();
