@@ -462,7 +462,7 @@ void resolveEcoVolterSmartCharge()
                     break;
                 case SMART_CONTROL_PARTIAL_ON:
                     log_d("Setting EcoVolter to PARTIAL ON");
-                    ecoVolterAPI.setTargetCurrent(max(6, (wallboxData.chargingCurrent + 1)));
+                    ecoVolterAPI.setTargetCurrent(max(6, (wallboxData.targetChargingCurrent + 1)));
                     break;
                 case SMART_CONTROL_KEEP_CURRENT_STATE:
                     log_d("Keeping EcoVolter current state");
@@ -470,7 +470,7 @@ void resolveEcoVolterSmartCharge()
                     break;
                 case SMART_CONTROL_PARTIAL_OFF:
                     log_d("Setting EcoVolter to PARTIAL OFF");
-                    ecoVolterAPI.setTargetCurrent(max(6, (wallboxData.chargingCurrent - 1)));
+                    ecoVolterAPI.setTargetCurrent(max(6, (wallboxData.targetChargingCurrent - 1)));
                     break;
                 case SMART_CONTROL_FULL_OFF:
                     log_d("Setting EcoVolter to FULL OFF");
