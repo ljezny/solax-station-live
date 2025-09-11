@@ -465,7 +465,11 @@ void resolveEcoVolterSmartCharge()
                 {
                 case SMART_CONTROL_FULL_ON:
                     log_d("Setting EcoVolter to FULL ON");
-                    ecoVolterAPI.setTargetCurrent(6); // start at low
+                    if(wallboxData.chargingCurrent == 0) {
+                        ecoVolterAPI.setTargetCurrent(6); //start at six
+                    } else {
+                        ecoVolterAPI.setTargetCurrent(max(6, (wallboxData.targetChargingCurrent + 1))); //increase when requested
+                    }
                     break;
                 case SMART_CONTROL_PARTIAL_ON:
                     log_d("Setting EcoVolter to PARTIAL ON");
