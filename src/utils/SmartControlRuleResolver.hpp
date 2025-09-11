@@ -69,19 +69,19 @@ public:
             return SMART_CONTROL_PARTIAL_OFF;
         }
 
-        if (soc >= 98)
+        if (soc >= 95)
         {
             log_d("Battery full, activating");
             return SMART_CONTROL_FULL_ON;
         }
 
-        if (soc >= 90 && batteryPower > enablePowerTreshold)
+        if (soc >= 85 && batteryPower > enablePowerTreshold)
         {
             log_d("Battery almost full and charging, activating");
             return SMART_CONTROL_FULL_ON;
         }
 
-        if (soc >= 96 && batteryPower > enablePartialPowerTreshold)
+        if (soc >= 90 && batteryPower > enablePartialPowerTreshold)
         {
             log_d("Battery almost full and charging, partial activating");
             return SMART_CONTROL_PARTIAL_ON;
