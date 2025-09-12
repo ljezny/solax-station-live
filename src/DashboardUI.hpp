@@ -453,7 +453,7 @@ public:
 
         wallboxPowerTextAnimator.animate(ui_wallboxPowerLabel, previousWallboxResult.chargingPower, wallboxResult.chargingPower);
         lv_label_set_text(ui_wallboxPowerUnitLabel, format(POWER, wallboxResult.chargingPower).unit.c_str());
-        //wallboxBackgroundAnimator.animate(ui_wallboxContainer, wallboxResult.chargingPower > 0 ? orange : containerBackground);
+        wallboxBackgroundAnimator.animate(ui_wallboxContainer, wallboxResult.chargingPower > 0 ? /*orange*/ containerBackground : containerBackground);
         if (wallboxResult.chargingControlEnabled)
         {
             // show charging control
