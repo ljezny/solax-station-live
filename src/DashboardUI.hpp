@@ -466,10 +466,30 @@ public:
         if (wallboxResult.evConnected)
         {
             lv_obj_clear_flag(ui_wallboxPowerContainer, LV_OBJ_FLAG_HIDDEN);
+            
+            //charged energy
+            if (wallboxResult.chargedEnergy > 0)
+            {
+                lv_label_set_text(ui_wallboxEnergyLabel, format(ENERGY, wallboxResult.chargedEnergy * 1000.0, 1).value.c_str());
+                lv_label_set_text(ui_wallboxEnergyUnitLabel, format(ENERGY, wallboxResult.chargedEnergy * 1000.0, 1).unit.c_str());
+                lv_obj_clear_flag(ui_wallboxEnergyContainer, LV_OBJ_FLAG_HIDDEN);
+            } else {
+                lv_obj_add_flag(ui_wallboxEnergyContainer, LV_OBJ_FLAG_HIDDEN);
+            }
         }
         else
         {
             lv_obj_add_flag(ui_wallboxPowerContainer, LV_OBJ_FLAG_HIDDEN);
+
+            //charged total energy
+            if (wallboxResult.totalChargedEnergy > 0)
+            {
+                lv_label_set_text(ui_wallboxEnergyLabel, format(ENERGY, wallboxResult.totalChargedEnergy * 1000.0, 1, true).value.c_str());
+                lv_label_set_text(ui_wallboxEnergyUnitLabel, format(ENERGY, wallboxResult.totalChargedEnergy * 1000.0, 1, true).unit.c_str());
+                lv_obj_clear_flag(ui_wallboxEnergyContainer, LV_OBJ_FLAG_HIDDEN);
+            } else {
+                lv_obj_add_flag(ui_wallboxEnergyContainer, LV_OBJ_FLAG_HIDDEN);
+            }
         }
 
         if (wallboxResult.updated > 0)
@@ -480,6 +500,35 @@ public:
         else
         {
             lv_obj_add_flag(ui_wallboxContainer, LV_OBJ_FLAG_HIDDEN);
+        }
+
+        //wallbox temperature
+        if (wallboxResult.temperature > 0)
+        {
+            lv_label_set_text_fmt(ui_wallboxTemperatureLabel, "%d", wallboxResult.temperature);
+            if (wallboxResult.temperature > 40)
+            {
+                lv_obj_set_style_bg_color(ui_wallboxTemperatureContainer, red, 0);
+                lv_obj_set_style_text_color(ui_wallboxTemperatureLabel, white, 0);
+                lv_obj_set_style_text_color(ui_wallboxTemperatureUnitLabel, white, 0);
+            }
+            else if (wallboxResult.temperature > 30)
+            {
+                lv_obj_set_style_bg_color(ui_wallboxTemperatureContainer, orange, 0);
+                lv_obj_set_style_text_color(ui_wallboxTemperatureLabel, black, 0);
+                lv_obj_set_style_text_color(ui_wallboxTemperatureUnitLabel, black, 0);
+            }
+            else
+            {
+                lv_obj_set_style_bg_color(ui_wallboxTemperatureContainer, green, 0);
+                lv_obj_set_style_text_color(ui_wallboxTemperatureLabel, white, 0);
+                lv_obj_set_style_text_color(ui_wallboxTemperatureUnitLabel, white, 0);
+            }
+            lv_obj_clear_flag(ui_wallboxTemperatureContainer, LV_OBJ_FLAG_HIDDEN);
+        }
+        else
+        {
+            lv_obj_add_flag(ui_wallboxTemperatureContainer, LV_OBJ_FLAG_HIDDEN);
         }
 
         updateChart(inverterData, solarChartDataProvider);

@@ -58,7 +58,7 @@ public:
                             result.evConnected = deviceState == 1 || deviceState == 2 || deviceState == 3;
 
                             result.chargingPower = doc["Data"][11].as<int>();
-                            result.chargingEnergy = doc["Data"][12].as<int>() / 10.f; // Convert Wh to kWh
+                            result.chargedEnergy = doc["Data"][12].as<int>() / 10.f; // Convert Wh to kWh
                             result.chargingCurrent = doc["Data"][5].as<int>() / 100;
                             result.chargingControlEnabled = false;
                             result.phases = 3;

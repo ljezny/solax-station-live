@@ -473,7 +473,11 @@ void resolveEcoVolterSmartCharge()
                     break;
                 case SMART_CONTROL_PARTIAL_ON:
                     log_d("Setting EcoVolter to PARTIAL ON");
-                    ecoVolterAPI.setTargetCurrent(max(6, (wallboxData.targetChargingCurrent + 1)));
+                    if(wallboxData.chargingCurrent > 0) { 
+                        ecoVolterAPI.setTargetCurrent(max(6, (wallboxData.targetChargingCurrent + 1)));
+                    } else {
+                        log_d("EcoVolter not charging, cannot set to PARTIAL ON");
+                    }
                     break;
                 case SMART_CONTROL_KEEP_CURRENT_STATE:
                     log_d("Keeping EcoVolter current state");

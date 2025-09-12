@@ -10,7 +10,8 @@ typedef struct WallboxResult
     int chargingCurrent = 0;
     int maxChargingCurrent = 0;
     int targetChargingCurrent = 0;
-    float chargingEnergy = 0;
+    float totalChargedEnergy = 0;
+    float chargedEnergy = 0;
     bool chargingControlEnabled = false;
     int phases = 3;
     int voltageL1 = 0;

@@ -18,6 +18,14 @@ typedef struct
     int maxCurrent;
 } EcoVolterSettings_t;
 
+typedef struct
+{
+    time_t updated;
+    float totalChargedEnergy = 0;
+    int totalChargingCount = 0;
+    int totalChargingTime = 0;
+} EcoVolterStats_t;
+
 class EcoVolterProAPIV2
 {
 public:
@@ -35,6 +43,12 @@ public:
             }
             if(settings.maxCurrent != 0) {
                 result.maxChargingCurrent = settings.maxCurrent;
+            }
+
+            //stats
+            EcoVolterStats_t stats = getStats();
+            if(stats.updated != 0) {
+                result.totalChargedEnergy = stats.totalChargedEnergy;
             }
         }
         logWallboxResult(result);
@@ -160,8 +174,8 @@ public:
     }
 
 private:
-    String ecoVolterId;
-    IPAddress ip = IPAddress(0, 0, 0, 0);
+    String ecoVolterId = "REVCS01C00000021";
+    IPAddress ip = IPAddress(192, 168, 182, 62);
     HTTPClient http;
     void authorize(HTTPClient &http, String url, String body, String apiKey, time_t timestamp)
     {
@@ -262,7 +276,49 @@ private:
         http.end();
         return result;
     }
-    
+
+    EcoVolterStats_t getStats()
+    {
+        EcoVolterStats_t result;
+        result.updated = 0;
+
+        log_d("Loading EcoVolterProV2 stats");
+
+        String path = "/api/v1/charger/diagnostic";
+        String url = "http://" + ip.toString() + path;
+        log_d("Requesting: %s", url.c_str());
+        time_t timestamp = time(NULL);
+
+        if (http.begin(url))
+        {
+            authorize(http, url, "", ecoVolterId, timestamp);
+            int httpCode = http.GET();
+            if (httpCode == HTTP_CODE_OK)
+            {
+                String payload = http.getString();
+                log_d("Response: %s", payload.c_str());
+                DynamicJsonDocument doc(1024);
+                deserializeJson(doc, payload);
+
+                result.updated = millis();
+                result.totalChargedEnergy = doc["totalChargedEnergy"].as<float>();
+                result.totalChargingCount = doc["totalChargingCount"].as<int>();
+                result.totalChargingTime = doc["totalChargingTime"].as<int>();
+            }
+            else
+            {
+                log_d("ERROR: %s", http.errorToString(httpCode).c_str());
+                log_d("Response: %s", http.getString().c_str());
+            }
+        }
+        else
+        {
+            log_d("Unable to connect.");
+        }
+        http.end();
+        return result;
+    }
+
     WallboxResult_t getStatus()
     {
         WallboxResult_t result;
@@ -287,7 +343,7 @@ private:
                 deserializeJson(doc, payload);
 
                 result.updated = millis();
-                result.chargingEnergy = doc["chargedEnergy"].as<float>();
+                result.chargedEnergy = doc["chargedEnergy"].as<float>();
                 result.chargingPower = doc["actualPower"].as<float>() * 1000.0f;
                 result.chargingCurrent = round(doc["currentL1"].as<float>());
                 result.maxChargingCurrent = round(doc["adapterMaxCurrent"].as<float>());
@@ -326,7 +382,8 @@ private:
         log_d("  Charging current: %d A", result.chargingCurrent);
         log_d("  Max charging current: %d A", result.maxChargingCurrent);
         log_d("  Target charging current: %d A", result.targetChargingCurrent);
-        log_d("  Charging energy: %.2f kWh", result.chargingEnergy);
+        log_d("  Charged energy: %.2f kWh", result.chargedEnergy);
+        log_d("  Total charged energy: %.2f kWh", result.totalChargedEnergy);
         log_d("  Charging control enabled: %s", String(result.chargingControlEnabled).c_str());
         log_d("  Phases: %d", result.phases);
         log_d("  Voltage L1: %d V", result.voltageL1);
