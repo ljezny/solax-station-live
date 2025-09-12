@@ -987,13 +987,15 @@ lv_label_set_text(ui_wallboxEnergyUnitLabel,"kWh");
 lv_obj_set_style_text_font(ui_wallboxEnergyUnitLabel, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_wallboxSmartCheckbox = lv_checkbox_create(ui_wallboxContainer);
-lv_checkbox_set_text(ui_wallboxSmartCheckbox,"Smart");
+lv_checkbox_set_text(ui_wallboxSmartCheckbox,"SMART");
 lv_obj_set_width( ui_wallboxSmartCheckbox, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_wallboxSmartCheckbox, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_x( ui_wallboxSmartCheckbox, 2 );
 lv_obj_set_y( ui_wallboxSmartCheckbox, 0 );
 lv_obj_set_align( ui_wallboxSmartCheckbox, LV_ALIGN_CENTER );
 lv_obj_add_flag( ui_wallboxSmartCheckbox, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
+lv_obj_set_style_text_letter_space(ui_wallboxSmartCheckbox, 2, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_line_space(ui_wallboxSmartCheckbox, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_wallboxSmartCheckbox, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_object_set_themeable_style_property(ui_wallboxSmartCheckbox, LV_PART_INDICATOR| LV_STATE_DEFAULT, LV_STYLE_BORDER_COLOR, _ui_theme_color_loadColor);
