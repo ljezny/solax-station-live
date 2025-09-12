@@ -13,7 +13,7 @@ SET(SOURCES ui_Splash.c
     ui_img_564643105.c
     ui_img_960241876.c
     ui_img_1061873486.c
-    ui_img_ecovolter2_png.c
+    ui_img_ecovolter3_png.c
     ui_img_performance_png.c
     ui_img_settings_png.c
     fonts/ui_font_OpenSansExtraSmall.c
