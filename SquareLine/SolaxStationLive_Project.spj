@@ -16245,7 +16245,7 @@
                           },
                           {
                             "nid": -883496526,
-                            "flags": 98,
+                            "flags": 50,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -16729,7 +16729,7 @@
                           },
                           {
                             "nid": 269793563,
-                            "flags": 98,
+                            "flags": 50,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -17025,7 +17025,7 @@
                       },
                       {
                         "nid": -516603019,
-                        "flags": 38,
+                        "flags": 54,
                         "strtype": "OBJECT/Size",
                         "intarray": [
                           1,
@@ -17125,8 +17125,7 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "CONTAINER",
-                    "tree_closed": true
+                    "saved_objtypeKey": "CONTAINER"
                   },
                   {
                     "guid": "GUID72909756-316769S6543214",
@@ -17509,7 +17508,7 @@
                           },
                           {
                             "nid": 477980473,
-                            "flags": 98,
+                            "flags": 50,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -17999,7 +17998,7 @@
                           },
                           {
                             "nid": 938789930,
-                            "flags": 98,
+                            "flags": 50,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -18294,7 +18293,7 @@
                       },
                       {
                         "nid": 1484849454,
-                        "flags": 38,
+                        "flags": 54,
                         "strtype": "OBJECT/Size",
                         "intarray": [
                           1,
@@ -18763,7 +18762,7 @@
                           },
                           {
                             "nid": -433842349,
-                            "flags": 98,
+                            "flags": 50,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -19247,7 +19246,7 @@
                           },
                           {
                             "nid": -87531425,
-                            "flags": 98,
+                            "flags": 50,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -19571,7 +19570,7 @@
                       },
                       {
                         "nid": -181398126,
-                        "flags": 38,
+                        "flags": 54,
                         "strtype": "OBJECT/Size",
                         "intarray": [
                           1,
@@ -19656,8 +19655,7 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "CONTAINER",
-                    "tree_closed": true
+                    "saved_objtypeKey": "CONTAINER"
                   },
                   {
                     "guid": "GUID2797220-320042S4763214",
@@ -20042,7 +20040,7 @@
                           },
                           {
                             "nid": 891502341,
-                            "flags": 98,
+                            "flags": 50,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -20531,7 +20529,7 @@
                           },
                           {
                             "nid": -945737000,
-                            "flags": 98,
+                            "flags": 50,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               100,
@@ -20834,7 +20832,7 @@
                         "Flow": 1,
                         "Wrap": false,
                         "Reversed": false,
-                        "MainAlignment": 2,
+                        "MainAlignment": 0,
                         "CrossAlignment": 1,
                         "TrackAlignment": 1,
                         "LayoutType": 1,
@@ -20860,7 +20858,7 @@
                       },
                       {
                         "nid": 1460660642,
-                        "flags": 38,
+                        "flags": 54,
                         "strtype": "OBJECT/Size",
                         "intarray": [
                           1,
@@ -20992,7 +20990,7 @@
                   },
                   {
                     "nid": -531177999,
-                    "flags": 98,
+                    "flags": 50,
                     "strtype": "OBJECT/Size",
                     "intarray": [
                       100,
@@ -21134,8 +21132,7 @@
                     "InheritedType": 11
                   }
                 ],
-                "saved_objtypeKey": "CONTAINER",
-                "tree_closed": true
+                "saved_objtypeKey": "CONTAINER"
               },
               {
                 "guid": "GUID81689248-285399S8033214",
@@ -21592,7 +21589,7 @@
                     "strtype": "OBJECT/Size",
                     "intarray": [
                       100,
-                      6
+                      1
                     ],
                     "InheritedType": 7
                   },
@@ -24967,7 +24964,7 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 833,
+    "backup_cnt": 834,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",
