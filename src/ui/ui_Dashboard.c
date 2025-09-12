@@ -65,7 +65,6 @@ ui_object_set_themeable_style_property(ui_pvContainer, LV_PART_MAIN| LV_STATE_DE
 ui_object_set_themeable_style_property(ui_pvContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BG_OPA, _ui_theme_alpha_pvColor);
 ui_object_set_themeable_style_property(ui_pvContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BORDER_COLOR, _ui_theme_color_pvColor);
 ui_object_set_themeable_style_property(ui_pvContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BORDER_OPA, _ui_theme_alpha_pvColor);
-lv_obj_set_style_border_width(ui_pvContainer, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_border_side(ui_pvContainer, LV_BORDER_SIDE_FULL, LV_PART_MAIN| LV_STATE_DEFAULT);
 ui_object_set_themeable_style_property(ui_pvContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_SHADOW_COLOR, _ui_theme_color_pvColor);
 ui_object_set_themeable_style_property(ui_pvContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_SHADOW_OPA, _ui_theme_alpha_pvColor);
@@ -265,7 +264,6 @@ ui_object_set_themeable_style_property(ui_batteryContainer, LV_PART_MAIN| LV_STA
 ui_object_set_themeable_style_property(ui_batteryContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BG_OPA, _ui_theme_alpha_batteryColor);
 ui_object_set_themeable_style_property(ui_batteryContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BORDER_COLOR, _ui_theme_color_batteryColor);
 ui_object_set_themeable_style_property(ui_batteryContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BORDER_OPA, _ui_theme_alpha_batteryColor);
-lv_obj_set_style_border_width(ui_batteryContainer, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_border_side(ui_batteryContainer, LV_BORDER_SIDE_FULL, LV_PART_MAIN| LV_STATE_DEFAULT);
 ui_object_set_themeable_style_property(ui_batteryContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_SHADOW_COLOR, _ui_theme_color_batteryColor);
 ui_object_set_themeable_style_property(ui_batteryContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_SHADOW_OPA, _ui_theme_alpha_batteryColor);
@@ -422,7 +420,6 @@ lv_obj_set_style_bg_color(ui_loadContainer, lv_color_hex(0xFFFFFF), LV_PART_MAIN
 lv_obj_set_style_bg_opa(ui_loadContainer, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 ui_object_set_themeable_style_property(ui_loadContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BORDER_COLOR, _ui_theme_color_loadColor);
 ui_object_set_themeable_style_property(ui_loadContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BORDER_OPA, _ui_theme_alpha_loadColor);
-lv_obj_set_style_border_width(ui_loadContainer, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_border_side(ui_loadContainer, LV_BORDER_SIDE_FULL, LV_PART_MAIN| LV_STATE_DEFAULT);
 ui_object_set_themeable_style_property(ui_loadContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_SHADOW_COLOR, _ui_theme_color_loadColor);
 ui_object_set_themeable_style_property(ui_loadContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_SHADOW_OPA, _ui_theme_alpha_loadColor);
@@ -532,7 +529,6 @@ lv_obj_set_style_bg_color(ui_gridContainer, lv_color_hex(0xFFFFFF), LV_PART_MAIN
 lv_obj_set_style_bg_opa(ui_gridContainer, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 ui_object_set_themeable_style_property(ui_gridContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BORDER_COLOR, _ui_theme_color_gridColor);
 ui_object_set_themeable_style_property(ui_gridContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BORDER_OPA, _ui_theme_alpha_gridColor);
-lv_obj_set_style_border_width(ui_gridContainer, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_border_side(ui_gridContainer, LV_BORDER_SIDE_FULL, LV_PART_MAIN| LV_STATE_DEFAULT);
 ui_object_set_themeable_style_property(ui_gridContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_SHADOW_COLOR, _ui_theme_color_gridColor);
 ui_object_set_themeable_style_property(ui_gridContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_SHADOW_OPA, _ui_theme_alpha_gridColor);
@@ -632,7 +628,6 @@ lv_obj_set_style_bg_color(ui_inverterContainer, lv_color_hex(0xFFFFFF), LV_PART_
 lv_obj_set_style_bg_opa(ui_inverterContainer, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 ui_object_set_themeable_style_property(ui_inverterContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BORDER_COLOR, _ui_theme_color_inverterColor);
 ui_object_set_themeable_style_property(ui_inverterContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BORDER_OPA, _ui_theme_alpha_inverterColor);
-lv_obj_set_style_border_width(ui_inverterContainer, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_border_side(ui_inverterContainer, LV_BORDER_SIDE_FULL, LV_PART_MAIN| LV_STATE_DEFAULT);
 ui_object_set_themeable_style_property(ui_inverterContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_SHADOW_COLOR, _ui_theme_color_inverterColor);
 ui_object_set_themeable_style_property(ui_inverterContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_SHADOW_OPA, _ui_theme_alpha_inverterColor);
@@ -872,10 +867,8 @@ lv_obj_clear_flag( ui_wallboxContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCRO
 lv_obj_set_style_radius(ui_wallboxContainer, 16, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_bg_color(ui_wallboxContainer, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_bg_opa(ui_wallboxContainer, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
-ui_object_set_themeable_style_property(ui_wallboxContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_OUTLINE_COLOR, _ui_theme_color_loadColor);
-ui_object_set_themeable_style_property(ui_wallboxContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_OUTLINE_OPA, _ui_theme_alpha_loadColor);
-lv_obj_set_style_outline_width(ui_wallboxContainer, 3, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_outline_pad(ui_wallboxContainer, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+ui_object_set_themeable_style_property(ui_wallboxContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BORDER_COLOR, _ui_theme_color_loadColor);
+ui_object_set_themeable_style_property(ui_wallboxContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BORDER_OPA, _ui_theme_alpha_loadColor);
 ui_object_set_themeable_style_property(ui_wallboxContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_SHADOW_COLOR, _ui_theme_color_loadColor);
 ui_object_set_themeable_style_property(ui_wallboxContainer, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_SHADOW_OPA, _ui_theme_alpha_loadColor);
 lv_obj_set_style_shadow_width(ui_wallboxContainer, 32, LV_PART_MAIN| LV_STATE_DEFAULT);

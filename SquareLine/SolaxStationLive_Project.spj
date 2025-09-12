@@ -3981,12 +3981,6 @@
                             "InheritedType": 7
                           },
                           {
-                            "nid": 2114009853,
-                            "strtype": "_style/Border width",
-                            "integer": 4,
-                            "InheritedType": 6
-                          },
-                          {
                             "nid": 1206560644,
                             "strtype": "_style/Border side",
                             "strval": "FULL",
@@ -6411,12 +6405,6 @@
                             "InheritedType": 7
                           },
                           {
-                            "nid": 163684367,
-                            "strtype": "_style/Border width",
-                            "integer": 4,
-                            "InheritedType": 6
-                          },
-                          {
                             "nid": 2084343570,
                             "strtype": "_style/Border side",
                             "strval": "FULL",
@@ -8172,12 +8160,6 @@
                             "InheritedType": 7
                           },
                           {
-                            "nid": 137401659,
-                            "strtype": "_style/Border width",
-                            "integer": 4,
-                            "InheritedType": 6
-                          },
-                          {
                             "nid": -639341573,
                             "strtype": "_style/Border side",
                             "strval": "FULL",
@@ -9149,12 +9131,6 @@
                               255
                             ],
                             "InheritedType": 7
-                          },
-                          {
-                            "nid": -1864079509,
-                            "strtype": "_style/Border width",
-                            "integer": 4,
-                            "InheritedType": 6
                           },
                           {
                             "nid": 137653220,
@@ -13487,12 +13463,6 @@
                             "InheritedType": 7
                           },
                           {
-                            "nid": 2131316193,
-                            "strtype": "_style/Border width",
-                            "integer": 4,
-                            "InheritedType": 6
-                          },
-                          {
                             "nid": -1294674421,
                             "strtype": "_style/Border side",
                             "strval": "FULL",
@@ -15209,8 +15179,7 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "CONTAINER",
-                    "tree_closed": true
+                    "saved_objtypeKey": "CONTAINER"
                   },
                   {
                     "guid": "GUID73121592-76290S5314244",
@@ -15577,8 +15546,8 @@
                             "InheritedType": 7
                           },
                           {
-                            "nid": 10810,
-                            "strtype": "_style/Outline_Color",
+                            "nid": 10710,
+                            "strtype": "_style/Border_Color",
                             "strval": "loadColor",
                             "integer": 1646890208,
                             "intarray": [
@@ -15586,15 +15555,6 @@
                               173,
                               54,
                               255
-                            ],
-                            "InheritedType": 7
-                          },
-                          {
-                            "nid": 10820,
-                            "strtype": "_style/Outline_params",
-                            "intarray": [
-                              3,
-                              0
                             ],
                             "InheritedType": 7
                           },
@@ -24964,7 +24924,7 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 838,
+    "backup_cnt": 839,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",
