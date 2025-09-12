@@ -572,11 +572,11 @@ public:
 
         lv_obj_set_style_bg_color(ui_Dashboard, isDarkMode ? black : white, 0);
         lv_obj_set_style_bg_color(ui_LeftContainer, containerBackground, 0);
-        lv_obj_set_style_bg_opa(ui_LeftContainer, isDarkMode ? LV_OPA_80 : LV_OPA_COVER, 0);
+        lv_obj_set_style_bg_opa(ui_LeftContainer, isDarkMode ? LV_OPA_80 : LV_OPA_80, 0);
         lv_obj_set_style_bg_color(ui_TopRightContainer, containerBackground, 0);
-        lv_obj_set_style_bg_opa(ui_TopRightContainer, isDarkMode ? LV_OPA_80 : LV_OPA_COVER, 0);
+        lv_obj_set_style_bg_opa(ui_TopRightContainer, isDarkMode ? LV_OPA_80 : LV_OPA_80, 0);
         lv_obj_set_style_bg_color(ui_RightBottomContainer, containerBackground, 0);
-        lv_obj_set_style_bg_opa(ui_RightBottomContainer, isDarkMode ? LV_OPA_80 : LV_OPA_COVER, 0);
+        lv_obj_set_style_bg_opa(ui_RightBottomContainer, isDarkMode ? LV_OPA_80 : LV_OPA_80, 0);
         lv_obj_set_style_bg_color(ui_inverterContainer, containerBackground, 0);
         lv_obj_set_style_outline_color(ui_inverterContainer, containerBackground, 0);
         lv_obj_set_style_outline_opa(ui_inverterContainer, LV_OPA_80, 0);
