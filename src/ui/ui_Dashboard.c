@@ -39,6 +39,7 @@ lv_obj_set_flex_grow( ui_LeftContainer, 1);
 lv_obj_set_x( ui_LeftContainer, 4 );
 lv_obj_set_y( ui_LeftContainer, -20 );
 lv_obj_set_align( ui_LeftContainer, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_LeftContainer, LV_OBJ_FLAG_OVERFLOW_VISIBLE );   /// Flags
 lv_obj_clear_flag( ui_LeftContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 lv_obj_set_style_radius(ui_LeftContainer, 16, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_bg_color(ui_LeftContainer, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
@@ -859,8 +860,8 @@ ui_wallboxContainer = lv_obj_create(ui_LeftContainer);
 lv_obj_remove_style_all(ui_wallboxContainer);
 lv_obj_set_width( ui_wallboxContainer, lv_pct(34));
 lv_obj_set_height( ui_wallboxContainer, LV_SIZE_CONTENT);   /// 28
-lv_obj_set_x( ui_wallboxContainer, 0 );
-lv_obj_set_y( ui_wallboxContainer, lv_pct(1) );
+lv_obj_set_x( ui_wallboxContainer, -1 );
+lv_obj_set_y( ui_wallboxContainer, lv_pct(2) );
 lv_obj_set_align( ui_wallboxContainer, LV_ALIGN_BOTTOM_MID );
 lv_obj_set_flex_flow(ui_wallboxContainer,LV_FLEX_FLOW_COLUMN);
 lv_obj_set_flex_align(ui_wallboxContainer, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -877,17 +878,19 @@ lv_obj_set_style_shadow_color(ui_wallboxContainer, lv_color_hex(0xFFAA00), LV_PA
 lv_obj_set_style_shadow_opa(ui_wallboxContainer, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_shadow_width(ui_wallboxContainer, 32, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_shadow_spread(ui_wallboxContainer, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_left(ui_wallboxContainer, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_right(ui_wallboxContainer, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_top(ui_wallboxContainer, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_left(ui_wallboxContainer, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_right(ui_wallboxContainer, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_top(ui_wallboxContainer, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_bottom(ui_wallboxContainer, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_row(ui_wallboxContainer, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_row(ui_wallboxContainer, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_wallboxContainer, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Image2 = lv_img_create(ui_wallboxContainer);
-lv_img_set_src(ui_Image2, &ui_img_ecovolter_png);
+lv_img_set_src(ui_Image2, &ui_img_ecovolter2_png);
 lv_obj_set_width( ui_Image2, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_Image2, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_x( ui_Image2, -43 );
+lv_obj_set_y( ui_Image2, 36 );
 lv_obj_add_flag( ui_Image2, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
 lv_obj_clear_flag( ui_Image2, LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
@@ -895,8 +898,8 @@ ui_wallboxTemperatureContainer = lv_obj_create(ui_wallboxContainer);
 lv_obj_remove_style_all(ui_wallboxTemperatureContainer);
 lv_obj_set_width( ui_wallboxTemperatureContainer, LV_SIZE_CONTENT);  /// 100
 lv_obj_set_height( ui_wallboxTemperatureContainer, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( ui_wallboxTemperatureContainer, 12 );
-lv_obj_set_y( ui_wallboxTemperatureContainer, -24 );
+lv_obj_set_x( ui_wallboxTemperatureContainer, 8 );
+lv_obj_set_y( ui_wallboxTemperatureContainer, -8 );
 lv_obj_set_align( ui_wallboxTemperatureContainer, LV_ALIGN_TOP_RIGHT );
 lv_obj_set_flex_flow(ui_wallboxTemperatureContainer,LV_FLEX_FLOW_ROW);
 lv_obj_set_flex_align(ui_wallboxTemperatureContainer, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
@@ -976,7 +979,7 @@ ui_wallboxPowerUnitLabel = lv_label_create(ui_wallboxPowerContainer);
 lv_obj_set_width( ui_wallboxPowerUnitLabel, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_wallboxPowerUnitLabel, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_wallboxPowerUnitLabel, LV_ALIGN_CENTER );
-lv_label_set_text(ui_wallboxPowerUnitLabel,"W");
+lv_label_set_text(ui_wallboxPowerUnitLabel,"W\n");
 lv_obj_set_style_text_font(ui_wallboxPowerUnitLabel, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_wallboxSmartCheckbox = lv_checkbox_create(ui_wallboxContainer);

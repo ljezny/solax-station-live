@@ -13596,8 +13596,8 @@
                         "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
-                          0,
-                          0
+                          -43,
+                          36
                         ],
                         "InheritedType": 7
                       },
@@ -13690,7 +13690,7 @@
                       {
                         "nid": 1020,
                         "strtype": "IMAGE/Asset",
-                        "strval": "assets/ecovolter.png",
+                        "strval": "assets/ecovolter2.png",
                         "InheritedType": 5
                       },
                       {
@@ -14089,8 +14089,8 @@
                         "flags": 17,
                         "strtype": "OBJECT/Position",
                         "intarray": [
-                          0,
-                          0
+                          8,
+                          -8
                         ],
                         "InheritedType": 7
                       },
@@ -14107,7 +14107,7 @@
                       {
                         "nid": 1667494556,
                         "strtype": "OBJECT/Align",
-                        "strval": "BOTTOM_RIGHT",
+                        "strval": "TOP_RIGHT",
                         "InheritedType": 3
                       },
                       {
@@ -14987,7 +14987,6 @@
                           },
                           {
                             "nid": -1095495111,
-                            "flags": 1048576,
                             "strtype": "LABEL/Label",
                             "InheritedType": 1
                           },
@@ -15000,7 +14999,7 @@
                           {
                             "nid": 2057553768,
                             "strtype": "LABEL/Text",
-                            "strval": "W",
+                            "strval": "W\\n",
                             "InheritedType": 10
                           },
                           {
@@ -15413,7 +15412,7 @@
                     "Wrap": false,
                     "Reversed": false,
                     "MainAlignment": 1,
-                    "CrossAlignment": 0,
+                    "CrossAlignment": 1,
                     "TrackAlignment": 1,
                     "LayoutType": 1,
                     "nid": 30,
@@ -15431,8 +15430,8 @@
                     "flags": 33,
                     "strtype": "OBJECT/Position",
                     "intarray": [
-                      0,
-                      3
+                      -1,
+                      2
                     ],
                     "InheritedType": 7
                   },
@@ -15591,7 +15590,7 @@
                             "nid": 11120,
                             "strtype": "_style/Padding_RowCol",
                             "intarray": [
-                              8,
+                              4,
                               0
                             ],
                             "InheritedType": 7
@@ -24923,7 +24922,7 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 805,
+    "backup_cnt": 815,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",
