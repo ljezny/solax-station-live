@@ -978,7 +978,7 @@
                                   {
                                     "nid": -1331255842,
                                     "strtype": "_style/Text_Font",
-                                    "strval": "OpenSansLarge",
+                                    "strval": "OpenSansLargeBold",
                                     "InheritedType": 3
                                   }
                                 ],
@@ -4205,7 +4205,7 @@
                                   {
                                     "nid": -523234032,
                                     "strtype": "_style/Text_Font",
-                                    "strval": "OpenSansLarge",
+                                    "strval": "OpenSansLargeBold",
                                     "InheritedType": 3
                                   }
                                 ],
@@ -4508,8 +4508,7 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "CONTAINER",
-                    "tree_closed": true
+                    "saved_objtypeKey": "CONTAINER"
                   },
                   {
                     "guid": "GUID58981421-119135S7764217",
@@ -7710,7 +7709,7 @@
                                   {
                                     "nid": 1135793372,
                                     "strtype": "_style/Text_Font",
-                                    "strval": "OpenSansLarge",
+                                    "strval": "OpenSansLargeBold",
                                     "InheritedType": 3
                                   }
                                 ],
@@ -8239,8 +8238,7 @@
                     "InheritedType": 11
                   }
                 ],
-                "saved_objtypeKey": "CONTAINER",
-                "tree_closed": true
+                "saved_objtypeKey": "CONTAINER"
               },
               {
                 "guid": "GUID51250966-303937S9023214",
@@ -8690,7 +8688,7 @@
                                   {
                                     "nid": 1295857027,
                                     "strtype": "_style/Text_Font",
-                                    "strval": "OpenSansLarge",
+                                    "strval": "OpenSansLargeBold",
                                     "InheritedType": 3
                                   }
                                 ],
@@ -10736,7 +10734,7 @@
                                   {
                                     "nid": 129752346,
                                     "strtype": "_style/Text_Font",
-                                    "strval": "OpenSansLarge",
+                                    "strval": "OpenSansLargeBold",
                                     "InheritedType": 3
                                   }
                                 ],
@@ -14861,7 +14859,7 @@
                                   {
                                     "nid": 1817040304,
                                     "strtype": "_style/Text_Font",
-                                    "strval": "OpenSansLarge",
+                                    "strval": "OpenSansLargeBold",
                                     "InheritedType": 3
                                   }
                                 ],
