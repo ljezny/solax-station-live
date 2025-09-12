@@ -15789,7 +15789,7 @@
                       {
                         "nid": -1457213810,
                         "strtype": "_style/Bg_Radius",
-                        "integer": 16,
+                        "integer": 24,
                         "InheritedType": 6
                       },
                       {
@@ -21069,7 +21069,7 @@
                           {
                             "nid": -1073708557,
                             "strtype": "_style/Bg_Radius",
-                            "integer": 16,
+                            "integer": 24,
                             "InheritedType": 6
                           },
                           {
@@ -21669,7 +21669,7 @@
                           {
                             "nid": -458010741,
                             "strtype": "_style/Bg_Radius",
-                            "integer": 16,
+                            "integer": 24,
                             "InheritedType": 6
                           },
                           {
@@ -24964,7 +24964,7 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 834,
+    "backup_cnt": 835,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",
