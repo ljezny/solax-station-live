@@ -16019,7 +16019,7 @@
                                       {
                                         "nid": -149994788,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansLarge",
+                                        "strval": "OpenSansLargeBold",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -16503,7 +16503,7 @@
                                       {
                                         "nid": -376642031,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansLarge",
+                                        "strval": "OpenSansLargeBold",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -17284,7 +17284,7 @@
                                       {
                                         "nid": 1284354731,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansLarge",
+                                        "strval": "OpenSansLargeBold",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -17761,7 +17761,7 @@
                                       {
                                         "nid": 841065576,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansLarge",
+                                        "strval": "OpenSansLargeBold",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -18537,7 +18537,7 @@
                                       {
                                         "nid": 1430609438,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansLarge",
+                                        "strval": "OpenSansLargeBold",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -19020,7 +19020,7 @@
                                       {
                                         "nid": -1937223236,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansLarge",
+                                        "strval": "OpenSansLargeBold",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -19814,7 +19814,7 @@
                                       {
                                         "nid": 926025815,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansLarge",
+                                        "strval": "OpenSansLargeBold",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -20303,7 +20303,7 @@
                                       {
                                         "nid": 585400234,
                                         "strtype": "_style/Text_Font",
-                                        "strval": "OpenSansLarge",
+                                        "strval": "OpenSansLargeBold",
                                         "InheritedType": 3
                                       }
                                     ],
@@ -24964,7 +24964,7 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 835,
+    "backup_cnt": 838,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",
