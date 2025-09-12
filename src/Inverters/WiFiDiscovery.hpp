@@ -64,6 +64,7 @@ public:
             }
             discoveries[j].inverterIP = dongleInfo.dongleIp;
             discoveries[j].sn = dongleInfo.sn;
+            
             if (discoveries[j].sn.isEmpty() && discoveries[j].type != CONNECTION_TYPE_NONE)
             {
                 discoveries[j].sn = parseDongleSN(ssid);
@@ -309,16 +310,29 @@ private:
     String parseDongleSN(String ssid)
     {
         String sn = ssid;
-        sn.replace("Wifi_", "");
-        sn.replace("Solar-WiFi", "");
-        sn.replace("AP_", "");
-        sn.replace("venus-", "");
-
+        if(ssid.startsWith("Wifi_")) {
+            sn.replace("Wifi_", ""); //wallbox dongle, keep SQ
+            return sn;
+        } else if (ssid.startsWith("Solar-WiFi-")) {
+            sn.replace("Solar-WiFi-", ""); //Solar-WiFi dongle, keep the rest
+            return sn;
+        } else if (ssid.startsWith("AP_")) {
+            sn.replace("AP_", ""); //AP dongle, keep the rest
+            return sn;
+        } else if (ssid.startsWith("venus-")) {
+            sn.replace("venus-", ""); //venus dongle, keep the rest
+            return sn;
+        }
+        
         for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
         {
-            sn.replace(supportedModels[i].prefix, "");
+            if(sn.startsWith(supportedModels[i].prefix)) {
+                sn.replace(supportedModels[i].prefix, "");
+                return sn;  
+            }
+            
         }
-        return sn;
+        return ""; //unknown dongle, no SN
     }
 
     int wifiSignalPercent(int rssi)
