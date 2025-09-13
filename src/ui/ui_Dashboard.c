@@ -1114,7 +1114,7 @@ lv_obj_set_style_pad_top(ui_batteryStatsContainer, 12, LV_PART_MAIN| LV_STATE_DE
 lv_obj_set_style_pad_bottom(ui_batteryStatsContainer, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Image12 = lv_img_create(ui_batteryStatsContainer);
-lv_img_set_src(ui_Image12, &ui_img_performance_png);
+lv_img_set_src(ui_Image12, &ui_img_1279321064);
 lv_obj_set_width( ui_Image12, LV_SIZE_CONTENT);  /// 48
 lv_obj_set_height( ui_Image12, LV_SIZE_CONTENT);   /// 48
 lv_obj_set_x( ui_Image12, -141 );

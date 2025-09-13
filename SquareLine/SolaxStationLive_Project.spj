@@ -16580,7 +16580,7 @@
                               {
                                 "nid": -2090400239,
                                 "strtype": "IMAGE/Asset",
-                                "strval": "assets/performance.png",
+                                "strval": "assets/eco-battery.png",
                                 "InheritedType": 5
                               },
                               {
@@ -25179,7 +25179,7 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 853,
+    "backup_cnt": 855,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",
