@@ -242,33 +242,33 @@ public:
             lv_obj_clear_flag(ui_pvStringsContainer1, LV_OBJ_FLAG_HIDDEN);
         }
 
-        lv_label_set_text_fmt(ui_inverterTemperatureLabel, "%d", inverterData.inverterTemperature);
+        lv_label_set_text_fmt(ui_inverterTemperatureLabel, "%d°C", inverterData.inverterTemperature);
         if (inverterData.inverterTemperature > 50)
         {
-            lv_obj_set_style_bg_color(ui_inverterTemperatureContainer, red, 0);
+            lv_obj_set_style_bg_color(ui_inverterTemperatureLabel, red, 0);
+            lv_obj_set_style_shadow_color(ui_inverterTemperatureLabel, red, 0);
             lv_obj_set_style_text_color(ui_inverterTemperatureLabel, white, 0);
-            lv_obj_set_style_text_color(ui_inverterTemperatureUnitLabel, white, 0);
         }
         else if (inverterData.inverterTemperature > 40)
         {
-            lv_obj_set_style_bg_color(ui_inverterTemperatureContainer, orange, 0);
+            lv_obj_set_style_bg_color(ui_inverterTemperatureLabel, orange, 0);
+            lv_obj_set_style_shadow_color(ui_inverterTemperatureLabel, orange, 0);
             lv_obj_set_style_text_color(ui_inverterTemperatureLabel, black, 0);
-            lv_obj_set_style_text_color(ui_inverterTemperatureUnitLabel, black, 0);
         }
         else
         {
-            lv_obj_set_style_bg_color(ui_inverterTemperatureContainer, green, 0);
+            lv_obj_set_style_bg_color(ui_inverterTemperatureLabel, green, 0);
+            lv_obj_set_style_shadow_color(ui_inverterTemperatureLabel, green, 0);
             lv_obj_set_style_text_color(ui_inverterTemperatureLabel, white, 0);
-            lv_obj_set_style_text_color(ui_inverterTemperatureUnitLabel, white, 0);
         }
 
         if (inverterData.inverterTemperature == 0)
         {
-            lv_obj_add_flag(ui_inverterTemperatureContainer, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_inverterTemperatureLabel, LV_OBJ_FLAG_HIDDEN);
         }
         else
         {
-            lv_obj_clear_flag(ui_inverterTemperatureContainer, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_inverterTemperatureLabel, LV_OBJ_FLAG_HIDDEN);
         }
 
         inverterPowerTextAnimator.animate(ui_inverterPowerLabel, previousInverterData.inverterPower, inverterData.inverterPower);
@@ -334,25 +334,25 @@ public:
         }
 
         lv_label_set_text(ui_batteryPowerUnitLabel, format(POWER, abs(inverterData.batteryPower)).unit.c_str());
-        lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d", inverterData.batteryTemperature);
+        lv_label_set_text_fmt(ui_batteryTemperatureLabel, "%d°C", inverterData.batteryTemperature);
 
         if (inverterData.batteryTemperature > 40)
         {
-            lv_obj_set_style_bg_color(ui_batteryTemperatureContainer, red, 0);
+            lv_obj_set_style_bg_color(ui_batteryTemperatureLabel, red, 0);
+            lv_obj_set_style_shadow_color(ui_batteryTemperatureLabel, red, 0);
             lv_obj_set_style_text_color(ui_batteryTemperatureLabel, white, 0);
-            lv_obj_set_style_text_color(ui_batteryTemperatureUnitLabel, white, 0);
         }
         else if (inverterData.batteryTemperature > 30)
         {
-            lv_obj_set_style_bg_color(ui_batteryTemperatureContainer, orange, 0);
+            lv_obj_set_style_bg_color(ui_batteryTemperatureLabel, orange, 0);
+            lv_obj_set_style_shadow_color(ui_batteryTemperatureLabel, orange, 0);
             lv_obj_set_style_text_color(ui_batteryTemperatureLabel, black, 0);
-            lv_obj_set_style_text_color(ui_batteryTemperatureUnitLabel, black, 0);
         }
         else
         {
-            lv_obj_set_style_bg_color(ui_batteryTemperatureContainer, green, 0);
+            lv_obj_set_style_bg_color(ui_batteryTemperatureLabel, green, 0);
+            lv_obj_set_style_shadow_color(ui_batteryTemperatureLabel, green, 0);
             lv_obj_set_style_text_color(ui_batteryTemperatureLabel, white, 0);
-            lv_obj_set_style_text_color(ui_batteryTemperatureUnitLabel, white, 0);
         }
 
         selfUsePercentTextAnimator.animate(ui_selfUsePercentLabel, getSelfUsePowerPercent(previousInverterData), getSelfUsePowerPercent(inverterData));
@@ -505,30 +505,30 @@ public:
         //wallbox temperature
         if (wallboxResult.temperature > 0)
         {
-            lv_label_set_text_fmt(ui_wallboxTemperatureLabel, "%d", wallboxResult.temperature);
+            lv_label_set_text_fmt(ui_wallboxTemperatureLabel, "%d°C", wallboxResult.temperature);
             if (wallboxResult.temperature > 40)
             {
-                lv_obj_set_style_bg_color(ui_wallboxTemperatureContainer, red, 0);
+                lv_obj_set_style_bg_color(ui_wallboxTemperatureLabel, red, 0);
+                lv_obj_set_style_shadow_color(ui_wallboxTemperatureLabel, red, 0);
                 lv_obj_set_style_text_color(ui_wallboxTemperatureLabel, white, 0);
-                lv_obj_set_style_text_color(ui_wallboxTemperatureUnitLabel, white, 0);
             }
             else if (wallboxResult.temperature > 30)
             {
-                lv_obj_set_style_bg_color(ui_wallboxTemperatureContainer, orange, 0);
+                lv_obj_set_style_bg_color(ui_wallboxTemperatureLabel, orange, 0);
+                lv_obj_set_style_shadow_color(ui_wallboxTemperatureLabel, orange, 0);
                 lv_obj_set_style_text_color(ui_wallboxTemperatureLabel, black, 0);
-                lv_obj_set_style_text_color(ui_wallboxTemperatureUnitLabel, black, 0);
             }
             else
             {
-                lv_obj_set_style_bg_color(ui_wallboxTemperatureContainer, green, 0);
+                lv_obj_set_style_bg_color(ui_wallboxTemperatureLabel, green, 0);
+                lv_obj_set_style_shadow_color(ui_wallboxTemperatureLabel, green, 0);
                 lv_obj_set_style_text_color(ui_wallboxTemperatureLabel, white, 0);
-                lv_obj_set_style_text_color(ui_wallboxTemperatureUnitLabel, white, 0);
             }
-            lv_obj_clear_flag(ui_wallboxTemperatureContainer, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_wallboxTemperatureLabel, LV_OBJ_FLAG_HIDDEN);
         }
         else
         {
-            lv_obj_add_flag(ui_wallboxTemperatureContainer, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_wallboxTemperatureLabel, LV_OBJ_FLAG_HIDDEN);
         }
 
         updateChart(inverterData, solarChartDataProvider);
