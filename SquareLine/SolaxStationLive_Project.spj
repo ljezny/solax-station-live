@@ -16296,11 +16296,11 @@
                           },
                           {
                             "nid": -516603019,
-                            "flags": 54,
+                            "flags": 22,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               1,
-                              100
+                              88
                             ],
                             "InheritedType": 7
                           },
@@ -17785,11 +17785,11 @@
                           },
                           {
                             "nid": 1484849454,
-                            "flags": 54,
+                            "flags": 22,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               1,
-                              100
+                              88
                             ],
                             "InheritedType": 7
                           },
@@ -17927,8 +17927,7 @@
                             "InheritedType": 11
                           }
                         ],
-                        "saved_objtypeKey": "CONTAINER",
-                        "tree_closed": true
+                        "saved_objtypeKey": "CONTAINER"
                       }
                     ],
                     "dont_export": false,
@@ -17979,7 +17978,7 @@
                         "strtype": "OBJECT/Size",
                         "intarray": [
                           100,
-                          50
+                          150
                         ],
                         "InheritedType": 7
                       },
@@ -19415,11 +19414,11 @@
                           },
                           {
                             "nid": -181398126,
-                            "flags": 54,
+                            "flags": 22,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               1,
-                              100
+                              88
                             ],
                             "InheritedType": 7
                           },
@@ -20897,11 +20896,11 @@
                           },
                           {
                             "nid": 1460660642,
-                            "flags": 54,
+                            "flags": 22,
                             "strtype": "OBJECT/Size",
                             "intarray": [
                               1,
-                              100
+                              88
                             ],
                             "InheritedType": 7
                           },
@@ -21738,6 +21737,17 @@
                             "strtype": "_style/StyleState",
                             "strval": "DEFAULT",
                             "childs": [
+                              {
+                                "nid": 10410,
+                                "strtype": "_style/Text_Color",
+                                "intarray": [
+                                  0,
+                                  0,
+                                  0,
+                                  255
+                                ],
+                                "InheritedType": 7
+                              },
                               {
                                 "nid": 1439534553,
                                 "strtype": "_style/Text_Font",
@@ -25181,7 +25191,7 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 856,
+    "backup_cnt": 858,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",
