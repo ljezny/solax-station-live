@@ -280,7 +280,7 @@ ui_batteryTemperatureLabel = lv_label_create(ui_batteryContainer);
 lv_obj_set_width( ui_batteryTemperatureLabel, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_batteryTemperatureLabel, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_x( ui_batteryTemperatureLabel, 16 );
-lv_obj_set_y( ui_batteryTemperatureLabel, -28 );
+lv_obj_set_y( ui_batteryTemperatureLabel, -24 );
 lv_obj_set_align( ui_batteryTemperatureLabel, LV_ALIGN_TOP_RIGHT );
 lv_label_set_text(ui_batteryTemperatureLabel,"56°C");
 lv_obj_add_flag( ui_batteryTemperatureLabel, LV_OBJ_FLAG_IGNORE_LAYOUT );   /// Flags

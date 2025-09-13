@@ -42,8 +42,8 @@ LV_FONT_DECLARE( ui_font_OpenSansExtraSmall);
 LV_FONT_DECLARE( ui_font_OpenSansLarge);
 LV_FONT_DECLARE( ui_font_OpenSansLargeBold);
 LV_FONT_DECLARE( ui_font_OpenSansMedium);
-LV_FONT_DECLARE( ui_font_OpenSansSmall);
 LV_FONT_DECLARE( ui_font_OpenSansMediumBold);
+LV_FONT_DECLARE( ui_font_OpenSansSmall);
 
 // UI INIT
 void ui_init(void);

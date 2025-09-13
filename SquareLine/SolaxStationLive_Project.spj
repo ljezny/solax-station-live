@@ -4093,7 +4093,7 @@
                         "strtype": "OBJECT/Position",
                         "intarray": [
                           16,
-                          -28
+                          -24
                         ],
                         "InheritedType": 7
                       },
@@ -14965,8 +14965,7 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "CONTAINER",
-            "tree_closed": true
+            "saved_objtypeKey": "CONTAINER"
           },
           {
             "guid": "GUID21262894-282239S34813214",
