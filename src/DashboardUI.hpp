@@ -531,7 +531,27 @@ public:
             lv_obj_add_flag(ui_wallboxTemperatureLabel, LV_OBJ_FLAG_HIDDEN);
         }
 
-        updateChart(inverterData, solarChartDataProvider);
+        //hide all logos
+        lv_obj_add_flag(ui_wallboxLogoEcovolterImage, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(ui_wallboxLogoSolaxImage, LV_OBJ_FLAG_HIDDEN);
+
+        switch (wallboxResult.type)
+        {
+        case WALLBOX_TYPE_SOLAX:
+            //show solax logo
+            lv_obj_clear_flag(ui_wallboxLogoSolaxImage, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_set_style_shadow_color(ui_wallboxContainer, lv_color_hex(_ui_theme_color_pvColor[0]), 0);
+            break;
+        case WALLBOX_TYPE_ECOVOLTER_PRO_V2:
+            //show ecovolter logo
+            lv_obj_clear_flag(ui_wallboxLogoEcovolterImage, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_set_style_shadow_color(ui_wallboxContainer, lv_color_hex(_ui_theme_color_loadColor[0]), 0);
+            break;
+        default:
+            break;
+        }
+
+        updateChart(inverterData, solarChartDataProvider, isDarkMode);
 
         lv_obj_set_style_text_color(ui_statusLabel, lv_palette_main(LV_PALETTE_DEEP_ORANGE), 0);
 
@@ -625,7 +645,7 @@ private:
     lv_chart_series_t *acPowerSeries;
     lv_chart_series_t *socSeries;
 
-    void updateChart(InverterData_t &inverterData, SolarChartDataProvider &solarChartDataProvider)
+    void updateChart(InverterData_t &inverterData, SolarChartDataProvider &solarChartDataProvider, bool isDarkMode)
     {
         uint32_t i;
 
@@ -658,6 +678,7 @@ private:
         // lv_chart_set_div_line_count(ui_Chart1, 5, 6);
         // lv_chart_set_axis_tick( ui_Chart1, LV_CHART_AXIS_PRIMARY_X, 0, 0, 6, max(2, min(5, c)), true, 32);
         lv_chart_set_range(ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, (lv_coord_t)maxPower);
+        lv_obj_set_style_text_color(ui_Chart1, isDarkMode ? lv_color_white() : lv_color_black(), LV_PART_TICKS);
     }
 
     void updateFlowAnimations(InverterData_t inverterData, ShellyResult_t shellyResult)

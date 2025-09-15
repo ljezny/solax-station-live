@@ -20,74 +20,71 @@ typedef struct
     String sn;
 } SolaxWallboxInfo_t;
 
+typedef struct
+{
+    long updated = 0;
+    bool evConnected = false;
+    int chargingPower = 0;
+    int chargingCurrent = 0;
+    int maxChargingCurrent = 0;
+    int targetChargingCurrent = 0;
+    float totalChargedEnergy = 0;
+    float chargedEnergy = 0;
+    bool chargingControlEnabled = false;
+    int phases = 3;
+    int voltageL1 = 0;
+    int voltageL2 = 0;
+    int voltageL3 = 0;
+    int currentL1 = 0;
+    int currentL2 = 0;
+    int currentL3 = 0;
+    int temperature = 0;
+} SolaxRealtimeData_t;
+
+typedef struct
+{
+    long updated = 0;
+    int mode = 0; //0: off, 1: Fast charge, 2: Eco charge, 3: Green charge
+    int targetChargingCurrent = 0;
+} SolaxSetData_t;
+
 class SolaxWallboxLocalAPI
 {
 public:
-    WallboxResult_t getStatus()
-    {
+    WallboxResult_t getStatus() {
         WallboxResult_t result;
-        result.updated = 0;
-        if (wallboxInfo.ip != IPAddress(0, 0, 0, 0))
-        {
-            HTTPClient client;
-            if (client.begin(wallboxInfo.ip.toString(), 80))
-            {
-                int httpCode = client.POST("optType=ReadRealTimeData&pwd=" + wallboxInfo.sn);
-                if (httpCode == HTTP_CODE_OK)
-                {
-                    String payload = client.getString();
-                    log_d("Wallbox payload: %s", payload.c_str());
-                    DynamicJsonDocument doc(4096); // Adjust size as needed
-                    DeserializationError error = deserializeJson(doc, payload);
-                    if (!error)
-                    {
-                        // https://github.com/nazar-pc/solax-local-api-docs/blob/master/DataEvCharger.txt
-                        if (doc["Data"].as<JsonArray>().size() != 0)
-                        {
-                            result.updated = time(NULL);
-                            /*0,1: Preparing
-                            2: Charging
-                            3: Finishing
-                            4: Faulted
-                            5: Unavailable
-                            6: Reserved
-                            7: SuspendedEV
-                            8: SuspendedEVSE*/
-                            int deviceState = doc["Data"][0].as<int>();
-                            log_d("Device state: %d", deviceState);
-                            result.evConnected = deviceState == 1 || deviceState == 2 || deviceState == 3;
 
-                            result.chargingPower = doc["Data"][11].as<int>();
-                            result.chargedEnergy = doc["Data"][12].as<int>() / 10.f; // Convert Wh to kWh
-                            result.chargingCurrent = doc["Data"][5].as<int>() / 100;
-                            result.chargingControlEnabled = false;
-                            result.phases = 3;
-                            result.updated = millis();
-                        }
-                        else
-                        {
-                            log_d("No data found in response.");
-                        }
-                    }
-                    else
-                    {
-                        log_d("JSON deserialization failed: %s", error.c_str());
-                    }
-                }
-                else
-                {
-                    log_d("HTTP GET failed with code: %d", httpCode);
-                }
-                client.end();
-            }
-            else
-            {
-                log_d("Failed to connect to wallbox dongle at %s", wallboxInfo.ip.toString().c_str());
+        SolaxRealtimeData_t realtimeData = getRealtimeData();
+        if(realtimeData.updated > 0) {
+            result.updated = realtimeData.updated;
+            result.type = WALLBOX_TYPE_SOLAX;
+            result.evConnected = realtimeData.evConnected;
+            result.chargingPower = realtimeData.chargingPower;
+            result.chargedEnergy = realtimeData.chargedEnergy;
+            result.chargingCurrent = realtimeData.chargingCurrent;
+            result.maxChargingCurrent = realtimeData.maxChargingCurrent;
+            result.targetChargingCurrent = realtimeData.targetChargingCurrent;
+            result.totalChargedEnergy = realtimeData.totalChargedEnergy;
+            result.chargingControlEnabled = realtimeData.chargingControlEnabled;
+            result.phases = realtimeData.phases;
+            result.voltageL1 = realtimeData.voltageL1;
+            result.voltageL2 = realtimeData.voltageL2;
+            result.voltageL3 = realtimeData.voltageL3;
+            result.currentL1 = realtimeData.currentL1;
+            result.currentL2 = realtimeData.currentL2;
+            result.currentL3 = realtimeData.currentL3;
+            result.temperature = realtimeData.temperature;
+
+            SolaxSetData_t setData = getSetData();
+            if(setData.updated > 0) {
+                result.targetChargingCurrent = setData.targetChargingCurrent;
+                result.maxChargingCurrent = 16;
             }
         }
+        logWallboxResult(result);
         return result;
     }
-    
+
     bool isDiscovered() const
     {
         return wallboxInfo.ip != IPAddress(0, 0, 0, 0);
@@ -101,7 +98,7 @@ public:
 
 private:
     SolaxWallboxInfo_t wallboxInfo;
-
+    HTTPClient client;
     SolaxWallboxInfo_t getWallboxInfo()
     {
         uint32_t ip = 0;
@@ -149,5 +146,121 @@ private:
         mdns_free();
 
         return {IPAddress(ip), sn};
+    }
+
+    SolaxRealtimeData_t getRealtimeData()
+    {
+        SolaxRealtimeData_t result;
+        result.updated = 0;
+        if (wallboxInfo.ip != IPAddress(0, 0, 0, 0))
+        {
+            if (client.begin(wallboxInfo.ip.toString(), 80))
+            {
+                int httpCode = client.POST("optType=ReadRealTimeData&pwd=" + wallboxInfo.sn);
+                if (httpCode == HTTP_CODE_OK)
+                {
+                    String payload = client.getString();
+                    log_d("Wallbox payload: %s", payload.c_str());
+                    DynamicJsonDocument doc(4096); // Adjust size as needed
+                    DeserializationError error = deserializeJson(doc, payload);
+                    if (!error)
+                    {
+                        // https://github.com/nazar-pc/solax-local-api-docs/blob/master/DataEvCharger.txt
+                        if (doc["Data"].as<JsonArray>().size() != 0)
+                        {
+                            result.updated = time(NULL);
+                            /*0,1: Preparing
+                            2: Charging
+                            3: Finishing
+                            4: Faulted
+                            5: Unavailable
+                            6: Reserved
+                            7: SuspendedEV
+                            8: SuspendedEVSE*/
+                            int deviceState = doc["Data"][0].as<int>();
+                            log_d("Device state: %d", deviceState);
+                            result.evConnected = deviceState == 1 || deviceState == 2 || deviceState == 3;
+
+                            result.chargingPower = doc["Data"][11].as<int>();
+                            result.chargedEnergy = doc["Data"][12].as<int>() / 10.f; // Convert Wh to kWh
+                            result.totalChargedEnergy = (doc["Data"][15].as<int>() << 8 | doc["Data"][14].as<int>()) / 10.f; // Convert Wh to kWh
+                            result.chargingCurrent = doc["Data"][5].as<int>() / 100;
+                            result.chargingControlEnabled = true;
+                            result.voltageL1 = doc["Data"][2].as<int>() / 100;
+                            result.voltageL2 = doc["Data"][3].as<int>() / 100;
+                            result.voltageL3 = doc["Data"][4].as<int>() / 100;
+                            result.currentL1 = doc["Data"][5].as<int>() / 100;
+                            result.currentL2 = doc["Data"][6].as<int>() / 100;
+                            result.currentL3 = doc["Data"][7].as<int>() / 100;
+                            result.temperature = doc["Data"][24].as<int>(); 
+                            result.phases = 3;
+                            result.updated = millis();
+                        }
+                        else
+                        {
+                            log_d("No data found in response.");
+                        }
+                    }
+                    else
+                    {
+                        log_d("JSON deserialization failed: %s", error.c_str());
+                    }
+                }
+                else
+                {
+                    log_d("HTTP GET failed with code: %d", httpCode);
+                }
+                client.end();
+            }
+            else
+            {
+                log_d("Failed to connect to wallbox dongle at %s", wallboxInfo.ip.toString().c_str());
+            }
+        }
+        return result;
+    }
+
+    SolaxSetData_t getSetData()
+    {
+        SolaxSetData_t result;
+        result.updated = 0;
+        if (wallboxInfo.ip != IPAddress(0, 0, 0, 0))
+        {
+            if (client.begin(wallboxInfo.ip.toString(), 80))
+            {
+                int httpCode = client.POST("optType=ReadSetData&pwd=" + wallboxInfo.sn);
+                if (httpCode == HTTP_CODE_OK)
+                {
+                    String payload = client.getString();
+                    log_d("Wallbox set payload: %s", payload.c_str());
+                    DynamicJsonDocument doc(4*1024); // Adjust size as needed
+                    DeserializationError error = deserializeJson(doc, payload);
+                    if (!error)
+                    {
+                        result.updated = millis();
+                        result.targetChargingCurrent = doc[76].as<int>();
+                        result.mode = doc[1].as<int>();
+                        
+                        for(int i = 0; i < 90; i++) {
+                            log_d("Set data[%d]: %d", i, doc[i].as<int>());
+                        }
+                    }
+                    else
+                    {
+                        log_d("JSON deserialization failed: %s", error.c_str());
+                    }
+                }
+                else
+                {
+                    log_d("HTTP GET failed with code: %d", httpCode);
+                }
+                client.end();
+            }
+            else
+            {
+                log_d("Failed to connect to wallbox dongle at %s", wallboxInfo.ip.toString().c_str());
+            }
+        }
+        return result;
     }
 };

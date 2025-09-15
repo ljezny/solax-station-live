@@ -740,19 +740,19 @@ void updateState()
             {
                 break;
             }
-            if (loadEcoVolterTask())
-            {
-                resolveEcoVolterSmartCharge();
-                break;
-            }
-
-            // if (!ecoVolterAPI.isDiscovered()) // ecovolter has priority
+            // if (loadEcoVolterTask())
             // {
-            //     if (loadSolaxWallboxTask())
-            //     {
-            //         break;
-            //     }
+            //     resolveEcoVolterSmartCharge();
+            //     break;
             // }
+
+            //if (!ecoVolterAPI.isDiscovered()) // ecovolter has priority
+            {
+                if (loadSolaxWallboxTask())
+                {
+                    break;
+                }
+            }
         }
 
         break;
