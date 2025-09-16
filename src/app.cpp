@@ -454,7 +454,7 @@ void resolveEcoVolterSmartCharge()
     smartEnabled = dashboardUI->isWallboxSmartChecked();
     xSemaphoreGive(lvgl_mutex);
 
-    if (ecoVolterAPI.isDiscovered() && wallboxData.evConnected)
+    if (ecoVolterAPI.isDiscovered() && wallboxData.type == WALLBOX_TYPE_ECOVOLTER_PRO_V2 && wallboxData.evConnected)
     {
         if (smartEnabled)
         {
@@ -535,7 +535,7 @@ void resolveSolaxSmartCharge()
     smartEnabled = dashboardUI->isWallboxSmartChecked();
     xSemaphoreGive(lvgl_mutex);
 
-    if (solaxWallboxAPI.isDiscovered() && wallboxData.evConnected)
+    if (solaxWallboxAPI.isDiscovered() && wallboxData.type == WALLBOX_TYPE_SOLAX && wallboxData.evConnected)
     {
         if (smartEnabled)
         {
@@ -801,13 +801,13 @@ void updateState()
             {
                 break;
             }
-            // if (loadEcoVolterTask())
-            // {
-            //     resolveEcoVolterSmartCharge();
-            //     break;
-            // }
+            if (loadEcoVolterTask())
+            {
+                resolveEcoVolterSmartCharge();
+                break;
+            }
 
-            //if (!ecoVolterAPI.isDiscovered()) // ecovolter has priority
+            if (!ecoVolterAPI.isDiscovered()) // ecovolter has priority
             {
                 if (loadSolaxWallboxTask())
                 {
