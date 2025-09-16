@@ -88,7 +88,7 @@ public:
     bool setCharging(bool enable) {
         //0: off, 1: Fast charge, 2: Eco charge, 3: Green charge
         int mode = enable ? 1 : 0;
-        return setRegValue(1, mode);
+        return setRegValue(2, mode);
     }
 
     bool setMaxCurrent(int current) {
