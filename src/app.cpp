@@ -527,6 +527,67 @@ bool loadSolaxWallboxTask()
     return run;
 }
 
+void resolveSolaxSmartCharge()
+{
+    log_d("Resolving Solax Smart Charge");
+    bool smartEnabled = false;
+    xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+    smartEnabled = dashboardUI->isWallboxSmartChecked();
+    xSemaphoreGive(lvgl_mutex);
+
+    if (solaxWallboxAPI.isDiscovered() && wallboxData.evConnected)
+    {
+        if (smartEnabled)
+        {
+            RequestedSmartControlState_t state = wallboxRuleResolver.resolveSmartControlState(wallboxData.phases * 230 * 6, wallboxData.phases * 230 * 1, wallboxData.phases * 230 * 6, wallboxData.phases * 230 * 1);
+            if (state != SMART_CONTROL_UNKNOWN)
+            {
+                switch (state)
+                {
+                case SMART_CONTROL_FULL_ON:
+                    log_d("Setting Solax Wallbox to FULL ON");
+                    if(wallboxData.chargingCurrent == 0) {
+                        solaxWallboxAPI.setMaxCurrent(6); //start at six
+                        solaxWallboxAPI.setCharging(true);
+                    } else {
+                        solaxWallboxAPI.setMaxCurrent(max(6, (wallboxData.targetChargingCurrent + 1))); //increase when requested
+                    }
+                    break;
+                case SMART_CONTROL_PARTIAL_ON:
+                    log_d("Setting Solax Wallbox to PARTIAL ON");
+                    if(wallboxData.chargingCurrent > 0) {
+                        solaxWallboxAPI.setMaxCurrent(max(6, (wallboxData.targetChargingCurrent + 1)));
+                    } else {
+                        log_d("Solax Wallbox not charging, cannot set to PARTIAL ON");
+                    }
+                    break;
+                case SMART_CONTROL_KEEP_CURRENT_STATE:
+                    log_d("Keeping Solax Wallbox current state");
+                    // Do nothing, keep current state
+                    break;
+                case SMART_CONTROL_PARTIAL_OFF:
+                    log_d("Setting Solax Wallbox to PARTIAL OFF");
+                    solaxWallboxAPI.setMaxCurrent(max(6, (wallboxData.targetChargingCurrent - 1)));
+                    break;
+                case SMART_CONTROL_FULL_OFF:
+                    log_d("Setting Solax Wallbox to FULL OFF");
+                    solaxWallboxAPI.setCharging(false);
+                    solaxWallboxAPI.setMaxCurrent(16); //reset to max for next possible manual charge
+                    break;
+                }
+            }
+        }
+        else
+        {
+            log_d("Smart control disabled in UI");
+        }
+    }
+    else
+    {
+        log_d("EcoVolter Pro not discovered, cannot resolve smart charge");
+    }
+}
+
 void syncTime()
 {
     // use ntp arduino
@@ -750,6 +811,7 @@ void updateState()
             {
                 if (loadSolaxWallboxTask())
                 {
+                    resolveSolaxSmartCharge();
                     break;
                 }
             }

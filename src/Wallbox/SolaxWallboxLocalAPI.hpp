@@ -85,6 +85,18 @@ public:
         return result;
     }
 
+    bool setCharging(bool enable) {
+        //0: off, 1: Fast charge, 2: Eco charge, 3: Green charge
+        int mode = enable ? 1 : 0;
+        return setRegValue(1, mode);
+    }
+
+    bool setMaxCurrent(int current) {
+        if(current < 6) current = 6;
+        if(current > 16) current = 16;
+        return setRegValue(82, current); // in 0.01A
+    }
+
     bool isDiscovered() const
     {
         return wallboxInfo.ip != IPAddress(0, 0, 0, 0);
@@ -98,7 +110,6 @@ public:
 
 private:
     SolaxWallboxInfo_t wallboxInfo;
-    HTTPClient client;
     SolaxWallboxInfo_t getWallboxInfo()
     {
         uint32_t ip = 0;
@@ -128,7 +139,7 @@ private:
                     }
 
                     break;
-
+ 
                     r = r->next;
                 }
                 mdns_query_results_free(results);
@@ -154,6 +165,7 @@ private:
         result.updated = 0;
         if (wallboxInfo.ip != IPAddress(0, 0, 0, 0))
         {
+            HTTPClient client;
             if (client.begin(wallboxInfo.ip.toString(), 80))
             {
                 int httpCode = client.POST("optType=ReadRealTimeData&pwd=" + wallboxInfo.sn);
@@ -226,6 +238,7 @@ private:
         result.updated = 0;
         if (wallboxInfo.ip != IPAddress(0, 0, 0, 0))
         {
+            HTTPClient client;
             if (client.begin(wallboxInfo.ip.toString(), 80))
             {
                 int httpCode = client.POST("optType=ReadSetData&pwd=" + wallboxInfo.sn);
@@ -240,10 +253,6 @@ private:
                         result.updated = millis();
                         result.targetChargingCurrent = doc[76].as<int>();
                         result.mode = doc[1].as<int>();
-                        
-                        for(int i = 0; i < 90; i++) {
-                            log_d("Set data[%d]: %d", i, doc[i].as<int>());
-                        }
                     }
                     else
                     {
@@ -253,6 +262,38 @@ private:
                 else
                 {
                     log_d("HTTP GET failed with code: %d", httpCode);
+                }
+                client.end();
+            }
+            else
+            {
+                log_d("Failed to connect to wallbox dongle at %s", wallboxInfo.ip.toString().c_str());
+            }
+        }
+        return result;
+    }
+
+    bool setRegValue(int reg, int value)
+    {
+        bool result = false;
+        if (wallboxInfo.ip != IPAddress(0, 0, 0, 0))
+        {
+            HTTPClient client;
+            if (client.begin(wallboxInfo.ip.toString(), 80))
+            {
+                //optType=setReg&pwd=SQTGDYPBXK&data={"num":1,"Data":[{"reg":2,"val":"3"}]}
+                String postData = "optType=WriteSetData&pwd=" + wallboxInfo.sn + "&data={\"num\":1,\"Data\":[{\"reg\":" + String(reg) + ",\"val\":\"" + String(value) + "\"}]}";
+                log_d("POST data: %s", postData.c_str());
+                int httpCode = client.POST(postData);
+                if (httpCode == HTTP_CODE_OK)
+                {
+                    String payload = client.getString();
+                    result = payload.startsWith("Y:code");
+                    log_d("Set reg result: %s", payload.c_str());
+                }
+                else
+                {
+                    log_d("HTTP POST failed with code: %d", httpCode);
                 }
                 client.end();
             }
