@@ -276,13 +276,14 @@ private:
     bool setRegValue(int reg, int value)
     {
         bool result = false;
+        log_d("Setting reg %d to value %d", reg, value);
         if (wallboxInfo.ip != IPAddress(0, 0, 0, 0))
         {
             HTTPClient client;
             if (client.begin(wallboxInfo.ip.toString(), 80))
             {
                 //optType=setReg&pwd=SQTGDYPBXK&data={"num":1,"Data":[{"reg":2,"val":"3"}]}
-                String postData = "optType=WriteSetData&pwd=" + wallboxInfo.sn + "&data={\"num\":1,\"Data\":[{\"reg\":" + String(reg) + ",\"val\":\"" + String(value) + "\"}]}";
+                String postData = "optType=setReg&pwd=" + wallboxInfo.sn + "&data={\"num\":1,\"Data\":[{\"reg\":" + String(reg) + ",\"val\":\"" + String(value) + "\"}]}";
                 log_d("POST data: %s", postData.c_str());
                 int httpCode = client.POST(postData);
                 if (httpCode == HTTP_CODE_OK)
