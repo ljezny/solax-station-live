@@ -121,6 +121,8 @@ private:
         data.pvTotal = response.readUInt32LSB(0x52) / 10.0f;
         data.loadToday = response.readUInt16(0x50) / 10.0f;
         data.batteryCapacityWh = response.readUInt16(0x26);
+        //log 0x26 register value for debugging
+        log_d("Battery capacity (0x26): %d Wh", data.batteryCapacityWh);
         data.minSoc = 10;
         data.maxSoc = 100;
         return true;
