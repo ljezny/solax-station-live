@@ -567,7 +567,9 @@ void resolveSolaxSmartCharge()
                     break;
                 case SMART_CONTROL_PARTIAL_OFF:
                     log_d("Setting Solax Wallbox to PARTIAL OFF");
-                    solaxWallboxAPI.setMaxCurrent(max(6, (wallboxData.targetChargingCurrent - 1)));
+                    if(wallboxData.chargingCurrent > 0) {
+                        solaxWallboxAPI.setMaxCurrent(max(6, (wallboxData.targetChargingCurrent - 1)));
+                    }
                     break;
                 case SMART_CONTROL_FULL_OFF:
                     log_d("Setting Solax Wallbox to FULL OFF");
