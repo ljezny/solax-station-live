@@ -42,7 +42,7 @@ private:
             log_d("Connected.");
             byte packetBuffer[1024];
 
-            inverterData.sn = sn;
+            inverterData.sn = String(sn);
 
             if (channel.sendReadDataRequest(0, 8 - 0 + 1, sn))
             {
