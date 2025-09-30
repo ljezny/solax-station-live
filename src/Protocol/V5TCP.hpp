@@ -14,8 +14,10 @@ class V5TCP
 private:
     CustomNetworkClient client;
     uint8_t sequenceNumber = 0;
+    static constexpr int MAX_RETRIES = 3;
 
 public:
+    IPAddress ip;
     uint16_t readUInt16(byte *buf, byte reg)
     {
         return (buf[3 + reg * 2] << 8 | buf[3 + reg * 2 + 1]);
@@ -73,7 +75,7 @@ public:
 
     bool sendReadDataRequest(uint16_t addr, uint8_t len, uint32_t sn)
     {
-        if(sn == 0)
+        if (sn == 0)
         {
             log_d("SN is zero, cannot send request");
             return false;
@@ -136,7 +138,7 @@ public:
               sequenceNumber, sn, addr, len);
 
         size_t requestSize = sizeof(request);
-        
+
         String dump = "";
         for (size_t i = 0; i < requestSize; i++)
         {
@@ -225,5 +227,85 @@ public:
         }
         log_d("Request: %s", dump.c_str());
         return MODBUS_RTU_FRAME_LENGTH;
+    }
+
+    bool tryReadWithRetries(uint16_t startReg, uint16_t length, uint32_t sn, byte *buffer, std::function<void()> onSuccess)
+    {
+        for (int i = 0; i < MAX_RETRIES; ++i)
+        {
+            if (connect(ip))
+            {
+                if (sendReadDataRequest(startReg, length, sn))
+                {
+                    if (readModbusRTUResponse(buffer, 1024) > 0)
+                    {
+                        onSuccess();
+                        disconnect();
+                        return true;
+                    }
+                    else
+                    {
+                        log_d("Read failed for 0x%04X", startReg);
+                    }
+                }
+                else
+                {
+                    log_d("Send request failed for 0x%04X", startReg);
+                }
+                disconnect();
+            }
+            else
+            {
+                log_d("Failed to connect to dongle at %s", ip.toString().c_str());
+            }
+        }
+        return false;
+    }
+
+    IPAddress discoverDongleIP()
+    {
+        IPAddress dongleIP;
+        WiFiUDP udp;
+        String message = "WIFIKIT-214028-READ";
+        udp.beginPacket(IPAddress(255, 255, 255, 255), 48899);
+        udp.write((const uint8_t *)message.c_str(), (size_t)message.length());
+        udp.endPacket();
+
+        unsigned long start = millis();
+        while (millis() - start < 3000)
+        {
+            int packetSize = udp.parsePacket();
+            if (packetSize)
+            {
+                // On success, the inverter responses with it's IP address (as a text string) followed by it's WiFi AP name.
+                char d[128] = {0};
+                udp.read(d, sizeof(d));
+
+                log_d("Received IP address: %s", String(d).c_str());
+                int indexOfComma = String(d).indexOf(',');
+                String ip = String(d).substring(0, indexOfComma);
+                log_d("Parsed IP address: %s", ip.c_str());
+                dongleIP.fromString(ip);
+                log_d("Dongle IP: %s", dongleIP.toString());
+                break;
+            }
+        }
+        udp.stop();
+        return dongleIP;
+    }
+
+    void ensureIPAddress(const String &ipAddress)
+    {
+        if (ip == IPAddress(0, 0, 0, 0))
+        {
+            if (!ipAddress.isEmpty())
+                ip = IPAddress(ipAddress.c_str());
+            if (ip == IPAddress(0, 0, 0, 0))
+            {
+                ip = discoverDongleIP();
+                if (ip == IPAddress(0, 0, 0, 0))
+                    ip = IPAddress(10, 10, 100, 254); // fallback
+            }
+        }
     }
 };

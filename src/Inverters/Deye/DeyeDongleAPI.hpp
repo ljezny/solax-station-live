@@ -16,237 +16,122 @@ private:
 
     InverterData_t readData(String ipAddress, String dongleSN)
     {
-        if (ip == IPAddress(0, 0, 0, 0))
-        {
-            if (!ipAddress.isEmpty())
-            {
-                ip = IPAddress(ipAddress.c_str());
-            }
-
-            if (ip == IPAddress(0, 0, 0, 0))
-            {
-                ip = discoverDongleIP();
-                if (ip == IPAddress(0, 0, 0, 0))
-                {
-                    ip = IPAddress(10, 10, 100, 254); // default IP
-                }
-            }
-        }
         int powerMultiplier = 1;
+        uint16_t deviceType = 0;
         InverterData_t inverterData;
         log_d("Connecting to dongle...");
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
         log_d("SN: %d", sn);
-        if (channel.connect(ip))
-        {
-            log_d("Connected.");
-            byte packetBuffer[1024];
+        byte packetBuffer[1024];
+        channel.ensureIPAddress(ipAddress);
 
-            inverterData.sn = String(sn);
-
-            if (channel.sendReadDataRequest(0, 8 - 0 + 1, sn))
-            {
-                if (channel.readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
-                {
-                    inverterData.status = DONGLE_STATUS_OK;
+        if (!channel.tryReadWithRetries(0, 8 - 0 + 1, sn, packetBuffer, [&]()
+                                        {
                     inverterData.millis = millis();
-                    uint16_t deviceType = channel.readUInt16(packetBuffer, 0);
+                    deviceType = channel.readUInt16(packetBuffer, 0);
                     log_d("Device type: %s", String(deviceType, HEX));
-                    powerMultiplier = (deviceType == 0x600 || deviceType == 0x601) ? 10 : 1;
                     uint16_t commProtoVer = channel.readUInt16(packetBuffer, 2);
                     log_d("Comm protocol version: %s", String(commProtoVer, HEX));
                     String inverterSN = channel.readString(packetBuffer, 3, 10);
                     log_d("Inverter SN: %s", inverterSN.c_str());
-                    inverterData.sn = inverterSN;
-                }
-                else
-                {
-                    channel.disconnect();
-                    inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                    return inverterData;
-                }
-            }
-            else
-            {
-                log_d("Failed to send request");
-                channel.disconnect();
-                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                return inverterData;
-            }
+                    inverterData.sn = inverterSN; }))
+            return inverterData;
 
-            // pv input
-            // 672-675
-            // but we need only few
-            if (channel.sendReadDataRequest(672, 675 - 672 + 1, sn))
-            {
-                if (channel.readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
-                {
-                    inverterData.pv1Power = powerMultiplier * channel.readUInt16(packetBuffer, 672 - 672);
-                    inverterData.pv2Power = powerMultiplier * channel.readUInt16(packetBuffer, 673 - 672);
-                    inverterData.pv3Power = powerMultiplier * channel.readUInt16(packetBuffer, 674 - 672);
-                    inverterData.pv4Power = powerMultiplier * channel.readUInt16(packetBuffer, 675 - 672);
-                }
-                else
-                {
-                    channel.disconnect();
-                    inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                    return inverterData;
-                }
-            }
-            else
-            {
-                log_d("Failed to send request");
-                channel.disconnect();
-                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                return inverterData;
-            }
-
-            // battery input
-            // 586 - 591
-            if (channel.sendReadDataRequest(586, 591 - 586 + 1, sn))
-            {
-                if (channel.readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
-                {
-                    inverterData.batteryTemperature = (channel.readInt16(packetBuffer, 586 - 586) - 1000) / 10;
-                    inverterData.soc = channel.readUInt16(packetBuffer, 588 - 586);
-                    inverterData.batteryTemperature = (channel.readInt16(packetBuffer, 586 - 586) - 1000) / 10;
-                    inverterData.batteryPower =  -1 * powerMultiplier * channel.readInt16(packetBuffer, 590 - 586); // Battery power flow - negative for charging, positive for discharging
-                }
-                else
-                {
-                    channel.disconnect();
-                    inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                    return inverterData;
-                }
-            }
-            else
-            {
-                log_d("Failed to send request");
-                channel.disconnect();
-                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                return inverterData;
-            }
-
-            // phase and power
-            // 598 - 655
-            if (channel.sendReadDataRequest(598, 655 - 598 + 1, sn))
-            {
-                if (channel.readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
-                {
-                    inverterData.L1Power = channel.readInt16(packetBuffer, 633 - 598);
-                    inverterData.L2Power = channel.readInt16(packetBuffer, 634 - 598);
-                    inverterData.L3Power = channel.readInt16(packetBuffer, 635 - 598);
-                    inverterData.inverterPower = channel.readInt16(packetBuffer, 636 - 598);
-                    inverterData.loadPower = channel.readInt16(packetBuffer, 653 - 598);
-                    inverterData.feedInPower = -1 * channel.readInt16(packetBuffer, 625 - 598);
-                }
-                else
-                {
-                    channel.disconnect();
-                    inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                    return inverterData;
-                }
-            }
-            else
-            {
-                log_d("Failed to send request");
-                channel.disconnect();
-                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                return inverterData;
-            }
-
-            // module info
-            // 541
-            if (channel.sendReadDataRequest(541, 1, sn))
-            {
-                if (channel.readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
-                {
-                    inverterData.inverterTemperature = (channel.readInt16(packetBuffer, 0) - 1000) / 10;
-                }
-                else
-                {
-                    channel.disconnect();
-                    inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                    return inverterData;
-                }
-            }
-            else
-            {
-                log_d("Failed to send request");
-                channel.disconnect();
-                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                return inverterData;
-            }
-
-            // //stats
-            // 514 - 535
-            if (channel.sendReadDataRequest(514, 535 - 514 + 2, sn))
-            {
-                if (channel.readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
-                {
-                    inverterData.pvToday = channel.readUInt16(packetBuffer, 529 - 514) / 10.0f;
-                    inverterData.pvTotal = channel.readUInt16(packetBuffer, 534 - 514) / 10.0f;
-                    inverterData.loadToday = channel.readUInt16(packetBuffer, 526 - 514) / 10.0f;
-                    inverterData.loadTotal = channel.readUInt32(packetBuffer, 527 - 514) / 10.0f;
-                    inverterData.batteryChargedToday = channel.readUInt16(packetBuffer, 514 - 514) / 10.0f;
-                    inverterData.batteryDischargedToday = channel.readUInt16(packetBuffer, 515 - 514) / 10.0f;
-                    inverterData.gridBuyToday = channel.readUInt16(packetBuffer, 520 - 514) / 10.0f;
-                    inverterData.gridBuyTotal = channel.readUInt32(packetBuffer, 522 - 514) / 10.0f;
-                    inverterData.gridSellToday = channel.readUInt16(packetBuffer, 521 - 514) / 10.0f;
-                    inverterData.gridSellTotal = channel.readUInt32(packetBuffer, 524 - 514) / 10.0f;
-                }
-                else
-                {
-                    channel.disconnect();
-                    inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                    return inverterData;
-                }
-            }
-            else
-            {
-                log_d("Failed to send request");
-                channel.disconnect();
-                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-                return inverterData;
-            }
+        if (deviceType == 0x500 || deviceType == 0x600 || deviceType == 0x601)
+        {
+            load3PhaseInverter(deviceType, sn, inverterData);
+        }
+        else if (deviceType == 2)
+        {
+            loadMicroInverter(sn, inverterData);
         }
 
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
         logInverterData(inverterData);
 
-        // disconnect(client); //do not disconnect, we will use the same connection for next request
         return inverterData;
     }
 
-    IPAddress discoverDongleIP()
+    void loadMicroInverter(uint32_t sn, InverterData_t &inverterData)
     {
-        IPAddress dongleIP;
-        WiFiUDP udp;
-        String message = "WIFIKIT-214028-READ";
-        udp.beginPacket(IPAddress(255, 255, 255, 255), 48899);
-        udp.write((const uint8_t *)message.c_str(), (size_t)message.length());
-        udp.endPacket();
+        log_d("Loading micro inverter data...");
+        byte packetBuffer[1024];
+        if (!channel.tryReadWithRetries(150, 197 - 150 + 1, sn, packetBuffer, [&]()
+                                        {
+                                            inverterData.pv1Power = channel.readUInt16(packetBuffer, 186 - 150);
+                                            inverterData.pv2Power = channel.readUInt16(packetBuffer, 187 - 150);
+                                            inverterData.pv3Power = channel.readUInt16(packetBuffer, 188 - 150);
+                                            inverterData.pv4Power = channel.readUInt16(packetBuffer, 189 - 150);
+                                            inverterData.inverterPower = channel.readInt16(packetBuffer, 175 - 150);
+                                            inverterData.loadPower = channel.readInt16(packetBuffer, 178 - 150);
+                                            inverterData.batteryTemperature = (channel.readInt16(packetBuffer, 182 - 150) - 1000) / 10;
+                                            inverterData.soc = channel.readUInt16(packetBuffer, 184 - 150);
+                                            inverterData.batteryPower = -1 * channel.readInt16(packetBuffer, 190 - 150);
+                                            inverterData.feedInPower = -1 * channel.readInt16(packetBuffer, 178 - 150);
+                                        }))
+            return;
 
-        unsigned long start = millis();
-        while (millis() - start < 3000)
-        {
-            int packetSize = udp.parsePacket();
-            if (packetSize)
-            {
-                // On success, the inverter responses with it's IP address (as a text string) followed by it's WiFi AP name.
-                char d[128] = {0};
-                udp.read(d, sizeof(d));
+                if (!channel.tryReadWithRetries(60, 99 - 60 + 1, sn, packetBuffer, [&]()
+                                        {
+                inverterData.inverterTemperature = channel.readInt16(packetBuffer, 90 - 60) / 10;
+                inverterData.pvToday = channel.readUInt16(packetBuffer, 60 - 60) / 10.0f;
+                inverterData.pvTotal = channel.readUInt32(packetBuffer, 63 - 60) / 10.0f;
+                inverterData.loadToday = channel.readUInt16(packetBuffer, 84 - 60) / 10.0f;
+                inverterData.batteryChargedToday = channel.readUInt16(packetBuffer, 70 - 60) / 10.0f;
+                inverterData.batteryDischargedToday = channel.readUInt16(packetBuffer, 71 - 60) / 10.0f;
+                inverterData.gridBuyToday = channel.readUInt16(packetBuffer, 76 - 60) / 10.0f;
+                inverterData.gridSellToday = channel.readUInt16(packetBuffer, 77 - 60) / 10.0f;
+                                        }))
+            return;
+    }
 
-                log_d("Received IP address: %s", String(d).c_str());
-                int indexOfComma = String(d).indexOf(',');
-                String ip = String(d).substring(0, indexOfComma);
-                log_d("Parsed IP address: %s", ip.c_str());
-                dongleIP.fromString(ip);
-                log_d("Dongle IP: %s", dongleIP.toString());
-                break;
-            }
-        }
-        udp.stop();
-        return dongleIP;
+    void load3PhaseInverter(int deviceType, uint32_t sn, InverterData_t &inverterData)
+    {
+        log_d("Loading 3-phase inverter data...");
+        int powerMultiplier = (deviceType == 0x600 || deviceType == 0x601) ? 10 : 1;
+        byte packetBuffer[1024];
+        if (!channel.tryReadWithRetries(672, 675 - 672 + 1, sn, packetBuffer, [&]()
+                                        {
+                inverterData.pv1Power = powerMultiplier * channel.readUInt16(packetBuffer, 672 - 672);
+                inverterData.pv2Power = powerMultiplier * channel.readUInt16(packetBuffer, 673 - 672);
+                inverterData.pv3Power = powerMultiplier * channel.readUInt16(packetBuffer, 674 - 672);
+                inverterData.pv4Power = powerMultiplier * channel.readUInt16(packetBuffer, 675 - 672); }))
+            return;
+
+        if (!channel.tryReadWithRetries(586, 591 - 586 + 1, sn, packetBuffer, [&]()
+                                        {
+                                            inverterData.batteryTemperature = (channel.readInt16(packetBuffer, 586 - 586) - 1000) / 10;
+                                            inverterData.soc = channel.readUInt16(packetBuffer, 588 - 586);
+                                            inverterData.batteryTemperature = (channel.readInt16(packetBuffer, 586 - 586) - 1000) / 10;
+                                            inverterData.batteryPower = -1 * powerMultiplier * channel.readInt16(packetBuffer, 590 - 586); // Battery power flow - negative for charging, positive for discharging
+                                        }))
+            return;
+
+        if (!channel.tryReadWithRetries(598, 655 - 598 + 1, sn, packetBuffer, [&]()
+                                        {
+                inverterData.L1Power = channel.readInt16(packetBuffer, 633 - 598);
+                inverterData.L2Power = channel.readInt16(packetBuffer, 634 - 598);
+                inverterData.L3Power = channel.readInt16(packetBuffer, 635 - 598);
+                inverterData.inverterPower = channel.readInt16(packetBuffer, 636 - 598);
+                inverterData.loadPower = channel.readInt16(packetBuffer, 653 - 598);
+                inverterData.feedInPower = -1 * channel.readInt16(packetBuffer, 625 - 598); }))
+            return;
+
+        channel.tryReadWithRetries(541, 1, sn, packetBuffer, [&]()
+                                   { inverterData.inverterTemperature = (channel.readInt16(packetBuffer, 0) - 1000) / 10; });
+
+        if (!channel.tryReadWithRetries(514, 535 - 514 + 2, sn, packetBuffer, [&]()
+                                        {
+                                            inverterData.pvToday = channel.readUInt16(packetBuffer, 529 - 514) / 10.0f;
+                inverterData.pvTotal = channel.readUInt16(packetBuffer, 534 - 514) / 10.0f;
+                inverterData.loadToday = channel.readUInt16(packetBuffer, 526 - 514) / 10.0f;
+                inverterData.loadTotal = channel.readUInt32(packetBuffer, 527 - 514) / 10.0f;
+                inverterData.batteryChargedToday = channel.readUInt16(packetBuffer, 514 - 514) / 10.0f;
+                inverterData.batteryDischargedToday = channel.readUInt16(packetBuffer, 515 - 514) / 10.0f;
+                inverterData.gridBuyToday = channel.readUInt16(packetBuffer, 520 - 514) / 10.0f;
+                inverterData.gridBuyTotal = channel.readUInt32(packetBuffer, 522 - 514) / 10.0f;
+                inverterData.gridSellToday = channel.readUInt16(packetBuffer, 521 - 514) / 10.0f;
+                inverterData.gridSellTotal = channel.readUInt32(packetBuffer, 524 - 514) / 10.0f; }))
+            return;
     }
 };
