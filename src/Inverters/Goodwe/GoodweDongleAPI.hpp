@@ -39,15 +39,6 @@ private:
         return rtuChannel.sendDataRequest(ip, 8899, 35100, 125);
     }
 
-    ModbusResponse sendStatisticsDataRequestPacket(IPAddress ip)
-    {
-        if (tcpChannel.isConnected())
-        {
-            return tcpChannel.sendModbusRequest(0xF7, 0x03, 45222, 45243 - 45222);
-        }
-        return rtuChannel.sendDataRequest(ip, 8899, 45222, 45243 - 45222);
-    }
-
     ModbusResponse sendBMSInfoRequestPacket(IPAddress ip)
     {
         if (tcpChannel.isConnected())
@@ -128,6 +119,13 @@ private:
                     }
 
                     inverterData.inverterTemperature = response.readInt16(35100 + 74) / 10;
+                    inverterData.pvTotal = response.readUInt32(35100 + 91) / 10.0;
+                    inverterData.pvToday = response.readUInt32(35100 + 93) / 10.0;
+                    inverterData.loadToday = response.readUInt16(35100 + 105) / 10.0;
+                    inverterData.loadTotal = response.readUInt32(35100 + 103) / 10.0;
+                    inverterData.batteryChargedToday = response.readUInt16(35100 + 108) / 10.0;
+                    inverterData.batteryDischargedToday = response.readUInt16(35100 + 111) / 10.0;
+                    logInverterData(inverterData);
 
                     // this is a hack - Goodwe returns incorrect day values for grid sell/buy
                     // so count it manually from total values
@@ -140,23 +138,6 @@ private:
                         gridBuyTotal = 0;
                         gridSellTotal = 0;
                     }
-                    
-                    break;
-                }
-                delay(i * 300); // wait before retrying
-            }
-
-            for (int i = 0; i < 3; i++)
-            {
-                response = sendStatisticsDataRequestPacket(ip);
-                if (response.isValid)
-                {
-                    inverterData.pvTotal = response.readUInt32(45222) / 10.0;
-                    inverterData.pvToday = response.readUInt32(45224) / 10.0;
-                    inverterData.loadToday = response.readUInt16(45236) / 10.0;
-                    inverterData.loadTotal = response.readUInt32(45234) / 10.0;
-                    inverterData.batteryChargedToday = response.readUInt16(45239) / 10.0;
-                    inverterData.batteryDischargedToday = response.readUInt16(45242) / 10.0;
                     break;
                 }
                 delay(i * 300); // wait before retrying
