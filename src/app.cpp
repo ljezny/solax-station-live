@@ -308,7 +308,7 @@ bool loadInverterDataTask()
 #if DEMO
         inverterData = createRandomMockData();
         solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power, inverterData.loadPower, inverterData.soc);
-        //dongleDiscovery.preferedInverterWifiDongleIndex = 0;
+        // dongleDiscovery.preferedInverterWifiDongleIndex = 0;
         return run;
 #endif
 
@@ -430,13 +430,17 @@ bool loadEcoVolterTask()
         {
             log_d("Loading EcoVolter data");
             wallboxData = ecoVolterAPI.getData();
-            if(wallboxData.updated == 0) {
+            if (wallboxData.updated == 0)
+            {
                 failureCounter++;
-                if(failureCounter >= 3) {
+                if (failureCounter >= 3)
+                {
                     failureCounter = 0;
                     ecoVolterAPI.resetDiscovery(); // reset discovery if we cannot load data
                 }
-            } else {
+            }
+            else
+            {
                 failureCounter = 0;
             }
         }
@@ -465,17 +469,23 @@ void resolveEcoVolterSmartCharge()
                 {
                 case SMART_CONTROL_FULL_ON:
                     log_d("Setting EcoVolter to FULL ON");
-                    if(wallboxData.chargingCurrent == 0) {
-                        ecoVolterAPI.setTargetCurrent(6); //start at six
-                    } else {
-                        ecoVolterAPI.setTargetCurrent(max(6, (wallboxData.targetChargingCurrent + 1))); //increase when requested
+                    if (wallboxData.chargingCurrent == 0)
+                    {
+                        ecoVolterAPI.setTargetCurrent(6); // start at six
+                    }
+                    else
+                    {
+                        ecoVolterAPI.setTargetCurrent(max(6, (wallboxData.targetChargingCurrent + 1))); // increase when requested
                     }
                     break;
                 case SMART_CONTROL_PARTIAL_ON:
                     log_d("Setting EcoVolter to PARTIAL ON");
-                    if(wallboxData.chargingCurrent > 0) { 
+                    if (wallboxData.chargingCurrent > 0)
+                    {
                         ecoVolterAPI.setTargetCurrent(max(6, (wallboxData.targetChargingCurrent + 1)));
-                    } else {
+                    }
+                    else
+                    {
                         log_d("EcoVolter not charging, cannot set to PARTIAL ON");
                     }
                     break;
@@ -485,7 +495,10 @@ void resolveEcoVolterSmartCharge()
                     break;
                 case SMART_CONTROL_PARTIAL_OFF:
                     log_d("Setting EcoVolter to PARTIAL OFF");
-                    ecoVolterAPI.setTargetCurrent(max(6, (wallboxData.targetChargingCurrent - 1)));
+                    if (wallboxData.chargingCurrent > 0)
+                    {
+                        ecoVolterAPI.setTargetCurrent(max(6, (wallboxData.targetChargingCurrent - 1)));
+                    }
                     break;
                 case SMART_CONTROL_FULL_OFF:
                     log_d("Setting EcoVolter to FULL OFF");
@@ -546,18 +559,24 @@ void resolveSolaxSmartCharge()
                 {
                 case SMART_CONTROL_FULL_ON:
                     log_d("Setting Solax Wallbox to FULL ON");
-                    if(wallboxData.chargingCurrent == 0) {
-                        solaxWallboxAPI.setMaxCurrent(6); //start at six
+                    if (wallboxData.chargingCurrent == 0)
+                    {
+                        solaxWallboxAPI.setMaxCurrent(6); // start at six
                         solaxWallboxAPI.setCharging(true);
-                    } else {
-                        solaxWallboxAPI.setMaxCurrent(max(6, (wallboxData.targetChargingCurrent + 1))); //increase when requested
+                    }
+                    else
+                    {
+                        solaxWallboxAPI.setMaxCurrent(max(6, (wallboxData.targetChargingCurrent + 1))); // increase when requested
                     }
                     break;
                 case SMART_CONTROL_PARTIAL_ON:
                     log_d("Setting Solax Wallbox to PARTIAL ON");
-                    if(wallboxData.chargingCurrent > 0) {
+                    if (wallboxData.chargingCurrent > 0)
+                    {
                         solaxWallboxAPI.setMaxCurrent(max(6, (wallboxData.targetChargingCurrent + 1)));
-                    } else {
+                    }
+                    else
+                    {
                         log_d("Solax Wallbox not charging, cannot set to PARTIAL ON");
                     }
                     break;
@@ -567,12 +586,15 @@ void resolveSolaxSmartCharge()
                     break;
                 case SMART_CONTROL_PARTIAL_OFF:
                     log_d("Setting Solax Wallbox to PARTIAL OFF");
-                    solaxWallboxAPI.setMaxCurrent(max(6, (wallboxData.targetChargingCurrent - 1)));
+                    if (wallboxData.chargingCurrent > 0)
+                    {
+                        solaxWallboxAPI.setMaxCurrent(max(6, (wallboxData.targetChargingCurrent - 1)));
+                    }
                     break;
                 case SMART_CONTROL_FULL_OFF:
                     log_d("Setting Solax Wallbox to FULL OFF");
                     solaxWallboxAPI.setCharging(false);
-                    solaxWallboxAPI.setMaxCurrent(16); //reset to max for next possible manual charge
+                    solaxWallboxAPI.setMaxCurrent(16); // reset to max for next possible manual charge
                     break;
                 }
             }

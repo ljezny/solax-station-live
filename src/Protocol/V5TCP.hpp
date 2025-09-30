@@ -136,6 +136,14 @@ public:
               sequenceNumber, sn, addr, len);
 
         size_t requestSize = sizeof(request);
+        
+        String dump = "";
+        for (size_t i = 0; i < requestSize; i++)
+        {
+            dump += String(request[i], HEX) + " ";
+        }
+        log_d("Request: %s", dump.c_str());
+
         bool result = client.write(request, requestSize) == requestSize;
         return result;
     }
@@ -210,7 +218,12 @@ public:
             // read trailer
             log_d("Unable to read client.");
         }
-
+        String dump = "";
+        for (int i = 0; i < MODBUS_RTU_FRAME_LENGTH; i++)
+        {
+            dump += String(packetBuffer[i], HEX) + " ";
+        }
+        log_d("Request: %s", dump.c_str());
         return MODBUS_RTU_FRAME_LENGTH;
     }
 };
