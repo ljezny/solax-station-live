@@ -28,6 +28,7 @@ private:
         if (!channel.tryReadWithRetries(0, 8 - 0 + 1, sn, packetBuffer, [&]()
                                         {
                     inverterData.millis = millis();
+                    inverterData.status = DONGLE_STATUS_OK;
                     deviceType = channel.readUInt16(packetBuffer, 0);
                     log_d("Device type: %s", String(deviceType, HEX));
                     uint16_t commProtoVer = channel.readUInt16(packetBuffer, 2);
@@ -41,7 +42,7 @@ private:
         {
             load3PhaseInverter(deviceType, sn, inverterData);
         }
-        else if (deviceType == 2)
+        else if (deviceType == 2 || deviceType == 3)
         {
             loadMicroInverter(sn, inverterData);
         }
