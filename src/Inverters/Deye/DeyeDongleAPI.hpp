@@ -68,7 +68,7 @@ private:
                                             inverterData.batteryTemperature = (channel.readInt16(packetBuffer, 182 - 150) - 1000) / 10;
                                             inverterData.soc = channel.readUInt16(packetBuffer, 184 - 150);
                                             inverterData.batteryPower = -1 * channel.readInt16(packetBuffer, 190 - 150);
-                                            inverterData.feedInPower = -1 * channel.readInt16(packetBuffer, 178 - 150);
+                                            inverterData.feedInPower = -1 * channel.readInt16(packetBuffer, 169 - 150);
                                         }))
             return;
 
@@ -76,7 +76,7 @@ private:
                                         {
                 inverterData.inverterTemperature = (channel.readInt16(packetBuffer, 90 - 60) - 1000) / 10;
                 inverterData.pvToday = channel.readUInt16(packetBuffer, 60 - 60) / 10.0f;
-                inverterData.pvTotal = channel.readUInt32L(packetBuffer, 63 - 60) / 10.0f;
+                inverterData.pvTotal = channel.readUInt16(packetBuffer, 63 - 60) / 10.0f;
                 inverterData.loadToday = channel.readUInt16(packetBuffer, 84 - 60) / 10.0f;
                 inverterData.batteryChargedToday = channel.readUInt16(packetBuffer, 70 - 60) / 10.0f;
                 inverterData.batteryDischargedToday = channel.readUInt16(packetBuffer, 71 - 60) / 10.0f;
