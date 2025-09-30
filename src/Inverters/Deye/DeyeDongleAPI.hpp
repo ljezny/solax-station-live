@@ -75,9 +75,9 @@ private:
             }
 
             // pv input
-            // 672-673
+            // 672-675
             // but we need only few
-            if (channel.sendReadDataRequest(672, 673 - 672 + 1, sn))
+            if (channel.sendReadDataRequest(672, 675 - 672 + 1, sn))
             {
                 if (channel.readModbusRTUResponse(packetBuffer, sizeof(packetBuffer)) > 0)
                 {
