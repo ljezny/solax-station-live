@@ -74,9 +74,9 @@ private:
 
                 if (!channel.tryReadWithRetries(60, 99 - 60 + 1, sn, packetBuffer, [&]()
                                         {
-                inverterData.inverterTemperature = channel.readInt16(packetBuffer, 90 - 60) / 10;
+                inverterData.inverterTemperature = (channel.readInt16(packetBuffer, 90 - 60) - 1000) / 10;
                 inverterData.pvToday = channel.readUInt16(packetBuffer, 60 - 60) / 10.0f;
-                inverterData.pvTotal = channel.readUInt32(packetBuffer, 63 - 60) / 10.0f;
+                inverterData.pvTotal = channel.readUInt32L(packetBuffer, 63 - 60) / 10.0f;
                 inverterData.loadToday = channel.readUInt16(packetBuffer, 84 - 60) / 10.0f;
                 inverterData.batteryChargedToday = channel.readUInt16(packetBuffer, 70 - 60) / 10.0f;
                 inverterData.batteryDischargedToday = channel.readUInt16(packetBuffer, 71 - 60) / 10.0f;
@@ -103,7 +103,6 @@ private:
                                         {
                                             inverterData.batteryTemperature = (channel.readInt16(packetBuffer, 586 - 586) - 1000) / 10;
                                             inverterData.soc = channel.readUInt16(packetBuffer, 588 - 586);
-                                            inverterData.batteryTemperature = (channel.readInt16(packetBuffer, 586 - 586) - 1000) / 10;
                                             inverterData.batteryPower = -1 * powerMultiplier * channel.readInt16(packetBuffer, 590 - 586); // Battery power flow - negative for charging, positive for discharging
                                         }))
             return;

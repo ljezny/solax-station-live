@@ -33,6 +33,11 @@ public:
         return readUInt16(buf, reg) << 16 | readUInt16(buf, reg + 1);
     }
 
+    uint32_t readUInt32L(byte *buf, byte reg)
+    {
+        return (buf[3 + reg * 2 + 1] << 16 | buf[3 + reg * 2]);
+    }
+
     int32_t readInt32(byte *buf, byte reg)
     {
         return readInt16(buf, reg) << 16 | readUInt16(buf, reg + 1);
