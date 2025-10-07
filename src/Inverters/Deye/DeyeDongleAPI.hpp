@@ -38,13 +38,11 @@ private:
                     inverterData.sn = inverterSN; }))
             return inverterData;
 
-        if (deviceType == 0x500 || deviceType == 0x600 || deviceType == 0x601)
-        {
-            load3PhaseInverter(deviceType, sn, inverterData);
-        }
-        else if (deviceType == 2 || deviceType == 3)
+        if (deviceType == 2 || deviceType == 3)
         {
             loadMicroInverter(sn, inverterData);
+        } else {
+            load3PhaseInverter(deviceType, sn, inverterData);
         }
 
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
