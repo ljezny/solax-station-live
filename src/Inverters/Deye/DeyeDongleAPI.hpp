@@ -87,7 +87,7 @@ private:
     void load3PhaseInverter(int deviceType, uint32_t sn, InverterData_t &inverterData)
     {
         log_d("Loading 3-phase inverter data...");
-        int powerMultiplier = (deviceType == 0x600 || deviceType == 0x601) ? 10 : 1;
+        int powerMultiplier = (deviceType == 6) ? 10 : 1;
         byte packetBuffer[1024];
         if (!channel.tryReadWithRetries(672, 675 - 672 + 1, sn, packetBuffer, [&]()
                                         {
