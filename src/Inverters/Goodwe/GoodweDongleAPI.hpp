@@ -90,10 +90,27 @@ private:
                 if (response.isValid)
                 {
                     inverterData.status = DONGLE_STATUS_OK;
-                    inverterData.pv1Power = std::max<uint32_t>(0u, response.readUInt32(35100 + 5));
-                    inverterData.pv2Power = std::max<uint32_t>(0u, response.readUInt32(35100 + 9));
-                    inverterData.pv3Power = std::max<uint32_t>(0u, response.readUInt32(35100 + 13));
-                    inverterData.pv4Power = std::max<uint32_t>(0u, response.readUInt32(35100 + 17));
+                    inverterData.pv1Power = response.readUInt32(35100 + 5);
+                    inverterData.pv2Power = response.readUInt32(35100 + 9);
+                    inverterData.pv3Power = response.readUInt32(35100 + 13);
+                    inverterData.pv4Power = response.readUInt32(35100 + 17);
+
+                    if(inverterData.pv1Power < 0) {
+                        log_d("Invalid PV1 power: %d", inverterData.pv1Power);
+                        inverterData.pv1Power = 0;
+                    }
+                    if(inverterData.pv2Power < 0) {
+                        log_d("Invalid PV2 power: %d", inverterData.pv2Power);
+                        inverterData.pv2Power = 0;
+                    }
+                    if(inverterData.pv3Power < 0) {
+                        log_d("Invalid PV3 power: %d", inverterData.pv3Power);
+                        inverterData.pv3Power = 0;
+                    }
+                    if(inverterData.pv4Power < 0) {
+                        log_d("Invalid PV4 power: %d", inverterData.pv4Power);
+                        inverterData.pv4Power = 0;
+                    }
 
                     inverterData.batteryPower -= response.readInt16(35100 + 83); // TODO: maybe sign readuw(84);
                     // _ac = readsw(40);
