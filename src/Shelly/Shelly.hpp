@@ -125,7 +125,7 @@ public:
         WiFi.disconnect();
     }
 
-    bool sendRequest(NetworkClient &client, IPAddress ipAddress, String method, String path, String requestBody)
+    bool sendRequest(WiFiClient &client, IPAddress ipAddress, String method, String path, String requestBody)
     {
         log_d("IP: %s", ipAddress.toString().c_str());
         if (client.connect(ipAddress, 80, 3000))
@@ -385,7 +385,7 @@ private:
 
     void disableCloud_Gen1()
     {
-        NetworkClient client;
+        WiFiClient client;
         if (sendRequest(client, IPAddress(192, 168, 33, 1), "GET", "/settings/cloud?enabled=0", ""))
         {
         }
@@ -394,7 +394,7 @@ private:
 
     void setup_Gen1()
     {
-        NetworkClient client;
+        WiFiClient client;
         if (sendRequest(client, IPAddress(192, 168, 33, 1), "GET", "/settings/coiot_enable=0&mqtt_enable=0&ap_roaming_enabled=0", ""))
         {
         }
@@ -405,7 +405,7 @@ private:
     {
         bool result = false;
         String path = String("/settings/sta?enabled=true&ssid=") + urlencode(ssid) + "&key=" + urlencode(password);
-        NetworkClient client;
+        WiFiClient client;
         if (sendRequest(client, IPAddress(192, 168, 33, 1), "GET", path, ""))
         {
             result = true;
@@ -426,7 +426,7 @@ private:
         String requestBody;
         serializeJson(doc, requestBody);
         bool result = false;
-        NetworkClient client;
+        WiFiClient client;
         if (sendRequest(client, IPAddress(192, 168, 33, 1), "POST", "/rpc", requestBody))
         {
             result = true;
@@ -463,7 +463,7 @@ private:
     {
         ShellyStateResult_t result;
         result.updated = 0;
-        NetworkClient client;
+        WiFiClient client;
         if (sendRequest(client, ipAddress, "GET", "/status", ""))
         {
             DynamicJsonDocument doc(8192);
@@ -492,7 +492,7 @@ private:
     {
         ShellyStateResult_t result;
         result.updated = 0;
-        NetworkClient client;
+        WiFiClient client;
         if (sendRequest(client, ipAddress, "POST", "/rpc", "{\"id\":1,\"method\":\"Shelly.GetStatus\"}"))
         {
             DynamicJsonDocument doc(8192);
@@ -605,7 +605,7 @@ private:
         {
             path += "&timer=" + String(timeoutSec);
         }
-        NetworkClient client;
+        WiFiClient client;
         if (sendRequest(client, ipAddress, "GET", path, ""))
         {
             result = true;
@@ -627,7 +627,7 @@ private:
         {
             path += "&brightness=" + String(percent);
         }
-        NetworkClient client;
+        WiFiClient client;
         if (sendRequest(client, ipAddress, "GET", path, ""))
         {
             result = true;

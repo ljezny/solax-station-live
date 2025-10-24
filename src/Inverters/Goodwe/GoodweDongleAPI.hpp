@@ -64,7 +64,7 @@ private:
         {
             if (!ipAddress.isEmpty())
             {
-                ip = IPAddress(ipAddress.c_str());
+                ip.fromString(ipAddress.c_str());
             }
 
             if (ip == IPAddress(0, 0, 0, 0))

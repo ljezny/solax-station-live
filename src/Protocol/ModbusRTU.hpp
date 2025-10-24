@@ -44,7 +44,6 @@ public:
     ModbusResponse sendDataRequest(IPAddress ipAddress, int port, uint16_t addr, uint8_t len)
     {
         ModbusResponse response;
-        udp.clear(); // clear rx buffer
         if (!udp.beginPacket(ipAddress, port))
         {
             log_d("Failed to begin packet");
@@ -78,7 +77,6 @@ public:
         if (respLen < 7)
         {
             log_d("Invalid response length: %d", len);
-            udp.clear(); // clear buffer
             memset(response.data, 0, RX_BUFFER_SIZE);
             return response;
         }
@@ -87,7 +85,6 @@ public:
         if (c != 0)
         {
             log_d("CRC error: %04X", c);
-            udp.clear(); // clear buffer
             memset(response.data, 0, RX_BUFFER_SIZE);
             return response;
         }

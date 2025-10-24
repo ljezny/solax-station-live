@@ -303,8 +303,9 @@ public:
     {
         if (ip == IPAddress(0, 0, 0, 0))
         {
-            if (!ipAddress.isEmpty())
-                ip = IPAddress(ipAddress.c_str());
+            if (!ipAddress.isEmpty()) {
+                ip.fromString(ipAddress.c_str());
+            }
             if (ip == IPAddress(0, 0, 0, 0))
             {
                 ip = discoverDongleIP();
