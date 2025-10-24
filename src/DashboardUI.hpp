@@ -79,7 +79,8 @@ static void draw_event_cb(lv_event_t *e)
             int minutes = totalMinutes % 60;
             if (totalMinutes == 0)
             {
-                lv_snprintf(dsc->text, dsc->text_length, "");
+                memset(dsc->text, 0, dsc->text_length);
+                //lv_snprintf(dsc->text, dsc->text_length, "");
             }
             else
             {

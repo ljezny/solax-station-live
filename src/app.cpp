@@ -16,7 +16,6 @@
 #include "utils/UnitFormatter.hpp"
 #include "utils/SolarChartDataProvider.hpp"
 #include "utils/BacklightResolver.hpp"
-#include <mat.h>
 #include "DashboardUI.hpp"
 #include "SplashUI.hpp"
 #include "WiFiSetupUI.hpp"
@@ -289,6 +288,9 @@ InverterData_t loadInverterData(WiFiDiscoveryResult_t &discoveryResult)
     case CONNECTION_TYPE_VICTRON:
         d = victronDongleAPI.loadData(discoveryResult.inverterIP);
         break;
+    default:
+        d.status = DONGLE_STATUS_UNSUPPORTED_DONGLE;
+        break;
     }
     log_d("Inverter data loaded in %d ms", millis() - millisBefore);
     return d;
@@ -504,6 +506,8 @@ void resolveEcoVolterSmartCharge()
                     log_d("Setting EcoVolter to FULL OFF");
                     ecoVolterAPI.setTargetCurrent(0);
                     break;
+                default:
+                    break;
                 }
             }
         }
@@ -595,6 +599,8 @@ void resolveSolaxSmartCharge()
                     log_d("Setting Solax Wallbox to FULL OFF");
                     solaxWallboxAPI.setCharging(false);
                     solaxWallboxAPI.setMaxCurrent(16); // reset to max for next possible manual charge
+                    break;
+                default:
                     break;
                 }
             }

@@ -39,5 +39,6 @@
         "cstddef": "cpp",
         "format": "cpp"
     },
-    "cmake.sourceDirectory": "/Users/lukasjezny/solax-station-live/src/ui"
+    "cmake.sourceDirectory": "/Users/lukasjezny/solax-station-live/src/ui",
+    "C_Cpp.errorSquiggles": "disabled"
 }
