@@ -48,7 +48,7 @@ const ShellyModelInfo_t supportedModels[SHELLY_SUPPORTED_MODEL_COUNT] = {
     {PRO3, "Pro3-"},
     {PRODM1PM, "ShellyProDM1PM-"},
     {DIMG3, "Shelly0110DimG3-"},
-    {MINIG3, "ShellyMiniG3-"}
+    {MINIG3, "Shelly1MiniG3-"}
 };
 
 typedef struct ShellyStateResult
