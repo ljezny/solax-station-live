@@ -230,17 +230,6 @@ void setupLVGL()
 void setup()
 {
     Serial.begin(115200);
-#if CONFIG_SPIRAM_SUPPORT
-    esp_psram_extram_set_clock_rate(120 * 1000000);
-    if (!psramInit())
-    {
-        Serial.println("PSRAM 初始化失败！");
-        while (1)
-            ;
-    }
-#endif
-    // set cpu frequency to 240MHz
-    setCpuFrequencyMhz(240);
 
     setupLVGL();
     setupWiFi();
