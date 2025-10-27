@@ -58,6 +58,7 @@ private:
           log_d("Fetching URL: %s", url.c_str());
           // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *client is
           HTTPClient https;
+          https.useHTTP10(true);
           if (https.begin(*client, url))
           {
             int httpCode = https.GET();
@@ -67,10 +68,12 @@ private:
               // file found at server
               if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
               {
+                String payload = https.getString();
+                log_d("Received payload: %s", payload.c_str());
                 DynamicJsonDocument doc(12 * 1024);
                 DynamicJsonDocument filter(512);
                 filter["data"]["dataLine"][0]["point"][0]["y"] = true;
-                DeserializationError error = deserializeJson(doc, https.getStream(), DeserializationOption::Filter(filter));
+                DeserializationError error = deserializeJson(doc, payload, DeserializationOption::Filter(filter));
                 if (error == DeserializationError::Ok)
                 {
                   for (int i = 0; i < QUARTERS_OF_DAY; i++)
