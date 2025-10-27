@@ -27,6 +27,7 @@
 #define UI_REFRESH_INTERVAL 5000            // Define the UI refresh interval in milliseconds
 #define INVERTER_DATA_REFRESH_INTERVAL 5000 // Seems that 3s is problematic for some dongles (GoodWe), so we use 5s
 #define SHELLY_REFRESH_INTERVAL 3000
+#define ELECTRICITY_PRICE_REFRESH_INTERVAL 15 * 60 * 1000 // 15 minutes
 
 #define WALLBOX_DISCOVERY_REFRESH_INTERVAL 30000
 #define WALLBOX_STATUS_REFRESH_INTERVAL 5000
@@ -41,7 +42,7 @@ static lv_color_t disp_draw_buf1[screenWidth * screenHeight / 10];
 static lv_color_t disp_draw_buf2[screenWidth * screenHeight / 10];
 static lv_disp_drv_t disp_drv;
 
-SET_LOOP_TASK_STACK_SIZE(16 * 1024); // use freeStack
+SET_LOOP_TASK_STACK_SIZE(12 * 1024); // use freeStack
 
 WiFiDiscovery dongleDiscovery;
 ShellyAPI shellyAPI;
@@ -57,6 +58,7 @@ WallboxResult_t wallboxData;
 WallboxResult_t previousWallboxData;
 ShellyResult_t shellyResult;
 ShellyResult_t previousShellyResult;
+ElectricityPriceResult_t electricityPriceResult;
 SolarChartDataProvider solarChartDataProvider;
 MedianPowerSampler shellyMedianPowerSampler;
 MedianPowerSampler wallboxMedianPowerSampler;
@@ -407,6 +409,22 @@ bool reloadShellyTask()
     return run;
 }
 
+bool loadElectricityPriceTask()
+{
+    static long lastAttempt = 0;
+    bool run = false;
+    if (lastAttempt == 0 || millis() - lastAttempt > ELECTRICITY_PRICE_REFRESH_INTERVAL)
+    {
+        log_d("Loading electricity price data");
+
+        electricityPriceResult = ElectricityPriceLoader().getElectricityPrice(OTE_CZ, false);
+        
+        lastAttempt = millis();
+        run = true;
+    }
+    return run;
+}
+
 bool loadEcoVolterTask()
 {
     static long lastAttempt = 0;
@@ -653,7 +671,7 @@ void onEntering(state_t newState)
         dashboardUI->show();
         if (inverterData.status == DONGLE_STATUS_OK)
         {
-            dashboardUI->update(inverterData, inverterData, uiMedianPowerSampler, shellyResult, shellyResult, wallboxData, wallboxData, solarChartDataProvider, wifiSignalPercent());
+            dashboardUI->update(inverterData, inverterData, uiMedianPowerSampler, shellyResult, shellyResult, wallboxData, wallboxData, solarChartDataProvider, electricityPriceResult, wifiSignalPercent());
             previousShellyResult = shellyResult;
             previousInverterData = inverterData;
             previousWallboxData = wallboxData;
@@ -790,7 +808,7 @@ void updateState()
         else if ((millis() - previousInverterData.millis) > UI_REFRESH_INTERVAL)
         {
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-            dashboardUI->update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, uiMedianPowerSampler, shellyResult, previousShellyResult, wallboxData, previousWallboxData, solarChartDataProvider, wifiSignalPercent());
+            dashboardUI->update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, uiMedianPowerSampler, shellyResult, previousShellyResult, wallboxData, previousWallboxData, solarChartDataProvider, electricityPriceResult, wifiSignalPercent());
             xSemaphoreGive(lvgl_mutex);
 
             previousShellyResult = shellyResult;
@@ -823,6 +841,10 @@ void updateState()
             if (loadEcoVolterTask())
             {
                 resolveEcoVolterSmartCharge();
+                break;
+            }
+            if(loadElectricityPriceTask())
+            {
                 break;
             }
 

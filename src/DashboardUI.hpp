@@ -9,6 +9,7 @@
 #include "utils/UITextChangeAnimator.hpp"
 #include "utils/UIBackgroundAnimatior.hpp"
 #include "utils/MedianPowerSampler.hpp"
+#include "Spot/ElectricityPriceLoader.hpp"
 
 static void draw_event_cb(lv_event_t *e)
 {
@@ -61,7 +62,7 @@ static void draw_event_cb(lv_event_t *e)
     {
         if (dsc->id == LV_CHART_AXIS_PRIMARY_Y)
         {
-            lv_snprintf(dsc->text, dsc->text_length, "%d%%", dsc->value);
+            lv_snprintf(dsc->text, dsc->text_length, "%d%%", (int) dsc->value);
         }
         else if (dsc->id == LV_CHART_AXIS_SECONDARY_Y)
         {
@@ -152,7 +153,7 @@ public:
         return constrain(inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0, 0, 100);
     }
 
-    void update(InverterData_t &inverterData, InverterData_t &previousInverterData, MedianPowerSampler &uiMedianPowerSampler, ShellyResult_t &shellyResult, ShellyResult_t &previousShellyResult, WallboxResult_t &wallboxResult, WallboxResult_t &previousWallboxResult, SolarChartDataProvider &solarChartDataProvider, int wifiSignalPercent)
+    void update(InverterData_t &inverterData, InverterData_t &previousInverterData, MedianPowerSampler &uiMedianPowerSampler, ShellyResult_t &shellyResult, ShellyResult_t &previousShellyResult, WallboxResult_t &wallboxResult, WallboxResult_t &previousWallboxResult, SolarChartDataProvider &solarChartDataProvider, ElectricityPriceResult_t &electricityPriceResult, int wifiSignalPercent)
     {
         //hide settings button after one minute
         if (millis() - shownMillis > 60000)
@@ -575,6 +576,15 @@ public:
         }
 
         updateFlowAnimations(inverterData, shellyResult);
+
+        //electricity spot price block
+        if(electricityPriceResult.updated > 0) {
+            //show
+            lv_obj_clear_flag(ui_spotPriceContainer, LV_OBJ_FLAG_HIDDEN);
+        } else {
+            //hide
+            lv_obj_add_flag(ui_spotPriceContainer, LV_OBJ_FLAG_HIDDEN);
+        }
 
         lv_obj_set_style_bg_color(ui_Dashboard, isDarkMode ? black : white, 0);
         lv_obj_set_style_bg_color(ui_LeftContainer, containerBackground, 0);
