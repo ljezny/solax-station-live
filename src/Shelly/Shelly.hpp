@@ -24,8 +24,7 @@ typedef enum
     PLUS1PM,
     PRO3,
     PRODM1PM,
-    DIMG3,
-    MINIG3,
+    DIMG3
 } ShellyModel_t;
 
 typedef struct ShellyModelInfo
@@ -34,7 +33,7 @@ typedef struct ShellyModelInfo
     String prefix;
 } ShellyModelInfo_t;
 
-#define SHELLY_SUPPORTED_MODEL_COUNT 13
+#define SHELLY_SUPPORTED_MODEL_COUNT 12
 const ShellyModelInfo_t supportedModels[SHELLY_SUPPORTED_MODEL_COUNT] = {
     {PLUG_S, "shellyplug-s-"},
     {PLUG, "shellyplug-"},
@@ -47,9 +46,7 @@ const ShellyModelInfo_t supportedModels[SHELLY_SUPPORTED_MODEL_COUNT] = {
     {PRO3, "ShellyPro3-"},
     {PRO3, "Pro3-"},
     {PRODM1PM, "ShellyProDM1PM-"},
-    {DIMG3, "Shelly0110DimG3-"},
-    {MINIG3, "Shelly1MiniG3-"}
-};
+    {DIMG3, "Shelly0110DimG3-"}};
 
 typedef struct ShellyStateResult
 {
@@ -128,7 +125,7 @@ public:
         WiFi.disconnect();
     }
 
-    bool sendRequest(NetworkClient &client, IPAddress ipAddress, String method, String path, String requestBody)
+    bool sendRequest(WiFiClient &client, IPAddress ipAddress, String method, String path, String requestBody)
     {
         log_d("IP: %s", ipAddress.toString().c_str());
         if (client.connect(ipAddress, 80, 3000))
@@ -318,7 +315,7 @@ public:
                 ShellyStateResult_t state = pairs[i].lastState;
                 if (state.updated != 0)
                 {
-                    bool canBeControlled = (state.isOn && (state.source == NULL || String("http").equals(state.source) || String("timer").equals(state.source) || String("init").equals(state.source) || String("WS_in").equals(state.source)) || !state.isOn);
+                    bool canBeControlled = ((state.isOn && (state.source == NULL || String("http").equals(state.source) || String("timer").equals(state.source) || String("init").equals(state.source) || String("WS_in").equals(state.source))) || !state.isOn);
                     if (canBeControlled)
                     {
                         bool wasOn = state.isOn;
@@ -354,7 +351,6 @@ public:
         case PRO3:
         case PRODM1PM:
         case DIMG3:
-        case MINIG3:
             return setWiFiSTA_Gen2(ssid, password);
         }
         return false;
@@ -389,7 +385,7 @@ private:
 
     void disableCloud_Gen1()
     {
-        NetworkClient client;
+        WiFiClient client;
         if (sendRequest(client, IPAddress(192, 168, 33, 1), "GET", "/settings/cloud?enabled=0", ""))
         {
         }
@@ -398,7 +394,7 @@ private:
 
     void setup_Gen1()
     {
-        NetworkClient client;
+        WiFiClient client;
         if (sendRequest(client, IPAddress(192, 168, 33, 1), "GET", "/settings/coiot_enable=0&mqtt_enable=0&ap_roaming_enabled=0", ""))
         {
         }
@@ -409,7 +405,7 @@ private:
     {
         bool result = false;
         String path = String("/settings/sta?enabled=true&ssid=") + urlencode(ssid) + "&key=" + urlencode(password);
-        NetworkClient client;
+        WiFiClient client;
         if (sendRequest(client, IPAddress(192, 168, 33, 1), "GET", path, ""))
         {
             result = true;
@@ -430,7 +426,7 @@ private:
         String requestBody;
         serializeJson(doc, requestBody);
         bool result = false;
-        NetworkClient client;
+        WiFiClient client;
         if (sendRequest(client, IPAddress(192, 168, 33, 1), "POST", "/rpc", requestBody))
         {
             result = true;
@@ -453,7 +449,6 @@ private:
         case PLUS_PLUG_S:
         case PLUS1PM:
         case PRO3:
-        case MINIG3:
             result = getState_Gen2(shellyPair.ip, "switch");
             break;
         case PRODM1PM:
@@ -468,7 +463,7 @@ private:
     {
         ShellyStateResult_t result;
         result.updated = 0;
-        NetworkClient client;
+        WiFiClient client;
         if (sendRequest(client, ipAddress, "GET", "/status", ""))
         {
             DynamicJsonDocument doc(8192);
@@ -497,7 +492,7 @@ private:
     {
         ShellyStateResult_t result;
         result.updated = 0;
-        NetworkClient client;
+        WiFiClient client;
         if (sendRequest(client, ipAddress, "POST", "/rpc", "{\"id\":1,\"method\":\"Shelly.GetStatus\"}"))
         {
             DynamicJsonDocument doc(8192);
@@ -539,7 +534,7 @@ private:
         {
         case PLUG:
         case PLUG_S:
-            if (requestedState == SMART_CONTROL_FULL_ON || requestedState >= SMART_CONTROL_KEEP_CURRENT_STATE && shellyPair.lastState.isOn)
+            if (requestedState == SMART_CONTROL_FULL_ON || (requestedState >= SMART_CONTROL_KEEP_CURRENT_STATE && shellyPair.lastState.isOn))
             {
                 result = setState_Gen1(shellyPair.ip, true, timeoutSec);
             }
@@ -547,8 +542,7 @@ private:
         case PRO1PM:
         case PLUS_PLUG_S:
         case PLUS1PM:
-        case MINIG3:
-            if (requestedState == SMART_CONTROL_FULL_ON || requestedState >= SMART_CONTROL_KEEP_CURRENT_STATE && shellyPair.lastState.isOn)
+            if (requestedState == SMART_CONTROL_FULL_ON || (requestedState >= SMART_CONTROL_KEEP_CURRENT_STATE && shellyPair.lastState.isOn))
             {
                 result = setState_Gen2(shellyPair.ip, "relay", 0, true, timeoutSec);
             }
@@ -584,6 +578,9 @@ private:
             case SMART_CONTROL_PARTIAL_ON:
                 step = 1;
                 break;
+            default:
+                step = 0;
+                break;
             }
             percent += step * multiplier;
             percent = min(max(percent, 0), 100);
@@ -591,7 +588,7 @@ private:
             break;
         }
         case PRO3:
-            if (requestedState == SMART_CONTROL_FULL_ON || requestedState >= SMART_CONTROL_KEEP_CURRENT_STATE && shellyPair.lastState.isOn)
+            if (requestedState == SMART_CONTROL_FULL_ON || (requestedState >= SMART_CONTROL_KEEP_CURRENT_STATE && shellyPair.lastState.isOn))
             {
                 result &= setState_Gen2(shellyPair.ip, "relay", 0, true, timeoutSec);
                 result &= setState_Gen2(shellyPair.ip, "relay", 1, true, timeoutSec);
@@ -611,7 +608,7 @@ private:
         {
             path += "&timer=" + String(timeoutSec);
         }
-        NetworkClient client;
+        WiFiClient client;
         if (sendRequest(client, ipAddress, "GET", path, ""))
         {
             result = true;
@@ -633,7 +630,7 @@ private:
         {
             path += "&brightness=" + String(percent);
         }
-        NetworkClient client;
+        WiFiClient client;
         if (sendRequest(client, ipAddress, "GET", path, ""))
         {
             result = true;

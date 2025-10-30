@@ -6,7 +6,7 @@
 #include <Preferences.h>
 #include <mdns.h>
 #include <IPAddress.h>
-#include <NetworkClient.h>
+#include <WiFiClient.h>
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include <HTTPClient.h>

@@ -47,7 +47,8 @@ public:
         IPAddress ip;
         if (!ipAddress.isEmpty())
         {
-            if (!channel.connect(IPAddress(ipAddress.c_str()), 502))
+            ip.fromString(ipAddress);
+            if (!channel.connect(ip, 502))
             {
                 log_d("Failed to connect to Victron dongle");
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;

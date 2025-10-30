@@ -18,17 +18,17 @@ extern lv_obj_t *ui_Container12;
 extern lv_obj_t *ui_Container16;
 extern lv_obj_t *ui_Label1;
 extern lv_obj_t *ui_wifiDropdown;
-extern lv_obj_t *ui_Label2;
 extern lv_obj_t *ui_wifiPassword;
 extern lv_obj_t *ui_wifiSetupCompleteButton;
 extern lv_obj_t *ui_Label3;
 extern lv_obj_t *ui_Container15;
 extern lv_obj_t *ui_Label5;
 extern lv_obj_t *ui_connectionTypeDropdown;
-extern lv_obj_t *ui_Label4;
 extern lv_obj_t *ui_inverterIP;
-extern lv_obj_t *ui_inverterSNLabel;
 extern lv_obj_t *ui_inverterSN;
+extern lv_obj_t *ui_Container21;
+extern lv_obj_t *ui_Label2;
+extern lv_obj_t *ui_spotProviderDropdown;
 extern lv_obj_t *ui_keyboard;
 // CUSTOM VARIABLES
 

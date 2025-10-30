@@ -87,7 +87,7 @@ public:
         }
         sequenceNumber++;
 
-        byte modbusRTURequest[] = {0x1, 0x03, 0, 0, 0, 0, 0, 0};
+        uint8_t modbusRTURequest[] = {0x1, 0x03, 0, 0, 0, 0, 0, 0};
         modbusRTURequest[2] = addr >> 8;
         modbusRTURequest[3] = addr & 0xff;
         modbusRTURequest[5] = len;
@@ -95,18 +95,18 @@ public:
         modbusRTURequest[6] = c;
         modbusRTURequest[7] = c >> 8;
 
-        byte request[] = {
+        uint8_t request[] = {
             0xA5 /*Start of packet*/,
             0x17 /*Packet length*/,
             0x00 /*Packet length*/,
             0x10 /*Packet type, request*/,
             0x45 /*Packet type, request*/,
-            sequenceNumber & 0xff /*Request number*/,
+            (uint8_t) (sequenceNumber & 0xff) /*Request number*/,
             0 /*Request number*/,
-            sn & 0xff /*Serial number*/,
-            (sn >> 8) & 0xff /*Serial number*/,
-            (sn >> 16) & 0xff /*Serial number*/,
-            (sn >> 24) & 0xff /*Serial number*/, 0x02 /*Frame type*/,
+            (uint8_t) (sn & 0xff) /*Serial number*/,
+            (uint8_t) ((sn >> 8) & 0xff) /*Serial number*/,
+            (uint8_t) ((sn >> 16) & 0xff) /*Serial number*/,
+            (uint8_t) ((sn >> 24) & 0xff) /*Serial number*/, 0x02 /*Frame type*/,
             0x00 /*Sensor type*/,
             0x00 /*Sensor type*/,
             0x00 /*Total Working Time*/,
@@ -304,7 +304,9 @@ public:
         if (ip == IPAddress(0, 0, 0, 0))
         {
             if (!ipAddress.isEmpty())
-                ip = IPAddress(ipAddress.c_str());
+            {
+                ip.fromString(ipAddress);
+            }
             if (ip == IPAddress(0, 0, 0, 0))
             {
                 ip = discoverDongleIP();
