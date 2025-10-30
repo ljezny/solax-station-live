@@ -24,7 +24,8 @@ typedef enum
     PLUS1PM,
     PRO3,
     PRODM1PM,
-    DIMG3
+    DIMG3,
+    MINIG3,
 } ShellyModel_t;
 
 typedef struct ShellyModelInfo
@@ -33,7 +34,7 @@ typedef struct ShellyModelInfo
     String prefix;
 } ShellyModelInfo_t;
 
-#define SHELLY_SUPPORTED_MODEL_COUNT 12
+#define SHELLY_SUPPORTED_MODEL_COUNT 13
 const ShellyModelInfo_t supportedModels[SHELLY_SUPPORTED_MODEL_COUNT] = {
     {PLUG_S, "shellyplug-s-"},
     {PLUG, "shellyplug-"},
@@ -46,7 +47,8 @@ const ShellyModelInfo_t supportedModels[SHELLY_SUPPORTED_MODEL_COUNT] = {
     {PRO3, "ShellyPro3-"},
     {PRO3, "Pro3-"},
     {PRODM1PM, "ShellyProDM1PM-"},
-    {DIMG3, "Shelly0110DimG3-"}};
+    {DIMG3, "Shelly0110DimG3-"},
+    {MINIG3, "Shelly1MiniG3-"}};
 
 typedef struct ShellyStateResult
 {
@@ -212,7 +214,7 @@ public:
             }
             String hostname(rawHost);
             log_d("Found service: %s", hostname.c_str());
-            //check null
+            // check null
             if (r->addr == nullptr)
             {
                 log_w("mDNS result with null address; skipping");
@@ -351,6 +353,7 @@ public:
         case PRO3:
         case PRODM1PM:
         case DIMG3:
+        case MINIG3:
             return setWiFiSTA_Gen2(ssid, password);
         }
         return false;
@@ -449,6 +452,7 @@ private:
         case PLUS_PLUG_S:
         case PLUS1PM:
         case PRO3:
+        case MINIG3:
             result = getState_Gen2(shellyPair.ip, "switch");
             break;
         case PRODM1PM:
@@ -542,6 +546,7 @@ private:
         case PRO1PM:
         case PLUS_PLUG_S:
         case PLUS1PM:
+        case MINIG3:
             if (requestedState == SMART_CONTROL_FULL_ON || (requestedState >= SMART_CONTROL_KEEP_CURRENT_STATE && shellyPair.lastState.isOn))
             {
                 result = setState_Gen2(shellyPair.ip, "relay", 0, true, timeoutSec);
