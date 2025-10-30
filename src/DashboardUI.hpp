@@ -672,8 +672,10 @@ public:
         lv_obj_set_style_outline_opa(ui_inverterContainer, LV_OPA_80, 0);
         lv_obj_set_style_line_opa(ui_Chart1, isDarkMode ? LV_OPA_20 : LV_OPA_COVER, LV_PART_MAIN);
         lv_obj_set_style_bg_color(ui_loadContainer, isDarkMode ? black : white, 0);
-        lv_obj_set_style_text_color(ui_Dashboard, isDarkMode ? white : black, 0);
+        lv_obj_set_style_bg_color(ui_spotPriceContainer, isDarkMode ? black : white, 0);
         lv_obj_set_style_bg_opa(ui_spotPriceContainer, isDarkMode ? LV_OPA_80 : LV_OPA_80, 0);
+        lv_obj_set_style_line_opa(ui_Chart2, isDarkMode ? LV_OPA_20 : LV_OPA_COVER, LV_PART_MAIN);
+        lv_obj_set_style_text_color(ui_Dashboard, isDarkMode ? white : black, 0);
     }
 
 private:
@@ -778,6 +780,7 @@ private:
         lv_chart_set_range(ui_Chart2, LV_CHART_AXIS_SECONDARY_Y, (lv_coord_t)(minPrice * scale), (lv_coord_t)(maxPrice * scale));
 
         lv_obj_set_user_data(ui_Chart2, (void *)&electricityPriceResult);
+        lv_obj_set_style_text_color(ui_Chart2, isDarkMode ? lv_color_white() : lv_color_black(), LV_PART_TICKS);
     }
 
     void updateFlowAnimations(InverterData_t inverterData, ShellyResult_t shellyResult)

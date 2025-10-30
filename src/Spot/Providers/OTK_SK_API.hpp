@@ -51,7 +51,7 @@ public:
               DynamicJsonDocument doc(12 * 1024);
               DynamicJsonDocument filter(512);
               filter[0]["price"] = true;
-              DeserializationError err = deserializeJson(doc, https.getStream(), DeserializationOption::Filter(filter));
+              DeserializationError err = deserializeJson(doc, https.getString(), DeserializationOption::Filter(filter));
               if (err == DeserializationError::Ok)
               {
                 for (int i = 0; i < QUARTERS_OF_DAY; i++)

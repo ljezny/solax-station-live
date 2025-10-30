@@ -42,6 +42,15 @@ static lv_color_t disp_draw_buf1[screenWidth * screenHeight / 10];
 static lv_color_t disp_draw_buf2[screenWidth * screenHeight / 10];
 static lv_disp_drv_t disp_drv;
 
+static long lastElectricityPriceAttempt = 0;
+static long lastWallboxDiscoveryAttempt = 0;
+static long lastEcoVolterAttempt = 0;
+static long lastWallboxStatusAttempt = 0;
+static long lastShellyAttempt = 0;
+static long lastShellyPairAttempt = 0;
+static long lastWiFiScanAttempt = 0;
+static long lastInverterDataAttempt = 0;
+
 SET_LOOP_TASK_STACK_SIZE(8 * 1024); // use freeStack
 
 WiFiDiscovery dongleDiscovery;
@@ -242,15 +251,25 @@ void setup()
     esp_log_level_set("wifi", ESP_LOG_VERBOSE);
 }
 
+void resetAllTasks() {
+    lastElectricityPriceAttempt = 0;
+    lastWallboxDiscoveryAttempt = 0;
+    lastEcoVolterAttempt = 0;
+    lastWallboxStatusAttempt = 0;
+    lastShellyAttempt = 0;
+    lastShellyPairAttempt = 0;
+    lastWiFiScanAttempt = 0;
+    lastInverterDataAttempt = 0;
+}
+
 bool discoverDonglesTask()
 {
-    static long lastAttempt = 0;
     bool hasDongles = false;
     bool run = false;
-    if (lastAttempt == 0 || millis() - lastAttempt > 60 * 1000)
+    if (lastWiFiScanAttempt == 0 || millis() - lastWiFiScanAttempt > 60 * 1000)
     {
         run = true;
-        lastAttempt = millis();
+        lastWiFiScanAttempt = millis();
         dongleDiscovery.scanWiFi(true);
     }
     return run;
@@ -292,14 +311,13 @@ InverterData_t loadInverterData(WiFiDiscoveryResult_t &discoveryResult)
 
 bool loadInverterDataTask()
 {
-    static long lastAttempt = 0;
     bool run = false;
     static int failures = 0;
     static int incrementalDelayTimeOnError = 0;
-    if (lastAttempt == 0 || (millis() - lastAttempt) > (INVERTER_DATA_REFRESH_INTERVAL + incrementalDelayTimeOnError))
+    if (lastInverterDataAttempt == 0 || (millis() - lastInverterDataAttempt) > (INVERTER_DATA_REFRESH_INTERVAL + incrementalDelayTimeOnError))
     {
         log_d("Loading inverter data");
-        lastAttempt = millis();
+        lastInverterDataAttempt = millis();
         run = true;
 #if DEMO
         inverterData = createRandomMockData();
@@ -348,9 +366,8 @@ bool loadInverterDataTask()
 
 bool pairShellyTask()
 {
-    static long lastAttempt = 0;
     bool run = false;
-    if (lastAttempt == 0 || millis() - lastAttempt > 30000)
+    if (lastShellyPairAttempt == 0 || millis() - lastShellyPairAttempt > 30000)
     {
         log_d("Pairing Shelly");
         for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
@@ -377,7 +394,7 @@ bool pairShellyTask()
             log_d("Connected devices: %d, paired devices: %d", softAP.getNumberOfConnectedDevices(), shellyAPI.getPairedCount());
             shellyAPI.queryMDNS(WiFi.softAPIP(), WiFi.softAPSubnetMask());
         }
-        lastAttempt = millis();
+        lastShellyPairAttempt = millis();
         run = true;
     }
     return run;
@@ -385,9 +402,8 @@ bool pairShellyTask()
 
 bool reloadShellyTask()
 {
-    static long lastAttempt = 0;
     bool run = false;
-    if (lastAttempt == 0 || millis() - lastAttempt > SHELLY_REFRESH_INTERVAL)
+    if (lastShellyAttempt == 0 || millis() - lastShellyAttempt > SHELLY_REFRESH_INTERVAL)
     {
         log_d("Reloading Shelly data");
         shellyResult = shellyAPI.getState();
@@ -404,7 +420,7 @@ bool reloadShellyTask()
             }
         }
 
-        lastAttempt = millis();
+        lastShellyAttempt = millis();
         run = true;
     }
     return run;
@@ -412,15 +428,14 @@ bool reloadShellyTask()
 
 bool loadElectricityPriceTask()
 {
-    static long lastAttempt = 0;
     bool run = false;
-    if (lastAttempt == 0 || millis() - lastAttempt > ELECTRICITY_PRICE_REFRESH_INTERVAL)
+    if (lastElectricityPriceAttempt == 0 || millis() - lastElectricityPriceAttempt > ELECTRICITY_PRICE_REFRESH_INTERVAL)
     {
         log_d("Loading electricity price data");
-
-        electricityPriceResult = ElectricityPriceLoader().getElectricityPrice(OTE_CZ, false);
+        ElectricityPriceLoader loader;
+        electricityPriceResult = loader.getElectricityPrice(loader.getStoredElectricityPriceProvider(), false);
         
-        lastAttempt = millis();
+        lastElectricityPriceAttempt = millis();
         run = true;
     }
     return run;
@@ -428,11 +443,10 @@ bool loadElectricityPriceTask()
 
 bool loadEcoVolterTask()
 {
-    static long lastAttempt = 0;
     bool run = false;
     static int failureCounter = 0;
     int period = ecoVolterAPI.isDiscovered() ? WALLBOX_STATUS_REFRESH_INTERVAL : WALLBOX_DISCOVERY_REFRESH_INTERVAL;
-    if (lastAttempt == 0 || millis() - lastAttempt > period)
+    if (lastEcoVolterAttempt == 0 || millis() - lastEcoVolterAttempt > period)
     {
         if (!ecoVolterAPI.isDiscovered())
         {
@@ -456,7 +470,7 @@ bool loadEcoVolterTask()
                 failureCounter = 0;
             }
         }
-        lastAttempt = millis();
+        lastEcoVolterAttempt = millis();
         run = true;
     }
     return run;
@@ -534,10 +548,9 @@ void resolveEcoVolterSmartCharge()
 
 bool loadSolaxWallboxTask()
 {
-    static long lastAttempt = 0;
     bool run = false;
     int period = solaxWallboxAPI.isDiscovered() ? WALLBOX_STATUS_REFRESH_INTERVAL : WALLBOX_DISCOVERY_REFRESH_INTERVAL;
-    if (lastAttempt == 0 || millis() - lastAttempt > period)
+    if (lastWallboxStatusAttempt == 0 || millis() - lastWallboxStatusAttempt > period)
     {
         if (!solaxWallboxAPI.isDiscovered())
         {
@@ -548,7 +561,7 @@ bool loadSolaxWallboxTask()
             log_d("Loading Solax Wallbox data");
             wallboxData = solaxWallboxAPI.getStatus();
         }
-        lastAttempt = millis();
+        lastWallboxStatusAttempt = millis();
         run = true;
     }
     return run;
@@ -680,6 +693,8 @@ void onEntering(state_t newState)
             previousInverterData.millis = 0;
         }
         xSemaphoreGive(lvgl_mutex);
+
+        resetAllTasks();
         break;
     }
 }

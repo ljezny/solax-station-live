@@ -4,9 +4,10 @@
 #include <lvgl.h>
 #include "ui/ui.h"
 #include "Inverters/WiFiDiscovery.hpp"
-
+#include "Spot/ElectricityPriceLoader.hpp"
 static void wifiSetupCompleteHandler(lv_event_t *e);
 static void wifiRollerHandler(lv_event_t *e);
+static void spotRollerHandler(lv_event_t *e);
 static void connectionTypeHandler(lv_event_t *e);
 static void onFocusHandler(lv_event_t *e);
 static void onTextChangedHandler(lv_event_t *e);
@@ -38,6 +39,7 @@ public:
         lv_obj_add_event_cb(ui_wifiSetupCompleteButton, wifiSetupCompleteHandler, LV_EVENT_ALL, this);
         lv_obj_add_event_cb(ui_wifiDropdown, wifiRollerHandler, LV_EVENT_ALL, this);
         lv_obj_add_event_cb(ui_connectionTypeDropdown, connectionTypeHandler, LV_EVENT_ALL, this);
+        lv_obj_add_event_cb(ui_spotProviderDropdown, spotRollerHandler, LV_EVENT_ALL, this);
         lv_obj_add_event_cb(ui_wifiPassword, onFocusHandler, LV_EVENT_FOCUSED, this);
         lv_obj_add_event_cb(ui_inverterIP, onFocusHandler, LV_EVENT_FOCUSED, this);
         lv_obj_add_event_cb(ui_inverterSN, onFocusHandler, LV_EVENT_FOCUSED, this);
@@ -89,6 +91,15 @@ public:
             }
         }
 
+        ElectricityPriceLoader priceLoader;
+        String spotProviders = "";
+        for (int i = NONE; i < NORDPOOL_PL; i++)
+        {
+            spotProviders += priceLoader.getProviderCaption((ElectricityPriceProvider_t)i) + "\n";
+        }
+        lv_dropdown_set_options(ui_spotProviderDropdown, spotProviders.c_str());
+        lv_dropdown_set_selected(ui_spotProviderDropdown, priceLoader.getStoredElectricityPriceProvider());
+
         setCompleteButtonVisibility();
     }
 
@@ -120,6 +131,7 @@ public:
 
             lv_obj_remove_event_cb_with_user_data(ui_wifiSetupCompleteButton, wifiSetupCompleteHandler, this);
             lv_obj_remove_event_cb_with_user_data(ui_wifiDropdown, wifiRollerHandler, this);
+            lv_obj_remove_event_cb_with_user_data(ui_spotProviderDropdown, spotRollerHandler, this);
             lv_obj_remove_event_cb_with_user_data(ui_connectionTypeDropdown, connectionTypeHandler, this);
             lv_obj_remove_event_cb_with_user_data(ui_wifiPassword, onFocusHandler, this);
             lv_obj_remove_event_cb_with_user_data(ui_inverterIP, onFocusHandler, this);
@@ -230,6 +242,18 @@ static void wifiRollerHandler(lv_event_t *e)
         {
             ui->onWiFiRollerChanged();
         }
+    }
+}
+
+static void spotRollerHandler(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_VALUE_CHANGED)
+    {
+        int selectedIndex = lv_dropdown_get_selected(ui_spotProviderDropdown);
+        log_d("Spot provider changed to index: %d", selectedIndex);
+        ElectricityPriceLoader priceLoader;
+        priceLoader.storeElectricityPriceProvider((ElectricityPriceProvider_t)selectedIndex);
     }
 }
 

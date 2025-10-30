@@ -13,32 +13,33 @@
 
 typedef enum
 {
-    OTE_CZ = 0,
-    OTK_SK = 1,
-    PSE_PL = 2,
-    AWATTAR_DE = 3,
-    AWATTAR_AT = 4,
-    ELPRIS_SE1 = 5,
-    ELPRIS_SE2 = 6,
-    ELPRIS_SE3 = 7,
-    ELPRIS_SE4 = 8,
-    SPOT_HINTA_FI_DK1 = 9,
-    SPOT_HINTA_FI_DK2 = 10,
-    SPOT_HINTA_FI_EE = 11,
-    SPOT_HINTA_FIFI = 12,
-    SPOT_HINTA_FI_LT = 13,
-    SPOT_HINTA_FI_LV = 14,
-    SPOT_HINTA_FI_NO1 = 15,
-    SPOT_HINTA_FI_NO2 = 16,
-    SPOT_HINTA_FI_NO3 = 17,
-    SPOT_HINTA_FI_NO4 = 18,
-    SPOT_HINTA_FI_NO5 = 19,
-    NORDPOOL_AT = 20,
-    NORDPOOL_BE = 21,
-    NORDPOOL_FR = 22,
-    NORDPOOL_GER = 23,
-    NORDPOOL_NL = 24,
-    NORDPOOL_PL = 25
+    NONE = 0,
+    OTE_CZ,
+    OTK_SK,
+    PSE_PL,
+    AWATTAR_DE,
+    AWATTAR_AT,
+    ELPRIS_SE1,
+    ELPRIS_SE2,
+    ELPRIS_SE3,
+    ELPRIS_SE4,
+    SPOT_HINTA_FI_DK1,
+    SPOT_HINTA_FI_DK2,
+    SPOT_HINTA_FI_EE,
+    SPOT_HINTA_FIFI,
+    SPOT_HINTA_FI_LT,
+    SPOT_HINTA_FI_LV,
+    SPOT_HINTA_FI_NO1,
+    SPOT_HINTA_FI_NO2,
+    SPOT_HINTA_FI_NO3,
+    SPOT_HINTA_FI_NO4,
+    SPOT_HINTA_FI_NO5,
+    NORDPOOL_AT,
+    NORDPOOL_BE,
+    NORDPOOL_FR,
+    NORDPOOL_GER,
+    NORDPOOL_NL,
+    NORDPOOL_PL
 } ElectricityPriceProvider_t;
 
 class ElectricityPriceLoader
@@ -135,13 +136,12 @@ public:
                 break;
             }
 
-            if(result.updated > 0)
+            if (result.updated > 0)
             {
                 break;
             }
             delay(5000 * (r + 1)); // wait before retry
         }
-
 
         strcpy(result.currency, getCurrency(provider).c_str());
         strcpy(result.energyUnit, "kWh");
@@ -149,6 +149,86 @@ public:
         result.pricesHorizontalSeparatorStep = getHorizontalSeparatorStep(provider);
 
         return result;
+    }
+
+    ElectricityPriceProvider_t getStoredElectricityPriceProvider()
+    {
+        Preferences preferences;
+        preferences.begin("spot", true);
+        int provider = preferences.getInt("provider", NONE);
+        preferences.end();
+        return (ElectricityPriceProvider_t)provider;
+    }
+
+    void storeElectricityPriceProvider(ElectricityPriceProvider_t provider)
+    {
+        Preferences preferences;
+        preferences.begin("spot", false);
+        preferences.putInt("provider", (int)provider);
+        preferences.end();
+    }
+
+    String getProviderCaption(ElectricityPriceProvider_t provider)
+    {
+        switch (provider)
+        {
+        case NONE:
+            return "None";
+        case OTE_CZ:
+            return "OTE Czech Republic";
+        case OTK_SK:
+            return "OTK Slovakia";
+        case PSE_PL:
+            return "PSE Poland";
+        case AWATTAR_DE:
+            return "Awattar Germany";
+        case AWATTAR_AT:
+            return "Awattar Austria";
+        case ELPRIS_SE1:
+            return "Elpris Sweden SE1";
+        case ELPRIS_SE2:
+            return "Elpris Sweden SE2";
+        case ELPRIS_SE3:
+            return "Elpris Sweden SE3";
+        case ELPRIS_SE4:
+            return "Elpris Sweden SE4";
+        case SPOT_HINTA_FI_DK1:
+            return "SpotHinta Finland DK1";
+        case SPOT_HINTA_FI_DK2:
+            return "SpotHinta Finland DK2";
+        case SPOT_HINTA_FI_EE:
+            return "SpotHinta Finland EE";
+        case SPOT_HINTA_FIFI:
+            return "SpotHinta Finland FI";
+        case SPOT_HINTA_FI_LT:
+            return "SpotHinta Finland LT";
+        case SPOT_HINTA_FI_LV:
+            return "SpotHinta Finland LV";
+        case SPOT_HINTA_FI_NO1:
+            return "SpotHinta Finland NO1";
+        case SPOT_HINTA_FI_NO2:
+            return "SpotHinta Finland NO2";
+        case SPOT_HINTA_FI_NO3:
+            return "SpotHinta Finland NO3";
+        case SPOT_HINTA_FI_NO4:
+            return "SpotHinta Finland NO4";
+        case SPOT_HINTA_FI_NO5:
+            return "SpotHinta Finland NO5";
+        case NORDPOOL_AT:
+            return "NordPool Austria";
+        case NORDPOOL_BE:
+            return "NordPool Belgium";
+        case NORDPOOL_FR:
+            return "NordPool France";
+        case NORDPOOL_GER:
+            return "NordPool Germany";
+        case NORDPOOL_NL:
+            return "NordPool Netherlands";
+        case NORDPOOL_PL:
+            return "NordPool Poland";
+        default:
+            return "Unknown";
+        }
     }
 
 private:
