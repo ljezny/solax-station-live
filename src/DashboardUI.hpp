@@ -32,7 +32,7 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
     }
     if (dsc->part == LV_PART_ITEMS && dsc->type == LV_CHART_DRAW_PART_BAR)
     {
-        int priceRank = getPriceRank(*electricityPriceResult, dsc->id);
+        int priceRank = getPriceRank(*electricityPriceResult, dsc->value / 100.0f);
         int rank = priceRank / (8 * 4);
         lv_color_t color = green;
         if (rank == 2)
@@ -50,6 +50,18 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         dsc->rect_dsc->bg_grad.stops[1].color = color;
         dsc->rect_dsc->bg_grad.stops[0].color = lv_color_mix(color, lv_color_white(), 128);
         dsc->rect_dsc->bg_grad.stops_count = 2; 
+
+        time_t now = time(nullptr);
+        struct tm *timeinfo = localtime(&now);
+        int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
+        if (dsc->id == currentQuarter)
+        {
+            dsc->rect_dsc->outline_color = lv_color_hex(0x000000);
+            dsc->rect_dsc->outline_width = 2;
+            dsc->rect_dsc->outline_opa = LV_OPA_COVER;
+        } else {
+            dsc->rect_dsc->outline_opa = LV_OPA_TRANSP;
+        }
     }
 }
 

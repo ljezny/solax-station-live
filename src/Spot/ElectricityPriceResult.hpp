@@ -38,4 +38,4 @@ ElectricityPriceItem_t getAverageElectricityPrice(ElectricityPriceResult_t resul
 int getMinimumQuarterElectricityPrice(ElectricityPriceResult_t result);
 int getMaximumQuarterElectricityPrice(ElectricityPriceResult_t result);
 int getCurrentQuarterPriceRank(ElectricityPriceResult_t result);
-int getPriceRank(ElectricityPriceResult_t result, int quarter);
+int getPriceRank(ElectricityPriceResult_t result, float price);

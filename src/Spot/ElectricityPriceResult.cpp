@@ -90,8 +90,9 @@ int getPriceRank(ElectricityPriceResult_t result, float price)
     int rank = 1;
     for (int i = 0; i < QUARTERS_OF_DAY; i++)
     {
+        float quarterPrice = getTotalPrice(getQuarterElectricityPrice(result, i));
         // count all prices lower than current, when same price is found, ranks same prices according to hour of day
-        if (price < price)
+        if (quarterPrice < price)
         {
             rank++;
         }
