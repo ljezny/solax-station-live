@@ -11,7 +11,49 @@
 #include "utils/MedianPowerSampler.hpp"
 #include "Spot/ElectricityPriceLoader.hpp"
 
-static void draw_event_cb(lv_event_t *e)
+lv_color_t red = lv_color_hex(0xAB2328);
+lv_color_t orange = lv_color_hex(0xFFAA00);
+lv_color_t green = lv_color_hex(0x03AD36);
+
+static void electricity_price_draw_event_cb(lv_event_t *e)
+{
+    lv_obj_draw_part_dsc_t *dsc = lv_event_get_draw_part_dsc(e);
+    lv_obj_t *obj = lv_event_get_target(e);
+    ElectricityPriceResult_t *electricityPriceResult = (ElectricityPriceResult_t *)lv_obj_get_user_data(obj);
+    if (dsc->id == LV_CHART_AXIS_PRIMARY_X && dsc->text)
+    {
+        int linesCount = 5;
+        int hour = (dsc->value * (24 / (linesCount - 1)));
+        lv_snprintf(dsc->text, dsc->text_length, "%02d:00", hour);
+    }
+    if (dsc->id == LV_CHART_AXIS_SECONDARY_Y && dsc->text)
+    {
+        lv_snprintf(dsc->text, dsc->text_length, "%d", (int)(dsc->value / 100.0f));
+    }
+    if (dsc->part == LV_PART_ITEMS && dsc->type == LV_CHART_DRAW_PART_BAR)
+    {
+        int priceRank = getPriceRank(*electricityPriceResult, dsc->id);
+        int rank = priceRank / (8 * 4);
+        lv_color_t color = green;
+        if (rank == 2)
+        {
+            color = red;
+        }
+        else if (rank == 1)
+        {
+            color = orange;
+        }
+
+        dsc->rect_dsc->bg_color = color;
+        //vertical gradient for opacity
+        dsc->rect_dsc->bg_grad.dir = LV_GRAD_DIR_VER;
+        dsc->rect_dsc->bg_grad.stops[1].color = color;
+        dsc->rect_dsc->bg_grad.stops[0].color = lv_color_mix(color, lv_color_white(), 128);
+        dsc->rect_dsc->bg_grad.stops_count = 2; 
+    }
+}
+
+static void solar_chart_draw_event_cb(lv_event_t *e)
 {
     lv_obj_t *obj = lv_event_get_target(e);
     /*Add the faded area before the lines are drawn*/
@@ -62,7 +104,7 @@ static void draw_event_cb(lv_event_t *e)
     {
         if (dsc->id == LV_CHART_AXIS_PRIMARY_Y)
         {
-            lv_snprintf(dsc->text, dsc->text_length, "%d%%", (int) dsc->value);
+            lv_snprintf(dsc->text, dsc->text_length, "%d%%", (int)dsc->value);
         }
         else if (dsc->id == LV_CHART_AXIS_SECONDARY_Y)
         {
@@ -81,7 +123,7 @@ static void draw_event_cb(lv_event_t *e)
             if (totalMinutes == 0)
             {
                 memset(dsc->text, 0, dsc->text_length);
-                //lv_snprintf(dsc->text, dsc->text_length, "");
+                // lv_snprintf(dsc->text, dsc->text_length, "");
             }
             else
             {
@@ -106,12 +148,14 @@ class DashboardUI
 private:
     bool isDarkMode = false;
     long shownMillis = 0;
+
 public:
     const int UI_REFRESH_PERIOD_MS = 5000;
 
     DashboardUI(void (*onSettingsShow)(lv_event_t *))
     {
-        lv_obj_add_event_cb(ui_Chart1, draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
+        lv_obj_add_event_cb(ui_Chart1, solar_chart_draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
+        lv_obj_add_event_cb(ui_Chart2, electricity_price_draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
         lv_obj_add_event_cb(ui_settingsButton, onSettingsShow, LV_EVENT_RELEASED, NULL);
 
         pvAnimator.setup(ui_LeftContainer, _ui_theme_color_pvColor);
@@ -124,10 +168,15 @@ public:
         {
             lv_chart_remove_series(ui_Chart1, lv_chart_get_series_next(ui_Chart1, NULL));
         }
+        while (lv_chart_get_series_next(ui_Chart2, NULL))
+        {
+            lv_chart_remove_series(ui_Chart2, lv_chart_get_series_next(ui_Chart2, NULL));
+        }
 
         pvPowerSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_pvColor[0]), LV_CHART_AXIS_SECONDARY_Y);
         acPowerSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_loadColor[0]), LV_CHART_AXIS_SECONDARY_Y);
         socSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_batteryColor[0]), LV_CHART_AXIS_PRIMARY_Y);
+        priceSeries = lv_chart_add_series(ui_Chart2, lv_color_hex(_ui_theme_color_gridColor[0]), LV_CHART_AXIS_SECONDARY_Y);
     }
 
     ~DashboardUI()
@@ -143,7 +192,7 @@ public:
     {
         lv_scr_load(ui_Dashboard);
 
-        //show settings button
+        // show settings button
         lv_obj_clear_flag(ui_settingsButton, LV_OBJ_FLAG_HIDDEN);
         shownMillis = millis();
     }
@@ -153,14 +202,14 @@ public:
         return constrain(inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0, 0, 100);
     }
 
-    void update(InverterData_t &inverterData, InverterData_t &previousInverterData, MedianPowerSampler &uiMedianPowerSampler, ShellyResult_t &shellyResult, ShellyResult_t &previousShellyResult, WallboxResult_t &wallboxResult, WallboxResult_t &previousWallboxResult, SolarChartDataProvider &solarChartDataProvider, ElectricityPriceResult_t &electricityPriceResult, int wifiSignalPercent)
+    void update(InverterData_t &inverterData, InverterData_t &previousInverterData, MedianPowerSampler &uiMedianPowerSampler, ShellyResult_t &shellyResult, ShellyResult_t &previousShellyResult, WallboxResult_t &wallboxResult, WallboxResult_t &previousWallboxResult, SolarChartDataProvider &solarChartDataProvider, ElectricityPriceResult_t &electricityPriceResult, ElectricityPriceResult_t &previousElectricityPriceResult, int wifiSignalPercent)
     {
-        //hide settings button after one minute
+        // hide settings button after one minute
         if (millis() - shownMillis > 60000)
         {
             lv_obj_add_flag(ui_settingsButton, LV_OBJ_FLAG_HIDDEN);
         }
-        
+
         if (uiMedianPowerSampler.hasValidSamples())
         {
             isDarkMode = uiMedianPowerSampler.getMedianPVPower() == 0;
@@ -207,9 +256,6 @@ public:
 
         lv_color_t black = lv_color_make(0, 0, 0);
         lv_color_t white = lv_color_make(255, 255, 255);
-        lv_color_t red = lv_color_hex(0xAB2328);
-        lv_color_t orange = lv_color_hex(0xFFAA00);
-        lv_color_t green = lv_color_hex(0x03AD36);
 
         lv_color_t textColor = isDarkMode ? white : black;
         lv_color_t containerBackground = isDarkMode ? black : white;
@@ -217,7 +263,7 @@ public:
         pvPowerTextAnimator.animate(ui_pvLabel,
                                     previousInverterData.pv1Power + previousInverterData.pv2Power + previousInverterData.pv3Power + previousInverterData.pv4Power,
                                     inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power);
-        lv_label_set_text(ui_pv1Label, format(POWER, pvPower, 1.0f, true).formatted.c_str());
+        lv_label_set_text(ui_pv1Label, format(POWER, inverterData.pv1Power, 1.0f, true).formatted.c_str());
         lv_label_set_text(ui_pv2Label, format(POWER, inverterData.pv2Power, 1.0f, true).formatted.c_str());
         lv_label_set_text(ui_pv3Label, format(POWER, inverterData.pv3Power, 1.0f, true).formatted.c_str());
         lv_label_set_text(ui_pv4Label, format(POWER, inverterData.pv4Power, 1.0f, true).formatted.c_str());
@@ -371,7 +417,7 @@ public:
         lv_obj_set_style_text_color(ui_gridBuyTodayLabel, red, 0);
         lv_obj_set_style_text_color(ui_gridBuyTodayUnitLabel, red, 0);
         lv_label_set_text(ui_gridBuyTodayUnitLabel, format(ENERGY, inverterData.gridBuyToday * 1000.0, 1).unit.c_str());
-        lv_label_set_text(ui_batteryChargedTodayLabel,  ("+" + format(ENERGY, inverterData.batteryChargedToday * 1000.0, 1).value).c_str());
+        lv_label_set_text(ui_batteryChargedTodayLabel, ("+" + format(ENERGY, inverterData.batteryChargedToday * 1000.0, 1).value).c_str());
         lv_label_set_text(ui_batteryChargedTodayUnitLabel, (format(ENERGY, inverterData.batteryChargedToday * 1000.0, 1).unit).c_str());
         lv_label_set_text(ui_batteryDischargedTodayLabel, ("-" + format(ENERGY, inverterData.batteryDischargedToday * 1000.0, 1).value).c_str());
         lv_label_set_text(ui_batteryDischargedTodayUnitLabel, (format(ENERGY, inverterData.batteryDischargedToday * 1000.0, 1).unit).c_str());
@@ -455,13 +501,15 @@ public:
         if (wallboxResult.evConnected)
         {
             lv_obj_clear_flag(ui_wallboxPowerContainer, LV_OBJ_FLAG_HIDDEN);
-            
-            //charged energy
+
+            // charged energy
             if (wallboxResult.chargedEnergy > 0)
             {
                 lv_label_set_text(ui_wallboxEnergyLabel, format(ENERGY, wallboxResult.chargedEnergy * 1000.0, 1).formatted.c_str());
                 lv_obj_clear_flag(ui_wallboxEnergyContainer, LV_OBJ_FLAG_HIDDEN);
-            } else {
+            }
+            else
+            {
                 lv_obj_add_flag(ui_wallboxEnergyContainer, LV_OBJ_FLAG_HIDDEN);
             }
         }
@@ -469,12 +517,14 @@ public:
         {
             lv_obj_add_flag(ui_wallboxPowerContainer, LV_OBJ_FLAG_HIDDEN);
 
-            //charged total energy
+            // charged total energy
             if (wallboxResult.totalChargedEnergy > 0)
             {
                 lv_label_set_text(ui_wallboxEnergyLabel, format(ENERGY, wallboxResult.totalChargedEnergy * 1000.0, 1, true).formatted.c_str());
                 lv_obj_clear_flag(ui_wallboxEnergyContainer, LV_OBJ_FLAG_HIDDEN);
-            } else {
+            }
+            else
+            {
                 lv_obj_add_flag(ui_wallboxEnergyContainer, LV_OBJ_FLAG_HIDDEN);
             }
         }
@@ -489,7 +539,7 @@ public:
             lv_obj_add_flag(ui_wallboxContainer, LV_OBJ_FLAG_HIDDEN);
         }
 
-        //wallbox temperature
+        // wallbox temperature
         if (wallboxResult.temperature > 0)
         {
             lv_label_set_text_fmt(ui_wallboxTemperatureLabel, "%d°C", wallboxResult.temperature);
@@ -518,19 +568,19 @@ public:
             lv_obj_add_flag(ui_wallboxTemperatureLabel, LV_OBJ_FLAG_HIDDEN);
         }
 
-        //hide all logos
+        // hide all logos
         lv_obj_add_flag(ui_wallboxLogoEcovolterImage, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(ui_wallboxLogoSolaxImage, LV_OBJ_FLAG_HIDDEN);
 
         switch (wallboxResult.type)
         {
         case WALLBOX_TYPE_SOLAX:
-            //show solax logo
+            // show solax logo
             lv_obj_clear_flag(ui_wallboxLogoSolaxImage, LV_OBJ_FLAG_HIDDEN);
             lv_obj_set_style_shadow_color(ui_wallboxContainer, lv_color_hex(_ui_theme_color_pvColor[0]), 0);
             break;
         case WALLBOX_TYPE_ECOVOLTER_PRO_V2:
-            //show ecovolter logo
+            // show ecovolter logo
             lv_obj_clear_flag(ui_wallboxLogoEcovolterImage, LV_OBJ_FLAG_HIDDEN);
             lv_obj_set_style_shadow_color(ui_wallboxContainer, lv_color_hex(_ui_theme_color_loadColor[0]), 0);
             break;
@@ -538,7 +588,7 @@ public:
             break;
         }
 
-        updateChart(inverterData, solarChartDataProvider, isDarkMode);
+        updateSolarChart(inverterData, solarChartDataProvider, isDarkMode);
 
         lv_obj_set_style_text_color(ui_statusLabel, lv_palette_main(LV_PALETTE_DEEP_ORANGE), 0);
 
@@ -577,13 +627,20 @@ public:
 
         updateFlowAnimations(inverterData, shellyResult);
 
-        //electricity spot price block
-        if(electricityPriceResult.updated > 0) {
-            //show
+        // electricity spot price block
+        if (electricityPriceResult.updated > 0)
+        {
+            // show
             lv_obj_clear_flag(ui_spotPriceContainer, LV_OBJ_FLAG_HIDDEN);
-        } else {
-            //hide
+        }
+        else
+        {
+            // hide
             lv_obj_add_flag(ui_spotPriceContainer, LV_OBJ_FLAG_HIDDEN);
+        }
+        if (electricityPriceResult.updated != previousElectricityPriceResult.updated)
+        {
+            updateElectricityPriceChart(electricityPriceResult, isDarkMode);
         }
 
         lv_obj_set_style_bg_color(ui_Dashboard, isDarkMode ? black : white, 0);
@@ -632,8 +689,8 @@ private:
     lv_chart_series_t *pvPowerSeries;
     lv_chart_series_t *acPowerSeries;
     lv_chart_series_t *socSeries;
-
-    void updateChart(InverterData_t &inverterData, SolarChartDataProvider &solarChartDataProvider, bool isDarkMode)
+    lv_chart_series_t *priceSeries;
+    void updateSolarChart(InverterData_t &inverterData, SolarChartDataProvider &solarChartDataProvider, bool isDarkMode)
     {
         uint32_t i;
 
@@ -669,6 +726,27 @@ private:
         lv_obj_set_style_text_color(ui_Chart1, isDarkMode ? lv_color_white() : lv_color_black(), LV_PART_TICKS);
     }
 
+    void updateElectricityPriceChart(ElectricityPriceResult_t &electricityPriceResult, bool isDarkMode)
+    {
+        float scale = 100.0f;
+        float maxPrice = electricityPriceResult.scaleMaxValue;
+        float minPrice = 0.0f;
+        priceSeries->start_point = 0;
+        for (int i = 0; i < QUARTERS_OF_DAY; i++)
+        {
+            lv_chart_set_next_value(ui_Chart2, priceSeries, electricityPriceResult.prices[i].electricityPrice * scale);
+            maxPrice = max(maxPrice, electricityPriceResult.prices[i].electricityPrice);
+            minPrice = min(minPrice, electricityPriceResult.prices[i].electricityPrice);
+        }
+        // round max to higher
+        maxPrice = ceil(maxPrice);
+        minPrice = floor(minPrice);
+        lv_chart_set_point_count(ui_Chart2, QUARTERS_OF_DAY);
+        lv_chart_set_range(ui_Chart2, LV_CHART_AXIS_SECONDARY_Y, (lv_coord_t)(minPrice * scale), (lv_coord_t)(maxPrice * scale));
+
+        lv_obj_set_user_data(ui_Chart2, (void *)&electricityPriceResult);
+    }
+
     void updateFlowAnimations(InverterData_t inverterData, ShellyResult_t shellyResult)
     {
         int duration = UI_REFRESH_PERIOD_MS / 3;
@@ -688,7 +766,7 @@ private:
         {
             if (inverterData.batteryPower > 0)
             {
-                batteryAnimator.run(ui_inverterContainer, ui_batteryContainer, duration,UI_BACKGROUND_ANIMATION_DURATION + duration, 1, (inverterData.batteryPower / 1000) + 1, offsetX, -offsetY);
+                batteryAnimator.run(ui_inverterContainer, ui_batteryContainer, duration, UI_BACKGROUND_ANIMATION_DURATION + duration, 1, (inverterData.batteryPower / 1000) + 1, offsetX, -offsetY);
             }
             else if (inverterData.batteryPower < 0)
             {

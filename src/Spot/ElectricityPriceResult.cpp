@@ -85,16 +85,13 @@ int getMaximumQuarterElectricityPrice(ElectricityPriceResult_t result)
     return maxIndex;
 }
 
-int getPriceRank(ElectricityPriceResult_t result, int quarter)
+int getPriceRank(ElectricityPriceResult_t result, float price)
 {
-    float currentSpotPrice = getTotalPrice(getQuarterElectricityPrice(result, quarter));
-
     int rank = 1;
     for (int i = 0; i < QUARTERS_OF_DAY; i++)
     {
-        float price = getTotalPrice(getQuarterElectricityPrice(result, i));
         // count all prices lower than current, when same price is found, ranks same prices according to hour of day
-        if (price < currentSpotPrice || (price == currentSpotPrice && i < quarter))
+        if (price < price)
         {
             rank++;
         }

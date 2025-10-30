@@ -59,6 +59,7 @@ WallboxResult_t previousWallboxData;
 ShellyResult_t shellyResult;
 ShellyResult_t previousShellyResult;
 ElectricityPriceResult_t electricityPriceResult;
+ElectricityPriceResult_t previousElectricityPriceResult;
 SolarChartDataProvider solarChartDataProvider;
 MedianPowerSampler shellyMedianPowerSampler;
 MedianPowerSampler wallboxMedianPowerSampler;
@@ -671,10 +672,11 @@ void onEntering(state_t newState)
         dashboardUI->show();
         if (inverterData.status == DONGLE_STATUS_OK)
         {
-            dashboardUI->update(inverterData, inverterData, uiMedianPowerSampler, shellyResult, shellyResult, wallboxData, wallboxData, solarChartDataProvider, electricityPriceResult, wifiSignalPercent());
+            dashboardUI->update(inverterData, inverterData, uiMedianPowerSampler, shellyResult, shellyResult, wallboxData, wallboxData, solarChartDataProvider, electricityPriceResult, previousElectricityPriceResult, wifiSignalPercent());
             previousShellyResult = shellyResult;
             previousInverterData = inverterData;
             previousWallboxData = wallboxData;
+            previousElectricityPriceResult = electricityPriceResult;
             previousInverterData.millis = 0;
         }
         xSemaphoreGive(lvgl_mutex);
@@ -808,7 +810,7 @@ void updateState()
         else if ((millis() - previousInverterData.millis) > UI_REFRESH_INTERVAL)
         {
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-            dashboardUI->update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, uiMedianPowerSampler, shellyResult, previousShellyResult, wallboxData, previousWallboxData, solarChartDataProvider, electricityPriceResult, wifiSignalPercent());
+            dashboardUI->update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, uiMedianPowerSampler, shellyResult, previousShellyResult, wallboxData, previousWallboxData, solarChartDataProvider, electricityPriceResult, previousElectricityPriceResult, wifiSignalPercent());
             xSemaphoreGive(lvgl_mutex);
 
             previousShellyResult = shellyResult;
@@ -823,6 +825,10 @@ void updateState()
         {
             // only one task per state update
             if (loadInverterDataTask())
+            {
+                break;
+            }
+            if(loadElectricityPriceTask())
             {
                 break;
             }
@@ -843,10 +849,7 @@ void updateState()
                 resolveEcoVolterSmartCharge();
                 break;
             }
-            if(loadElectricityPriceTask())
-            {
-                break;
-            }
+            
 
             if (!ecoVolterAPI.isDiscovered()) // ecovolter has priority
             {

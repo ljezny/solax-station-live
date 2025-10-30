@@ -128,6 +128,7 @@ extern lv_obj_t *ui_RightBottomContainer;
 extern lv_obj_t *ui_Chart1;
 extern lv_obj_t *ui_spotPriceContainer;
 extern lv_obj_t *ui_Chart2;
+extern lv_obj_t *ui_currentPriceLabel;
 extern lv_obj_t *ui_settingsButton;
 // CUSTOM VARIABLES
 

@@ -157,7 +157,7 @@ private:
         switch (provider)
         {
         case OTE_CZ:
-            return "Kč";
+            return "CZK";
         case PSE_PL:
             return "gr";
         case ELPRIS_SE1:
