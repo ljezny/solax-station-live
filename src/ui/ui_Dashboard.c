@@ -1364,7 +1364,7 @@ lv_obj_set_style_pad_right(ui_Chart2, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_top(ui_Chart2, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_bottom(ui_Chart2, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_row(ui_Chart2, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_column(ui_Chart2, -1, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_column(ui_Chart2, 1, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 lv_obj_set_style_text_color(ui_Chart2, lv_color_hex(0x000000), LV_PART_TICKS | LV_STATE_DEFAULT );
 lv_obj_set_style_text_opa(ui_Chart2, 255, LV_PART_TICKS| LV_STATE_DEFAULT);
@@ -1387,8 +1387,8 @@ lv_obj_set_style_shadow_color(ui_currentPriceLabel, lv_color_hex(0xFFAA00), LV_P
 lv_obj_set_style_shadow_opa(ui_currentPriceLabel, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_shadow_width(ui_currentPriceLabel, 32, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_shadow_spread(ui_currentPriceLabel, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_left(ui_currentPriceLabel, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_right(ui_currentPriceLabel, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_left(ui_currentPriceLabel, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_right(ui_currentPriceLabel, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_top(ui_currentPriceLabel, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_bottom(ui_currentPriceLabel, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
 

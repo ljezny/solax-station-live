@@ -35,7 +35,7 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         int priceRank = getPriceRank(*electricityPriceResult, dsc->value / 100.0f);
         int rank = priceRank / (8 * 4);
         lv_color_t color = green;
-        if (rank == 2)
+        if (rank >= 2)
         {
             color = red;
         }
@@ -47,8 +47,8 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         dsc->rect_dsc->bg_color = color;
         //vertical gradient for opacity
         dsc->rect_dsc->bg_grad.dir = LV_GRAD_DIR_VER;
-        dsc->rect_dsc->bg_grad.stops[1].color = color;
         dsc->rect_dsc->bg_grad.stops[0].color = lv_color_mix(color, lv_color_white(), 128);
+        dsc->rect_dsc->bg_grad.stops[1].color = color;
         dsc->rect_dsc->bg_grad.stops_count = 2; 
 
         time_t now = time(nullptr);
@@ -57,7 +57,7 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         if (dsc->id == currentQuarter)
         {
             dsc->rect_dsc->outline_color = lv_color_hex(0x000000);
-            dsc->rect_dsc->outline_width = 2;
+            dsc->rect_dsc->outline_width = 1;
             dsc->rect_dsc->outline_opa = LV_OPA_COVER;
         } else {
             dsc->rect_dsc->outline_opa = LV_OPA_TRANSP;
@@ -650,10 +650,9 @@ public:
             // hide
             lv_obj_add_flag(ui_spotPriceContainer, LV_OBJ_FLAG_HIDDEN);
         }
-        if (electricityPriceResult.updated != previousElectricityPriceResult.updated)
-        {
-            updateElectricityPriceChart(electricityPriceResult, isDarkMode);
-        }
+        
+        updateElectricityPriceChart(electricityPriceResult, isDarkMode);
+        updateCurrentPrice(electricityPriceResult, isDarkMode);
 
         lv_obj_set_style_bg_color(ui_Dashboard, isDarkMode ? black : white, 0);
         lv_obj_set_style_bg_color(ui_LeftContainer, containerBackground, 0);
@@ -736,6 +735,28 @@ private:
         // lv_chart_set_axis_tick( ui_Chart1, LV_CHART_AXIS_PRIMARY_X, 0, 0, 6, max(2, min(5, c)), true, 32);
         lv_chart_set_range(ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, (lv_coord_t)maxPower);
         lv_obj_set_style_text_color(ui_Chart1, isDarkMode ? lv_color_white() : lv_color_black(), LV_PART_TICKS);
+    }
+    
+    void updateCurrentPrice(ElectricityPriceResult_t &electricityPriceResult, bool isDarkMode){
+        ElectricityPriceItem_t currentPrice = getCurrentQuarterElectricityPrice(electricityPriceResult);
+        String priceText = String(currentPrice.electricityPrice, 2) + " " + electricityPriceResult.currency + " / " + electricityPriceResult.energyUnit;
+        priceText.replace(".", ",");
+        lv_label_set_text(ui_currentPriceLabel, priceText.c_str());
+        int priceRank = getPriceRank(electricityPriceResult, currentPrice.electricityPrice);
+        int rank = priceRank / (8 * 4);
+        lv_color_t color = green;
+        if (rank >= 2)
+        {
+            color = red;
+        }
+        else if (rank == 1)
+        {
+            color = orange;
+        }
+        lv_obj_set_style_bg_color(ui_currentPriceLabel, color, 0);
+        lv_obj_set_style_text_color(ui_currentPriceLabel, isDarkMode ? lv_color_black() : lv_color_white(), 0);
+        lv_obj_set_style_shadow_color(ui_currentPriceLabel, color, 0);
+
     }
 
     void updateElectricityPriceChart(ElectricityPriceResult_t &electricityPriceResult, bool isDarkMode)
