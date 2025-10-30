@@ -26,7 +26,12 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
     {
         int linesCount = 5;
         int hour = (dsc->value * (24 / (linesCount - 1)));
-        lv_snprintf(dsc->text, dsc->text_length, "%02d:00", hour);
+        if(hour % 24 != 0)
+        {
+            lv_snprintf(dsc->text, dsc->text_length, "%02d:00", hour);
+        } else {
+            lv_snprintf(dsc->text, dsc->text_length, "");
+        }
     }
     if (dsc->id == LV_CHART_AXIS_SECONDARY_Y && dsc->text)
     {
@@ -51,6 +56,12 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
         if (dsc->id == currentQuarter) {
             color = isDarkMode ? lv_color_white() : lv_color_black();
+
+            int w = lv_obj_get_content_width(obj);
+            if(w != 384) {
+                log_w("Spot price chart width should be exactly 96 * 4 = 384, actual: %d", w);
+            }
+            
         }
 
         dsc->rect_dsc->bg_color = color;

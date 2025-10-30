@@ -12615,7 +12615,8 @@
                 "InheritedType": 11
               }
             ],
-            "saved_objtypeKey": "CONTAINER"
+            "saved_objtypeKey": "CONTAINER",
+            "tree_closed": true
           },
           {
             "guid": "GUID21262894-282239S34813214",
@@ -13261,7 +13262,7 @@
                                             "strtype": "_style/Padding_RowCol",
                                             "intarray": [
                                               0,
-                                              4
+                                              2
                                             ],
                                             "InheritedType": 7
                                           }
@@ -13680,7 +13681,6 @@
                                   },
                                   {
                                     "nid": 1459526310,
-                                    "flags": 1048576,
                                     "strtype": "OBJECT/Flags",
                                     "InheritedType": 1
                                   },
@@ -13692,7 +13692,6 @@
                                   },
                                   {
                                     "nid": 225,
-                                    "flags": 1048576,
                                     "strtype": "OBJECT/Scrolling",
                                     "InheritedType": 1
                                   },
@@ -13745,7 +13744,7 @@
                                             "strtype": "_style/Padding_RowCol",
                                             "intarray": [
                                               0,
-                                              4
+                                              2
                                             ],
                                             "InheritedType": 7
                                           }
@@ -14725,7 +14724,7 @@
                                             "strtype": "_style/Padding_RowCol",
                                             "intarray": [
                                               0,
-                                              4
+                                              2
                                             ],
                                             "InheritedType": 7
                                           }
@@ -15233,7 +15232,7 @@
                                             "strtype": "_style/Padding_RowCol",
                                             "intarray": [
                                               0,
-                                              4
+                                              2
                                             ],
                                             "InheritedType": 7
                                           }
@@ -15708,8 +15707,8 @@
                                 "nid": 11120,
                                 "strtype": "_style/Padding_RowCol",
                                 "intarray": [
-                                  8,
-                                  8
+                                  6,
+                                  6
                                 ],
                                 "InheritedType": 7
                               }
@@ -15731,7 +15730,8 @@
                         "InheritedType": 11
                       }
                     ],
-                    "saved_objtypeKey": "CONTAINER"
+                    "saved_objtypeKey": "CONTAINER",
+                    "tree_closed": true
                   },
                   {
                     "guid": "GUID47428351-664782S5784256",
@@ -16367,7 +16367,7 @@
                                             "strtype": "_style/Padding_RowCol",
                                             "intarray": [
                                               0,
-                                              4
+                                              2
                                             ],
                                             "InheritedType": 7
                                           }
@@ -16851,7 +16851,7 @@
                                             "strtype": "_style/Padding_RowCol",
                                             "intarray": [
                                               0,
-                                              4
+                                              2
                                             ],
                                             "InheritedType": 7
                                           },
@@ -17001,7 +17001,25 @@
                               },
                               {
                                 "part": "lv.PART.MAIN",
-                                "childs": [],
+                                "childs": [
+                                  {
+                                    "nid": 10000,
+                                    "strtype": "_style/StyleState",
+                                    "strval": "DEFAULT",
+                                    "childs": [
+                                      {
+                                        "nid": 11120,
+                                        "strtype": "_style/Padding_RowCol",
+                                        "intarray": [
+                                          4,
+                                          0
+                                        ],
+                                        "InheritedType": 7
+                                      }
+                                    ],
+                                    "InheritedType": 1
+                                  }
+                                ],
                                 "nid": 1010,
                                 "strtype": "CONTAINER/Style_main",
                                 "strval": "lv.PART.MAIN, Rectangle, Pad, Text, Transform",
@@ -17205,8 +17223,7 @@
                             "InheritedType": 11
                           }
                         ],
-                        "saved_objtypeKey": "CONTAINER",
-                        "tree_closed": true
+                        "saved_objtypeKey": "CONTAINER"
                       },
                       {
                         "guid": "GUID2797220-320042S4763214",
@@ -17839,7 +17856,7 @@
                                             "strtype": "_style/Padding_RowCol",
                                             "intarray": [
                                               0,
-                                              4
+                                              2
                                             ],
                                             "InheritedType": 7
                                           },
@@ -18327,7 +18344,7 @@
                                             "strtype": "_style/Padding_RowCol",
                                             "intarray": [
                                               0,
-                                              4
+                                              2
                                             ],
                                             "InheritedType": 7
                                           },
@@ -18483,7 +18500,25 @@
                               },
                               {
                                 "part": "lv.PART.MAIN",
-                                "childs": [],
+                                "childs": [
+                                  {
+                                    "nid": 10000,
+                                    "strtype": "_style/StyleState",
+                                    "strval": "DEFAULT",
+                                    "childs": [
+                                      {
+                                        "nid": 11120,
+                                        "strtype": "_style/Padding_RowCol",
+                                        "intarray": [
+                                          4,
+                                          0
+                                        ],
+                                        "InheritedType": 7
+                                      }
+                                    ],
+                                    "InheritedType": 1
+                                  }
+                                ],
                                 "nid": 1010,
                                 "strtype": "CONTAINER/Style_main",
                                 "strval": "lv.PART.MAIN, Rectangle, Pad, Text, Transform",
@@ -18819,8 +18854,8 @@
                                 "nid": 11120,
                                 "strtype": "_style/Padding_RowCol",
                                 "intarray": [
-                                  8,
-                                  8
+                                  0,
+                                  6
                                 ],
                                 "InheritedType": 7
                               }
@@ -18974,8 +19009,8 @@
                             "nid": 11120,
                             "strtype": "_style/Padding_RowCol",
                             "intarray": [
-                              8,
-                              8
+                              6,
+                              0
                             ],
                             "InheritedType": 7
                           }
@@ -19661,10 +19696,10 @@
                       },
                       {
                         "nid": 60,
-                        "flags": 34,
+                        "flags": 33,
                         "strtype": "OBJECT/Size",
                         "intarray": [
-                          100,
+                          388,
                           100
                         ],
                         "InheritedType": 7
@@ -19677,7 +19712,6 @@
                       },
                       {
                         "nid": 90,
-                        "flags": 1048576,
                         "strtype": "OBJECT/Flags",
                         "InheritedType": 1
                       },
@@ -19713,7 +19747,6 @@
                       },
                       {
                         "nid": 320,
-                        "flags": 1048576,
                         "strtype": "OBJECT/States",
                         "InheritedType": 1
                       },
@@ -19738,8 +19771,8 @@
                         "nid": 1040,
                         "strtype": "CHART/Division_lines",
                         "intarray": [
-                          5,
-                          24
+                          0,
+                          0
                         ],
                         "InheritedType": 7
                       },
@@ -19761,7 +19794,7 @@
                         "nid": 1070,
                         "strtype": "CHART/XMajor",
                         "intarray": [
-                          0,
+                          4,
                           5
                         ],
                         "InheritedType": 7
@@ -19866,7 +19899,7 @@
                       {
                         "nid": 1210,
                         "strtype": "CHART/Labels_on_Secondary_Y_axis",
-                        "strval": "True",
+                        "strval": "False",
                         "InheritedType": 2
                       },
                       {
@@ -19920,8 +19953,8 @@
                                 "nid": 11110,
                                 "strtype": "_style/Padding",
                                 "intarray": [
-                                  8,
-                                  8,
+                                  0,
+                                  0,
                                   4,
                                   4
                                 ],
@@ -20047,7 +20080,7 @@
                         "strtype": "OBJECT/Position",
                         "intarray": [
                           0,
-                          -10
+                          0
                         ],
                         "InheritedType": 7
                       },
@@ -20295,12 +20328,6 @@
                     "InheritedType": 2
                   },
                   {
-                    "nid": 180,
-                    "strtype": "OBJECT/Overflow_visible",
-                    "strval": "True",
-                    "InheritedType": 2
-                  },
-                  {
                     "nid": 225,
                     "flags": 1048576,
                     "strtype": "OBJECT/Scrolling",
@@ -20391,10 +20418,10 @@
                             "nid": 11110,
                             "strtype": "_style/Padding",
                             "intarray": [
-                              16,
-                              42,
-                              16,
-                              24
+                              2,
+                              2,
+                              8,
+                              28
                             ],
                             "InheritedType": 7
                           }
@@ -20548,7 +20575,7 @@
                         "nid": -1552543700,
                         "strtype": "_style/Padding_RowCol",
                         "intarray": [
-                          8,
+                          6,
                           0
                         ],
                         "InheritedType": 7
@@ -20939,10 +20966,10 @@
                     "nid": 723455050,
                     "strtype": "_style/Padding",
                     "intarray": [
-                      8,
-                      8,
-                      8,
-                      8
+                      6,
+                      6,
+                      6,
+                      6
                     ],
                     "InheritedType": 7
                   },
@@ -20951,7 +20978,7 @@
                     "strtype": "_style/Padding_RowCol",
                     "intarray": [
                       0,
-                      8
+                      6
                     ],
                     "InheritedType": 7
                   }
@@ -23696,7 +23723,7 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 882,
+    "backup_cnt": 902,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",
