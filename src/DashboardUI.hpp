@@ -15,6 +15,8 @@ lv_color_t red = lv_color_hex(0xAB2328);
 lv_color_t orange = lv_color_hex(0xFFAA00);
 lv_color_t green = lv_color_hex(0x03AD36);
 
+static bool isDarkMode = false;
+
 static void electricity_price_draw_event_cb(lv_event_t *e)
 {
     lv_obj_draw_part_dsc_t *dsc = lv_event_get_draw_part_dsc(e);
@@ -44,6 +46,13 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
             color = orange;
         }
 
+        time_t now = time(nullptr);
+        struct tm *timeinfo = localtime(&now);
+        int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
+        if (dsc->id == currentQuarter) {
+            color = isDarkMode ? lv_color_white() : lv_color_black();
+        }
+
         dsc->rect_dsc->bg_color = color;
         //vertical gradient for opacity
         dsc->rect_dsc->bg_grad.dir = LV_GRAD_DIR_VER;
@@ -51,17 +60,6 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         dsc->rect_dsc->bg_grad.stops[1].color = color;
         dsc->rect_dsc->bg_grad.stops_count = 2; 
 
-        time_t now = time(nullptr);
-        struct tm *timeinfo = localtime(&now);
-        int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
-        if (dsc->id == currentQuarter)
-        {
-            dsc->rect_dsc->outline_color = lv_color_hex(0x000000);
-            dsc->rect_dsc->outline_width = 1;
-            dsc->rect_dsc->outline_opa = LV_OPA_COVER;
-        } else {
-            dsc->rect_dsc->outline_opa = LV_OPA_TRANSP;
-        }
     }
 }
 
@@ -158,7 +156,6 @@ static void solar_chart_draw_event_cb(lv_event_t *e)
 class DashboardUI
 {
 private:
-    bool isDarkMode = false;
     long shownMillis = 0;
 
 public:
