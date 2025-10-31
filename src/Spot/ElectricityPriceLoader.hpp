@@ -51,7 +51,12 @@ public:
         result.updated = 0;
         memset(result.currency, 0, CURRENCY_LENGTH);
         memset(result.energyUnit, 0, ENERGY_UNIT_LENGTH);
-
+        log_d("Loading electricity price data for provider %s", getProviderCaption(provider).c_str());
+        if(provider == NONE)
+        {
+            log_d("No electricity price provider selected.");
+            return result;
+        }
         for (int r = 0; r < 5; r++)
         {
             switch (provider)

@@ -21,7 +21,7 @@ private:
     double gridBuyTotal = 0;
     double gridSellTotal = 0;
     int day = -1;
-
+    const int RETRY_COUNT = 5;
     ModbusResponse sendSNDataRequestPacket(IPAddress ip)
     {
         if (tcpChannel.isConnected())
@@ -84,7 +84,7 @@ private:
             log_d("Connected.");
             ModbusResponse response;
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < RETRY_COUNT; i++)
             {
                 response = sendRunningDataRequestPacket(ip);
                 if (response.isValid)
@@ -128,7 +128,7 @@ private:
                 delay(i * 300); // wait before retrying
             }
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < RETRY_COUNT; i++)
             {
                 response = sendSNDataRequestPacket(ip);
                 if (response.isValid)
@@ -140,7 +140,7 @@ private:
                 delay(i * 300); // wait before retrying
             }
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < RETRY_COUNT; i++)
             { // it is UDP so retries are needed
                 response = sendSmartMeterRequestPacket(ip);
                 if (response.isValid)
@@ -175,7 +175,7 @@ private:
                 delay(i * 300); // wait before retrying
             }
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < RETRY_COUNT; i++)
             { // it is UDP so retries are needed
                 response = sendBMSInfoRequestPacket(ip);
                 if (response.isValid)
