@@ -313,7 +313,6 @@ public:
             isDarkMode = uiMedianPowerSampler.getMedianPVPower() == 0;
             uiMedianPowerSampler.resetSamples();
         }
-        isDarkMode = true; //force dark mode for now
         int selfUseEnergyTodayPercent = inverterData.loadToday > 0 ? ((inverterData.loadToday - inverterData.gridBuyToday) / inverterData.loadToday) * 100 : 0;
         selfUseEnergyTodayPercent = constrain(selfUseEnergyTodayPercent, 0, 100);
         int pvPower = inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power;

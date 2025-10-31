@@ -263,7 +263,7 @@ private:
         switch (provider)
         {
         case OTE_CZ:
-            return 7.0f;
+            return 10.0f;
         case PSE_PL:
             return 100.0f;
         case ELPRIS_SE1:
