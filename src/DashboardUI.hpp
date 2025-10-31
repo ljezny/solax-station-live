@@ -49,8 +49,8 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         lv_coord_t w = (int32_t)lv_obj_get_content_width(obj);
         lv_coord_t h = (int32_t)lv_obj_get_content_height(obj);
         uint32_t segmentCount = QUARTERS_OF_DAY;
-        uint32_t segmentGap = 1;
-        int32_t segmentWidth = 3;
+        uint32_t segmentGap = 0;
+        int32_t segmentWidth = 4;
         int32_t offset_x = w - (segmentCount * segmentWidth + (segmentCount - 1) * segmentGap);
 
         float minPrice = electricityPriceResult->prices[0].electricityPrice;
@@ -102,8 +102,11 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
 
             lv_draw_rect_dsc_t draw_rect_dsc;
             lv_draw_rect_dsc_init(&draw_rect_dsc);
-            draw_rect_dsc.bg_opa = LV_OPA_COVER;
+            draw_rect_dsc.bg_opa = LV_OPA_10;
             draw_rect_dsc.bg_color = color;
+            draw_rect_dsc.border_opa = LV_OPA_80;
+            draw_rect_dsc.border_color = color;
+            draw_rect_dsc.border_width = 1;
 
             lv_area_t a;
             a.x1 = obj->coords.x1 + offset_x + i * (segmentWidth + segmentGap);
@@ -130,6 +133,27 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         // a.y1 = obj->coords.y1 + pad_top + (priceRange + minPrice) * h / priceRange - 1;
         // a.y2 = a.y1;
         //lv_draw_rect(dsc->draw_ctx, &line_dsc, &a);
+
+        //show times for 6, 12, 18 hours
+        lv_draw_label_dsc_t label_dsc;
+        //use OpenSans small font
+        label_dsc.font = &ui_font_OpenSansExtraSmall;
+        lv_draw_label_dsc_init(&label_dsc);
+        lv_obj_init_draw_label_dsc(obj, LV_PART_MAIN, &label_dsc);
+        lv_area_t a;
+        a.y1 = obj->coords.y2 - pad_bottom + 2;
+        a.y2 = a.y1 + lv_font_get_line_height(label_dsc.font);
+        for (int hour = 6; hour <= 18; hour += 6)
+        {
+            int quarter = hour * 4;
+            //center label
+            String text = (hour < 10 ? "0" : "") + String(hour) + ":00";
+            lv_point_t size;
+            lv_txt_get_size(&size, text.c_str(), label_dsc.font, label_dsc.letter_space, label_dsc.line_space, LV_COORD_MAX, label_dsc.flag);
+            a.x1 = obj->coords.x1 + offset_x + quarter * (segmentWidth + segmentGap) + (segmentWidth - size.x) / 2;
+            a.x2 = a.x1 + size.x; - 1;
+            lv_draw_label(dsc->draw_ctx, &label_dsc, &a, text.c_str(), NULL);
+        }
     }
 }
 
