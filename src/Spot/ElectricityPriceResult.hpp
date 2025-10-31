@@ -4,10 +4,17 @@
 
 #define QUARTERS_OF_DAY 96
 
+typedef enum PriceLevel {
+    PRICE_LEVEL_NEGATIVE = -1,
+    PRICE_LEVEL_CHEAP,
+    PRICE_LEVEL_MEDIUM,
+    PRICE_LEVEL_EXPENSIVE,
+} PriceLevel_t;
 
 typedef struct ElectricityPriceItem
 {
     float electricityPrice;
+    PriceLevel_t priceLevel;
 } ElectricityPriceItem_t;
 
 #define CURRENCY_LENGTH 4

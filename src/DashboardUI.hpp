@@ -17,49 +17,119 @@ lv_color_t green = lv_color_hex(0x03AD36);
 
 static bool isDarkMode = false;
 
+static lv_color_t getPriceLevelColor(PriceLevel_t level)
+{
+    switch (level)
+    {
+    case PRICE_LEVEL_CHEAP:
+        return green;
+    case PRICE_LEVEL_MEDIUM:
+        return orange;
+    case PRICE_LEVEL_EXPENSIVE:
+        return red;
+    case PRICE_LEVEL_NEGATIVE:
+        return lv_color_hex(0x007BFF); //frozen blue
+    default:
+        return lv_color_hex(0x808080); //gray for unknown
+    }
+}
+
 static void electricity_price_draw_event_cb(lv_event_t *e)
 {
     lv_obj_draw_part_dsc_t *dsc = lv_event_get_draw_part_dsc(e);
     lv_obj_t *obj = lv_event_get_target(e);
     ElectricityPriceResult_t *electricityPriceResult = (ElectricityPriceResult_t *)lv_obj_get_user_data(obj);
-    if (dsc->id == LV_CHART_AXIS_PRIMARY_X && dsc->text)
-    {
-        int linesCount = 5;
-        int hour = (dsc->value * (24 / (linesCount - 1)));
-        lv_snprintf(dsc->text, dsc->text_length, "%02d:00", hour);
-    }
-    if (dsc->id == LV_CHART_AXIS_SECONDARY_Y && dsc->text)
-    {
-        lv_snprintf(dsc->text, dsc->text_length, "%d", (int)(dsc->value / 100.0f));
-    }
-    if (dsc->part == LV_PART_ITEMS && dsc->type == LV_CHART_DRAW_PART_BAR)
-    {
-        int priceRank = getPriceRank(*electricityPriceResult, dsc->value / 100.0f);
-        int rank = priceRank / (8 * 4);
-        lv_color_t color = green;
-        if (rank >= 2)
-        {
-            color = red;
-        }
-        else if (rank == 1)
-        {
-            color = orange;
-        }
 
+    if (dsc->part == LV_PART_MAIN)
+    {
+        lv_coord_t pad_left = lv_obj_get_style_pad_left(obj, LV_PART_MAIN);
+        lv_coord_t pad_right = lv_obj_get_style_pad_right(obj, LV_PART_MAIN);
+        lv_coord_t pad_top = lv_obj_get_style_pad_top(obj, LV_PART_MAIN);
+        lv_coord_t pad_bottom = lv_obj_get_style_pad_bottom(obj, LV_PART_MAIN);
+        lv_coord_t w = (int32_t)lv_obj_get_content_width(obj);
+        lv_coord_t h = (int32_t)lv_obj_get_content_height(obj);
+        uint32_t segmentCount = QUARTERS_OF_DAY;
+        uint32_t segmentGap = 1;
+        int32_t segmentWidth = 3;
+        int32_t offset_x = w - (segmentCount * segmentWidth + (segmentCount - 1) * segmentGap);
+
+        float minPrice = electricityPriceResult->prices[0].electricityPrice;
+        float maxPrice = electricityPriceResult->prices[0].electricityPrice;
+        for (uint32_t i = 0; i < segmentCount; i++)
+        {
+            float price = electricityPriceResult->prices[i].electricityPrice;
+            if (price < minPrice)
+            {
+                minPrice = price;
+            }
+            if (price > maxPrice)
+            {
+                maxPrice = price;
+            }
+        }
+        minPrice = min(0.0f, minPrice);
+        maxPrice = max(maxPrice, electricityPriceResult->scaleMaxValue);
+        float priceRange = maxPrice - minPrice;
+
+        //draw vertical line for current quarter
         time_t now = time(nullptr);
         struct tm *timeinfo = localtime(&now);
         int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
-        if (dsc->id == currentQuarter) {
-            color = isDarkMode ? lv_color_white() : lv_color_black();
+        lv_draw_rect_dsc_t current_quarter_dsc;
+        lv_draw_rect_dsc_init(&current_quarter_dsc);
+        current_quarter_dsc.bg_opa = LV_OPA_50;
+        current_quarter_dsc.bg_color = isDarkMode ? lv_color_hex(0x555555) : lv_color_hex(0xAAAAAA);
+        lv_area_t cq_a;
+        cq_a.x1 = obj->coords.x1 + offset_x + currentQuarter * (segmentWidth + segmentGap) - segmentGap / 2;
+        cq_a.x2 = cq_a.x1 + segmentWidth + segmentGap - 1;
+        cq_a.y1 = obj->coords.y1 + pad_top;
+        cq_a.y2 = obj->coords.y2 - pad_bottom;
+        lv_draw_rect(dsc->draw_ctx, &current_quarter_dsc, &cq_a);
+
+        //draw price segments
+        for (uint32_t i = 0; i < segmentCount; i++)
+        {
+            float price = electricityPriceResult->prices[i].electricityPrice;
+            lv_color_t color = getPriceLevelColor(electricityPriceResult->prices[i].priceLevel);
+           
+            // time_t now = time(nullptr);
+            // struct tm *timeinfo = localtime(&now);
+            // int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
+            // if (i == currentQuarter)
+            // {
+            //     color = isDarkMode ? lv_color_white() : lv_color_black();
+            // }
+
+            lv_draw_rect_dsc_t draw_rect_dsc;
+            lv_draw_rect_dsc_init(&draw_rect_dsc);
+            draw_rect_dsc.bg_opa = LV_OPA_COVER;
+            draw_rect_dsc.bg_color = color;
+
+            lv_area_t a;
+            a.x1 = obj->coords.x1 + offset_x + i * (segmentWidth + segmentGap);
+            a.x2 = a.x1 + segmentWidth - 1;
+            a.y1 = obj->coords.y1 + pad_top + (priceRange - price + minPrice) * h / priceRange;
+            a.y2 = obj->coords.y1 + pad_top + (priceRange + minPrice) * h / priceRange - 1; 
+            if(a.y1 > a.y2) //swap
+            {
+                lv_coord_t temp = a.y1;
+                a.y1 = a.y2;
+                a.y2 = temp;
+            }
+            lv_draw_rect(dsc->draw_ctx, &draw_rect_dsc, &a);
         }
-
-        dsc->rect_dsc->bg_color = color;
-        //vertical gradient for opacity
-        dsc->rect_dsc->bg_grad.dir = LV_GRAD_DIR_VER;
-        dsc->rect_dsc->bg_grad.stops[0].color = lv_color_mix(color, lv_color_white(), 128);
-        dsc->rect_dsc->bg_grad.stops[1].color = color;
-        dsc->rect_dsc->bg_grad.stops_count = 2; 
-
+        
+        //draw x-axis line
+        // lv_draw_rect_dsc_t line_dsc;
+        // lv_draw_rect_dsc_init(&line_dsc);
+        // line_dsc.bg_opa = LV_OPA_COVER;
+        // line_dsc.bg_color = isDarkMode ? lv_color_hex(0x555555) : lv_color_hex(0xAAAAAA);
+        // lv_area_t a;
+        // a.x1 = obj->coords.x1 + pad_left;
+        // a.x2 = obj->coords.x2 - pad_right;
+        // a.y1 = obj->coords.y1 + pad_top + (priceRange + minPrice) * h / priceRange - 1;
+        // a.y2 = a.y1;
+        //lv_draw_rect(dsc->draw_ctx, &line_dsc, &a);
     }
 }
 
@@ -164,7 +234,7 @@ public:
     DashboardUI(void (*onSettingsShow)(lv_event_t *))
     {
         lv_obj_add_event_cb(ui_Chart1, solar_chart_draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
-        lv_obj_add_event_cb(ui_Chart2, electricity_price_draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
+        lv_obj_add_event_cb(ui_spotPriceContainer, electricity_price_draw_event_cb, LV_EVENT_DRAW_PART_END, NULL);
         lv_obj_add_event_cb(ui_settingsButton, onSettingsShow, LV_EVENT_RELEASED, NULL);
 
         pvAnimator.setup(ui_LeftContainer, _ui_theme_color_pvColor);
@@ -177,15 +247,10 @@ public:
         {
             lv_chart_remove_series(ui_Chart1, lv_chart_get_series_next(ui_Chart1, NULL));
         }
-        while (lv_chart_get_series_next(ui_Chart2, NULL))
-        {
-            lv_chart_remove_series(ui_Chart2, lv_chart_get_series_next(ui_Chart2, NULL));
-        }
 
         pvPowerSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_pvColor[0]), LV_CHART_AXIS_SECONDARY_Y);
         acPowerSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_loadColor[0]), LV_CHART_AXIS_SECONDARY_Y);
         socSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_batteryColor[0]), LV_CHART_AXIS_PRIMARY_Y);
-        priceSeries = lv_chart_add_series(ui_Chart2, lv_color_hex(_ui_theme_color_gridColor[0]), LV_CHART_AXIS_SECONDARY_Y);
     }
 
     ~DashboardUI()
@@ -647,7 +712,7 @@ public:
             // hide
             lv_obj_add_flag(ui_spotPriceContainer, LV_OBJ_FLAG_HIDDEN);
         }
-        
+
         updateElectricityPriceChart(electricityPriceResult, isDarkMode);
         updateCurrentPrice(electricityPriceResult, isDarkMode);
 
@@ -671,7 +736,6 @@ public:
         lv_obj_set_style_bg_color(ui_loadContainer, isDarkMode ? black : white, 0);
         lv_obj_set_style_bg_color(ui_spotPriceContainer, isDarkMode ? black : white, 0);
         lv_obj_set_style_bg_opa(ui_spotPriceContainer, isDarkMode ? LV_OPA_80 : LV_OPA_80, 0);
-        lv_obj_set_style_line_opa(ui_Chart2, isDarkMode ? LV_OPA_20 : LV_OPA_COVER, LV_PART_MAIN);
         lv_obj_set_style_text_color(ui_Dashboard, isDarkMode ? white : black, 0);
     }
 
@@ -699,14 +763,12 @@ private:
     lv_chart_series_t *pvPowerSeries;
     lv_chart_series_t *acPowerSeries;
     lv_chart_series_t *socSeries;
-    lv_chart_series_t *priceSeries;
     void updateSolarChart(InverterData_t &inverterData, SolarChartDataProvider &solarChartDataProvider, bool isDarkMode)
     {
         uint32_t i;
 
         pvPowerSeries->start_point = 0;
         acPowerSeries->start_point = 0;
-        socSeries->start_point = 0;
 
         float maxPower = 5000.0f;
         int c = 0;
@@ -735,49 +797,24 @@ private:
         lv_chart_set_range(ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, (lv_coord_t)maxPower);
         lv_obj_set_style_text_color(ui_Chart1, isDarkMode ? lv_color_white() : lv_color_black(), LV_PART_TICKS);
     }
-    
-    void updateCurrentPrice(ElectricityPriceResult_t &electricityPriceResult, bool isDarkMode){
+
+    void updateCurrentPrice(ElectricityPriceResult_t &electricityPriceResult, bool isDarkMode)
+    {
         ElectricityPriceItem_t currentPrice = getCurrentQuarterElectricityPrice(electricityPriceResult);
         String priceText = String(currentPrice.electricityPrice, 2) + " " + electricityPriceResult.currency + " / " + electricityPriceResult.energyUnit;
         priceText.replace(".", ",");
         lv_label_set_text(ui_currentPriceLabel, priceText.c_str());
-        int priceRank = getPriceRank(electricityPriceResult, currentPrice.electricityPrice);
-        int rank = priceRank / (8 * 4);
-        lv_color_t color = green;
-        if (rank >= 2)
-        {
-            color = red;
-        }
-        else if (rank == 1)
-        {
-            color = orange;
-        }
+        lv_color_t color = getPriceLevelColor(currentPrice.priceLevel);
+        
         lv_obj_set_style_bg_color(ui_currentPriceLabel, color, 0);
         lv_obj_set_style_text_color(ui_currentPriceLabel, isDarkMode ? lv_color_black() : lv_color_white(), 0);
         lv_obj_set_style_shadow_color(ui_currentPriceLabel, color, 0);
-
     }
 
     void updateElectricityPriceChart(ElectricityPriceResult_t &electricityPriceResult, bool isDarkMode)
     {
-        float scale = 100.0f;
-        float maxPrice = electricityPriceResult.scaleMaxValue;
-        float minPrice = 0.0f;
-        priceSeries->start_point = 0;
-        for (int i = 0; i < QUARTERS_OF_DAY; i++)
-        {
-            lv_chart_set_next_value(ui_Chart2, priceSeries, electricityPriceResult.prices[i].electricityPrice * scale);
-            maxPrice = max(maxPrice, electricityPriceResult.prices[i].electricityPrice);
-            minPrice = min(minPrice, electricityPriceResult.prices[i].electricityPrice);
-        }
-        // round max to higher
-        maxPrice = ceil(maxPrice);
-        minPrice = floor(minPrice);
-        lv_chart_set_point_count(ui_Chart2, QUARTERS_OF_DAY);
-        lv_chart_set_range(ui_Chart2, LV_CHART_AXIS_SECONDARY_Y, (lv_coord_t)(minPrice * scale), (lv_coord_t)(maxPrice * scale));
-
-        lv_obj_set_user_data(ui_Chart2, (void *)&electricityPriceResult);
-        lv_obj_set_style_text_color(ui_Chart2, isDarkMode ? lv_color_white() : lv_color_black(), LV_PART_TICKS);
+        lv_obj_set_user_data(ui_spotPriceContainer, (void *)&electricityPriceResult);
+        lv_obj_invalidate(ui_spotPriceContainer);
     }
 
     void updateFlowAnimations(InverterData_t inverterData, ShellyResult_t shellyResult)

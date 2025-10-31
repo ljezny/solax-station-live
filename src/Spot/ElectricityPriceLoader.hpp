@@ -147,7 +147,10 @@ public:
         strcpy(result.energyUnit, "kWh");
         result.scaleMaxValue = getRecommendedScaleMaxValue(provider);
         result.pricesHorizontalSeparatorStep = getHorizontalSeparatorStep(provider);
-
+        for (int i = 0; i < QUARTERS_OF_DAY; i++)
+        {
+            result.prices[i].priceLevel = getPriceLevel(result.prices[i].electricityPrice);
+        }
         return result;
     }
 
@@ -255,7 +258,7 @@ private:
         switch (provider)
         {
         case OTE_CZ:
-            return 10.0f;
+            return 7.0f;
         case PSE_PL:
             return 100.0f;
         case ELPRIS_SE1:
@@ -275,7 +278,7 @@ private:
         case OTE_CZ:
             return 1;
         case PSE_PL:
-            return 10;
+            return 25;
         case ELPRIS_SE1:
         case ELPRIS_SE2:
         case ELPRIS_SE3:
@@ -283,6 +286,62 @@ private:
             return 1;
         default:
             return 2;
+        }
+    }
+
+    float getCheapPriceThreshold(ElectricityPriceProvider_t provider)
+    {
+        switch (provider)
+        {
+        case OTE_CZ:
+            return 1.5f;
+        case PSE_PL:
+            return 50.0f;
+        case ELPRIS_SE1:
+        case ELPRIS_SE2:
+        case ELPRIS_SE3:
+        case ELPRIS_SE4:
+            return 6.0f;
+        default:
+            return 6.0f;
+        }
+    }
+
+    float getExpensivePriceThreshold(ElectricityPriceProvider_t provider)
+    {
+        switch (provider)
+        {
+        case OTE_CZ:
+            return 3.0f;
+        case PSE_PL:
+            return 45.0f;
+        case ELPRIS_SE1:
+        case ELPRIS_SE2:
+        case ELPRIS_SE3:
+        case ELPRIS_SE4:
+            return 13.0f;
+        default:
+            return 12.0f;
+        }
+    }
+
+    PriceLevel_t getPriceLevel(float price)
+    {
+        if (price < 0.0f)
+        {
+            return PRICE_LEVEL_NEGATIVE;
+        }
+        else if (price <= getCheapPriceThreshold(getStoredElectricityPriceProvider()))
+        {
+            return PRICE_LEVEL_CHEAP;
+        }
+        else if (price >= getExpensivePriceThreshold(getStoredElectricityPriceProvider()))
+        {
+            return PRICE_LEVEL_EXPENSIVE;
+        }
+        else
+        {
+            return PRICE_LEVEL_MEDIUM;
         }
     }
 };
