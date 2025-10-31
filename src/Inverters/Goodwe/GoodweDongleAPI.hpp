@@ -16,7 +16,7 @@ public:
 
 private:
     ModbusRTU rtuChannel;
-    ModbusTCP tcpChannel;
+    //ModbusTCP tcpChannel;
     IPAddress ip = IPAddress(0, 0, 0, 0); // default IP address
     double gridBuyTotal = 0;
     double gridSellTotal = 0;
@@ -24,37 +24,37 @@ private:
     const int RETRY_COUNT = 5;
     ModbusResponse sendSNDataRequestPacket(IPAddress ip)
     {
-        if (tcpChannel.isConnected())
-        {
-            return tcpChannel.sendModbusRequest(0xF7, 0x03, 35003, 8);
-        }
+        // if (tcpChannel.isConnected())
+        // {
+        //     return tcpChannel.sendModbusRequest(0xF7, 0x03, 35003, 8);
+        // }
         return rtuChannel.sendDataRequest(ip, 8899, 35003, 8);
     }
 
     ModbusResponse sendRunningDataRequestPacket(IPAddress ip)
     {
-        if (tcpChannel.isConnected())
-        {
-            return tcpChannel.sendModbusRequest(0xF7, 0x03, 35100, 125);
-        }
+        // if (tcpChannel.isConnected())
+        // {
+        //     return tcpChannel.sendModbusRequest(0xF7, 0x03, 35100, 125);
+        // }
         return rtuChannel.sendDataRequest(ip, 8899, 35100, 125);
     }
 
     ModbusResponse sendBMSInfoRequestPacket(IPAddress ip)
     {
-        if (tcpChannel.isConnected())
-        {
-            return tcpChannel.sendModbusRequest(0xF7, 0x03, 37000, 8);
-        }
+        // if (tcpChannel.isConnected())
+        // {
+        //     return tcpChannel.sendModbusRequest(0xF7, 0x03, 37000, 8);
+        // }
         return rtuChannel.sendDataRequest(ip, 8899, 37000, 8);
     }
 
     ModbusResponse sendSmartMeterRequestPacket(IPAddress ip)
     {
-        if (tcpChannel.isConnected())
-        {
-            return tcpChannel.sendModbusRequest(0xF7, 0x03, 36000, 44);
-        }
+        // if (tcpChannel.isConnected())
+        // {
+        //     return tcpChannel.sendModbusRequest(0xF7, 0x03, 36000, 44);
+        // }
         return rtuChannel.sendDataRequest(ip, 8899, 36000, 44);
     }
 
@@ -79,7 +79,7 @@ private:
 
         InverterData_t inverterData;
         log_d("Connecting to dongle...%s", ip.toString().c_str());
-        if (tcpChannel.connect(ip, 502) || rtuChannel.connect())
+        if (/*tcpChannel.connect(ip, 502) || */rtuChannel.connect())
         {
             log_d("Connected.");
             ModbusResponse response;
@@ -189,7 +189,7 @@ private:
             }
         }
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
-        tcpChannel.disconnect();
+        //tcpChannel.disconnect();
         rtuChannel.disconnect();
         logInverterData(inverterData);
 
