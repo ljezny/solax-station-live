@@ -102,7 +102,7 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
 
             lv_draw_rect_dsc_t draw_rect_dsc;
             lv_draw_rect_dsc_init(&draw_rect_dsc);
-            draw_rect_dsc.bg_opa = LV_OPA_10;
+            draw_rect_dsc.bg_opa = LV_OPA_30;
             draw_rect_dsc.bg_color = color;
             draw_rect_dsc.border_opa = LV_OPA_80;
             draw_rect_dsc.border_color = color;
@@ -313,6 +313,7 @@ public:
             isDarkMode = uiMedianPowerSampler.getMedianPVPower() == 0;
             uiMedianPowerSampler.resetSamples();
         }
+        isDarkMode = true; //force dark mode for now
         int selfUseEnergyTodayPercent = inverterData.loadToday > 0 ? ((inverterData.loadToday - inverterData.gridBuyToday) / inverterData.loadToday) * 100 : 0;
         selfUseEnergyTodayPercent = constrain(selfUseEnergyTodayPercent, 0, 100);
         int pvPower = inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power;
