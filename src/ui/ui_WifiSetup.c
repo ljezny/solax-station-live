@@ -100,7 +100,6 @@ lv_label_set_text(ui_Label5,"Inverter");
 
 ui_connectionTypeDropdown = lv_dropdown_create(ui_Container15);
 lv_dropdown_set_options( ui_connectionTypeDropdown, "SOLAX\nVictron\nGoodWe\nSofar Solar\nDEYE" );
-lv_dropdown_set_text( ui_connectionTypeDropdown, "Inverter Type");
 lv_obj_set_width( ui_connectionTypeDropdown, lv_pct(100));
 lv_obj_set_height( ui_connectionTypeDropdown, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_x( ui_connectionTypeDropdown, 0 );

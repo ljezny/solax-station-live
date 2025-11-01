@@ -21822,7 +21822,7 @@
                       {
                         "nid": 1050,
                         "strtype": "DROPDOWN/Base_text",
-                        "strval": "Inverter Type",
+                        "strval": "",
                         "InheritedType": 10
                       },
                       {
@@ -23304,7 +23304,7 @@
     "uiExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "projectExportFolderPath": "/Users/lukasjezny/solax-station-live/src/ui",
     "custom_variable_prefix": "uic",
-    "backup_cnt": 891,
+    "backup_cnt": 892,
     "autosave_cnt": 0,
     "group_color_cnt": 0,
     "lvgl_version": "8.3.11",
