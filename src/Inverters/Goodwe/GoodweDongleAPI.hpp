@@ -90,10 +90,10 @@ private:
                 if (response.isValid)
                 {
                     inverterData.status = DONGLE_STATUS_OK;
-                    inverterData.pv1Power = response.readUInt16(35100 + 5);
-                    inverterData.pv2Power = response.readUInt16(35100 + 9);
-                    inverterData.pv3Power = response.readUInt16(35100 + 13);
-                    inverterData.pv4Power = response.readUInt16(35100 + 17);
+                    inverterData.pv1Power = response.readUInt32(35100 + 5);
+                    inverterData.pv2Power = response.readUInt32(35100 + 9);
+                    inverterData.pv3Power = response.readUInt32(35100 + 13);
+                    inverterData.pv4Power = response.readUInt32(35100 + 17);
 
                     inverterData.batteryPower -= response.readInt16(35100 + 83); // TODO: maybe sign readuw(84);
                     // _ac = readsw(40);
