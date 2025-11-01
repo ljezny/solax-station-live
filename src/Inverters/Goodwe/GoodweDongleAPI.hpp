@@ -77,7 +77,7 @@ private:
             }
         }
 
-        InverterData_t inverterData;
+        InverterData_t inverterData{};
         log_d("Connecting to dongle...%s", ip.toString().c_str());
         if (/*tcpChannel.connect(ip, 502) || */rtuChannel.connect())
         {

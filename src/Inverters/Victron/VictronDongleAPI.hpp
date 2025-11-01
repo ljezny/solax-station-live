@@ -43,7 +43,7 @@ public:
 
     InverterData_t loadData(String ipAddress)
     {
-        InverterData_t inverterData;
+        InverterData_t inverterData{};
         IPAddress ip;
         if (!ipAddress.isEmpty())
         {

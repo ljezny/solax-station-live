@@ -15,7 +15,7 @@ private:
 
     InverterData_t readData(String ipAddress, String dongleSN)
     {
-        InverterData_t inverterData;
+        InverterData_t inverterData{};
         inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
         inverterData.sn = sn;
