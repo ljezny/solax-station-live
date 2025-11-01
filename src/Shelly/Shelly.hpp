@@ -233,33 +233,33 @@ public:
             if ((uint32_t)ipAddress == ((uint32_t)softAPIP & (uint32_t)softAPSubnet))
             {
                 log_d("Found Shelly on softAP subnet: %s", hostname.c_str());
-            }
-
-            hostname.toLowerCase();
-            for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
-            {
-                String prefix = supportedModels[i].prefix;
-                prefix.toLowerCase();
-                if (hostname.startsWith(prefix))
+                hostname.toLowerCase();
+                for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
                 {
-                    log_d("Found Shelly: %s model: %s", hostname.c_str(), supportedModels[i].prefix.c_str());
-                    String idText = hostname.substring(prefix.length());
-                    unsigned long long shellyId = strtoull(idText.c_str(), NULL, 16);
-                    for (int j = 0; j < MAX_SHELLY_PAIRS; j++)
+                    String prefix = supportedModels[i].prefix;
+                    prefix.toLowerCase();
+                    if (hostname.startsWith(prefix))
                     {
-                        log_d("Checking Shelly %s", String(pairs[j].shellyId, HEX).c_str());
-                        if (pairs[j].shellyId == 0 || pairs[j].shellyId == shellyId)
+                        log_d("Found Shelly: %s model: %s", hostname.c_str(), supportedModels[i].prefix.c_str());
+                        String idText = hostname.substring(prefix.length());
+                        unsigned long long shellyId = strtoull(idText.c_str(), NULL, 16);
+                        for (int j = 0; j < MAX_SHELLY_PAIRS; j++)
                         {
-                            pairs[j].shellyId = shellyId;
-                            pairs[j].ip = r->addr->addr.u_addr.ip4.addr;
-                            pairs[j].model = supportedModels[i].model;
-                            log_d("Paired Shelly %s", String(shellyId, HEX).c_str());
-                            break;
+                            log_d("Checking Shelly %s", String(pairs[j].shellyId, HEX).c_str());
+                            if (pairs[j].shellyId == 0 || pairs[j].shellyId == shellyId)
+                            {
+                                pairs[j].shellyId = shellyId;
+                                pairs[j].ip = r->addr->addr.u_addr.ip4.addr;
+                                pairs[j].model = supportedModels[i].model;
+                                log_d("Paired Shelly %s", String(shellyId, HEX).c_str());
+                                break;
+                            }
                         }
+                        break;
                     }
-                    break;
                 }
             }
+
             r = r->next;
         }
         mdns_query_results_free(results);
