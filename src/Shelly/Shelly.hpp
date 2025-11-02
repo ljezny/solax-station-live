@@ -182,6 +182,14 @@ public:
         return false;
     }
 
+    static inline bool inSameSubnet(IPAddress ip, IPAddress base, IPAddress mask)
+    {
+        uint32_t ip_u = (uint32_t)ip;
+        uint32_t base_u = (uint32_t)base;
+        uint32_t mask_u = (uint32_t)mask;
+        return (ip_u & mask_u) == (base_u & mask_u);
+    }
+
     void queryMDNS(IPAddress softAPIP, IPAddress softAPSubnet)
     {
         mdns_result_t *results = NULL;
@@ -230,7 +238,7 @@ public:
 
             IPAddress ipAddress = r->addr->addr.u_addr.ip4.addr;
             // check if IP is in the same subnet as softAP
-            if ((uint32_t)ipAddress == ((uint32_t)softAPIP & (uint32_t)softAPSubnet))
+            if (inSameSubnet(ipAddress, softAPIP, softAPSubnet))
             {
                 log_d("Found Shelly on softAP subnet: %s", hostname.c_str());
                 hostname.toLowerCase();
