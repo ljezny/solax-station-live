@@ -28,9 +28,9 @@ static lv_color_t getPriceLevelColor(PriceLevel_t level)
     case PRICE_LEVEL_EXPENSIVE:
         return red;
     case PRICE_LEVEL_NEGATIVE:
-        return lv_color_hex(0x007BFF); //frozen blue
+        return lv_color_hex(0x007BFF); // frozen blue
     default:
-        return lv_color_hex(0x808080); //gray for unknown
+        return lv_color_hex(0x808080); // gray for unknown
     }
 }
 
@@ -71,7 +71,7 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         maxPrice = max(maxPrice, electricityPriceResult->scaleMaxValue);
         float priceRange = maxPrice - minPrice;
 
-        //draw vertical line for current quarter
+        // draw vertical line for current quarter
         time_t now = time(nullptr);
         struct tm *timeinfo = localtime(&now);
         int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
@@ -86,12 +86,12 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         cq_a.y2 = obj->coords.y2 - pad_bottom;
         lv_draw_rect(dsc->draw_ctx, &current_quarter_dsc, &cq_a);
 
-        //draw price segments
+        // draw price segments
         for (uint32_t i = 0; i < segmentCount; i++)
         {
             float price = electricityPriceResult->prices[i].electricityPrice;
             lv_color_t color = getPriceLevelColor(electricityPriceResult->prices[i].priceLevel);
-           
+
             // time_t now = time(nullptr);
             // struct tm *timeinfo = localtime(&now);
             // int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
@@ -112,8 +112,8 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
             a.x1 = obj->coords.x1 + offset_x + i * (segmentWidth + segmentGap);
             a.x2 = a.x1 + segmentWidth - 1;
             a.y1 = obj->coords.y1 + pad_top + (priceRange - price + minPrice) * h / priceRange;
-            a.y2 = obj->coords.y1 + pad_top + (priceRange + minPrice) * h / priceRange - 1; 
-            if(a.y1 > a.y2) //swap
+            a.y2 = obj->coords.y1 + pad_top + (priceRange + minPrice) * h / priceRange - 1;
+            if (a.y1 > a.y2) // swap
             {
                 lv_coord_t temp = a.y1;
                 a.y1 = a.y2;
@@ -121,22 +121,22 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
             }
             lv_draw_rect(dsc->draw_ctx, &draw_rect_dsc, &a);
         }
-        
-        //draw x-axis line
-        // lv_draw_rect_dsc_t line_dsc;
-        // lv_draw_rect_dsc_init(&line_dsc);
-        // line_dsc.bg_opa = LV_OPA_COVER;
-        // line_dsc.bg_color = isDarkMode ? lv_color_hex(0x555555) : lv_color_hex(0xAAAAAA);
-        // lv_area_t a;
-        // a.x1 = obj->coords.x1 + pad_left;
-        // a.x2 = obj->coords.x2 - pad_right;
-        // a.y1 = obj->coords.y1 + pad_top + (priceRange + minPrice) * h / priceRange - 1;
-        // a.y2 = a.y1;
-        //lv_draw_rect(dsc->draw_ctx, &line_dsc, &a);
 
-        //show times for 6, 12, 18 hours
+        // draw x-axis line
+        //  lv_draw_rect_dsc_t line_dsc;
+        //  lv_draw_rect_dsc_init(&line_dsc);
+        //  line_dsc.bg_opa = LV_OPA_COVER;
+        //  line_dsc.bg_color = isDarkMode ? lv_color_hex(0x555555) : lv_color_hex(0xAAAAAA);
+        //  lv_area_t a;
+        //  a.x1 = obj->coords.x1 + pad_left;
+        //  a.x2 = obj->coords.x2 - pad_right;
+        //  a.y1 = obj->coords.y1 + pad_top + (priceRange + minPrice) * h / priceRange - 1;
+        //  a.y2 = a.y1;
+        // lv_draw_rect(dsc->draw_ctx, &line_dsc, &a);
+
+        // show times for 6, 12, 18 hours
         lv_draw_label_dsc_t label_dsc;
-        //use OpenSans small font
+        // use OpenSans small font
         label_dsc.font = &ui_font_OpenSansExtraSmall;
         lv_draw_label_dsc_init(&label_dsc);
         lv_obj_init_draw_label_dsc(obj, LV_PART_MAIN, &label_dsc);
@@ -146,12 +146,13 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         for (int hour = 6; hour <= 18; hour += 6)
         {
             int quarter = hour * 4;
-            //center label
+            // center label
             String text = (hour < 10 ? "0" : "") + String(hour) + ":00";
             lv_point_t size;
             lv_txt_get_size(&size, text.c_str(), label_dsc.font, label_dsc.letter_space, label_dsc.line_space, LV_COORD_MAX, label_dsc.flag);
             a.x1 = obj->coords.x1 + offset_x + quarter * (segmentWidth + segmentGap) + (segmentWidth - size.x) / 2;
-            a.x2 = a.x1 + size.x; - 1;
+            a.x2 = a.x1 + size.x;
+            -1;
             lv_draw_label(dsc->draw_ctx, &label_dsc, &a, text.c_str(), NULL);
         }
     }
@@ -439,7 +440,7 @@ public:
 
         lv_label_set_text(ui_batteryPowerLabel, format(POWER, abs(inverterData.batteryPower), 1.0f, true).formatted.c_str());
         batteryBackgroundAnimator.animate(ui_batteryContainer, ((inverterData.batteryPower) < 0) ? lv_color_hex(_ui_theme_color_batteryColor[0]) : containerBackground);
-
+        updateBatteryIcon(inverterData.soc);
         if (inverterData.batteryCapacityWh > 0)
         {
             if (abs(inverterData.batteryPower) > 100)
@@ -489,21 +490,22 @@ public:
             lv_obj_set_style_text_color(ui_batteryTemperatureLabel, white, 0);
         }
 
-        selfUsePercentTextAnimator.animate(ui_selfUsePercentLabel, getSelfUsePowerPercent(previousInverterData), getSelfUsePowerPercent(inverterData));
+        lv_label_set_text_fmt(ui_selfUsePercentLabel, "%d%%", getSelfUsePowerPercent(inverterData));
+
         if (getSelfUsePowerPercent(inverterData) > 50)
         {
-            lv_obj_set_style_text_color(ui_selfUsePercentLabel, green, 0);
-            lv_obj_set_style_text_color(ui_selfUsePercentUnitLabel, green, 0);
+            selfUseBackgroundAnimator.animate(ui_selfUsePercentLabel, green);
+            // lv_obj_set_style_bg_color(ui_selfUsePercentLabel, green, 0);
         }
         else if (getSelfUsePowerPercent(inverterData) > 30)
         {
-            lv_obj_set_style_text_color(ui_selfUsePercentLabel, orange, 0);
-            lv_obj_set_style_text_color(ui_selfUsePercentUnitLabel, orange, 0);
+            selfUseBackgroundAnimator.animate(ui_selfUsePercentLabel, orange);
+            // lv_obj_set_style_bg_color(ui_selfUsePercentLabel, orange, 0);
         }
         else
         {
-            lv_obj_set_style_text_color(ui_selfUsePercentLabel, red, 0);
-            lv_obj_set_style_text_color(ui_selfUsePercentUnitLabel, red, 0);
+            selfUseBackgroundAnimator.animate(ui_selfUsePercentLabel, red);
+            // lv_obj_set_style_bg_color(ui_selfUsePercentLabel, red, 0);
         }
         lv_label_set_text(ui_yieldTodayLabel, format(ENERGY, inverterData.pvToday * 1000.0, 1).value.c_str());
         lv_label_set_text(ui_yieldTodayUnitLabel, format(ENERGY, inverterData.pvToday * 1000.0, 1).unit.c_str());
@@ -761,8 +763,24 @@ public:
         lv_obj_set_style_bg_color(ui_spotPriceContainer, isDarkMode ? black : white, 0);
         lv_obj_set_style_bg_opa(ui_spotPriceContainer, isDarkMode ? LV_OPA_80 : LV_OPA_80, 0);
         lv_obj_set_style_text_color(ui_Dashboard, isDarkMode ? white : black, 0);
+        lv_obj_set_style_text_color(ui_selfUsePercentLabel, isDarkMode ? black : white, 0);
     }
 
+    void updateBatteryIcon(int soc) {
+        if (soc >= 85) {
+            lv_img_set_src(ui_batteryImage, &ui_img_battery_100_png);
+        } else if (soc >= 75) {
+            lv_img_set_src(ui_batteryImage, &ui_img_battery_80_png);
+        } else if (soc >= 55) {
+            lv_img_set_src(ui_batteryImage, &ui_img_battery_60_png);
+        } else if (soc >= 35) {
+            lv_img_set_src(ui_batteryImage, &ui_img_battery_40_png);
+        } else if (soc >= 15) {
+            lv_img_set_src(ui_batteryImage, &ui_img_battery_20_png);
+        } else {
+            lv_img_set_src(ui_batteryImage, &ui_img_battery_0_png);
+        }
+    }
 private:
     int const UI_TEXT_CHANGE_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS;
     int const UI_BACKGROUND_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS / 3;
@@ -777,6 +795,7 @@ private:
     UIBackgroundAnimator batteryBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
     UIBackgroundAnimator gridBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
     UIBackgroundAnimator wallboxBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
+    UIBackgroundAnimator selfUseBackgroundAnimator = UIBackgroundAnimator(UI_BACKGROUND_ANIMATION_DURATION);
 
     UIBallAnimator pvAnimator;
     UIBallAnimator batteryAnimator;
@@ -829,7 +848,7 @@ private:
         priceText.replace(".", ",");
         lv_label_set_text(ui_currentPriceLabel, priceText.c_str());
         lv_color_t color = getPriceLevelColor(currentPrice.priceLevel);
-        
+
         lv_obj_set_style_bg_color(ui_currentPriceLabel, color, 0);
         lv_obj_set_style_text_color(ui_currentPriceLabel, isDarkMode ? lv_color_black() : lv_color_white(), 0);
         lv_obj_set_style_shadow_color(ui_currentPriceLabel, color, 0);

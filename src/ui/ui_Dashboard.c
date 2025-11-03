@@ -5,7 +5,7 @@
 
 #include "ui.h"
 
-lv_obj_t *ui_Dashboard = NULL;lv_obj_t *ui_LeftContainer = NULL;lv_obj_t *ui_pvContainer = NULL;lv_obj_t *ui_Container11 = NULL;lv_obj_t *ui_pvLabel = NULL;lv_obj_t *ui_pvUnitLabel = NULL;lv_obj_t *ui_Container1 = NULL;lv_obj_t *ui_pvStringsContainer = NULL;lv_obj_t *ui_pv1Label = NULL;lv_obj_t *ui_pv2Label = NULL;lv_obj_t *ui_pvStringsContainer1 = NULL;lv_obj_t *ui_pv3Label = NULL;lv_obj_t *ui_pv4Label = NULL;lv_obj_t *ui_Image6 = NULL;lv_obj_t *ui_batteryContainer = NULL;lv_obj_t *ui_batteryTemperatureLabel = NULL;lv_obj_t *ui_Container23 = NULL;lv_obj_t *ui_socLabel = NULL;lv_obj_t *ui_socLabel1 = NULL;lv_obj_t *ui_Container17 = NULL;lv_obj_t *ui_batteryTimeLabel = NULL;lv_obj_t *ui_Container24 = NULL;lv_obj_t *ui_batteryPowerLabel = NULL;lv_obj_t *ui_Container25 = NULL;lv_obj_t *ui_Image10 = NULL;lv_obj_t *ui_loadContainer = NULL;lv_obj_t *ui_Image8 = NULL;lv_obj_t *ui_Container14 = NULL;lv_obj_t *ui_shellyContainer = NULL;lv_obj_t *ui_shellyCountLabel = NULL;lv_obj_t *ui_shellyPowerLabel = NULL;lv_obj_t *ui_Container20 = NULL;lv_obj_t *ui_loadPowerLabel = NULL;lv_obj_t *ui_loadPowerUnitLabel = NULL;lv_obj_t *ui_gridContainer = NULL;lv_obj_t *ui_Image9 = NULL;lv_obj_t *ui_Container4 = NULL;lv_obj_t *ui_Container22 = NULL;lv_obj_t *ui_feedInPowerLabel = NULL;lv_obj_t *ui_feedInPowerUnitLabel = NULL;lv_obj_t *ui_selfUseContainer = NULL;lv_obj_t *ui_selfUsePercentLabel = NULL;lv_obj_t *ui_selfUsePercentUnitLabel = NULL;lv_obj_t *ui_inverterContainer = NULL;lv_obj_t *ui_Image5 = NULL;lv_obj_t *ui_dongleFWVersion = NULL;lv_obj_t *ui_inverterTemperatureLabel = NULL;lv_obj_t *ui_Container26 = NULL;lv_obj_t *ui_inverterPowerLabel = NULL;lv_obj_t *ui_inverterPowerUnitLabel = NULL;lv_obj_t *ui_inverterPhasesContainer = NULL;lv_obj_t *ui_Container29 = NULL;lv_obj_t *ui_inverterPowerBar1 = NULL;lv_obj_t *ui_inverterPowerL1Label = NULL;lv_obj_t *ui_Container3 = NULL;lv_obj_t *ui_inverterPowerBar2 = NULL;lv_obj_t *ui_inverterPowerL2Label = NULL;lv_obj_t *ui_Container28 = NULL;lv_obj_t *ui_inverterPowerBar3 = NULL;lv_obj_t *ui_inverterPowerL3Label = NULL;lv_obj_t *ui_statusLabel = NULL;lv_obj_t *ui_wallboxContainer = NULL;lv_obj_t *ui_wallboxTemperatureLabel = NULL;lv_obj_t *ui_wallboxLogoSolaxImage = NULL;lv_obj_t *ui_wallboxLogoEcovolterImage = NULL;lv_obj_t *ui_wallboxPowerContainer = NULL;lv_obj_t *ui_wallboxPowerLabel = NULL;lv_obj_t *ui_wallboxPowerUnitLabel = NULL;lv_obj_t *ui_wallboxEnergyContainer = NULL;lv_obj_t *ui_wallboxEnergyLabel = NULL;lv_obj_t *ui_wallboxSmartCheckbox = NULL;lv_obj_t *ui_RightContainer = NULL;lv_obj_t *ui_TopRightContainer = NULL;lv_obj_t *ui_Container33 = NULL;lv_obj_t *ui_pvStatsContainer = NULL;lv_obj_t *ui_Image11 = NULL;lv_obj_t *ui_Container34 = NULL;lv_obj_t *ui_Container27 = NULL;lv_obj_t *ui_yieldTodayLabel = NULL;lv_obj_t *ui_yieldTodayUnitLabel = NULL;lv_obj_t *ui_Container5 = NULL;lv_obj_t *ui_yieldTotalLabel = NULL;lv_obj_t *ui_yieldTotalUnitLabel = NULL;lv_obj_t *ui_loadStatsContainer = NULL;lv_obj_t *ui_Image13 = NULL;lv_obj_t *ui_Container37 = NULL;lv_obj_t *ui_Container8 = NULL;lv_obj_t *ui_loadTodayLabel = NULL;lv_obj_t *ui_loadTodayUnitLabel = NULL;lv_obj_t *ui_Container30 = NULL;lv_obj_t *ui_selfUseTodayLabel = NULL;lv_obj_t *ui_selfUseTodayUnitLabel = NULL;lv_obj_t *ui_Container36 = NULL;lv_obj_t *ui_batteryStatsContainer = NULL;lv_obj_t *ui_Image12 = NULL;lv_obj_t *ui_Container35 = NULL;lv_obj_t *ui_Container6 = NULL;lv_obj_t *ui_batteryChargedTodayLabel = NULL;lv_obj_t *ui_batteryChargedTodayUnitLabel = NULL;lv_obj_t *ui_Container9 = NULL;lv_obj_t *ui_batteryDischargedTodayLabel = NULL;lv_obj_t *ui_batteryDischargedTodayUnitLabel = NULL;lv_obj_t *ui_gridStatsContainer = NULL;lv_obj_t *ui_Image14 = NULL;lv_obj_t *ui_Container38 = NULL;lv_obj_t *ui_Container7 = NULL;lv_obj_t *ui_gridSellTodayLabel = NULL;lv_obj_t *ui_gridSellTodayUnitLabel = NULL;lv_obj_t *ui_Container10 = NULL;lv_obj_t *ui_gridBuyTodayLabel = NULL;lv_obj_t *ui_gridBuyTodayUnitLabel = NULL;lv_obj_t *ui_RightBottomContainer = NULL;lv_obj_t *ui_Chart1 = NULL;lv_obj_t *ui_spotPriceContainer = NULL;lv_obj_t *ui_currentPriceLabel = NULL;lv_obj_t *ui_settingsButton = NULL;
+lv_obj_t *ui_Dashboard = NULL;lv_obj_t *ui_LeftContainer = NULL;lv_obj_t *ui_pvContainer = NULL;lv_obj_t *ui_Container11 = NULL;lv_obj_t *ui_pvLabel = NULL;lv_obj_t *ui_pvUnitLabel = NULL;lv_obj_t *ui_Container1 = NULL;lv_obj_t *ui_pvStringsContainer = NULL;lv_obj_t *ui_pv1Label = NULL;lv_obj_t *ui_pv2Label = NULL;lv_obj_t *ui_pvStringsContainer1 = NULL;lv_obj_t *ui_pv3Label = NULL;lv_obj_t *ui_pv4Label = NULL;lv_obj_t *ui_Image6 = NULL;lv_obj_t *ui_batteryContainer = NULL;lv_obj_t *ui_batteryTemperatureLabel = NULL;lv_obj_t *ui_Container23 = NULL;lv_obj_t *ui_socLabel = NULL;lv_obj_t *ui_socLabel1 = NULL;lv_obj_t *ui_Container17 = NULL;lv_obj_t *ui_batteryTimeLabel = NULL;lv_obj_t *ui_Container24 = NULL;lv_obj_t *ui_batteryPowerLabel = NULL;lv_obj_t *ui_Container25 = NULL;lv_obj_t *ui_batteryImage = NULL;lv_obj_t *ui_loadContainer = NULL;lv_obj_t *ui_Image8 = NULL;lv_obj_t *ui_Container14 = NULL;lv_obj_t *ui_shellyContainer = NULL;lv_obj_t *ui_shellyCountLabel = NULL;lv_obj_t *ui_shellyPowerLabel = NULL;lv_obj_t *ui_Container20 = NULL;lv_obj_t *ui_loadPowerLabel = NULL;lv_obj_t *ui_loadPowerUnitLabel = NULL;lv_obj_t *ui_gridContainer = NULL;lv_obj_t *ui_Image9 = NULL;lv_obj_t *ui_Container4 = NULL;lv_obj_t *ui_Container22 = NULL;lv_obj_t *ui_feedInPowerLabel = NULL;lv_obj_t *ui_feedInPowerUnitLabel = NULL;lv_obj_t *ui_selfUsePercentLabel = NULL;lv_obj_t *ui_inverterContainer = NULL;lv_obj_t *ui_Image5 = NULL;lv_obj_t *ui_dongleFWVersion = NULL;lv_obj_t *ui_inverterTemperatureLabel = NULL;lv_obj_t *ui_Container26 = NULL;lv_obj_t *ui_inverterPowerLabel = NULL;lv_obj_t *ui_inverterPowerUnitLabel = NULL;lv_obj_t *ui_inverterPhasesContainer = NULL;lv_obj_t *ui_Container29 = NULL;lv_obj_t *ui_inverterPowerBar1 = NULL;lv_obj_t *ui_inverterPowerL1Label = NULL;lv_obj_t *ui_Container3 = NULL;lv_obj_t *ui_inverterPowerBar2 = NULL;lv_obj_t *ui_inverterPowerL2Label = NULL;lv_obj_t *ui_Container28 = NULL;lv_obj_t *ui_inverterPowerBar3 = NULL;lv_obj_t *ui_inverterPowerL3Label = NULL;lv_obj_t *ui_statusLabel = NULL;lv_obj_t *ui_wallboxContainer = NULL;lv_obj_t *ui_wallboxTemperatureLabel = NULL;lv_obj_t *ui_wallboxLogoSolaxImage = NULL;lv_obj_t *ui_wallboxLogoEcovolterImage = NULL;lv_obj_t *ui_wallboxPowerContainer = NULL;lv_obj_t *ui_wallboxPowerLabel = NULL;lv_obj_t *ui_wallboxPowerUnitLabel = NULL;lv_obj_t *ui_wallboxEnergyContainer = NULL;lv_obj_t *ui_wallboxEnergyLabel = NULL;lv_obj_t *ui_wallboxSmartCheckbox = NULL;lv_obj_t *ui_RightContainer = NULL;lv_obj_t *ui_TopRightContainer = NULL;lv_obj_t *ui_Container33 = NULL;lv_obj_t *ui_pvStatsContainer = NULL;lv_obj_t *ui_Image11 = NULL;lv_obj_t *ui_Container34 = NULL;lv_obj_t *ui_Container27 = NULL;lv_obj_t *ui_yieldTodayLabel = NULL;lv_obj_t *ui_yieldTodayUnitLabel = NULL;lv_obj_t *ui_Container5 = NULL;lv_obj_t *ui_yieldTotalLabel = NULL;lv_obj_t *ui_yieldTotalUnitLabel = NULL;lv_obj_t *ui_loadStatsContainer = NULL;lv_obj_t *ui_Image13 = NULL;lv_obj_t *ui_Container37 = NULL;lv_obj_t *ui_Container8 = NULL;lv_obj_t *ui_loadTodayLabel = NULL;lv_obj_t *ui_loadTodayUnitLabel = NULL;lv_obj_t *ui_Container30 = NULL;lv_obj_t *ui_selfUseTodayLabel = NULL;lv_obj_t *ui_selfUseTodayUnitLabel = NULL;lv_obj_t *ui_Container36 = NULL;lv_obj_t *ui_batteryStatsContainer = NULL;lv_obj_t *ui_Image12 = NULL;lv_obj_t *ui_Container35 = NULL;lv_obj_t *ui_Container6 = NULL;lv_obj_t *ui_batteryChargedTodayLabel = NULL;lv_obj_t *ui_batteryChargedTodayUnitLabel = NULL;lv_obj_t *ui_Container9 = NULL;lv_obj_t *ui_batteryDischargedTodayLabel = NULL;lv_obj_t *ui_batteryDischargedTodayUnitLabel = NULL;lv_obj_t *ui_gridStatsContainer = NULL;lv_obj_t *ui_Image14 = NULL;lv_obj_t *ui_Container38 = NULL;lv_obj_t *ui_Container7 = NULL;lv_obj_t *ui_gridSellTodayLabel = NULL;lv_obj_t *ui_gridSellTodayUnitLabel = NULL;lv_obj_t *ui_Container10 = NULL;lv_obj_t *ui_gridBuyTodayLabel = NULL;lv_obj_t *ui_gridBuyTodayUnitLabel = NULL;lv_obj_t *ui_RightBottomContainer = NULL;lv_obj_t *ui_Chart1 = NULL;lv_obj_t *ui_spotPriceContainer = NULL;lv_obj_t *ui_currentPriceLabel = NULL;lv_obj_t *ui_settingsButton = NULL;
 // event funtions
 
 // build funtions
@@ -296,13 +296,13 @@ lv_obj_set_align( ui_Container25, LV_ALIGN_CENTER );
 lv_obj_add_flag( ui_Container25, LV_OBJ_FLAG_OVERFLOW_VISIBLE );   /// Flags
 lv_obj_clear_flag( ui_Container25, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
-ui_Image10 = lv_img_create(ui_Container25);
-lv_img_set_src(ui_Image10, &ui_img_1279321064);
-lv_obj_set_width( ui_Image10, LV_SIZE_CONTENT);  /// 48
-lv_obj_set_height( ui_Image10, LV_SIZE_CONTENT);   /// 48
-lv_obj_set_align( ui_Image10, LV_ALIGN_CENTER );
-lv_obj_add_flag( ui_Image10, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
-lv_obj_clear_flag( ui_Image10, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+ui_batteryImage = lv_img_create(ui_Container25);
+lv_img_set_src(ui_batteryImage, &ui_img_battery_60_png);
+lv_obj_set_width( ui_batteryImage, LV_SIZE_CONTENT);  /// 48
+lv_obj_set_height( ui_batteryImage, LV_SIZE_CONTENT);   /// 48
+lv_obj_set_align( ui_batteryImage, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_batteryImage, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
+lv_obj_clear_flag( ui_batteryImage, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_loadContainer = lv_obj_create(ui_LeftContainer);
 lv_obj_remove_style_all(ui_loadContainer);
@@ -462,36 +462,21 @@ lv_obj_set_align( ui_feedInPowerUnitLabel, LV_ALIGN_CENTER );
 lv_label_set_text(ui_feedInPowerUnitLabel,"W");
 lv_obj_set_style_text_font(ui_feedInPowerUnitLabel, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-ui_selfUseContainer = lv_obj_create(ui_LeftContainer);
-lv_obj_remove_style_all(ui_selfUseContainer);
-lv_obj_set_width( ui_selfUseContainer, 100);
-lv_obj_set_height( ui_selfUseContainer, LV_SIZE_CONTENT);   /// 50
-lv_obj_set_align( ui_selfUseContainer, LV_ALIGN_TOP_MID );
-lv_obj_set_flex_flow(ui_selfUseContainer,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_selfUseContainer, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-lv_obj_clear_flag( ui_selfUseContainer, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
-lv_obj_set_style_pad_left(ui_selfUseContainer, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_right(ui_selfUseContainer, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_top(ui_selfUseContainer, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_bottom(ui_selfUseContainer, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
-
-ui_selfUsePercentLabel = lv_label_create(ui_selfUseContainer);
+ui_selfUsePercentLabel = lv_label_create(ui_LeftContainer);
 lv_obj_set_width( ui_selfUsePercentLabel, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_selfUsePercentLabel, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_align( ui_selfUsePercentLabel, LV_ALIGN_CENTER );
-lv_label_set_text(ui_selfUsePercentLabel,"86");
-ui_object_set_themeable_style_property(ui_selfUsePercentLabel, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR, _ui_theme_color_loadColor);
-ui_object_set_themeable_style_property(ui_selfUsePercentLabel, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA, _ui_theme_alpha_loadColor);
-lv_obj_set_style_text_font(ui_selfUsePercentLabel, &ui_font_OpenSansLarge, LV_PART_MAIN| LV_STATE_DEFAULT);
-
-ui_selfUsePercentUnitLabel = lv_label_create(ui_selfUseContainer);
-lv_obj_set_width( ui_selfUsePercentUnitLabel, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_selfUsePercentUnitLabel, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_align( ui_selfUsePercentUnitLabel, LV_ALIGN_CENTER );
-lv_label_set_text(ui_selfUsePercentUnitLabel,"%");
-ui_object_set_themeable_style_property(ui_selfUsePercentUnitLabel, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_TEXT_COLOR, _ui_theme_color_loadColor);
-ui_object_set_themeable_style_property(ui_selfUsePercentUnitLabel, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA, _ui_theme_alpha_loadColor);
-lv_obj_set_style_text_font(ui_selfUsePercentUnitLabel, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_align( ui_selfUsePercentLabel, LV_ALIGN_TOP_MID );
+lv_label_set_text(ui_selfUsePercentLabel,"86%");
+lv_obj_set_style_text_color(ui_selfUsePercentLabel, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_text_opa(ui_selfUsePercentLabel, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_text_font(ui_selfUsePercentLabel, &ui_font_OpenSansMediumBold, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_radius(ui_selfUsePercentLabel, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
+ui_object_set_themeable_style_property(ui_selfUsePercentLabel, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BG_COLOR, _ui_theme_color_loadColor);
+ui_object_set_themeable_style_property(ui_selfUsePercentLabel, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BG_OPA, _ui_theme_alpha_loadColor);
+lv_obj_set_style_pad_left(ui_selfUsePercentLabel, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_right(ui_selfUsePercentLabel, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_top(ui_selfUsePercentLabel, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_selfUsePercentLabel, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_inverterContainer = lv_obj_create(ui_LeftContainer);
 lv_obj_remove_style_all(ui_inverterContainer);
@@ -1099,7 +1084,7 @@ lv_obj_set_style_pad_top(ui_batteryStatsContainer, 12, LV_PART_MAIN| LV_STATE_DE
 lv_obj_set_style_pad_bottom(ui_batteryStatsContainer, 12, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Image12 = lv_img_create(ui_batteryStatsContainer);
-lv_img_set_src(ui_Image12, &ui_img_1279321064);
+lv_img_set_src(ui_Image12, &ui_img_performance_png);
 lv_obj_set_width( ui_Image12, LV_SIZE_CONTENT);  /// 48
 lv_obj_set_height( ui_Image12, LV_SIZE_CONTENT);   /// 48
 lv_obj_set_x( ui_Image12, -141 );
@@ -1415,7 +1400,7 @@ ui_batteryTimeLabel= NULL;
 ui_Container24= NULL;
 ui_batteryPowerLabel= NULL;
 ui_Container25= NULL;
-ui_Image10= NULL;
+ui_batteryImage= NULL;
 ui_loadContainer= NULL;
 ui_Image8= NULL;
 ui_Container14= NULL;
@@ -1431,9 +1416,7 @@ ui_Container4= NULL;
 ui_Container22= NULL;
 ui_feedInPowerLabel= NULL;
 ui_feedInPowerUnitLabel= NULL;
-ui_selfUseContainer= NULL;
 ui_selfUsePercentLabel= NULL;
-ui_selfUsePercentUnitLabel= NULL;
 ui_inverterContainer= NULL;
 ui_Image5= NULL;
 ui_dongleFWVersion= NULL;

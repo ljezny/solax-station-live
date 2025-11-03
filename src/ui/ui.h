@@ -30,13 +30,21 @@ extern lv_obj_t *ui____initial_actions0;
 // IMAGES AND IMAGE SETS
 LV_IMG_DECLARE( ui_img_logo_png);   // assets/logo.png
 LV_IMG_DECLARE( ui_img_1516017106);   // assets/solar-panel-4.png
-LV_IMG_DECLARE( ui_img_1279321064);   // assets/eco-battery.png
+LV_IMG_DECLARE( ui_img_battery_60_png);   // assets/battery_60.png
 LV_IMG_DECLARE( ui_img_564643105);   // assets/eco-house-3.png
 LV_IMG_DECLARE( ui_img_960241876);   // assets/power-plant.png
 LV_IMG_DECLARE( ui_img_1061873486);   // assets/solar-inverter.png
 LV_IMG_DECLARE( ui_img_solax_png);   // assets/solax.png
 LV_IMG_DECLARE( ui_img_ecovolter3_png);   // assets/ecovolter3.png
+LV_IMG_DECLARE( ui_img_performance_png);   // assets/performance.png
 LV_IMG_DECLARE( ui_img_settings_png);   // assets/settings.png
+LV_IMG_DECLARE( ui_img_1279321064);   // assets/eco-battery.png
+LV_IMG_DECLARE( ui_img_1337922523);   // assets/solar-plug.png
+LV_IMG_DECLARE( ui_img_battery_0_png);   // assets/battery_0.png
+LV_IMG_DECLARE( ui_img_battery_20_png);   // assets/battery_20.png
+LV_IMG_DECLARE( ui_img_battery_40_png);   // assets/battery_40.png
+LV_IMG_DECLARE( ui_img_battery_80_png);   // assets/battery_80.png
+LV_IMG_DECLARE( ui_img_battery_100_png);   // assets/battery_100.png
 
 // FONTS
 LV_FONT_DECLARE( ui_font_OpenSansExtraSmall);

@@ -9,13 +9,21 @@ SET(SOURCES ui_Splash.c
     ui_events.c
     ui_img_logo_png.c
     ui_img_1516017106.c
-    ui_img_1279321064.c
+    ui_img_battery_60_png.c
     ui_img_564643105.c
     ui_img_960241876.c
     ui_img_1061873486.c
     ui_img_solax_png.c
     ui_img_ecovolter3_png.c
+    ui_img_performance_png.c
     ui_img_settings_png.c
+    ui_img_1279321064.c
+    ui_img_1337922523.c
+    ui_img_battery_0_png.c
+    ui_img_battery_20_png.c
+    ui_img_battery_40_png.c
+    ui_img_battery_80_png.c
+    ui_img_battery_100_png.c
     fonts/ui_font_OpenSansExtraSmall.c
     fonts/ui_font_OpenSansLarge.c
     fonts/ui_font_OpenSansLargeBold.c
