@@ -767,7 +767,7 @@ public:
     }
 
     void updateBatteryIcon(int soc) {
-        if (soc >= 85) {
+        if (soc >= 95) {
             lv_img_set_src(ui_batteryImage, &ui_img_battery_100_png);
         } else if (soc >= 75) {
             lv_img_set_src(ui_batteryImage, &ui_img_battery_80_png);
