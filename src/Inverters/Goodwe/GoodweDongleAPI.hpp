@@ -155,8 +155,8 @@ private:
                     log_d("Register 8: %d", register8);
                     // end debug logging
 
-                    inverterData.feedInPower = response.readInt32(36000 + 25);
-                    inverterData.loadPower -= inverterData.feedInPower;
+                    inverterData.gridPower = response.readInt32(36000 + 25);
+                    inverterData.loadPower -= inverterData.gridPower;
                     
                     log_d("Grid sell total: %f", inverterData.gridSellTotal);
                     log_d("Grid buy total: %f", inverterData.gridBuyTotal);

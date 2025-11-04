@@ -66,7 +66,7 @@ private:
                                             inverterData.batteryTemperature = (channel.readInt16(packetBuffer, 182 - 150) - 1000) / 10;
                                             inverterData.soc = channel.readUInt16(packetBuffer, 184 - 150);
                                             inverterData.batteryPower = -1 * channel.readInt16(packetBuffer, 190 - 150);
-                                            inverterData.feedInPower = -1 * channel.readInt16(packetBuffer, 169 - 150);
+                                            inverterData.gridPower = -1 * channel.readInt16(packetBuffer, 169 - 150);
                                         }))
             return;
 
@@ -112,7 +112,7 @@ private:
                 inverterData.L3Power = channel.readInt16(packetBuffer, 635 - 598);
                 inverterData.inverterPower = channel.readInt16(packetBuffer, 636 - 598);
                 inverterData.loadPower = channel.readInt16(packetBuffer, 653 - 598);
-                inverterData.feedInPower = -1 * channel.readInt16(packetBuffer, 625 - 598); }))
+                inverterData.gridPower = -1 * channel.readInt16(packetBuffer, 625 - 598); }))
             return;
 
         channel.tryReadWithRetries(541, 1, sn, packetBuffer, [&]()

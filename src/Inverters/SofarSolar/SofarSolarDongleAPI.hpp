@@ -52,7 +52,7 @@ private:
                                 {
             inverterData.inverterPower = channel.readInt16(packetBuffer, 0x485 - 0x484) * 10;
             inverterData.loadPower = channel.readInt16(packetBuffer, 0x04AF - 0x484) * 10;
-            inverterData.feedInPower = channel.readInt16(packetBuffer, 0x0488 - 0x484) * 10;
+            inverterData.gridPower = channel.readInt16(packetBuffer, 0x0488 - 0x484) * 10;
             inverterData.L1Power = channel.readInt16(packetBuffer, 0x48F - 0x484) * 10;
             inverterData.L2Power = channel.readInt16(packetBuffer, 0x49A - 0x484) * 10;
             inverterData.L3Power = channel.readInt16(packetBuffer, 0x4A5 - 0x484) * 10; }))

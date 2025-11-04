@@ -112,7 +112,7 @@ private:
         data.soc = response.readUInt16(0x1C);
         data.batteryPower = response.readInt16(0x16);
         data.batteryVoltage = response.readInt16(0x14) / 10.0f;
-        data.feedInPower = response.readInt32LSB(0x46);
+        //data.gridPower = response.readInt32LSB(0x46); //read later from phases
         data.batteryChargedToday = response.readUInt16(0x23) / 10.0f;
         data.batteryDischargedToday = response.readUInt16(0x20) / 10.0f;
         data.batteryTemperature = response.readInt16(0x18);
@@ -151,18 +151,22 @@ private:
             log_d("Failed to read phase data");
             return false;
         }
-
         data.L1Power = response.readInt16(0x6C);
         data.L2Power = response.readInt16(0x70);
         data.L3Power = response.readInt16(0x74);
 
-        uint16_t offgridL1Power = response.readInt16(0x78);
-        uint16_t offgridL2Power = response.readInt16(0x7C);
-        uint16_t offgridL3Power = response.readInt16(0x80);
+        //backup
+        uint16_t backupL1Power = response.readInt16(0x78);
+        uint16_t backupL2Power = response.readInt16(0x7C);
+        uint16_t backupL3Power = response.readInt16(0x80);
+        data.L1Power += backupL1Power;
+        data.L2Power += backupL2Power;
+        data.L3Power += backupL3Power;
 
-        data.L1Power += offgridL1Power;
-        data.L2Power += offgridL2Power;
-        data.L3Power += offgridL3Power;
+        data.gridPowerL1 = response.readInt16(0x82);
+        data.gridPowerL2 = response.readInt16(0x84);
+        data.gridPowerL3 = response.readInt16(0x86);
+        data.gridPower = data.gridPowerL1 + data.gridPowerL2 + data.gridPowerL3;
         return true;
     }
 
@@ -182,7 +186,7 @@ private:
     void finalizePowerCalculations(InverterData_t &data)
     {
         data.inverterPower = data.L1Power + data.L2Power + data.L3Power;
-        data.loadPower = data.inverterPower - data.feedInPower;
+        data.loadPower = data.inverterPower - data.gridPower;
         data.loadToday += data.gridBuyToday - data.gridSellToday;
     }
 

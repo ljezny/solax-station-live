@@ -298,7 +298,7 @@ public:
 
     int getSelfUsePowerPercent(InverterData_t &inverterData)
     {
-        return constrain(inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.feedInPower)) / inverterData.loadPower : 0, 0, 100);
+        return constrain(inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + inverterData.gridPower)) / inverterData.loadPower : 0, 0, 100);
     }
 
     void update(InverterData_t &inverterData, InverterData_t &previousInverterData, MedianPowerSampler &uiMedianPowerSampler, ShellyResult_t &shellyResult, ShellyResult_t &previousShellyResult, WallboxResult_t &wallboxResult, WallboxResult_t &previousWallboxResult, SolarChartDataProvider &solarChartDataProvider, ElectricityPriceResult_t &electricityPriceResult, ElectricityPriceResult_t &previousElectricityPriceResult, int wifiSignalPercent)
@@ -323,9 +323,9 @@ public:
         {
             inPower += abs(inverterData.batteryPower);
         }
-        if (inverterData.feedInPower < 0)
+        if (inverterData.gridPower < 0)
         {
-            inPower += abs(inverterData.feedInPower);
+            inPower += abs(inverterData.gridPower);
         }
 
         int outPower = inverterData.loadPower;
@@ -333,9 +333,9 @@ public:
         {
             outPower += inverterData.batteryPower;
         }
-        if (inverterData.feedInPower > 0)
+        if (inverterData.gridPower > 0)
         {
-            outPower += inverterData.feedInPower;
+            outPower += inverterData.gridPower;
         }
         int totalPhasePower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
         int l1PercentUsage = totalPhasePower > 0 ? (100 * inverterData.L1Power) / totalPhasePower : 0;
@@ -351,6 +351,21 @@ public:
         else
         {
             lv_obj_add_flag(ui_inverterPhasesContainer, LV_OBJ_FLAG_HIDDEN);
+        }
+
+        int totalGridPhasePower = abs(inverterData.gridPowerL1) + abs(inverterData.gridPowerL2) + abs(inverterData.gridPowerL3);
+        int gridL1PercentUsage = totalGridPhasePower > 0 ? (100 * abs(inverterData.gridPowerL1)) / totalGridPhasePower : 0;
+        int gridL2PercentUsage = totalGridPhasePower > 0 ? (100 * abs(inverterData.gridPowerL2)) / totalGridPhasePower : 0;
+        int gridL3PercentUsage = totalGridPhasePower > 0 ? (100 * abs(inverterData.gridPowerL3)) / totalGridPhasePower : 0;
+        bool hasGridPhases = inverterData.gridPowerL1 > 0 || inverterData.gridPowerL2 > 0 || inverterData.gridPowerL3 > 0;
+        if (hasGridPhases)
+        {
+            // show grid phase container
+            lv_obj_clear_flag(ui_smartMeterContainer, LV_OBJ_FLAG_HIDDEN);
+        }
+        else
+        {
+            lv_obj_add_flag(ui_smartMeterContainer, LV_OBJ_FLAG_HIDDEN);
         }
 
         lv_color_t black = lv_color_make(0, 0, 0);
@@ -416,26 +431,40 @@ public:
         inverterPowerTextAnimator.animate(ui_inverterPowerLabel, previousInverterData.inverterPower, inverterData.inverterPower);
         pvBackgroundAnimator.animate(ui_pvContainer, ((inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power) > 0) ? lv_color_hex(_ui_theme_color_pvColor[0]) : containerBackground);
         lv_label_set_text(ui_inverterPowerUnitLabel, format(POWER, inverterData.inverterPower).unit.c_str());
-        // lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.L1Power).value.c_str());
+        
+        //phases
         lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.L1Power, 1.0f, true).formatted.c_str());
         lv_bar_set_value(ui_inverterPowerBar1, min(2400, inverterData.L1Power), LV_ANIM_ON);
         lv_obj_set_style_bg_color(ui_inverterPowerBar1, l1PercentUsage > 50 ? red : textColor, LV_PART_INDICATOR);
         lv_obj_set_style_text_color(ui_inverterPowerL1Label, l1PercentUsage > 50 ? red : textColor, 0);
-        // lv_label_set_text(ui_inverterPowerL2Label, format(POWER, inverterData.L2Power).value.c_str());
         lv_label_set_text(ui_inverterPowerL2Label, format(POWER, inverterData.L2Power, 1.0f, true).formatted.c_str());
         lv_bar_set_value(ui_inverterPowerBar2, min(2400, inverterData.L2Power), LV_ANIM_ON);
         lv_obj_set_style_bg_color(ui_inverterPowerBar2, l2PercentUsage > 50 ? red : textColor, LV_PART_INDICATOR);
         lv_obj_set_style_text_color(ui_inverterPowerL2Label, l2PercentUsage > 50 ? red : textColor, 0);
-        // lv_label_set_text(ui_inverterPowerL3Label, format(POWER, inverterData.L3Power).value.c_str());
         lv_label_set_text(ui_inverterPowerL3Label, format(POWER, inverterData.L3Power, 1.0f, true).formatted.c_str());
         lv_bar_set_value(ui_inverterPowerBar3, min(2400, inverterData.L3Power), LV_ANIM_ON);
         lv_obj_set_style_bg_color(ui_inverterPowerBar3, l3PercentUsage > 50 ? red : textColor, LV_PART_INDICATOR);
         lv_obj_set_style_text_color(ui_inverterPowerL3Label, l3PercentUsage > 50 ? red : textColor, 0);
+
+        //grid phases
+        lv_label_set_text(ui_meterPowerLabelL1, format(POWER, inverterData.gridPowerL1, 1.0f, true).formatted.c_str());
+        lv_bar_set_value(ui_meterPowerBarL1, max((int32_t)-2400, min((int32_t)2400, inverterData.gridPowerL1)), LV_ANIM_ON);
+        lv_obj_set_style_bg_color(ui_meterPowerBarL1, gridL1PercentUsage > 50 ? red : textColor, LV_PART_INDICATOR);
+        lv_obj_set_style_text_color(ui_meterPowerLabelL1, gridL1PercentUsage > 50 ? red : textColor, 0);
+        lv_label_set_text(ui_meterPowerLabelL2, format(POWER, inverterData.gridPowerL2, 1.0f, true).formatted.c_str());
+        lv_bar_set_value(ui_meterPowerBarL2, max((int32_t)-2400, min((int32_t)2400, inverterData.gridPowerL2)), LV_ANIM_ON);
+        lv_obj_set_style_bg_color(ui_meterPowerBarL2, gridL2PercentUsage > 50 ? red : textColor, LV_PART_INDICATOR);
+        lv_obj_set_style_text_color(ui_meterPowerLabelL2, gridL2PercentUsage > 50 ? red : textColor, 0);
+        lv_label_set_text(ui_meterPowerLabelL3, format(POWER, inverterData.gridPowerL3, 1.0f, true).formatted.c_str());
+        lv_bar_set_value(ui_meterPowerBarL3, max((int32_t)-2400, min((int32_t)2400, inverterData.gridPowerL3)), LV_ANIM_ON);
+        lv_obj_set_style_bg_color(ui_meterPowerBarL3, gridL3PercentUsage > 50 ? red : textColor, LV_PART_INDICATOR);
+        lv_obj_set_style_text_color(ui_meterPowerLabelL3, gridL3PercentUsage > 50 ? red : textColor, 0);
+
         loadPowerTextAnimator.animate(ui_loadPowerLabel, previousInverterData.loadPower, inverterData.loadPower);
         lv_label_set_text(ui_loadPowerUnitLabel, format(POWER, inverterData.loadPower).unit.c_str());
-        feedInPowerTextAnimator.animate(ui_feedInPowerLabel, abs(previousInverterData.feedInPower), abs(inverterData.feedInPower));
-        lv_label_set_text(ui_feedInPowerUnitLabel, format(POWER, abs(inverterData.feedInPower)).unit.c_str());
-        gridBackgroundAnimator.animate(ui_gridContainer, ((inverterData.feedInPower) < 0) ? lv_color_hex(_ui_theme_color_gridColor[0]) : containerBackground);
+        feedInPowerTextAnimator.animate(ui_feedInPowerLabel, abs(previousInverterData.gridPower), abs(inverterData.gridPower));
+        lv_label_set_text(ui_feedInPowerUnitLabel, format(POWER, abs(inverterData.gridPower)).unit.c_str());
+        gridBackgroundAnimator.animate(ui_gridContainer, ((inverterData.gridPower) < 0) ? lv_color_hex(_ui_theme_color_gridColor[0]) : containerBackground);
         lv_label_set_text_fmt(ui_socLabel, (inverterData.socApproximated ? "~%d" : "%d"), inverterData.soc);
 
         lv_label_set_text(ui_batteryPowerLabel, format(POWER, abs(inverterData.batteryPower), 1.0f, true).formatted.c_str());
@@ -895,13 +924,13 @@ private:
             batteryAnimator.hide();
         }
 
-        if (inverterData.feedInPower > 0)
+        if (inverterData.gridPower > 0)
         {
-            gridAnimator.run(ui_inverterContainer, ui_gridContainer, duration, UI_BACKGROUND_ANIMATION_DURATION + duration, 1, (inverterData.feedInPower / 1000) + 1, offsetX, offsetY);
+            gridAnimator.run(ui_inverterContainer, ui_gridContainer, duration, UI_BACKGROUND_ANIMATION_DURATION + duration, 1, (inverterData.gridPower / 1000) + 1, offsetX, offsetY);
         }
-        else if (inverterData.feedInPower < 0)
+        else if (inverterData.gridPower < 0)
         {
-            gridAnimator.run(ui_gridContainer, ui_inverterContainer, duration, UI_BACKGROUND_ANIMATION_DURATION + 0, 0, (abs(inverterData.feedInPower) / 1000) + 1, offsetX, offsetY);
+            gridAnimator.run(ui_gridContainer, ui_inverterContainer, duration, UI_BACKGROUND_ANIMATION_DURATION + 0, 0, (abs(inverterData.gridPower) / 1000) + 1, offsetX, offsetY);
         }
         else
         {

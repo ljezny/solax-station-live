@@ -42,7 +42,10 @@ typedef struct
     int16_t loadPower = 0;
     float loadToday = 0;
     float loadTotal = 0;
-    int32_t feedInPower = 0;
+    int32_t gridPower = 0;
+    int32_t gridPowerL1 = 0;
+    int32_t gridPowerL2 = 0;
+    int32_t gridPowerL3 = 0;
     int inverterTemperature = 0;
     int batteryTemperature = 0;
     double pvToday = 0;
@@ -74,7 +77,10 @@ void logInverterData(InverterData_t& inverterData) {
     log_d("Load Power: %d", inverterData.loadPower);
     log_d("Load Today: %f", inverterData.loadToday);
     log_d("Load Total: %f", inverterData.loadTotal);
-    log_d("Feed In Power: %d", inverterData.feedInPower);
+    log_d("Grid Power: %d", inverterData.gridPower);
+    log_d("Grid Power L1: %d", inverterData.gridPowerL1);
+    log_d("Grid Power L2: %d", inverterData.gridPowerL2);
+    log_d("Grid Power L3: %d", inverterData.gridPowerL3);
     log_d("Inverter Temperature: %d", inverterData.inverterTemperature);
     log_d("Battery Temperature: %d", inverterData.batteryTemperature);
     log_d("PV Today: %f", inverterData.pvToday);

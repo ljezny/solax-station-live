@@ -136,7 +136,7 @@ InverterData_t createRandomMockData()
     inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
     inverterData.loadPower = random(800, 1200);
     inverterData.loadToday = random(20, 60);
-    inverterData.feedInPower = random(-1000, 1000);
+    inverterData.gridPower = random(-1000, 1000);
     inverterData.soc = random(80, 85);
     inverterData.pvToday = random(30, 50);
     inverterData.pvTotal = random(1500, 2000);
@@ -338,9 +338,9 @@ bool loadInverterDataTask()
                 failures = 0;
                 inverterData = d;
                 solarChartDataProvider.addSample(millis(), inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.loadPower, inverterData.soc);
-                shellyMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
-                uiMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
-                wallboxMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.feedInPower);
+                shellyMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.gridPower);
+                uiMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.gridPower);
+                wallboxMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.gridPower);
                 dongleDiscovery.storeLastConnectedSSID(wifiDiscoveryResult.ssid);
             }
             else
