@@ -107,7 +107,10 @@ public:
             inverterData.L3Power = max(0, ((int)response.readUInt16(819)) - response.readInt16(822));
             inverterData.loadPower = response.readUInt16(817) + response.readUInt16(818) + response.readUInt16(819);
             inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
-            inverterData.gridPower = -1 * (response.readInt16(820) + response.readInt16(821) + response.readInt16(822));
+            inverterData.gridPowerL1 = -1 * response.readInt16(820);
+            inverterData.gridPowerL2 = -1 * response.readInt16(821);
+            inverterData.gridPowerL3 = -1 * response.readInt16(822);
+            inverterData.gridPower = inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3;
         }
 
         for (int i = 0; i < sizeof(vebusUnits); i++)

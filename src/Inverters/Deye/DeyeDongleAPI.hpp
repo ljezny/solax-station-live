@@ -112,6 +112,9 @@ private:
                 inverterData.L3Power = channel.readInt16(packetBuffer, 635 - 598);
                 inverterData.inverterPower = channel.readInt16(packetBuffer, 636 - 598);
                 inverterData.loadPower = channel.readInt16(packetBuffer, 653 - 598);
+                inverterData.gridPowerL1 = -1 * channel.readInt16(packetBuffer, 622 - 598);
+                inverterData.gridPowerL2 = -1 * channel.readInt16(packetBuffer, 623 - 598);
+                inverterData.gridPowerL3 = -1 * channel.readInt16(packetBuffer, 624 - 598);
                 inverterData.gridPower = -1 * channel.readInt16(packetBuffer, 625 - 598); }))
             return;
 

@@ -155,6 +155,9 @@ private:
                     log_d("Register 8: %d", register8);
                     // end debug logging
 
+                    inverterData.gridPowerL1 = response.readInt32(36000 + 19);
+                    inverterData.gridPowerL2 = response.readInt32(36000 + 21);
+                    inverterData.gridPowerL3 = response.readInt32(36000 + 23);
                     inverterData.gridPower = response.readInt32(36000 + 25);
                     inverterData.loadPower -= inverterData.gridPower;
                     
