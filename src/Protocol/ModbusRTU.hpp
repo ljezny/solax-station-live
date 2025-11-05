@@ -82,6 +82,13 @@ public:
             udp.clear();
             return response;
         }
+        
+        log_d("Request address: %d", addr);
+        String dataHex = "";
+        for (int i = 0; i < respLen; i++) {
+            dataHex += String(response.data[i], HEX);
+        }
+        log_d("Response data: %s", dataHex.c_str());
 
         c = crc16(response.data + 2, respLen - 2, 0x8005, 0xFFFF, 0, true, true);
         if (c != 0)
@@ -94,10 +101,11 @@ public:
 
         response.unit = response.data[0];
         response.functionCode = response.data[1];
+        
         response.address = addr;
         response.length = response.data[2];
         log_d("Response: unit=%d, functionCode=%d, address=%d, length=%d", response.unit, response.functionCode, response.address, response.length);
-        //shift data N bytes (header)
+        // shift data N bytes (header)
         int skip = 5;
         for (int i = 0; i < respLen - skip; i++)
         {
