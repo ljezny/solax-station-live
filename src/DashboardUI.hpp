@@ -354,7 +354,7 @@ public:
         }
 
         int totalGridPhasePower = abs(inverterData.gridPowerL1) + abs(inverterData.gridPowerL2) + abs(inverterData.gridPowerL3);
-        bool hasGridPhases = inverterData.gridPowerL1 > 0 || inverterData.gridPowerL2 > 0 || inverterData.gridPowerL3 > 0;
+        bool hasGridPhases = inverterData.gridPowerL1 != 0 || inverterData.gridPowerL2 != 0 || inverterData.gridPowerL3 != 0;
         if (hasGridPhases)
         {
             // show grid phase container
