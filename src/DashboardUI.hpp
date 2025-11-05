@@ -457,16 +457,16 @@ public:
         //grid phases
         lv_label_set_text(ui_meterPowerLabelL1, format(POWER, inverterData.gridPowerL1, 1.0f, false).formatted.c_str());
         lv_bar_set_value(ui_meterPowerBarL1, max((int32_t)-2400, min((int32_t)2400, inverterData.gridPowerL1)), LV_ANIM_ON);
-        lv_obj_set_style_bg_color(ui_meterPowerBarL1, inverterData.gridPowerL1 < 0 ? orange : green, LV_PART_INDICATOR);
-        lv_obj_set_style_text_color(ui_meterPowerLabelL1, inverterData.gridPowerL1 < 0 ? orange : textColor, 0);
+        lv_obj_set_style_bg_color(ui_meterPowerBarL1, inverterData.gridPowerL1 < 0 ? red : textColor, LV_PART_INDICATOR);
+        lv_obj_set_style_text_color(ui_meterPowerLabelL1, inverterData.gridPowerL1 < 0 ? red : textColor, 0);
         lv_label_set_text(ui_meterPowerLabelL2, format(POWER, inverterData.gridPowerL2, 1.0f, false).formatted.c_str());
         lv_bar_set_value(ui_meterPowerBarL2, max((int32_t)-2400, min((int32_t)2400, inverterData.gridPowerL2)), LV_ANIM_ON);
-        lv_obj_set_style_bg_color(ui_meterPowerBarL2, inverterData.gridPowerL2 < 0 ? orange : green, LV_PART_INDICATOR);
-        lv_obj_set_style_text_color(ui_meterPowerLabelL2, inverterData.gridPowerL2 < 0 ? orange : textColor, 0);
+        lv_obj_set_style_bg_color(ui_meterPowerBarL2, inverterData.gridPowerL2 < 0 ? red : textColor, LV_PART_INDICATOR);
+        lv_obj_set_style_text_color(ui_meterPowerLabelL2, inverterData.gridPowerL2 < 0 ? red : textColor, 0);
         lv_label_set_text(ui_meterPowerLabelL3, format(POWER, inverterData.gridPowerL3, 1.0f, false).formatted.c_str());
         lv_bar_set_value(ui_meterPowerBarL3, max((int32_t)-2400, min((int32_t)2400, inverterData.gridPowerL3)), LV_ANIM_ON);
-        lv_obj_set_style_bg_color(ui_meterPowerBarL3, inverterData.gridPowerL3 < 0 ? orange : green, LV_PART_INDICATOR);
-        lv_obj_set_style_text_color(ui_meterPowerLabelL3, inverterData.gridPowerL3 < 0 ? orange : textColor, 0);
+        lv_obj_set_style_bg_color(ui_meterPowerBarL3, inverterData.gridPowerL3 < 0 ? red : textColor, LV_PART_INDICATOR);
+        lv_obj_set_style_text_color(ui_meterPowerLabelL3, inverterData.gridPowerL3 < 0 ? red : textColor, 0);
 
         loadPowerTextAnimator.animate(ui_loadPowerLabel, previousInverterData.loadPower, inverterData.loadPower);
         lv_label_set_text(ui_loadPowerUnitLabel, format(POWER, inverterData.loadPower).unit.c_str());
