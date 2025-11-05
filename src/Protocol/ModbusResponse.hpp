@@ -14,6 +14,11 @@ public:
     uint8_t data[RX_BUFFER_SIZE];
     bool isValid = false;
 
+    ModbusResponse() : sequenceNumber(0), unit(0), functionCode(0), address(0), length(0)
+    {
+        memset(data, 0, RX_BUFFER_SIZE);
+    }
+
     uint16_t readUInt16(uint16_t reg)
     {
         uint8_t index = reg - address;

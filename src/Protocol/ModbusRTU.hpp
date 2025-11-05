@@ -43,7 +43,7 @@ public:
 
     ModbusResponse sendDataRequest(IPAddress ipAddress, int port, uint16_t addr, uint8_t len)
     {
-        ModbusResponse response;
+        ModbusResponse response{};
         udp.clear();
         if (!udp.beginPacket(ipAddress, port))
         {

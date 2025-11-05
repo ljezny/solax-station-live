@@ -82,11 +82,10 @@ private:
         if (/*tcpChannel.connect(ip, 502) || */rtuChannel.connect())
         {
             log_d("Connected.");
-            ModbusResponse response;
 
             for (int i = 0; i < RETRY_COUNT; i++)
             {
-                response = sendRunningDataRequestPacket(ip);
+                ModbusResponse response = sendRunningDataRequestPacket(ip);
                 if (response.isValid)
                 {
                     inverterData.status = DONGLE_STATUS_OK;
@@ -110,8 +109,7 @@ private:
                     inverterData.loadTotal = response.readUInt32(35100 + 103) / 10.0;
                     inverterData.batteryChargedToday = response.readUInt16(35100 + 108) / 10.0;
                     inverterData.batteryDischargedToday = response.readUInt16(35100 + 111) / 10.0;
-                    logInverterData(inverterData);
-
+                   
                     // this is a hack - Goodwe returns incorrect day values for grid sell/buy
                     // so count it manually from total values
                     int day = (response.readUInt16(35100 + 1) >> 8) & 0xFF;
@@ -130,7 +128,7 @@ private:
 
             for (int i = 0; i < RETRY_COUNT; i++)
             {
-                response = sendSNDataRequestPacket(ip);
+                ModbusResponse response = sendSNDataRequestPacket(ip);
                 if (response.isValid)
                 {
                     inverterData.sn = response.readString(35003, 8);
@@ -142,7 +140,7 @@ private:
 
             for (int i = 0; i < RETRY_COUNT; i++)
             { // it is UDP so retries are needed
-                response = sendSmartMeterRequestPacket(ip);
+                ModbusResponse response = sendSmartMeterRequestPacket(ip);
                 if (response.isValid)
                 {
                     inverterData.gridSellTotal = response.readIEEE754(36000 + 15) / 1000.0f;
@@ -180,7 +178,7 @@ private:
 
             for (int i = 0; i < RETRY_COUNT; i++)
             { // it is UDP so retries are needed
-                response = sendBMSInfoRequestPacket(ip);
+                ModbusResponse response = sendBMSInfoRequestPacket(ip);
                 if (response.isValid)
                 {
 
