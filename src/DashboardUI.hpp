@@ -358,11 +358,22 @@ public:
         if (hasGridPhases)
         {
             // show grid phase container
-            lv_obj_clear_flag(ui_smartMeterContainer, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_meterPowerBarL1, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_meterPowerBarL2, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_meterPowerBarL3, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_meterPowerLabelL1, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_meterPowerLabelL2, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_meterPowerLabelL3, LV_OBJ_FLAG_HIDDEN);
         }
         else
         {
-            lv_obj_add_flag(ui_smartMeterContainer, LV_OBJ_FLAG_HIDDEN);
+            // hide grid phase container
+            lv_obj_add_flag(ui_meterPowerBarL1, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_meterPowerBarL2, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_meterPowerBarL3, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_meterPowerLabelL1, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_meterPowerLabelL2, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_add_flag(ui_meterPowerLabelL3, LV_OBJ_FLAG_HIDDEN);
         }
 
         lv_color_t black = lv_color_make(0, 0, 0);
