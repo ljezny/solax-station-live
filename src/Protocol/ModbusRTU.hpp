@@ -87,6 +87,7 @@ public:
         String dataHex = "";
         for (int i = 0; i < respLen; i++) {
             dataHex += String(response.data[i], HEX);
+            dataHex += " ";
         }
         log_d("Response data: %s", dataHex.c_str());
 
@@ -98,13 +99,17 @@ public:
             udp.clear();
             return response;
         }
-
-        response.unit = response.data[0];
-        response.functionCode = response.data[1];
+        // AA55 is first two bytes
+        response.unit = response.data[2];
+        response.functionCode = response.data[3];
         
         response.address = addr;
-        response.length = response.data[2];
+        response.length = response.data[4];
         log_d("Response: unit=%d, functionCode=%d, address=%d, length=%d", response.unit, response.functionCode, response.address, response.length);
+        if(response.length != len * 2) {
+            log_d("Warning: Expected length %d, but got %d", len * 2, response.length);
+            return response;
+        }
         // shift data N bytes (header)
         int skip = 5;
         for (int i = 0; i < respLen - skip; i++)
