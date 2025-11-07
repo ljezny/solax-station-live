@@ -828,6 +828,9 @@ public:
         lv_obj_set_style_bg_opa(ui_spotPriceContainer, isDarkMode ? LV_OPA_80 : LV_OPA_80, 0);
         lv_obj_set_style_text_color(ui_Dashboard, isDarkMode ? white : black, 0);
         lv_obj_set_style_text_color(ui_selfUsePercentLabel, isDarkMode ? black : white, 0);
+
+        lv_obj_set_style_bg_color(ui_clocksLabel, containerBackground, 0);
+        lv_obj_set_style_text_color(ui_clocksLabel, isDarkMode ? white : black, 0);
     }
 
     void updateBatteryIcon(int soc)
