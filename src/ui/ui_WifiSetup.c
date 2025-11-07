@@ -5,7 +5,7 @@
 
 #include "ui.h"
 
-lv_obj_t *ui_WifiSetup = NULL;lv_obj_t *ui_Container12 = NULL;lv_obj_t *ui_Container16 = NULL;lv_obj_t *ui_Label1 = NULL;lv_obj_t *ui_wifiDropdown = NULL;lv_obj_t *ui_wifiPassword = NULL;lv_obj_t *ui_wifiSetupCompleteButton = NULL;lv_obj_t *ui_Label3 = NULL;lv_obj_t *ui_Container15 = NULL;lv_obj_t *ui_Label5 = NULL;lv_obj_t *ui_connectionTypeDropdown = NULL;lv_obj_t *ui_inverterIP = NULL;lv_obj_t *ui_inverterSN = NULL;lv_obj_t *ui_Container21 = NULL;lv_obj_t *ui_Label2 = NULL;lv_obj_t *ui_spotProviderDropdown = NULL;lv_obj_t *ui_keyboard = NULL;
+lv_obj_t *ui_WifiSetup = NULL;lv_obj_t *ui_Container12 = NULL;lv_obj_t *ui_Container16 = NULL;lv_obj_t *ui_Label1 = NULL;lv_obj_t *ui_wifiDropdown = NULL;lv_obj_t *ui_wifiPassword = NULL;lv_obj_t *ui_wifiSetupCompleteButton = NULL;lv_obj_t *ui_Label3 = NULL;lv_obj_t *ui_Container15 = NULL;lv_obj_t *ui_Label5 = NULL;lv_obj_t *ui_connectionTypeDropdown = NULL;lv_obj_t *ui_inverterIP = NULL;lv_obj_t *ui_inverterSN = NULL;lv_obj_t *ui_Container21 = NULL;lv_obj_t *ui_Label2 = NULL;lv_obj_t *ui_spotProviderDropdown = NULL;lv_obj_t *ui_timeZoneDropdown = NULL;lv_obj_t *ui_keyboard = NULL;
 // event funtions
 
 // build funtions
@@ -149,6 +149,13 @@ lv_obj_set_height( ui_spotProviderDropdown, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_spotProviderDropdown, LV_ALIGN_CENTER );
 lv_obj_add_flag( ui_spotProviderDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
 
+ui_timeZoneDropdown = lv_dropdown_create(ui_Container21);
+lv_dropdown_set_options( ui_timeZoneDropdown, "GMT+1 Europe / Prague" );
+lv_obj_set_width( ui_timeZoneDropdown, lv_pct(100));
+lv_obj_set_height( ui_timeZoneDropdown, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( ui_timeZoneDropdown, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_timeZoneDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
+
 ui_keyboard = lv_keyboard_create(ui_WifiSetup);
 lv_obj_set_height( ui_keyboard, 220);
 lv_obj_set_width( ui_keyboard, lv_pct(100));
@@ -181,6 +188,7 @@ ui_inverterSN= NULL;
 ui_Container21= NULL;
 ui_Label2= NULL;
 ui_spotProviderDropdown= NULL;
+ui_timeZoneDropdown= NULL;
 ui_keyboard= NULL;
 
 }

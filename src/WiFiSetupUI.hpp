@@ -8,6 +8,7 @@
 static void wifiSetupCompleteHandler(lv_event_t *e);
 static void wifiRollerHandler(lv_event_t *e);
 static void spotRollerHandler(lv_event_t *e);
+static void timezoneRollerHandler(lv_event_t *e);
 static void connectionTypeHandler(lv_event_t *e);
 static void onFocusHandler(lv_event_t *e);
 static void onTextChangedHandler(lv_event_t *e);
@@ -40,6 +41,7 @@ public:
         lv_obj_add_event_cb(ui_wifiDropdown, wifiRollerHandler, LV_EVENT_ALL, this);
         lv_obj_add_event_cb(ui_connectionTypeDropdown, connectionTypeHandler, LV_EVENT_ALL, this);
         lv_obj_add_event_cb(ui_spotProviderDropdown, spotRollerHandler, LV_EVENT_ALL, this);
+        lv_obj_add_event_cb(ui_timeZoneDropdown, timezoneRollerHandler, LV_EVENT_ALL, this);
         lv_obj_add_event_cb(ui_wifiPassword, onFocusHandler, LV_EVENT_FOCUSED, this);
         lv_obj_add_event_cb(ui_inverterIP, onFocusHandler, LV_EVENT_FOCUSED, this);
         lv_obj_add_event_cb(ui_inverterSN, onFocusHandler, LV_EVENT_FOCUSED, this);
@@ -99,6 +101,22 @@ public:
         }
         lv_dropdown_set_options(ui_spotProviderDropdown, spotProviders.c_str());
         lv_dropdown_set_selected(ui_spotProviderDropdown, priceLoader.getStoredElectricityPriceProvider());
+
+        String timezones = "";
+        for (int i = 0; i < TIMEZONE_COUNT; i++)
+        {
+            timezones += String(TIMEZONES[i].name) + "\n";
+        }
+        lv_dropdown_set_options(ui_timeZoneDropdown, timezones.c_str());
+        String storedTimeZone = priceLoader.getStoredTimeZone();
+        for (int i = 0; i < TIMEZONE_COUNT; i++)
+        {
+            if (storedTimeZone.equals(TIMEZONES[i].tz))
+            {
+                lv_dropdown_set_selected(ui_timeZoneDropdown, i);
+                break;
+            }
+        }
 
         setCompleteButtonVisibility();
     }
@@ -254,6 +272,21 @@ static void spotRollerHandler(lv_event_t *e)
         log_d("Spot provider changed to index: %d", selectedIndex);
         ElectricityPriceLoader priceLoader;
         priceLoader.storeElectricityPriceProvider((ElectricityPriceProvider_t)selectedIndex);
+    }
+}
+
+static void timezoneRollerHandler(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_VALUE_CHANGED)
+    {
+        int selectedIndex = lv_dropdown_get_selected(ui_timeZoneDropdown);
+        if (selectedIndex >= 0 && selectedIndex < TIMEZONE_COUNT)
+        {
+            log_d("Timezone changed to index: %d", selectedIndex);
+            ElectricityPriceLoader priceLoader;
+            priceLoader.storeTimeZone(String(TIMEZONES[selectedIndex].tz));
+        }
     }
 }
 

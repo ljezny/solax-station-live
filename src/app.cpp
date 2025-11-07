@@ -639,10 +639,26 @@ void resolveSolaxSmartCharge()
     }
 }
 
+void setTimeZone() {
+    ElectricityPriceLoader loader;
+    String tz = loader.getStoredTimeZone();
+    log_d("Stored time zone: %s", tz.c_str());
+    if (tz.length() > 0) {
+        
+        setenv("TZ", tz.c_str(), 1);
+        tzset();
+
+        log_d("Time zone set to %s", tz.c_str());
+    } else {
+        log_d("No time zone stored, using default"); 
+    }
+}
+
 void syncTime()
 {
     // use ntp arduino
     configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+    setTimeZone();
     struct tm timeinfo;
     if (!getLocalTime(&timeinfo, 5000))
     {
@@ -695,6 +711,7 @@ void onEntering(state_t newState)
         xSemaphoreGive(lvgl_mutex);
 
         resetAllTasks();
+        setTimeZone();
         break;
     }
 }

@@ -42,6 +42,41 @@ typedef enum
     NORDPOOL_PL
 } ElectricityPriceProvider_t;
 
+struct Timezone {
+  const char* name;   // Caption shown to user
+  const char* tz;     // TZ string for setenv()
+};
+
+const Timezone TIMEZONES[] = {
+  {"UTC", "UTC0"},
+  {"Europe/London", "GMT0BST,M3.5.0/1,M10.5.0"},
+  {"Europe/Paris", "CET-1CEST,M3.5.0/2,M10.5.0/3"},
+  {"Europe/Moscow", "MSK-3"},
+  {"Asia/Dubai", "GST-4"},
+  {"Asia/Kolkata", "IST-5:30"},
+  {"Asia/Bangkok", "ICT-7"},
+  {"Asia/Singapore", "SGT-8"},
+  {"Asia/Tokyo", "JST-9"},
+  {"Australia/Sydney", "AEST-10AEDT,M10.1.0,M4.1.0/3"},
+  {"Pacific/Auckland", "NZST-12NZDT,M9.5.0,M4.1.0/3"},
+  {"America/St_Johns", "NST3:30NDT,M3.2.0,M11.1.0"},
+  {"America/Halifax", "AST4ADT,M3.2.0,M11.1.0"},
+  {"America/New_York", "EST5EDT,M3.2.0,M11.1.0"},
+  {"America/Chicago", "CST6CDT,M3.2.0,M11.1.0"},
+  {"America/Denver", "MST7MDT,M3.2.0,M11.1.0"},
+  {"America/Los_Angeles", "PST8PDT,M3.2.0,M11.1.0"},
+  {"America/Anchorage", "AKST9AKDT,M3.2.0,M11.1.0"},
+  {"Pacific/Honolulu", "HST10"},
+  {"America/Sao_Paulo", "BRT3"},
+  {"America/Argentina/Buenos_Aires", "ART3"},
+  {"Africa/Cairo", "EET-2"},
+  {"Africa/Johannesburg", "SAST-2"},
+  {"Indian/Mauritius", "MUT-4"},
+  {"Atlantic/Azores", "AZOT1AZOST,M3.5.0/0,M10.5.0/1"}
+};
+
+const int TIMEZONE_COUNT = sizeof(TIMEZONES) / sizeof(TIMEZONES[0]);
+
 class ElectricityPriceLoader
 {
 public:
@@ -173,6 +208,23 @@ public:
         Preferences preferences;
         preferences.begin("spot", false);
         preferences.putInt("provider", (int)provider);
+        preferences.end();
+    }
+
+    String getStoredTimeZone()
+    {
+        Preferences preferences;
+        preferences.begin("spot", true);
+        String timeZone = preferences.getString("tz", "CET-1CEST,M3.5.0/2,M10.5.0/3");
+        preferences.end();
+        return timeZone;
+    }
+
+    void storeTimeZone(String timeZone)
+    {
+        Preferences preferences;
+        preferences.begin("spot", false);
+        preferences.putString("tz", timeZone);
         preferences.end();
     }
 

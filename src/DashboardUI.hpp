@@ -255,7 +255,7 @@ private:
 
 public:
     const int UI_REFRESH_PERIOD_MS = 5000;
-
+    lv_timer_t *clocksTimer = nullptr;
     DashboardUI(void (*onSettingsShow)(lv_event_t *))
     {
         lv_obj_add_event_cb(ui_Chart1, solar_chart_draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
@@ -276,10 +276,37 @@ public:
         pvPowerSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_pvColor[0]), LV_CHART_AXIS_SECONDARY_Y);
         acPowerSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_loadColor[0]), LV_CHART_AXIS_SECONDARY_Y);
         socSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_batteryColor[0]), LV_CHART_AXIS_PRIMARY_Y);
+
+        // add timer
+        clocksTimer = lv_timer_create([](lv_timer_t *timer)
+                                      {
+                                        static uint8_t step = 0;
+                                        step++;
+                                          // update time and date labels
+                                          struct tm timeinfo;
+                                          if (getLocalTime(&timeinfo))
+                                          {
+                                            // show label
+                                            lv_obj_clear_flag(ui_clocksLabel, LV_OBJ_FLAG_HIDDEN);
+                                            char timeStr[6];
+                                            lv_snprintf(timeStr, sizeof(timeStr), step % 2 == 0 ? "%02d %02d" : "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+                                            lv_label_set_text(ui_clocksLabel, timeStr);
+                                          }
+                                          else
+                                          {
+                                            // hide label
+                                            lv_obj_add_flag(ui_clocksLabel, LV_OBJ_FLAG_HIDDEN);
+                                            lv_label_set_text(ui_clocksLabel, "--:--");
+                                          } }, 1000, NULL);
     }
 
     ~DashboardUI()
     {
+        if (clocksTimer)
+        {
+            lv_timer_del(clocksTimer);
+            clocksTimer = nullptr;
+        }
     }
 
     bool isWallboxSmartChecked()
@@ -439,8 +466,8 @@ public:
         inverterPowerTextAnimator.animate(ui_inverterPowerLabel, previousInverterData.inverterPower, inverterData.inverterPower);
         pvBackgroundAnimator.animate(ui_pvContainer, ((inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power) > 0) ? lv_color_hex(_ui_theme_color_pvColor[0]) : containerBackground);
         lv_label_set_text(ui_inverterPowerUnitLabel, format(POWER, inverterData.inverterPower).unit.c_str());
-        
-        //phases
+
+        // phases
         lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.L1Power, 1.0f, false).formatted.c_str());
         lv_bar_set_value(ui_inverterPowerBar1, min(2400, inverterData.L1Power), LV_ANIM_ON);
         lv_obj_set_style_bg_color(ui_inverterPowerBar1, l1PercentUsage > 50 && inverterData.L1Power > 1200 ? red : textColor, LV_PART_INDICATOR);
@@ -454,7 +481,7 @@ public:
         lv_obj_set_style_bg_color(ui_inverterPowerBar3, l3PercentUsage > 50 && inverterData.L3Power > 1200 ? red : textColor, LV_PART_INDICATOR);
         lv_obj_set_style_text_color(ui_inverterPowerL3Label, l3PercentUsage > 50 && inverterData.L3Power > 1200 ? red : textColor, 0);
 
-        //grid phases
+        // grid phases
         lv_label_set_text(ui_meterPowerLabelL1, format(POWER, inverterData.gridPowerL1, 1.0f, false).formatted.c_str());
         lv_bar_set_value(ui_meterPowerBarL1, max((int32_t)-2400, min((int32_t)2400, inverterData.gridPowerL1)), LV_ANIM_ON);
         lv_obj_set_style_bg_color(ui_meterPowerBarL1, inverterData.gridPowerL1 < 0 ? red : textColor, LV_PART_INDICATOR);
@@ -803,21 +830,34 @@ public:
         lv_obj_set_style_text_color(ui_selfUsePercentLabel, isDarkMode ? black : white, 0);
     }
 
-    void updateBatteryIcon(int soc) {
-        if (soc >= 95) {
+    void updateBatteryIcon(int soc)
+    {
+        if (soc >= 95)
+        {
             lv_img_set_src(ui_batteryImage, &ui_img_battery_100_png);
-        } else if (soc >= 75) {
+        }
+        else if (soc >= 75)
+        {
             lv_img_set_src(ui_batteryImage, &ui_img_battery_80_png);
-        } else if (soc >= 55) {
+        }
+        else if (soc >= 55)
+        {
             lv_img_set_src(ui_batteryImage, &ui_img_battery_60_png);
-        } else if (soc >= 35) {
+        }
+        else if (soc >= 35)
+        {
             lv_img_set_src(ui_batteryImage, &ui_img_battery_40_png);
-        } else if (soc >= 15) {
+        }
+        else if (soc >= 15)
+        {
             lv_img_set_src(ui_batteryImage, &ui_img_battery_20_png);
-        } else {
+        }
+        else
+        {
             lv_img_set_src(ui_batteryImage, &ui_img_battery_0_png);
         }
     }
+
 private:
     int const UI_TEXT_CHANGE_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS;
     int const UI_BACKGROUND_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS / 3;

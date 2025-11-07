@@ -131,6 +131,7 @@ extern lv_obj_t *ui_gridSellTodayUnitLabel;
 extern lv_obj_t *ui_Container10;
 extern lv_obj_t *ui_gridBuyTodayLabel;
 extern lv_obj_t *ui_gridBuyTodayUnitLabel;
+extern lv_obj_t *ui_clocksLabel;
 extern lv_obj_t *ui_RightBottomContainer;
 extern lv_obj_t *ui_Chart1;
 extern lv_obj_t *ui_spotPriceContainer;
