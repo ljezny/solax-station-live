@@ -11,9 +11,9 @@
 #include "utils/MedianPowerSampler.hpp"
 #include "Spot/ElectricityPriceLoader.hpp"
 
-lv_color_t red = lv_color_hex(0xAB2328);
-lv_color_t orange = lv_color_hex(0xFFAA00);
-lv_color_t green = lv_color_hex(0x03AD36);
+lv_color_t red = lv_color_hex(0xE63946);
+lv_color_t orange = lv_color_hex(0xFFA726);
+lv_color_t green = lv_color_hex(0x4CAF50);
 
 static bool isDarkMode = false;
 
