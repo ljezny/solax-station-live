@@ -145,7 +145,7 @@ private:
 
     bool readPhaseData(InverterData_t &data)
     {
-        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x6A, 0x84 - 0x6A + 2);
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x6A, 0x88 - 0x6A + 2);
         if (!response.isValid)
         {
             log_d("Failed to read phase data");
