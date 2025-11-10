@@ -10,6 +10,7 @@
 #include "Inverters/SofarSolar/SofarSolarDongleAPI.hpp"
 #include "Inverters/Deye/DeyeDongleAPI.hpp"
 #include "Inverters/Victron/VictronDongleAPI.hpp"
+#include "Inverters/Growatt/GrowattDongleAPI.hpp"
 #include "Wallbox/EcoVolterProV2.hpp"
 #include "Wallbox/SolaxWallboxLocalAPI.hpp"
 #include "Shelly/Shelly.hpp"
@@ -282,6 +283,7 @@ InverterData_t loadInverterData(WiFiDiscoveryResult_t &discoveryResult)
     static SofarSolarDongleAPI sofarSolarDongleAPI = SofarSolarDongleAPI();
     static DeyeDongleAPI deyeDongleAPI = DeyeDongleAPI();
     static VictronDongleAPI victronDongleAPI = VictronDongleAPI();
+    static GrowattDongleAPI growattDongleAPI = GrowattDongleAPI();
     long millisBefore = millis();
     InverterData_t d;
     switch (discoveryResult.type)
@@ -300,6 +302,9 @@ InverterData_t loadInverterData(WiFiDiscoveryResult_t &discoveryResult)
         break;
     case CONNECTION_TYPE_VICTRON:
         d = victronDongleAPI.loadData(discoveryResult.inverterIP);
+        break;
+    case CONNECTION_TYPE_GROWATT:
+        d = growattDongleAPI.loadData(discoveryResult.inverterIP);
         break;
     default:
         d.status = DONGLE_STATUS_UNSUPPORTED_DONGLE;

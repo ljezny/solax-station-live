@@ -90,6 +90,14 @@ public:
                 discoveries[j].password = "uarnb5xs";
             }
 
+            //Lukas Capka
+            if (discoveries[j].ssid == "wifi.sosna")
+            {
+                log_d("Found special SSID: %s", discoveries[j].ssid.c_str());
+                discoveries[j].password = "1sosna2sosny";
+                discoveries[j].type = CONNECTION_TYPE_GROWATT;
+            }
+
             j++;
         }
     }

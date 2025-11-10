@@ -9,6 +9,7 @@ typedef enum {
     CONNECTION_TYPE_SOFAR,
     CONNECTION_TYPE_VICTRON,
     CONNECTION_TYPE_DEYE,
+    CONNECTION_TYPE_GROWATT
 } ConnectionType_t;
 
 typedef struct {
