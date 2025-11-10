@@ -291,7 +291,7 @@ public:
                                         step++;
                                           // update time and date labels
                                           struct tm timeinfo;
-                                          if (getLocalTime(&timeinfo))
+                                          if (getLocalTime(&timeinfo,0))
                                           {
                                             // show label
                                             lv_obj_clear_flag(ui_clocksLabel, LV_OBJ_FLAG_HIDDEN);
