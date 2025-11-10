@@ -277,6 +277,13 @@ public:
         acPowerSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_loadColor[0]), LV_CHART_AXIS_SECONDARY_Y);
         socSeries = lv_chart_add_series(ui_Chart1, lv_color_hex(_ui_theme_color_batteryColor[0]), LV_CHART_AXIS_PRIMARY_Y);
 
+        lv_obj_set_style_anim_time(ui_inverterPowerBar1, UI_BACKGROUND_ANIMATION_DURATION, LV_PART_ANY);
+        lv_obj_set_style_anim_time(ui_inverterPowerBar2, UI_BACKGROUND_ANIMATION_DURATION, LV_PART_ANY);
+        lv_obj_set_style_anim_time(ui_inverterPowerBar3, UI_BACKGROUND_ANIMATION_DURATION, LV_PART_ANY);
+        lv_obj_set_style_anim_time(ui_meterPowerBarL1, UI_BACKGROUND_ANIMATION_DURATION, LV_PART_ANY);
+        lv_obj_set_style_anim_time(ui_meterPowerBarL2, UI_BACKGROUND_ANIMATION_DURATION, LV_PART_ANY);
+        lv_obj_set_style_anim_time(ui_meterPowerBarL3, UI_BACKGROUND_ANIMATION_DURATION, LV_PART_ANY);
+
         // add timer
         clocksTimer = lv_timer_create([](lv_timer_t *timer)
                                       {
