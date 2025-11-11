@@ -18,13 +18,14 @@ public:
     WiFiDiscovery &dongleDiscovery;
     WiFiDiscoveryResult_t result;
 
-    const ConnectionType_t connectionTypes[6] = {
+    const ConnectionType_t connectionTypes[7] = {
         CONNECTION_TYPE_NONE,
         CONNECTION_TYPE_SOLAX,
         CONNECTION_TYPE_GOODWE,
         CONNECTION_TYPE_SOFAR,
         CONNECTION_TYPE_VICTRON,
         CONNECTION_TYPE_DEYE,
+        CONNECTION_TYPE_GROWATT
     };
 
     WiFiSetupUI(WiFiDiscovery &dongleDiscovery) : dongleDiscovery(dongleDiscovery)
