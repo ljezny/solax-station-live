@@ -11,35 +11,21 @@ public:
 
     InverterData_t loadData(const String &ipAddress)
     {
-        if (ip == IPAddress(0, 0, 0, 0))
-        {
-            if (!ipAddress.isEmpty())
-            {
-                ip.fromString(ipAddress);
-            }
+        InverterData_t inverterData = {};
+        inverterData.millis = millis();
 
-            if (ip == IPAddress(0, 0, 0, 0))
-            {
-                ip = discoverDongleIP();
-                if (ip == IPAddress(0, 0, 0, 0))
-                {
-                    ip = IPAddress(10, 10, 100, 253);
-                }
-            }
-        }
-        log_d("Connecting to dongle...%s", ip.toString().c_str());
-        if(!channel.connect(ip, MODBUS_PORT))
+        if (!connectToDongle(ipAddress))
         {
-            log_d("Failed to connect to dongle at %s", ip.toString().c_str());
-            InverterData_t inverterData{};
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
-            inverterData.millis = millis();
             return inverterData;
         }
 
-        InverterData_t inverterData{};
-
-        inverterData.millis = millis();
+        if (!readInverterData(inverterData))
+        {
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            channel.disconnect();
+            return inverterData;
+        }
 
         logInverterData(inverterData);
         channel.disconnect();
@@ -58,7 +44,55 @@ private:
     static constexpr uint8_t FUNCTION_CODE_READ_HOLDING = 0x03;
     static constexpr uint8_t FUNCTION_CODE_READ_INPUT = 0x04;
 
-   
+   bool connectToDongle(const String &ipAddress)
+    {
+        IPAddress targetIp = getIp(ipAddress);
+        if (!channel.connect(targetIp, MODBUS_PORT))
+        {
+            log_d("Failed to connect to Solax Modbus dongle at %s", targetIp.toString().c_str());
+            ip = IPAddress(0, 0, 0, 0);
+            channel.disconnect();
+            return false;
+        }
+        return true;
+    }
+
+    bool readInverterData(InverterData_t &data)
+    {
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0, 99);
+        if (!response.isValid)
+        {
+            log_d("Failed to read main inverter data");
+            return false;
+        }
+        data.status = DONGLE_STATUS_OK;
+        data.pv1Power = response.readUInt32(5) / 10;
+        data.pv2Power = response.readUInt32(9) / 10;
+        data.pv3Power = response.readUInt32(13) / 10;
+        data.pv4Power = response.readUInt32(17) / 10;
+        return true;
+    }
+
+    IPAddress getIp(const String &ipAddress)
+    {
+        if (ip == IPAddress(0, 0, 0, 0))
+        {
+            if (!ipAddress.isEmpty())
+            {
+                ip = IPAddress();
+                ip.fromString(ipAddress);
+            }
+        }
+
+        if (ip == IPAddress(0, 0, 0, 0))
+        {
+            ip = discoverDongleIP();
+        }
+
+        log_d("Using IP: %s", ip.toString().c_str());
+        return ip;
+    }
+
     IPAddress discoverDongleIP()
     {
         IPAddress dongleIP;
