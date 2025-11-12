@@ -139,7 +139,8 @@ private:
             return false;
         }
         data.batteryCapacityWh = response.readInt16(3226 - baseAddress);
-
+        data.minSoc = 10;
+        data.maxSoc = 100;
         return true;
     }
 
