@@ -64,7 +64,7 @@ public:
             }
             discoveries[j].inverterIP = dongleInfo.dongleIp;
             discoveries[j].sn = dongleInfo.sn;
-            
+
             if (discoveries[j].sn.isEmpty() && discoveries[j].type != CONNECTION_TYPE_NONE)
             {
                 discoveries[j].sn = parseDongleSN(ssid);
@@ -82,6 +82,10 @@ public:
                 {
                     discoveries[j].password = "12345678";
                 }
+                if (discoveries[j].type == CONNECTION_TYPE_GROWATT && discoveries[i].password.isEmpty())
+                {
+                    discoveries[j].password = "12345678";
+                }
             }
 
             // Dalibor Farny - Victron
@@ -90,7 +94,7 @@ public:
                 discoveries[j].password = "uarnb5xs";
             }
 
-            //Lukas Capka
+            // Lukas Capka
             if (discoveries[j].ssid == "wifi.sosna")
             {
                 log_d("Found special SSID: %s", discoveries[j].ssid.c_str());
@@ -204,7 +208,7 @@ public:
     {
         bool isValid = true;
         isValid &= result.type != CONNECTION_TYPE_NONE;
-        
+
         if (result.requiresPassword)
         {
             isValid &= !result.password.isEmpty();
@@ -253,6 +257,8 @@ public:
             return "DEYE";
         case CONNECTION_TYPE_VICTRON:
             return "Victron";
+        case CONNECTION_TYPE_GROWATT:
+            return "Growatt";
         default:
             return "Unknown";
         }
@@ -288,7 +294,8 @@ private:
     {
         if (ssid.startsWith("Wifi_"))
         {
-            if(ssid.startsWith("Wifi_SQ")) { //seems to be a wallbox dongle, ignore it
+            if (ssid.startsWith("Wifi_SQ"))
+            { // seems to be a wallbox dongle, ignore it
                 return CONNECTION_TYPE_NONE;
             }
             return CONNECTION_TYPE_SOLAX;
@@ -309,6 +316,10 @@ private:
         {
             return CONNECTION_TYPE_DEYE;
         }
+        else if (ssid.startsWith("XGD"))
+        {
+            return CONNECTION_TYPE_GROWATT;
+        }
         else
         {
             return CONNECTION_TYPE_NONE;
@@ -318,29 +329,36 @@ private:
     String parseDongleSN(String ssid)
     {
         String sn = ssid;
-        if(ssid.startsWith("Wifi_")) {
-            sn.replace("Wifi_", ""); //wallbox dongle, keep SQ
-            return sn;
-        } else if (ssid.startsWith("Solar-WiFi-")) {
-            sn.replace("Solar-WiFi-", ""); //Solar-WiFi dongle, keep the rest
-            return sn;
-        } else if (ssid.startsWith("AP_")) {
-            sn.replace("AP_", ""); //AP dongle, keep the rest
-            return sn;
-        } else if (ssid.startsWith("venus-")) {
-            sn.replace("venus-", ""); //venus dongle, keep the rest
+        if (ssid.startsWith("Wifi_"))
+        {
+            sn.replace("Wifi_", ""); // wallbox dongle, keep SQ
             return sn;
         }
-        
+        else if (ssid.startsWith("Solar-WiFi-"))
+        {
+            sn.replace("Solar-WiFi-", ""); // Solar-WiFi dongle, keep the rest
+            return sn;
+        }
+        else if (ssid.startsWith("AP_"))
+        {
+            sn.replace("AP_", ""); // AP dongle, keep the rest
+            return sn;
+        }
+        else if (ssid.startsWith("venus-"))
+        {
+            sn.replace("venus-", ""); // venus dongle, keep the rest
+            return sn;
+        }
+
         for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
         {
-            if(sn.startsWith(supportedModels[i].prefix)) {
+            if (sn.startsWith(supportedModels[i].prefix))
+            {
                 sn.replace(supportedModels[i].prefix, "");
-                return sn;  
+                return sn;
             }
-            
         }
-        return ""; //unknown dongle, no SN
+        return ""; // unknown dongle, no SN
     }
 
     int wifiSignalPercent(int rssi)

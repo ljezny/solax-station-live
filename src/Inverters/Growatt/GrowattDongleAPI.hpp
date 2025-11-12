@@ -166,7 +166,7 @@ private:
 
     IPAddress discoverDongleIP()
     {
-        IPAddress dongleIP;
+        /*IPAddress dongleIP;
         WiFiUDP udp;
         String message = "HF-A11ASSISTHREAD";
         udp.beginPacket(IPAddress(255, 255, 255, 255), 48899);
@@ -193,6 +193,7 @@ private:
             }
         }
         udp.stop();
-        return dongleIP;
+        return dongleIP;*/
+        return IPAddress(192, 168, 10, 100); // this is default for Growatt dongle when in AP mode
     }
 };
