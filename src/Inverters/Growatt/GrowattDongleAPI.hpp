@@ -137,7 +137,7 @@ private:
             return false;
         }
         data.status = DONGLE_STATUS_OK;
-        String sn = response.readString(23 - baseAddress, 5);
+        String sn = response.readString(23 - baseAddress, 10);
         log_d("Inverter SN: %s", sn.c_str());
         // data.pv1Power = response.readUInt32(3005 - baseAddress) / 10;
         // data.pv2Power = response.readUInt32(3009 - baseAddress) / 10;
