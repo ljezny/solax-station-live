@@ -19,11 +19,12 @@ public:
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             return inverterData;
         }
-
-        if (!readInverterPVData(inverterData) 
-            || !readBatteryData(inverterData) 
-            || !readStorageStatsData(inverterData) 
-            || !readBMSInfo(inverterData))
+        
+        //Storage(SPH Type)：03 register range：0~124,1000~1124；04 register range：0~124,1000~1124
+        if (!readHoldingData1(inverterData) 
+            || !readHoldingData2(inverterData) 
+            || !readInputData1(inverterData) 
+            || !readInputData2(inverterData))
         {
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             channel.disconnect();
@@ -60,9 +61,9 @@ private:
         return true;
     }
 
-    bool readInverterPVData(InverterData_t &data)
+    bool readInputData1(InverterData_t &data)
     {
-        const int baseAddress = 3000;
+        const int baseAddress = 0;
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 125);
         if (!response.isValid)
         {
@@ -70,79 +71,130 @@ private:
             return false;
         }
         data.status = DONGLE_STATUS_OK;
-        data.pv1Power = response.readUInt32(3005 - baseAddress) / 10;
-        data.pv2Power = response.readUInt32(3009 - baseAddress) / 10;
-        data.pv3Power = response.readUInt32(3013 - baseAddress) / 10;
-        data.pv4Power = response.readUInt32(3017 - baseAddress) / 10;
-        data.inverterTemperature = response.readInt16(3093 - baseAddress) / 10;
-        data.pvToday = response.readUInt32(3055 - baseAddress) / 10.0 + response.readUInt32(3059 - baseAddress) / 10.0 + response.readUInt32(3063 - baseAddress) / 10.0 + response.readUInt32(3067 - baseAddress) / 10.0;
-        data.pvTotal = response.readUInt32(3053 - baseAddress) / 10.0;
-        data.L1Power = response.readInt32(3028 - baseAddress) / 10;
-        data.L2Power = response.readInt16(3032 - baseAddress) / 10;
-        data.L3Power = response.readInt16(3036 - baseAddress) / 10;
-        data.inverterPower = data.L1Power + data.L2Power + data.L3Power;
-        data.loadPower = response.readInt32(3045 - baseAddress) / 10;
-        data.loadToday = response.readUInt32(3075 - baseAddress) / 10.0;
-        data.loadTotal = response.readUInt32(3077 - baseAddress) / 10.0;
-        data.gridSellToday = response.readUInt32(3071 - baseAddress) / 10.0;
-        data.gridSellTotal = response.readUInt32(3073 - baseAddress) / 10.0;
-        data.gridBuyToday = response.readUInt32(3067 - baseAddress) / 10.0;
-        data.gridBuyTotal = response.readUInt32(3069 - baseAddress) / 10.0;
-        data.gridPower = response.readInt32(3043 - baseAddress) / 10.0 - response.readInt32(3041 - baseAddress) / 10.0;
+        // data.pv1Power = response.readUInt32(3005 - baseAddress) / 10;
+        // data.pv2Power = response.readUInt32(3009 - baseAddress) / 10;
+        // data.pv3Power = response.readUInt32(3013 - baseAddress) / 10;
+        // data.pv4Power = response.readUInt32(3017 - baseAddress) / 10;
+        // data.inverterTemperature = response.readInt16(3093 - baseAddress) / 10;
+        // data.pvToday = response.readUInt32(3055 - baseAddress) / 10.0 + response.readUInt32(3059 - baseAddress) / 10.0 + response.readUInt32(3063 - baseAddress) / 10.0 + response.readUInt32(3067 - baseAddress) / 10.0;
+        // data.pvTotal = response.readUInt32(3053 - baseAddress) / 10.0;
+        // data.L1Power = response.readInt32(3028 - baseAddress) / 10;
+        // data.L2Power = response.readInt16(3032 - baseAddress) / 10;
+        // data.L3Power = response.readInt16(3036 - baseAddress) / 10;
+        // data.inverterPower = data.L1Power + data.L2Power + data.L3Power;
+        // data.loadPower = response.readInt32(3045 - baseAddress) / 10;
+        // data.loadToday = response.readUInt32(3075 - baseAddress) / 10.0;
+        // data.loadTotal = response.readUInt32(3077 - baseAddress) / 10.0;
+        // data.gridSellToday = response.readUInt32(3071 - baseAddress) / 10.0;
+        // data.gridSellTotal = response.readUInt32(3073 - baseAddress) / 10.0;
+        // data.gridBuyToday = response.readUInt32(3067 - baseAddress) / 10.0;
+        // data.gridBuyTotal = response.readUInt32(3069 - baseAddress) / 10.0;
+        // data.gridPower = response.readInt32(3043 - baseAddress) / 10.0 - response.readInt32(3041 - baseAddress) / 10.0;
 
         return true;
     }
 
-    bool readBatteryData(InverterData_t &data)
+    bool readInputData2(InverterData_t &data)
     {
-        const int baseAddress = 3100;
-        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 123);
-        if (!response.isValid)
-        {
-            log_d("Failed to read main inverter data");
-            return false;
-        }
-        data.soc = response.readInt16(3171 - baseAddress);
-        data.batteryPower = response.readInt32(3180 - baseAddress) / 10 - response.readInt32(3178 - baseAddress) / 10;
-        data.batteryTemperature = response.readInt16(3176 - baseAddress) / 10;
-        data.batteryChargedToday = response.readUInt32(3129 - baseAddress) / 10.0;
-        data.batteryDischargedToday = response.readUInt32(3125 - baseAddress) / 10.0;
-        data.batteryChargedTotal = response.readUInt32(3131 - baseAddress) / 10.0;
-        data.batteryDischargedTotal = response.readUInt32(3127 - baseAddress) / 10.0;
-        return true;
-    }
-
-    bool readStorageStatsData(InverterData_t &data)
-    {
-        const int baseAddress = 3000;
-        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 123);
+        const int baseAddress = 1000;
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 125);
         if (!response.isValid)
         {
             log_d("Failed to read main inverter data");
             return false;
         }
         data.status = DONGLE_STATUS_OK;
-        data.soc = response.readInt16(3171 - baseAddress);
-        data.batteryPower = response.readUInt32(3180 - baseAddress) / 10 - response.readUInt32(3178 - baseAddress) / 10;
-        data.batteryTemperature = response.readInt16(3176 - baseAddress) / 10;
+        // data.pv1Power = response.readUInt32(3005 - baseAddress) / 10;
+        // data.pv2Power = response.readUInt32(3009 - baseAddress) / 10;
+        // data.pv3Power = response.readUInt32(3013 - baseAddress) / 10;
+        // data.pv4Power = response.readUInt32(3017 - baseAddress) / 10;
+        // data.inverterTemperature = response.readInt16(3093 - baseAddress) / 10;
+        // data.pvToday = response.readUInt32(3055 - baseAddress) / 10.0 + response.readUInt32(3059 - baseAddress) / 10.0 + response.readUInt32(3063 - baseAddress) / 10.0 + response.readUInt32(3067 - baseAddress) / 10.0;
+        // data.pvTotal = response.readUInt32(3053 - baseAddress) / 10.0;
+        // data.L1Power = response.readInt32(3028 - baseAddress) / 10;
+        // data.L2Power = response.readInt16(3032 - baseAddress) / 10;
+        // data.L3Power = response.readInt16(3036 - baseAddress) / 10;
+        // data.inverterPower = data.L1Power + data.L2Power + data.L3Power;
+        // data.loadPower = response.readInt32(3045 - baseAddress) / 10;
+        // data.loadToday = response.readUInt32(3075 - baseAddress) / 10.0;
+        // data.loadTotal = response.readUInt32(3077 - baseAddress) / 10.0;
+        // data.gridSellToday = response.readUInt32(3071 - baseAddress) / 10.0;
+        // data.gridSellTotal = response.readUInt32(3073 - baseAddress) / 10.0;
+        // data.gridBuyToday = response.readUInt32(3067 - baseAddress) / 10.0;
+        // data.gridBuyTotal = response.readUInt32(3069 - baseAddress) / 10.0;
+        // data.gridPower = response.readInt32(3043 - baseAddress) / 10.0 - response.readInt32(3041 - baseAddress) / 10.0;
 
         return true;
     }
 
-    bool readBMSInfo(InverterData_t &data)
+    bool readHoldingData1(InverterData_t &data)
     {
-        const int baseAddress = 3212;
-        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 32);
+        const int baseAddress = 0;
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, baseAddress, 125);
         if (!response.isValid)
         {
             log_d("Failed to read main inverter data");
             return false;
         }
-        data.batteryCapacityWh = response.readInt16(3226 - baseAddress);
-        data.minSoc = 10;
-        data.maxSoc = 100;
+        data.status = DONGLE_STATUS_OK;
+        String sn = response.readString(23 - baseAddress, 5);
+        log_d("Inverter SN: %s", sn.c_str());
+        // data.pv1Power = response.readUInt32(3005 - baseAddress) / 10;
+        // data.pv2Power = response.readUInt32(3009 - baseAddress) / 10;
+        // data.pv3Power = response.readUInt32(3013 - baseAddress) / 10;
+        // data.pv4Power = response.readUInt32(3017 - baseAddress) / 10;
+        // data.inverterTemperature = response.readInt16(3093 - baseAddress) / 10;
+        // data.pvToday = response.readUInt32(3055 - baseAddress) / 10.0 + response.readUInt32(3059 - baseAddress) / 10.0 + response.readUInt32(3063 - baseAddress) / 10.0 + response.readUInt32(3067 - baseAddress) / 10.0;
+        // data.pvTotal = response.readUInt32(3053 - baseAddress) / 10.0;
+        // data.L1Power = response.readInt32(3028 - baseAddress) / 10;
+        // data.L2Power = response.readInt16(3032 - baseAddress) / 10;
+        // data.L3Power = response.readInt16(3036 - baseAddress) / 10;
+        // data.inverterPower = data.L1Power + data.L2Power + data.L3Power;
+        // data.loadPower = response.readInt32(3045 - baseAddress) / 10;
+        // data.loadToday = response.readUInt32(3075 - baseAddress) / 10.0;
+        // data.loadTotal = response.readUInt32(3077 - baseAddress) / 10.0;
+        // data.gridSellToday = response.readUInt32(3071 - baseAddress) / 10.0;
+        // data.gridSellTotal = response.readUInt32(3073 - baseAddress) / 10.0;
+        // data.gridBuyToday = response.readUInt32(3067 - baseAddress) / 10.0;
+        // data.gridBuyTotal = response.readUInt32(3069 - baseAddress) / 10.0;
+        // data.gridPower = response.readInt32(3043 - baseAddress) / 10.0 - response.readInt32(3041 - baseAddress) / 10.0;
+
         return true;
     }
+
+    bool readHoldingData2(InverterData_t &data)
+    {
+        const int baseAddress = 1000;
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, baseAddress, 125);
+        if (!response.isValid)
+        {
+            log_d("Failed to read main inverter data");
+            return false;
+        }
+        data.status = DONGLE_STATUS_OK;
+        // data.pv1Power = response.readUInt32(3005 - baseAddress) / 10;
+        // data.pv2Power = response.readUInt32(3009 - baseAddress) / 10;
+        // data.pv3Power = response.readUInt32(3013 - baseAddress) / 10;
+        // data.pv4Power = response.readUInt32(3017 - baseAddress) / 10;
+        // data.inverterTemperature = response.readInt16(3093 - baseAddress) / 10;
+        // data.pvToday = response.readUInt32(3055 - baseAddress) / 10.0 + response.readUInt32(3059 - baseAddress) / 10.0 + response.readUInt32(3063 - baseAddress) / 10.0 + response.readUInt32(3067 - baseAddress) / 10.0;
+        // data.pvTotal = response.readUInt32(3053 - baseAddress) / 10.0;
+        // data.L1Power = response.readInt32(3028 - baseAddress) / 10;
+        // data.L2Power = response.readInt16(3032 - baseAddress) / 10;
+        // data.L3Power = response.readInt16(3036 - baseAddress) / 10;
+        // data.inverterPower = data.L1Power + data.L2Power + data.L3Power;
+        // data.loadPower = response.readInt32(3045 - baseAddress) / 10;
+        // data.loadToday = response.readUInt32(3075 - baseAddress) / 10.0;
+        // data.loadTotal = response.readUInt32(3077 - baseAddress) / 10.0;
+        // data.gridSellToday = response.readUInt32(3071 - baseAddress) / 10.0;
+        // data.gridSellTotal = response.readUInt32(3073 - baseAddress) / 10.0;
+        // data.gridBuyToday = response.readUInt32(3067 - baseAddress) / 10.0;
+        // data.gridBuyTotal = response.readUInt32(3069 - baseAddress) / 10.0;
+        // data.gridPower = response.readInt32(3043 - baseAddress) / 10.0 - response.readInt32(3041 - baseAddress) / 10.0;
+
+        return true;
+    }
+   
 
     IPAddress getIp(const String &ipAddress)
     {
