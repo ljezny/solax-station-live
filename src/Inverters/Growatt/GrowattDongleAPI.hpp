@@ -59,7 +59,7 @@ private:
 
     bool readInverterData(InverterData_t &data)
     {
-        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0, 99);
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0, 125);
         if (!response.isValid)
         {
             log_d("Failed to read main inverter data");
@@ -70,6 +70,9 @@ private:
         data.pv2Power = response.readUInt32(9) / 10;
         data.pv3Power = response.readUInt32(13) / 10;
         data.pv4Power = response.readUInt32(17) / 10;
+        data.inverterTemperature = response.readInt16(93) / 10;
+        data.pvToday = response.readUInt32(53) / 10.0;
+        data.pvTotal = response.readUInt32(55) / 10.0;
         return true;
     }
 
