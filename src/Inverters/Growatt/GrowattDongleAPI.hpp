@@ -20,8 +20,10 @@ public:
             return inverterData;
         }
 
-        if (!readInverterPVData(inverterData) ||
-            !readInverterStorageData(inverterData))
+        if (!readInverterPVData(inverterData) 
+            || !readBatteryData(inverterData) 
+            || !readStorageStatsData(inverterData) 
+            || !readBMSInfo(inverterData))
         {
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             channel.disconnect();
@@ -45,7 +47,7 @@ private:
     static constexpr uint8_t FUNCTION_CODE_READ_HOLDING = 0x03;
     static constexpr uint8_t FUNCTION_CODE_READ_INPUT = 0x04;
 
-   bool connectToDongle(const String &ipAddress)
+    bool connectToDongle(const String &ipAddress)
     {
         IPAddress targetIp = getIp(ipAddress);
         if (!channel.connect(targetIp, MODBUS_PORT))
@@ -60,7 +62,7 @@ private:
 
     bool readInverterPVData(InverterData_t &data)
     {
-        const int baseAddress = 0;
+        const int baseAddress = 3000;
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 125);
         if (!response.isValid)
         {
@@ -68,32 +70,76 @@ private:
             return false;
         }
         data.status = DONGLE_STATUS_OK;
-        data.pv1Power = response.readUInt32(5 - baseAddress) / 10;
-        data.pv2Power = response.readUInt32(9 - baseAddress) / 10;
-        data.pv3Power = response.readUInt32(13 - baseAddress) / 10;
-        data.pv4Power = response.readUInt32(17 - baseAddress) / 10;
-        data.inverterTemperature = response.readInt16(93 - baseAddress) / 10;
-        data.pvToday = response.readUInt32(53 - baseAddress) / 10.0;
-        data.pvTotal = response.readUInt32(55 - baseAddress) / 10.0;
-        data.L1Power = response.readInt32(40 - baseAddress) / 10;
-        data.L2Power = response.readInt16(44 - baseAddress) / 10;
-        data.L3Power = response.readInt16(48 - baseAddress) / 10;
+        data.pv1Power = response.readUInt32(3005 - baseAddress) / 10;
+        data.pv2Power = response.readUInt32(3009 - baseAddress) / 10;
+        data.pv3Power = response.readUInt32(3013 - baseAddress) / 10;
+        data.pv4Power = response.readUInt32(3017 - baseAddress) / 10;
+        data.inverterTemperature = response.readInt16(3093 - baseAddress) / 10;
+        data.pvToday = response.readUInt32(3055 - baseAddress) / 10.0 + response.readUInt32(3059 - baseAddress) / 10.0 + response.readUInt32(3063 - baseAddress) / 10.0 + response.readUInt32(3067 - baseAddress) / 10.0;
+        data.pvTotal = response.readUInt32(3053 - baseAddress) / 10.0;
+        data.L1Power = response.readInt32(3028 - baseAddress) / 10;
+        data.L2Power = response.readInt16(3032 - baseAddress) / 10;
+        data.L3Power = response.readInt16(3036 - baseAddress) / 10;
         data.inverterPower = data.L1Power + data.L2Power + data.L3Power;
+        data.loadPower = response.readInt32(3045 - baseAddress) / 10;
+        data.loadToday = response.readUInt32(3075 - baseAddress) / 10.0;
+        data.loadTotal = response.readUInt32(3077 - baseAddress) / 10.0;
+        data.gridSellToday = response.readUInt32(3071 - baseAddress) / 10.0;
+        data.gridSellTotal = response.readUInt32(3073 - baseAddress) / 10.0;
+        data.gridBuyToday = response.readUInt32(3067 - baseAddress) / 10.0;
+        data.gridBuyTotal = response.readUInt32(3069 - baseAddress) / 10.0;
+        data.gridPower = response.readInt32(3043 - baseAddress) / 10.0 - response.readInt32(3041 - baseAddress) / 10.0;
+
         return true;
     }
 
-    bool readInverterStorageData(InverterData_t &data)
+    bool readBatteryData(InverterData_t &data)
     {
-        const int baseAddress = 1000;
-        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 125);
+        const int baseAddress = 3100;
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 123);
+        if (!response.isValid)
+        {
+            log_d("Failed to read main inverter data");
+            return false;
+        }
+        data.soc = response.readInt16(3171 - baseAddress);
+        data.batteryPower = response.readInt32(3180 - baseAddress) / 10 - response.readInt32(3178 - baseAddress) / 10;
+        data.batteryTemperature = response.readInt16(3176 - baseAddress) / 10;
+        data.batteryChargedToday = response.readUInt32(3129 - baseAddress) / 10.0;
+        data.batteryDischargedToday = response.readUInt32(3125 - baseAddress) / 10.0;
+        data.batteryChargedTotal = response.readUInt32(3131 - baseAddress) / 10.0;
+        data.batteryDischargedTotal = response.readUInt32(3127 - baseAddress) / 10.0;
+        return true;
+    }
+
+    bool readStorageStatsData(InverterData_t &data)
+    {
+        const int baseAddress = 3000;
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 123);
         if (!response.isValid)
         {
             log_d("Failed to read main inverter data");
             return false;
         }
         data.status = DONGLE_STATUS_OK;
-        data.soc = response.readInt16(10014 - baseAddress);
-        
+        data.soc = response.readInt16(3171 - baseAddress);
+        data.batteryPower = response.readUInt32(3180 - baseAddress) / 10 - response.readUInt32(3178 - baseAddress) / 10;
+        data.batteryTemperature = response.readInt16(3176 - baseAddress) / 10;
+
+        return true;
+    }
+
+    bool readBMSInfo(InverterData_t &data)
+    {
+        const int baseAddress = 3212;
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 32);
+        if (!response.isValid)
+        {
+            log_d("Failed to read main inverter data");
+            return false;
+        }
+        data.batteryCapacityWh = response.readInt16(3226 - baseAddress);
+
         return true;
     }
 
