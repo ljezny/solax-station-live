@@ -71,22 +71,14 @@ private:
         data.pv1Power = response.readUInt32(5) / 10;
         data.pv2Power = response.readUInt32(9) / 10;
         data.pv3Power = response.readUInt32(13) / 10;
-        data.pv4Power = response.readUInt32(17) / 10 + response.readUInt32(21) / 10 + response.readUInt32(25) / 10 + response.readUInt32(29) / 10 + response.readUInt32(33) / 10 + response.readUInt32(37) / 10;
+        data.pv4Power = response.readUInt32(17) / 10;// + response.readUInt32(21) / 10 + response.readUInt32(25) / 10 + response.readUInt32(29) / 10 + response.readUInt32(33) / 10 + response.readUInt32(37) / 10;
         data.inverterTemperature = response.readInt16(93) / 10;
-        data.pvToday = response.readUInt32(55) / 10.0 + response.readUInt32(59) / 10.0 + response.readUInt32(63) / 10.0 + response.readUInt32(67) / 10.0;
-        data.pvTotal = response.readUInt32(53) / 10.0;
-        data.L1Power = response.readInt32(28) / 10;
-        data.L2Power = response.readInt16(32) / 10;
-        data.L3Power = response.readInt16(36) / 10;
+        data.pvToday = response.readUInt32(53) / 10.0;
+        data.pvTotal = response.readUInt32(55) / 10.0;
+        data.L1Power = response.readInt32(40) / 10;
+        data.L2Power = response.readInt32(44) / 10;
+        data.L3Power = response.readInt32(48) / 10;
         data.inverterPower = data.L1Power + data.L2Power + data.L3Power;
-        data.loadPower = response.readInt32(45) / 10;
-        data.loadToday = response.readUInt32(75) / 10.0;
-        data.loadTotal = response.readUInt32(77) / 10.0;
-        data.gridSellToday = response.readUInt32(71) / 10.0;
-        data.gridSellTotal = response.readUInt32(73) / 10.0;
-        data.gridBuyToday = response.readUInt32(67) / 10.0;
-        data.gridBuyTotal = response.readUInt32(69) / 10.0;
-        data.gridPower = response.readInt32(43) / 10.0 - response.readInt32(41) / 10.0;
         return true;
     }
 
@@ -103,11 +95,19 @@ private:
         data.soc = response.readInt16(1014 );
         data.batteryPower = response.readInt32(1011) / 10 - response.readInt32(1009) / 10;
         data.batteryTemperature = response.readInt16(1040) / 10;
-        // data.batteryChargedToday = response.readUInt32(3129) / 10.0;
-        // data.batteryDischargedToday = response.readUInt32(3125) / 10.0;
-        // data.batteryChargedTotal = response.readUInt32(3131) / 10.0;
-        // data.batteryDischargedTotal = response.readUInt32(3127) / 10.0;
-
+        data.batteryChargedToday = response.readUInt32(1056) / 10.0;
+        data.batteryDischargedToday = response.readUInt32(1052) / 10.0;
+        data.batteryChargedTotal = response.readUInt32(1058) / 10.0;
+        data.batteryDischargedTotal = response.readUInt32(1054) / 10.0;
+        data.loadPower = response.readInt32(1037) / 10;
+        data.loadToday = response.readUInt32(1069) / 10.0;
+        data.loadTotal = response.readUInt32(1062) / 10.0;
+        data.gridSellToday = response.readUInt32(1048) / 10.0;
+        data.gridSellTotal = response.readUInt32(1050) / 10.0;
+        data.gridBuyToday = response.readUInt32(1044) / 10.0;
+        data.gridBuyTotal = response.readUInt32(1046) / 10.0;
+        data.gridPower = response.readInt32(1029) / 10.0 - response.readInt32(1021) / 10.0;
+        data.batteryCapacityWh = response.readUInt16(1107);
         return true;
     }
 
