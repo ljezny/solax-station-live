@@ -66,6 +66,7 @@ void logInverterData(InverterData_t& inverterData) {
     log_d("Battery Power: %d", inverterData.batteryPower);
     log_d("Battery Charged Today: %f", inverterData.batteryChargedToday);
     log_d("Battery Discharged Today: %f", inverterData.batteryDischargedToday);
+    log_d("Battery capacity: %f", inverterData.batteryCapacityWh);
     log_d("Grid Buy Today: %f", inverterData.gridBuyToday);
     log_d("Grid Sell Today: %f", inverterData.gridSellToday);
     log_d("Grid Buy Total: %f", inverterData.gridBuyTotal);
@@ -86,4 +87,5 @@ void logInverterData(InverterData_t& inverterData) {
     log_d("PV Today: %f", inverterData.pvToday);
     log_d("PV Total: %f", inverterData.pvTotal);
     log_d("Has Battery: %d", inverterData.hasBattery);
+
 } 
