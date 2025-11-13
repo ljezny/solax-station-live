@@ -68,26 +68,25 @@ private:
             return false;
         }
         data.status = DONGLE_STATUS_OK;
-        // data.pv1Power = response.readUInt32(3005) / 10;
-        // data.pv2Power = response.readUInt32(3009) / 10;
-        // data.pv3Power = response.readUInt32(3013) / 10;
-        // data.pv4Power = response.readUInt32(3017) / 10;
-        // data.inverterTemperature = response.readInt16(3093) / 10;
-        // data.pvToday = response.readUInt32(3055) / 10.0 + response.readUInt32(3059) / 10.0 + response.readUInt32(3063) / 10.0 + response.readUInt32(3067) / 10.0;
-        // data.pvTotal = response.readUInt32(3053) / 10.0;
-        // data.L1Power = response.readInt32(3028) / 10;
-        // data.L2Power = response.readInt16(3032) / 10;
-        // data.L3Power = response.readInt16(3036) / 10;
-        // data.inverterPower = data.L1Power + data.L2Power + data.L3Power;
-        // data.loadPower = response.readInt32(3045) / 10;
-        // data.loadToday = response.readUInt32(3075) / 10.0;
-        // data.loadTotal = response.readUInt32(3077) / 10.0;
-        // data.gridSellToday = response.readUInt32(3071) / 10.0;
-        // data.gridSellTotal = response.readUInt32(3073) / 10.0;
-        // data.gridBuyToday = response.readUInt32(3067) / 10.0;
-        // data.gridBuyTotal = response.readUInt32(3069) / 10.0;
-        // data.gridPower = response.readInt32(3043) / 10.0 - response.readInt32(3041) / 10.0;
-
+        data.pv1Power = response.readUInt32(5) / 10;
+        data.pv2Power = response.readUInt32(9) / 10;
+        data.pv3Power = response.readUInt32(13) / 10;
+        data.pv4Power = response.readUInt32(17) / 10 + response.readUInt32(21) / 10 + response.readUInt32(25) / 10 + response.readUInt32(29) / 10 + response.readUInt32(33) / 10 + response.readUInt32(37) / 10;
+        data.inverterTemperature = response.readInt16(93) / 10;
+        data.pvToday = response.readUInt32(55) / 10.0 + response.readUInt32(59) / 10.0 + response.readUInt32(63) / 10.0 + response.readUInt32(67) / 10.0;
+        data.pvTotal = response.readUInt32(53) / 10.0;
+        data.L1Power = response.readInt32(28) / 10;
+        data.L2Power = response.readInt16(32) / 10;
+        data.L3Power = response.readInt16(36) / 10;
+        data.inverterPower = data.L1Power + data.L2Power + data.L3Power;
+        data.loadPower = response.readInt32(45) / 10;
+        data.loadToday = response.readUInt32(75) / 10.0;
+        data.loadTotal = response.readUInt32(77) / 10.0;
+        data.gridSellToday = response.readUInt32(71) / 10.0;
+        data.gridSellTotal = response.readUInt32(73) / 10.0;
+        data.gridBuyToday = response.readUInt32(67) / 10.0;
+        data.gridBuyTotal = response.readUInt32(69) / 10.0;
+        data.gridPower = response.readInt32(43) / 10.0 - response.readInt32(41) / 10.0;
         return true;
     }
 
