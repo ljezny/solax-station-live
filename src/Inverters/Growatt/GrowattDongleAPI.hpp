@@ -100,7 +100,7 @@ private:
         data.batteryChargedTotal = response.readUInt32(1058) / 10.0;
         data.batteryDischargedTotal = response.readUInt32(1054) / 10.0;
         data.loadPower = response.readInt32(1037) / 10;
-        data.loadToday = response.readUInt32(1069) / 10.0;
+        data.loadToday = response.readUInt32(1060) / 10.0;
         data.loadTotal = response.readUInt32(1062) / 10.0;
         data.gridSellToday = response.readUInt32(1048) / 10.0;
         data.gridSellTotal = response.readUInt32(1050) / 10.0;
