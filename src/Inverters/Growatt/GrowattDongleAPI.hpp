@@ -75,9 +75,9 @@ private:
         data.inverterTemperature = response.readInt16(93) / 10;
         data.pvToday = response.readUInt32(53) / 10.0;
         data.pvTotal = response.readUInt32(55) / 10.0;
-        data.L1Power = response.readInt32(40) / 10;
-        data.L2Power = response.readInt32(44) / 10;
-        data.L3Power = response.readInt32(48) / 10;
+        // data.L1Power = response.readInt32(40) / 10;
+        // data.L2Power = response.readInt32(44) / 10;
+        // data.L3Power = response.readInt32(48) / 10;
         data.inverterPower = data.L1Power + data.L2Power + data.L3Power;
         return true;
     }
@@ -107,9 +107,10 @@ private:
         data.gridBuyToday = response.readUInt32(1044) / 10.0;
         data.gridBuyTotal = response.readUInt32(1046) / 10.0;
         data.gridPower = response.readInt32(1029) / 10.0 - response.readInt32(1021) / 10.0;
-        data.gridPowerL1 = response.readInt32(1023) / 10.0 - response.readInt32(1015) / 10.0;
-        data.gridPowerL2 = response.readInt32(1025) / 10.0 - response.readInt32(1017) / 10.0;
-        data.gridPowerL3 = response.readInt32(1027) / 10.0 - response.readInt32(1019) / 10.0;
+        
+        // data.gridPowerL1 = response.readInt32(1023) / 10.0 - response.readInt32(1015) / 10.0;
+        // data.gridPowerL2 = response.readInt32(1025) / 10.0 - response.readInt32(1017) / 10.0;
+        // data.gridPowerL3 = response.readInt32(1027) / 10.0 - response.readInt32(1019) / 10.0;
         data.batteryCapacityWh = response.readUInt16(1107);
         return true;
     }
@@ -155,43 +156,10 @@ private:
 
         if (ip == IPAddress(0, 0, 0, 0))
         {
-            ip = discoverDongleIP();
+            ip = IPAddress(192, 168, 10, 100); // this is default for Growatt dongle when in AP mode
         }
 
         log_d("Using IP: %s", ip.toString().c_str());
         return ip;
-    }
-
-    IPAddress discoverDongleIP()
-    {
-        /*IPAddress dongleIP;
-        WiFiUDP udp;
-        String message = "HF-A11ASSISTHREAD";
-        udp.beginPacket(IPAddress(255, 255, 255, 255), 48899);
-        udp.write((const uint8_t *)message.c_str(), (size_t)message.length());
-        udp.endPacket();
-
-        unsigned long start = millis();
-        while (millis() - start < 3000)
-        {
-            int packetSize = udp.parsePacket();
-            if (packetSize)
-            {
-                // On success, the inverter responses with it's IP address (as a text string) followed by it's WiFi AP name.
-                char d[128] = {0};
-                udp.read(d, sizeof(d));
-
-                log_d("Received IP address: %s", String(d).c_str());
-                int indexOfComma = String(d).indexOf(',');
-                String ip = String(d).substring(0, indexOfComma);
-                log_d("Parsed IP address: %s", ip.c_str());
-                dongleIP.fromString(ip);
-                log_d("Dongle IP: %s", dongleIP.toString());
-                break;
-            }
-        }
-        udp.stop();
-        return dongleIP;*/
-        return IPAddress(192, 168, 10, 100); // this is default for Growatt dongle when in AP mode
     }
 };
