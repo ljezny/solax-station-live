@@ -107,6 +107,9 @@ private:
         data.gridBuyToday = response.readUInt32(1044) / 10.0;
         data.gridBuyTotal = response.readUInt32(1046) / 10.0;
         data.gridPower = response.readInt32(1029) / 10.0 - response.readInt32(1021) / 10.0;
+        data.gridPowerL1 = response.readInt32(1023) / 10.0 - response.readInt32(1015) / 10.0;
+        data.gridPowerL2 = response.readInt32(1025) / 10.0 - response.readInt32(1017) / 10.0;
+        data.gridPowerL3 = response.readInt32(1027) / 10.0 - response.readInt32(1019) / 10.0;
         data.batteryCapacityWh = response.readUInt16(1107);
         return true;
     }
