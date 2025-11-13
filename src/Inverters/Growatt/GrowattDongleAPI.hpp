@@ -75,9 +75,9 @@ private:
         data.inverterTemperature = response.readInt16(93) / 10;
         data.pvToday = response.readUInt32(53) / 10.0;
         data.pvTotal = response.readUInt32(55) / 10.0;
-        // data.L1Power = response.readInt32(40) / 10;
-        // data.L2Power = response.readInt32(44) / 10;
-        // data.L3Power = response.readInt32(48) / 10;
+        data.L1Power = response.readInt32(40) / 10;
+        data.L2Power = response.readInt32(44) / 10;
+        data.L3Power = response.readInt32(48) / 10;
         data.inverterPower = data.L1Power + data.L2Power + data.L3Power;
         return true;
     }
