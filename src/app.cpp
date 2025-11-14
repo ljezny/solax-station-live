@@ -322,7 +322,6 @@ bool loadInverterDataTask()
     if (lastInverterDataAttempt == 0 || (millis() - lastInverterDataAttempt) > (INVERTER_DATA_REFRESH_INTERVAL + incrementalDelayTimeOnError))
     {
         log_d("Loading inverter data");
-        lastInverterDataAttempt = millis();
         run = true;
 #if DEMO
         inverterData = createRandomMockData();
@@ -365,6 +364,7 @@ bool loadInverterDataTask()
             incrementalDelayTimeOnError += 5000; // increase delay if connection failed
             dongleDiscovery.disconnect();
         }
+        lastInverterDataAttempt = millis();
     }
     return run;
 }
