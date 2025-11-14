@@ -21,7 +21,7 @@ public:
         }
 
         // Storage(SPH Type)：03 register range：0~124,1000~1124；04 register range：0~124,1000~1124
-        if (!readHoldingData1(inverterData) || !readHoldingData2(inverterData) || !readInputData1(inverterData) || !readInputData2(inverterData))
+        if (!readHoldingData1(inverterData) /*|| !readHoldingData2(inverterData) */ || !readInputData1(inverterData) || !readInputData2(inverterData))
         {
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             channel.disconnect();
