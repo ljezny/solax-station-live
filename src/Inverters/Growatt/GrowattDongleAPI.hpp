@@ -60,8 +60,8 @@ private:
 
     bool readInputData1(InverterData_t &data)
     {
-        const int baseAddress = 0;
-        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 125);
+        const int baseAddress = 5;
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 93 - baseAddress + 1);
         if (!response.isValid)
         {
             log_d("Failed to read main inverter data");
@@ -84,15 +84,16 @@ private:
 
     bool readInputData2(InverterData_t &data)
     {
-        const int baseAddress = 1000;
-        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 125);
+        //1000 - 1124, but we read we need
+        const int baseAddress = 1009;
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 1070 - baseAddress + 1);
         if (!response.isValid)
         {
             log_d("Failed to read main inverter data");
             return false;
         }
         data.status = DONGLE_STATUS_OK;
-        data.soc = response.readInt16(1014 );
+        data.soc = response.readInt16(1014);
         data.batteryPower = response.readInt32(1011) / 10 - response.readInt32(1009) / 10;
         data.batteryTemperature = response.readInt16(1040) / 10;
         data.batteryChargedToday = response.readUInt32(1056) / 10.0;
@@ -111,14 +112,15 @@ private:
         // data.gridPowerL1 = response.readInt32(1023) / 10.0 - response.readInt32(1015) / 10.0;
         // data.gridPowerL2 = response.readInt32(1025) / 10.0 - response.readInt32(1017) / 10.0;
         // data.gridPowerL3 = response.readInt32(1027) / 10.0 - response.readInt32(1019) / 10.0;
-        data.batteryCapacityWh = response.readUInt16(1107);
+        //data.batteryCapacityWh = response.readUInt16(1107);
         return true;
     }
 
     bool readHoldingData1(InverterData_t &data)
     {
-        const int baseAddress = 0;
-        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, baseAddress, 125);
+        //0 - 125, but we read we need
+        const int baseAddress = 23;
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, baseAddress, 10);
         if (!response.isValid)
         {
             log_d("Failed to read main inverter data");
