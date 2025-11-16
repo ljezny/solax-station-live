@@ -21,7 +21,7 @@ public:
         }
 
         // Storage(SPH Type)：03 register range：0~124,1000~1124；04 register range：0~124,1000~1124
-        if (!readHoldingData1(inverterData) /*|| !readHoldingData2(inverterData) */ || !readInputData1(inverterData) || !readInputData2(inverterData))
+        if (!readHoldingData1(inverterData) || !readInputData1(inverterData) || !readInputData2(inverterData))
         {
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             channel.disconnect();
@@ -61,13 +61,14 @@ private:
     bool readInputData1(InverterData_t &data)
     {
         const int baseAddress = 5;
+        log_d("Reading Growatt input PV data from address %d", baseAddress);
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 93 - baseAddress + 1);
         if (!response.isValid)
         {
-            log_d("Failed to read main inverter data");
+            log_d("Failed to input PV data");
             return false;
         }
-        data.status = DONGLE_STATUS_OK;
+        log_d("Growatt input PV data read successfully");
         data.pv1Power = response.readUInt32(5) / 10;
         data.pv2Power = response.readUInt32(9) / 10;
         data.pv3Power = response.readUInt32(13) / 10;
@@ -86,12 +87,14 @@ private:
     {
         //1000 - 1124, but we read we need
         const int baseAddress = 1009;
+        log_d("Reading Growatt input storage data from address %d", baseAddress);
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 1070 - baseAddress + 1);
         if (!response.isValid)
         {
-            log_d("Failed to read main inverter data");
+            log_d("Failed to read Growatt input storage data");
             return false;
         }
+        log_d("Growatt input storage data read successfully");
         data.status = DONGLE_STATUS_OK;
         data.soc = response.readInt16(1014);
         data.batteryPower = response.readInt32(1011) / 10 - response.readInt32(1009) / 10;
@@ -118,28 +121,39 @@ private:
 
     bool readHoldingData1(InverterData_t &data)
     {
+        if(sn != "")
+        {
+            data.sn = sn;
+            return true;
+        }
+
         //0 - 125, but we read we need
         const int baseAddress = 23;
+        log_d("Reading Growatt holding inverter data from address %d", baseAddress);
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, baseAddress, 10);
         if (!response.isValid)
         {
-            log_d("Failed to read main inverter data");
+            log_d("Failed to read Growatt holding inverter data");
             return false;
         }
+        log_d("Growatt holding inverter data read successfully");
         data.status = DONGLE_STATUS_OK;
         data.sn = response.readString(23 , 10);
+        sn = data.sn;
         return true;
     }
 
     bool readHoldingData2(InverterData_t &data)
     {
         const int baseAddress = 1000;
+        log_d("Reading Growatt holding inverter data from address %d", baseAddress);
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, baseAddress, 125);
         if (!response.isValid)
         {
-            log_d("Failed to read main inverter data");
+            log_d("Failed to read Growatt holding inverter data");
             return false;
         }
+        log_d("Growatt holding inverter data read successfully");
         data.status = DONGLE_STATUS_OK;
 
         return true;
