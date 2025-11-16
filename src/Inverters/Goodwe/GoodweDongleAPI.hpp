@@ -99,8 +99,7 @@ private:
                     inverterData.L1Power = response.readInt16(35100 + 25) + response.readInt16(35100 + 50);
                     inverterData.L2Power = response.readInt16(35100 + 30) + response.readInt16(35100 + 56);
                     inverterData.L3Power = response.readInt16(35100 + 35) + response.readInt16(35100 + 62);
-                    inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power; // readInt16(38); //38 - total inverter power
-                    inverterData.loadPower = inverterData.inverterPower;
+                    inverterData.loadPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
 
                     inverterData.inverterTemperature = response.readInt16(35100 + 74) / 10;
                     inverterData.pvTotal = response.readUInt32(35100 + 91) / 10.0;
@@ -156,8 +155,8 @@ private:
                     inverterData.gridPowerL1 = response.readInt32(36000 + 19);
                     inverterData.gridPowerL2 = response.readInt32(36000 + 21);
                     inverterData.gridPowerL3 = response.readInt32(36000 + 23);
-                    inverterData.gridPower = response.readInt32(36000 + 25);
-                    inverterData.loadPower -= inverterData.gridPower;
+                    
+                    inverterData.loadPower -= (inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
                     
                     log_d("Grid sell total: %f", inverterData.gridSellTotal);
                     log_d("Grid buy total: %f", inverterData.gridBuyTotal);

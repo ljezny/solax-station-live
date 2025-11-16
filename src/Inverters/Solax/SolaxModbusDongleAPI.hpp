@@ -101,7 +101,7 @@ private:
             return false;
         }
         data.status = DONGLE_STATUS_OK;
-        data.inverterPower = response.readInt16(0x02);
+        data.L1Power = response.readInt16(0x02);
         data.pv1Power = response.readUInt16(0x0A);
         data.pv2Power = response.readUInt16(0x0B);
         data.inverterTemperature = response.readInt16(0x08);
@@ -166,7 +166,7 @@ private:
         data.gridPowerL1 = response.readInt16(0x82);
         data.gridPowerL2 = response.readInt16(0x84);
         data.gridPowerL3 = response.readInt16(0x86);
-        data.gridPower = data.gridPowerL1 + data.gridPowerL2 + data.gridPowerL3;
+        //data.gridPower = data.gridPowerL1 + data.gridPowerL2 + data.gridPowerL3;
         return true;
     }
 
@@ -185,8 +185,8 @@ private:
 
     void finalizePowerCalculations(InverterData_t &data)
     {
-        data.inverterPower = data.L1Power + data.L2Power + data.L3Power;
-        data.loadPower = data.inverterPower - data.gridPower;
+        //data.inverterPower = data.L1Power + data.L2Power + data.L3Power;
+        data.loadPower = data.L1Power + data.L2Power + data.L3Power - (data.gridPowerL1 + data.gridPowerL2 + data.gridPowerL3);
         data.loadToday += data.gridBuyToday - data.gridSellToday;
     }
 

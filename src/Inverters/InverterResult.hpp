@@ -38,11 +38,9 @@ typedef struct
     int L1Power = 0;
     int L2Power = 0;
     int L3Power = 0;
-    int inverterPower = 0;
     int16_t loadPower = 0;
     float loadToday = 0;
     float loadTotal = 0;
-    int32_t gridPower = 0;
     int32_t gridPowerL1 = 0;
     int32_t gridPowerL2 = 0;
     int32_t gridPowerL3 = 0;
@@ -74,11 +72,9 @@ void logInverterData(InverterData_t& inverterData) {
     log_d("L1 Power: %d", inverterData.L1Power);
     log_d("L2 Power: %d", inverterData.L2Power);
     log_d("L3 Power: %d", inverterData.L3Power);
-    log_d("Inverter Power: %d", inverterData.inverterPower);
     log_d("Load Power: %d", inverterData.loadPower);
     log_d("Load Today: %f", inverterData.loadToday);
     log_d("Load Total: %f", inverterData.loadTotal);
-    log_d("Grid Power: %d", inverterData.gridPower);
     log_d("Grid Power L1: %d", inverterData.gridPowerL1);
     log_d("Grid Power L2: %d", inverterData.gridPowerL2);
     log_d("Grid Power L3: %d", inverterData.gridPowerL3);
