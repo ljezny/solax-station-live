@@ -111,6 +111,13 @@
             <td>Nechat prázdné</td>
             <td>SN donglu: XXXXXX</td>
         </tr>
+        <tr>
+            <td>GROWATT SPH</td>
+            <td>Nepodporováno</td>
+            <td>Nepodporováno</td>
+            <td>Nepodporováno</td>
+            <td>Nepodporováno</td>
+        </tr>
     </tbody>
 </table>
 <h2>Propojení přes domácí WiFi</h2>
@@ -164,6 +171,13 @@
             <td>Nechat prázdné nebo zadat IP</td>
             <td>SN donglu (XXXXXX z AP_XXXXXX), slouží jako heslo</td>
         </tr>
+        <tr>
+            <td>GROWATT SPH</td>
+            <td>Vaše WiFi</td>
+            <td>Vaše heslo</td>
+            <td>Zadat IP adresu (naleznete ve WiFi routeru)</td>
+            <td>Nevyplňovat</td>
+        </tr>
     </tbody>
 </table>
 
@@ -200,6 +214,10 @@
     Services ->
     Modbus TCP).</p>
 
+<h2>GROWATT SPH</h2>
+<p>Je nutné aktualizovat firmware ve vašem WiFi donglu Shine WiFi-X. Je nutné mít firmware alespoň 3.1.1.1, který povoluje Modbus TCP. Se starším firmware WiFi dongle nebude stanice fungovat.</p>
+<p>Aktualizaci provedete jednoduše pomocí aplikace ShinePhone. Stačí postupovat stejně, jako by jste chtěl wifi dongle přepojit na jinou wifi síť. Při nastavování se vám nabídne aktualizace donglu a tu potvrďte. <a href="https://www.youtube.com/watch?v=Zwuop7KQis8">Odkaz na video návod.</a></p>
+<p>Bohužel wifi dongle nenabízí žádný mechanismus autodetekce IP adresy na vaší wifi síti, jako je tomu u jiných střídačů. Do stanice je potřeba také zadat IP adresu vašeho Shine WiFi-X donglu. Tu naleznete např. v nastavení vašeho WiFi routeru v seznamu připojených zařízení (bude se nejspíše hlásit jako zařízení Espressif) </p>
 
 <h1>SOLAR PLUG</h1>
 <p>Všechny zásuvky SOLAR PLUG jsou plně kompatibilní. Po připojení do sítě jsou automaticky detekovány a zobrazí

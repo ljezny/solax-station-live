@@ -113,6 +113,13 @@
             <td>Leave blank</td>
             <td>Dongle SN: XXXXXX</td>
         </tr>
+        <tr>
+            <td>GROWATT SPH</td>
+            <td>Not supported</td>
+            <td>Not supported</td>
+            <td>Not supported</td>
+            <td>Not supported</td>
+        </tr>
     </tbody>
 </table>
 
@@ -166,6 +173,13 @@
             <td>Leave blank or enter IP</td>
             <td>Dongle SN (XXXXXX from AP_XXXXXX), used as auth</td>
         </tr>
+        <tr>
+            <td>GROWATT SPH</td>
+            <td>Your WiFi</td>
+            <td>Your password</td>
+            <td>Enter IP address (found in your WiFi router)</td>
+            <td>Do not fill in</td>
+        </tr>
     </tbody>
 </table>
 
@@ -201,6 +215,16 @@
 <p>For proper functioning, it is necessary to activate <strong>Modbus TCP</strong> in the device menu (Menu -> Settings
     -> Services ->
     Modbus TCP).</p>
+<h2>GROWATT SPH</h2>
+<p>You need to update the firmware on your Shine WiFi-X dongle. Firmware version 3.1.1.1 or higher is required, as it
+    enables Modbus TCP. With older firmware, the station will not work.</p>
+<p>You can easily update it using the ShinePhone app. Simply follow the same steps as if you were reconnecting the WiFi
+    dongle to a different Wi-Fi network. During the setup, you will be prompted to update the dongle’s firmware –
+    confirm the update. <a href="https://www.youtube.com/watch?v=Zwuop7KQis8">Link to the video guide.</a></p>
+<p>Unfortunately, the WiFi dongle does not offer any automatic IP address detection on your Wi-Fi network, unlike other
+    inverters. You must also manually enter the IP address of your Shine WiFi-X dongle into the station. You can find
+    it, for example, in your Wi-Fi router settings in the list of connected devices (it will most likely appear as a
+    device named “Espressif”).</p>
 
 <h1>SOLAR PLUG</h1>
 <p>All SOLAR PLUG outlets and relays are fully compatible.</p>

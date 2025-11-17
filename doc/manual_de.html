@@ -119,6 +119,13 @@
             <td>Freilassen</td>
             <td>Dongle SN: XXXXXX</td>
         </tr>
+        <tr>
+            <td>GROWATT SPH</td>
+            <td>Nicht unterstützt</td>
+            <td>Nicht unterstützt</td>
+            <td>Nicht unterstützt</td>
+            <td>Nicht unterstützt</td>
+        </tr>
     </tbody>
 </table>
 
@@ -172,6 +179,13 @@
             <td>Freilassen oder IP eingeben</td>
             <td>Dongle‑SN (XXXXXX von AP_XXXXXX), dient als Auth</td>
         </tr>
+        <tr>
+            <td>GROWATT SPH</td>
+            <td>Ihr WLAN</td>
+            <td>Ihr Passwort</td>
+            <td>IP-Adresse eingeben (finden Sie im WLAN-Router)</td>
+            <td>Nicht ausfüllen</td>
+        </tr>
     </tbody>
 </table>
 
@@ -207,6 +221,18 @@
 <p>Für eine ordnungsgemäße Funktion ist es notwendig, <strong>Modbus TCP</strong> im Gerätemenü zu aktivieren (Menü ->
     Einstellungen -> Dienste ->
     Modbus TCP).</p>
+<h2>GROWATT SPH</h2>
+<p>Es ist notwendig, die Firmware Ihres Shine WiFi-X-Dongles zu aktualisieren. Sie benötigen mindestens die
+    Firmware-Version 3.1.1.1, die Modbus TCP ermöglicht. Mit einer älteren Firmware wird die Station nicht
+    funktionieren.</p>
+<p>Das Update führen Sie ganz einfach über die ShinePhone-App durch. Folgen Sie dabei demselben Vorgang, als würden Sie
+    den WiFi-Dongle mit einem anderen WLAN-Netzwerk verbinden. Während der Einrichtung wird Ihnen ein Firmware-Update
+    angeboten – bestätigen Sie dieses. <a href="https://www.youtube.com/watch?v=Zwuop7KQis8">Link zur
+        Videoanleitung.</a></p>
+<p>Leider bietet der WiFi-Dongle keinen Mechanismus zur automatischen Erkennung der IP-Adresse in Ihrem WLAN, wie es bei
+    anderen Wechselrichtern der Fall ist. Sie müssen daher die IP-Adresse Ihres Shine WiFi-X-Dongles auch in die Station
+    eintragen. Diese finden Sie z. B. in den Einstellungen Ihres WiFi-Routers in der Liste der verbundenen Geräte
+    (vermutlich wird er als Gerät „Espressif“ angezeigt).</p>
 
 <h1>SOLAR PLUG</h1>
 <p>Alle SOLAR PLUG Steckdosen und Relais sind voll kompatibel.</p>
