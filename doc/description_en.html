@@ -1,51 +1,320 @@
-<p><strong>SOLAR STATION <span style="color:red">Live</span></strong> is a monitoring station for inverters:
-    <li> <strong>SOLAX X3-HYBRID G3/G4</strong></li>
-    <li><strong>GoodWe ET series</strong></li>
-    <li><strong>SOFAR SOLAR HYD</strong></li>
-    <li><strong>Victron</strong></li>
-    <li><strong>DEYE</strong></li>
-    <li><strong>GROWATT SPH</strong></li>
-</p>
-<p>It displays live data from the inverter:</p>
-<ul>
-    <li>energy flow - a clear overview of panel performance, household consumption, battery status, and even the inverter's temperature</li>
-    <li>statistics - how much energy was produced, consumed, purchased, and sold today</li>
-    <li>graph - production, consumption, and battery status over the past 24 hours</li>
-</ul>
-<q>What can be set, can go wrong.</q>
-<p>That’s why <strong>SOLAR STATION <span style="color:red">Live</span></strong> is designed so that the user doesn’t need to set anything. The station automatically connects to the inverter’s WiFi and starts displaying data.</p>
-<video width="800" height="400" style="display: block; margin-left: auto; margin-right: auto;" controls="controls">
-    <source src="/user/documents/upload/IMG_0014.mov" />
-</video>
-<h2>Before purchasing</h2>
-<p>Make sure that the inverter's WiFi network is available in the location where you want to use the station:</p>
-<ul>
-    <li><strong>SOLAX</strong> - Only installations with a WiFi Dongle are supported. The Dongle emits a WiFi network named WiFi_XXXXXX, where XXXXXX is the dongle's serial number. This network must be unsecured by default. If such a network is not available, it might still be hidden - you can verify and configure this in the SolaxCloud mobile app.</li>
-    <li><strong>GoodWe</strong> - The GoodWe inverter emits a WiFi network named Solar-WifiXXXXXX, where XXXXXX is the dongle's serial number. This network is secured by default with the password <code>12345678</code>. Please check if you can connect to this network using the password.</li>
-    <li><strong>SOFAR SOLAR, DEYE</strong> - The SOFAR SOLAR, DEYE inverter emits a WiFi network named AP-XXXXXX, where XXXXXX is the dongle's serial number. This WiFi network is secured by default with a password printed on the WiFi dongle. Please ensure you can connect to this network using the password.</li>
-    <li><strong>Victron</strong> - The Victron inverter emits a WiFi network named venus-XXXXXX, where XXXXXX is the dongle's serial number. This WiFi network is secured by default with a password printed on the WiFi dongle. Please ensure you can connect to this network using the password. Additionally, Modbus TCP must be enabled via the remote console (Menu/Settings/Services/Modbus TCP - enable).</li>
-    <li><strong>Growatt</strong> via your home Wi-Fi network. The Shine WiFi-X dongle must be updated to at least version 3.1.1.1 (in which MODBUS TCP is enabled).</li>
-</ul>
-<p>In the initial version, only typical home FVE installations with the listed inverters with batteries will be supported. Multi-inverter installations will not be supported yet.</p>
-<p>If you are unsure, contact me via the form.</p>
-<h2>Installation</h2>
-<p>Installation is very simple. Just plug the station into a socket using the included cable. The station will automatically connect to the inverter and start displaying data. <strong>That’s it!</strong></p>
-<h2>Firmware update</h2>
-<p><strong>SOLAR STATION <span style="color:red">Live</span></strong> does NOT feature automatic firmware updates like other projects. The device is designed so that if it works now, it will work even in 5 years. However, firmware can still be updated manually using a USB-C cable and a browser.</p>
-<h2>SOLAR PLUG</h2>
-<p>All SOLAR PLUG sockets sold are supported. Once the SOLAR PLUG is connected, <strong>SOLAR STATION <span
-            style="color:red">Live</span></strong> will automatically pair it, and a new tile will appear. Sockets are automatically switched according to internal rules to maximize the use of solar energy.</p>
-<h2>Technical specifications</h2>
-<ul>
-    <li>7" color display 800x480</li>
-    <li>ESP32-S3, 240Mhz, 4MB Flash, 512kB RAM</li>
-    <li>WiFi 2.4Ghz</li>
-    <li>USB-C</li>
-</ul>
-<h2>Package contents</h2>
-<ul>
-    <li>SOLAR STATION <span style="color:red">Live</span></li>
-    <li>USB-C cable</li>
-    <li>Stand</li>
-    <li>Adhesive wall mount</li>
-</ul>
+<div style="background:#ffffff; padding:40px 32px; margin:0; box-sizing:border-box;">
+  <div style="max-width:1200px; margin:0 auto; box-sizing:border-box;">
+
+    <!-- MAIN HEADER + PRODUCT PHOTOS + SUPPORTED INVERTERS -->
+    <div style="display:flex; flex-wrap:wrap; gap:32px; align-items:stretch; margin-bottom:40px;">
+
+      <!-- TEXT INTRO -->
+      <div style="flex:1 1 280px; min-width:0;">
+        <h1 style="margin:0 0 12px 0; line-height:1.1;">
+          SOLAR STATION <span style="font-weight:700; color:#ef4444;">Live</span>
+        </h1>
+        <p style="margin:0 0 16px 0; color:#4b5563;">
+          A monitoring station that finally shows you what is <strong>really</strong> going on in your PV system – without a phone app, without cloud accounts and without complicated setup. Just plug it in and within a few seconds you see live production, consumption and battery state.
+        </p>
+        <p style="margin:0 0 16px 0; color:#4b5563;">
+          On a single 7″ display you see where the energy comes from, where it goes and whether you are drawing from the grid unnecessarily. Perfect for anyone who doesn’t want to spend the evening tapping through apps, but still wants confidence they’re getting the most from their solar system.
+        </p>
+        <div style="display:flex; flex-wrap:wrap; gap:10px; margin:14px 0 0 0;">
+          <span style="border-radius:999px; padding:6px 14px; background:#f3f4f6; border:1px solid #e5e7eb;">Plug in &amp; see</span>
+          <span style="border-radius:999px; padding:6px 14px; background:#f3f4f6; border:1px solid #e5e7eb;">No cloud, no logins</span>
+          <span style="border-radius:999px; padding:6px 14px; background:#f3f4f6; border:1px solid #e5e7eb;">Live data on your desk</span>
+        </div>
+      </div>
+
+      <!-- PRODUCT PHOTOS -->
+      <div style="flex:1 1 320px; min-width:260px; display:flex; flex-direction:column; gap:16px;">
+        <div style="border-radius:16px; overflow:hidden; border:1px solid #e5e7eb; background:#ffffff; box-shadow:0 22px 55px rgba(15,23,42,0.12);">
+          <img src="https://cdn.myshoptet.com/usr/www.solar-station.cz/user/shop/big/142_crowpanel7-case-2024-aug-27-11-17-59am-000-customizedview37547068915.png?68f782a6" alt="SOLAR STATION Live – product photo" style="display:block; width:100%; height:auto;">
+        </div>
+        <div style="border-radius:16px; overflow:hidden; border:1px solid #e5e7eb; background:#ffffff; box-shadow:0 16px 45px rgba(15,23,42,0.10);">
+          <img src="https://cdn.myshoptet.com/usr/www.solar-station.cz/user/shop/big/142-3_crowpanel7-case-2024-aug-27-11-22-08am-000-customizedview17723076650.png?68f782a6" alt="SOLAR STATION Live – side view" style="display:block; width:100%; height:auto;">
+        </div>
+      </div>
+
+      <!-- SUPPORTED INVERTERS – INVERTED CARD -->
+      <div style="flex:0 1 330px; min-width:260px;">
+        <div style="border-radius:16px; border:1px solid #020617; background:#111827; padding:18px 16px; box-shadow:0 24px 60px rgba(15,23,42,0.55); color:#f9fafb; height:100%; box-sizing:border-box;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span style="font-weight:600;">Supported inverters</span>
+            <span style="color:#9ca3af;">typical home PV</span>
+          </div>
+          <table style="width:100%; border-collapse:collapse;">
+            <tbody>
+              <tr>
+                <td style="padding:6px 6px; border-bottom:1px solid rgba(148,163,184,0.35); color:#e5e7eb;">SOLAX X3-HYBRID G3/G4, Ultra</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 6px; border-bottom:1px solid rgba(148,163,184,0.35); color:#e5e7eb;">GoodWe ET series</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 6px; border-bottom:1px solid rgba(148,163,184,0.35); color:#e5e7eb;">SOFAR SOLAR HYD</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 6px; border-bottom:1px solid rgba(148,163,184,0.35); color:#e5e7eb;">Victron</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 6px; border-bottom:1px solid rgba(148,163,184,0.35); color:#e5e7eb;">DEYE</td>
+              </tr>
+              <tr>
+                <td style="padding:6px 6px; color:#e5e7eb;">GROWATT SPH</td>
+              </tr>
+            </tbody>
+          </table>
+          <p style="margin:12px 0 0 0; color:#9ca3af;">
+            The station talks directly to the inverter via its built-in WiFi network. If your device is on the list above, it will usually connect <strong>fully automatically</strong> once you power it up.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEATURES + VIDEO -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:28px; margin-bottom:40px;">
+      <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; box-shadow:0 22px 55px rgba(15,23,42,0.08);">
+        <h2 style="margin:0 0 12px 0;">What does it do?</h2>
+        <p style="margin:0 0 16px 0; color:#4b5563;">
+          <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> has one job: to give you <strong>instant feedback</strong> on whether your PV system is doing what you expect – without your phone, without logging into an app and without digging through charts.
+        </p>
+        <table style="width:100%; border-collapse:collapse;">
+          <tbody>
+            <tr style="border-bottom:1px solid #e5e7eb;">
+              <td style="padding:8px 6px; width:130px; font-weight:600;">Energy flow</td>
+              <td style="padding:8px 6px;">
+                A clear flow diagram shows how much power comes from the panels, what the house is using, how the battery is charging or discharging and whether power is being imported from or exported to the grid.
+                <br>You can tell at a glance whether you’re running on your own solar production – or on grid power.
+              </td>
+            </tr>
+            <tr style="border-bottom:1px solid #e5e7eb;">
+              <td style="padding:8px 6px; font-weight:600;">Today’s stats</td>
+              <td style="padding:8px 6px;">
+                Clean numbers for today: generated, consumed, imported, exported. You see how much your PV has “earned” you today and how much of your usage came from your own roof.
+                <br>Perfect for a quick look in the evening – did the sun pay off today?
+              </td>
+            </tr>
+            <tr style="border-bottom:1px solid #e5e7eb;">
+              <td style="padding:8px 6px; font-weight:600;">24h graph</td>
+              <td style="padding:8px 6px;">
+                A 24-hour history of generation, consumption and battery state. You see the morning ramp-up, the midday peak and the evening run-down from the battery.
+                <br>Night-time “power hogs” or load spikes that could be shifted are very easy to spot.
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:8px 6px; font-weight:600;">Spot prices</td>
+              <td style="padding:8px 6px;">
+                A <strong>spot electricity price chart</strong> for the current day. Expensive and cheap hours are clearly visible – you instantly see whether it’s a good time to run the dryer, dishwasher or charge your EV.
+                <br>Together with your generation curve it makes planning consumption easy, so your electricity bill stays under control.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="border-radius:16px; border:1px solid #e5e7eb; padding:20px; background:#ffffff; box-shadow:0 22px 55px rgba(15,23,42,0.08);">
+        <p style="margin:0 0 12px 0; color:#4b5563;">
+          Example screen of <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> – this is the view you’ll have on your table every day:
+        </p>
+        <div style="position:relative; width:100%; margin:0 auto; border-radius:12px; overflow:hidden; background:#111827;">
+          <video autoplay muted loop playsinline controls style="width:100%; height:auto; display:block; aspect-ratio:16/9;">
+            <source src="/user/documents/upload/IMG_0014.mov">
+          </video>
+        </div>
+        <p style="margin:12px 0 0 0; color:#6b7280;">
+          Live production, consumption, battery level, inverter temperature and energy flows – everything in real time, without reaching for your phone.
+        </p>
+      </div>
+    </div>
+
+    <!-- QUOTE + INSTALLATION -->
+    <div style="display:grid; grid-template-columns:minmax(280px,1.2fr) minmax(320px,1.8fr); gap:28px; margin-bottom:40px;">
+      <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+        <blockquote style="margin:0 0 10px 0; font-style:italic; color:#111827;">
+          “If you don’t have to configure it, you can’t misconfigure it.”
+        </blockquote>
+        <p style="margin:0 0 8px 0; color:#4b5563;">
+          That’s exactly how <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> behaves. After power-up it automatically looks for the WiFi network of your inverter – if needed, you enter the password once. From then on the station takes care of the connection itself.
+        </p>
+        <p style="margin:0; color:#4b5563;">
+          If no suitable network is found, it shows a clear list of available inverter networks – just like in the manual. No MAC addresses, no manual IP setup.
+        </p>
+      </div>
+      <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+        <h2 style="margin:0 0 10px 0;">Installation</h2>
+        <p style="margin:0 0 10px 0; color:#4b5563;">
+          Commissioning is intentionally kept simple, so anyone can do it – no need for network skills, IP addresses or Modbus knowledge.
+        </p>
+        <ol style="margin:0 0 10px 0; padding-left:22px; color:#111827;">
+          <li>Place the station where you can see it easily (living room, kitchen, hallway, office).</li>
+          <li>Plug it into a socket using the supplied USB-C cable and power adapter.</li>
+          <li><strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> automatically searches for your inverter’s WiFi and connects.</li>
+        </ol>
+        <p style="margin:0; color:#6b7280;">
+          If something doesn’t work on the first try, the step-by-step “Troubleshooting” guide walks you through typical cases like “WiFi not found” or “no data shown”.
+        </p>
+      </div>
+    </div>
+
+    <!-- BEFORE YOU BUY + WIFI TABLE -->
+    <div style="border-radius:16px; border:1px solid #e5e7eb; padding:24px 20px; background:#ffffff; margin-bottom:40px; box-shadow:0 22px 55px rgba(15,23,42,0.08);">
+      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:20px; margin-bottom:16px;">
+        <div style="flex:1 1 320px;">
+          <h2 style="margin:0 0 10px 0;">Before you buy</h2>
+          <p style="margin:0 0 10px 0; color:#4b5563;">
+            For <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> to work correctly, the WiFi signal from your inverter must reach the place where you want to put the station. That’s all – no internet access, router or extra hardware is strictly required.
+          </p>
+          <div style="border-radius:10px; border:1px solid #e5e7eb; background:#f9fafb; padding:12px 14px; margin-bottom:10px;">
+            <strong>New:</strong> The station can now also communicate via your home WiFi. This means better range, more stable connection and more freedom where you place the display in the house.
+          </div>
+          <p style="margin:0 0 6px 0; color:#6b7280;">
+            We currently support typical home installations with one hybrid inverter and one battery. More complex multi-inverter setups are not yet supported – if you’re unsure, just ask us.
+          </p>
+          <p style="margin:6px 0 0 0;">
+            Not sure about compatibility or WiFi coverage? <strong>Contact us via the form</strong> – tell us your inverter model and a short description of the system, and we will get back to you with a recommendation.
+          </p>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; margin-top:10px;">
+          <thead>
+            <tr style="background:#111827; color:#f9fafb;">
+              <th style="text-align:left; padding:9px 10px; white-space:nowrap;">Inverter</th>
+              <th style="text-align:left; padding:9px 10px; white-space:nowrap;">WiFi network</th>
+              <th style="text-align:left; padding:9px 10px; white-space:nowrap;">Note</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="background:#f9fafb;">
+              <td style="padding:8px 10px; border-bottom:1px solid #e5e7eb;"><strong>SOLAX</strong></td>
+              <td style="padding:8px 10px; border-bottom:1px solid #e5e7eb;">WiFi_XXXXXX (open)</td>
+              <td style="padding:8px 10px; border-bottom:1px solid #e5e7eb;">
+                WiFi dongle required. The network must be in its default “open” state. If you can’t see it, check the settings in the SolaxCloud app as described in the manual.
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:8px 10px; border-bottom:1px solid #e5e7eb;"><strong>GoodWe</strong></td>
+              <td style="padding:8px 10px; border-bottom:1px solid #e5e7eb;">Solar-WifiXXXXXX</td>
+              <td style="padding:8px 10px; border-bottom:1px solid #e5e7eb;">
+                Password <code>12345678</code>. Test the connection briefly with your phone or laptop – if that works, <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> will connect as well.
+              </td>
+            </tr>
+            <tr style="background:#f9fafb;">
+              <td style="padding:8px 10px; border-bottom:1px solid #e5e7eb;"><strong>SOFAR SOLAR, DEYE</strong></td>
+              <td style="padding:8px 10px; border-bottom:1px solid #e5e7eb;">AP-XXXXXX</td>
+              <td style="padding:8px 10px; border-bottom:1px solid #e5e7eb;">
+                The password is printed on the dongle. We recommend testing the connection once in advance – it saves time during first start-up of the station.
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:8px 10px; border-bottom:1px solid #e5e7eb;"><strong>Victron</strong></td>
+              <td style="padding:8px 10px; border-bottom:1px solid #e5e7eb;">venus-XXXXXX</td>
+              <td style="padding:8px 10px; border-bottom:1px solid #e5e7eb;">
+                The password is on the device label. In the settings you must enable Modbus TCP (Menu / Settings / Services / Modbus TCP) so the station can read data.
+              </td>
+            </tr>
+            <tr style="background:#f9fafb;">
+              <td style="padding:8px 10px;"><strong>Growatt</strong></td>
+              <td style="padding:8px 10px;">Your home WiFi</td>
+              <td style="padding:8px 10px;">
+                The Shine WiFi-X dongle must run firmware version 3.1.1.1 or newer with MODBUS TCP enabled. The manual explains how to check and update the firmware if needed.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FW + SOLAR PLUG + ECOVOLTER PRO -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:28px; margin-bottom:40px;">
+      <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+        <h2 style="margin:0 0 10px 0;">Firmware updates</h2>
+        <p style="margin:0 0 8px 0; color:#4b5563;">
+          <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> does not require regular updates – if it works correctly today, it will keep working like that for years.
+        </p>
+        <p style="margin:0 0 8px 0; color:#4b5563;">
+          When new features arrive (such as spot price charts or support for new inverters), you can update the firmware yourself in just a few minutes.
+        </p>
+        <p style="margin:0; color:#111827;">
+          Simply connect the station to your computer via USB-C, open the update page in your browser and follow the instructions. No special software, no deep IT skills – the process is explained step by step.
+        </p>
+      </div>
+
+      <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+        <h2 style="margin:0 0 10px 0;">SOLAR PLUG</h2>
+        <p style="margin:0 0 8px 0; color:#4b5563;">
+          SOLAR PLUG sockets and modules help you use surplus energy for useful loads – water heating, space heating, delayed drying, or charging e-bikes and tools.
+        </p>
+        <p style="margin:0 0 6px 0; color:#111827;">
+          Once plugged in, the sockets are <strong>automatically detected</strong> by <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> and appear as tiles on the screen, including status and real-time power.
+        </p>
+        <p style="margin:0; color:#111827;">
+          Control follows smart rules: it takes PV output, battery level and house consumption into account. The goal is to use as much of your solar energy on-site as possible instead of exporting it cheaply or draining the battery unnecessarily.
+        </p>
+      </div>
+
+      <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+        <h2 style="margin:0 0 10px 0;">EcoVolter Pro</h2>
+        <p style="margin:0 0 8px 0; color:#4b5563;">
+          The portable EcoVolter Pro II wallbox (3×16 A / 11 kW) is the ideal companion for a home PV system – it lets you charge your EV from a three-phase socket while respecting the limits of your grid connection.
+        </p>
+        <p style="margin:0 0 6px 0; color:#111827;">
+          <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> shows the EcoVolter as a tile with a charging cable icon, including whether it’s currently charging, at what power and how much it loads your house.
+        </p>
+        <p style="margin:0; color:#111827;">
+          Charging power can be dynamically controlled based on current PV output and household consumption – so your car is charged mainly from surplus solar and grid import is minimized. A perfect combo if you want to <strong>drive on sunshine</strong>.
+        </p>
+      </div>
+    </div>
+
+    <!-- TECHNICAL DATA + BOX CONTENTS -->
+    <div style="display:grid; grid-template-columns:minmax(320px,2fr) minmax(260px,1.3fr); gap:28px;">
+      <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+        <h2 style="margin:0 0 12px 0;">Technical data</h2>
+        <table style="width:100%; border-collapse:collapse;">
+          <tbody>
+            <tr style="background:#f9fafb;">
+              <td style="padding:8px 10px; border-radius:8px 0 0 0; width:35%; font-weight:600;">Display</td>
+              <td style="padding:8px 10px; border-radius:0 8px 0 0;">
+                7″ colour LCD, 800×480 – large enough for clear energy flows and graphs, still compact enough for your living space or kitchen.
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:8px 10px; border-top:1px solid #e5e7eb; font-weight:600;">Processor</td>
+              <td style="padding:8px 10px; border-top:1px solid #e5e7eb;">
+                ESP32-S3, 240 MHz – modern microcontroller with built-in WiFi and enough performance for smooth graphics at low power consumption.
+              </td>
+            </tr>
+            <tr style="background:#f9fafb;">
+              <td style="padding:8px 10px; border-top:1px solid #e5e7eb; font-weight:600;">Memory</td>
+              <td style="padding:8px 10px; border-top:1px solid #e5e7eb;">
+                4 MB Flash, 512 kB RAM – plenty of room for firmware, new features and long-term stability.
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:8px 10px; border-top:1px solid #e5e7eb; font-weight:600;">WiFi</td>
+              <td style="padding:8px 10px; border-top:1px solid #e5e7eb;">
+                2.4 GHz – proven frequency with good wall penetration, ideal for single-family homes.
+              </td>
+            </tr>
+            <tr style="background:#f9fafb;">
+              <td style="padding:8px 10px; border-top:1px solid #e5e7eb; border-radius:0 0 0 8px; font-weight:600;">Connector</td>
+              <td style="padding:8px 10px; border-top:1px solid #e5e7eb; border-radius:0 0 8px 0;">
+                USB-C – one cable for power and firmware updates. The appropriate cable is included; just plug it into the supplied adapter or any USB socket.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+        <h2 style="margin:0 0 10px 0;">Box contents</h2>
+        <ul style="margin:0; padding-left:22px; color:#111827;">
+          <li><strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> – fully assembled and tested, ready to use.</li>
+          <li>USB-C cable – for powering the station and for any future firmware updates.</li>
+          <li>Desk stand – keeps the display stable at a comfortable viewing angle.</li>
+          <li>Self-adhesive wall mount – if you prefer to have the overview on a wall in your hallway, kitchen or utility room.</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</div>

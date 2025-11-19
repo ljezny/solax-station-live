@@ -1,253 +1,371 @@
-<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> je navržen pro automatické připojení k
-    vašemu střídači bez nutnosti ruční konfigurace.</p>
+<div style="background:#ffffff; padding:32px 24px; margin:0; box-sizing:border-box;">
+  <div style="max-width:1200px; margin:0 auto; box-sizing:border-box;">
 
-<p>Pokud však <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> nenalezne kompatibilní WiFi síť,
-    zobrazí výběrové menu dostupných podporovaných WiFi sítí. Zobrazují se pouze sítě střídačů, nikoliv vaše domácí WiFi
-    síť.</p>
+    <!-- ÚVOD: AUTOMATICKÉ PŘIPOJENÍ -->
+    <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; margin-bottom:24px; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+      <h1 style="margin:0 0 12px 0;">SOLAR STATION <span style="color:#ef4444;">Live</span> – návod</h1>
+      <p style="margin:0 0 10px 0; color:#4b5563;">
+        <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> je navržen pro automatické připojení k vašemu střídači bez nutnosti ruční konfigurace.
+      </p>
+      <p style="margin:0 0 10px 0; color:#4b5563;">
+        Pokud však <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> nenalezne kompatibilní WiFi síť, zobrazí výběrové menu dostupných podporovaných WiFi sítí. Zobrazují se pouze sítě střídačů, nikoliv vaše domácí WiFi síť.
+      </p>
+      <p style="margin:0; color:#4b5563;">
+        Vyberte správný střídač a v případě potřeby zadejte heslo k WiFi síti. <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> si heslo uloží a příště se připojí automaticky.
+      </p>
+    </div>
 
-<p>Vyberte správný střídač a v případě potřeby zadejte heslo k WiFi síti. <strong>SOLAR STATION <span
-            style="color: #ff0000;">LIVE</span></strong> si heslo uloží.</p>
+    <!-- AKTUALIZACE FIRMWARE -->
+    <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; margin-bottom:24px; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+      <h2 style="margin:0 0 10px 0;">Aktualizace firmware</h2>
 
-<h2>Aktualizace firmware</h2>
-<p><span style="color: #ff0000;">Neprovádějte aktualizaci bez předchozí konzultace. Firmware nepřináší žádné nové
-        funkce, pouze opravy reportovaných chyb a podporu nových střídačů. Pokud zařízení funguje, není důvod k
-        aktualizaci.</span></p>
-<p>Nejprve se mrkněte jakou máte verzi <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong>
-<p>Pokud máte vzadu RESET tlačítko, jedná se o 2. generaci. Firmware pro 1. a 2. generaci jsou jiné (jiný ovladač
-    displaye). Nicméně pokud omylem přehrajete špatný firmware, nahrátím správného se to opraví - nic nepokazíte.</p>
-<ul>
-    <li>1. generace: <a
-            href="https://solar-station.cz/user/documents/solar-station-live/solar-station-live.html"><strong>Návod
-                zde</strong></a></li>
-    <li>2. generace: <a
-            href="https://www.solar-station.cz/user/documents/solar-station-live/solar-station-live-advance.html"><strong>Návod
-                zde</strong></a></li>
-</ul>
-<h2>Zobrazované údaje</h2>
-<p><img src="https://cdn.myshoptet.com/usr/www.solar-station.cz/user/documents/upload/solar-station-live-layout.png"
-        alt="solar-station-live-layout" /></p>
-<ol>
-    <li>Aktuální výkon FV panelů</li>
-    <li>Výkon jednotlivých stringů (pokud jsou k dispozici)</li>
-    <li>Procentuální soběstačnost ze solární energie</li>
-    <li>Úroveň nabití baterie</li>
-    <li>Výkon nabíjení a vybíjení baterie</li>
-    <li>Teplota baterie</li>
-    <li>Celkový výkon střídače</li>
-    <li>Zatížení jednotlivých fází střídače (červeně označena přetížená fáze). Záporné znaménko značí pak opační směr
-        toku na dané fázi - typicky pokud dochází k nabíjení baterie ze sítě apod.</li>
-    <li>Sériové číslo střídače a síla WiFi signálu</li>
-    <li>Teplota střídače</li>
-    <li>Počet aktivních a spárovaných zásuvek (souhrnný výkon sepnutých zásuvek)</li>
-    <li>Celková spotřeba domácnosti</li>
-    <li>Množství nakupované a prodávané energie do sítě</li>
-    <li>Dnešní výroba elektřiny</li>
-    <li>Celková výroba od instalace</li>
-    <li>Dnešní spotřeba elektřiny</li>
-    <li>Dnešní procentuální soběstačnost</li>
-    <li>Dnešní množství uložené energie do baterie</li>
-    <li>Dnešní využití energie z baterie</li>
-    <li>Dnešní přetok do sítě</li>
-    <li>Dnešní odběr ze sítě</li>
-    <li>Grafické znázornění výroby panelů (žlutá), stavu nabití baterie (modrá) a spotřeby domácnosti (zelená)
-    </li>
-</ol>
-<p>Některé denní statistiky po startu zobrazují u některých střídačů (Victron, GoodWe) nuly. Je to způsobeno
-    tím, že
-    střídač tuto denní statistiku neeviduje. <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> si
-    ji počítá sám z celkových statistik a proto se zobrazí až po půlnoci.</p>
+      <div style="border-radius:10px; border:1px solid #fecaca; background:#fef2f2; padding:12px 14px; margin:0 0 12px 0; color:#991b1b;">
+        <strong>Neprovádějte aktualizaci bez předchozí konzultace.</strong><br>
+        Firmware nepřináší žádné nové funkce, pouze opravy reportovaných chyb a podporu nových střídačů.
+        Pokud zařízení funguje, není důvod k aktualizaci.
+      </div>
 
-<h1>Propojení se střídačem</h1>
-<p>Stanice se připojí automaticky, pokud nalezne právě jeden podporovaný dongle a má k němu veškéré potřebné údaje. Po
-    restartu stanice tedy připojení obnoví.</p>
-<p>V případě, že stanice se nedokáže rozhodnout nebo se spojení nezdaří, zobrazí se nastavovací obrazovka.</p>
-<p>Stanice se může se střídačem propojit napřímo - připojí se přímo na wifi dongle - nebo lze stanici připojit do Vaší
-    WiFi sítě a tam si střídač nalezne (nebo se připojí na zadanou IP adresu).</p>
-<h2>Přímé propojení</h2>
-<p>V následující tabulce je uvedeno, co je pro který střídač potřeba vyplnit.</p>
-<table style="border-spacing: 15px; border-collapse: separate;">
-    <thead>
-        <tr>
-            <th>Připojení</th>
-            <th>WiFi</th>
-            <th>Heslo</th>
-            <th>IP</th>
-            <th>Sériové číslo</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Solax</td>
-            <td>Wifi_XXXXXX</td>
-            <td>Nechat prázdné</td>
-            <td>Nechat prázdné</td>
-            <td>Ignorováno</td>
-        </tr>
-        <tr>
-            <td>GoodWe</td>
-            <td>SolarWifiXXXXXX</td>
-            <td>Výchozí: 12345678</td>
-            <td>Nechat prázdné</td>
-            <td>Ignorováno</td>
-        </tr>
-        <tr>
-            <td>Victron</td>
-            <td>venus-XXXXXX</td>
-            <td>Dle donglu</td>
-            <td>Nechat prázdné</td>
-            <td>Ignorováno</td>
-        </tr>
-        <tr>
-            <td>Sofar</td>
-            <td>AP_XXXXXX</td>
-            <td>Dle donglu</td>
-            <td>Nechat prázdné</td>
-            <td>SN donglu: XXXXXX</td>
-        </tr>
-        <tr>
-            <td>DEYE</td>
-            <td>AP_XXXXXX</td>
-            <td>Dle donglu</td>
-            <td>Nechat prázdné</td>
-            <td>SN donglu: XXXXXX</td>
-        </tr>
-        <tr>
-            <td>GROWATT SPH</td>
-            <td>Nepodporováno</td>
-            <td>Nepodporováno</td>
-            <td>Nepodporováno</td>
-            <td>Nepodporováno</td>
-        </tr>
-    </tbody>
-</table>
-<h2>Propojení přes domácí WiFi</h2>
-<p>Pokud chcete stanici připojit do domácí WiFi sítě, zadejte název a heslo k WiFi síti. Stanice se pak připojí
-    do
-    domácí sítě a následně si střídač najde sám.</p>
-<p>V následující tabulce je uvedeno, co je pro který střídač potřeba vyplnit.</p>
-<table style="border-spacing: 15px; border-collapse: separate;">
-    <thead>
-        <tr>
-            <th>Připojení</th>
-            <th>WiFi</th>
-            <th>Heslo</th>
-            <th>IP měniče</th>
-            <th>SN měniče</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Solax</td>
-            <td>Vaše WiFi</td>
-            <td>Vaše heslo</td>
-            <td>Nechat prázdné nebo zadat IP</td>
-            <td>Ignorováno</td>
-        </tr>
-        <tr>
-            <td>GoodWe</td>
-            <td>Vaše WiFi</td>
-            <td>Vaše heslo</td>
-            <td>Nechat prázdné nebo zadat IP</td>
-            <td>Ignorováno</td>
-        </tr>
-        <tr>
-            <td>Victron</td>
-            <td>Vaše WiFi</td>
-            <td>Vaše heslo</td>
-            <td>Nechat prázdné nebo zadat IP</td>
-            <td>Ignorováno</td>
-        </tr>
-        <tr>
-            <td>Sofar</td>
-            <td>Vaše WiFi</td>
-            <td>Vaše heslo</td>
-            <td>Nechat prázdné nebo zadat IP</td>
-            <td>SN donglu (XXXXXX z AP_XXXXXX), slouží jako heslo</td>
-        </tr>
-        <tr>
-            <td>DEYE</td>
-            <td>Vaše WiFi</td>
-            <td>Vaše heslo</td>
-            <td>Nechat prázdné nebo zadat IP</td>
-            <td>SN donglu (XXXXXX z AP_XXXXXX), slouží jako heslo</td>
-        </tr>
-        <tr>
-            <td>GROWATT SPH</td>
-            <td>Vaše WiFi</td>
-            <td>Vaše heslo</td>
-            <td>Zadat IP adresu (naleznete ve WiFi routeru)</td>
-            <td>Nevyplňovat</td>
-        </tr>
-    </tbody>
-</table>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        Nejprve se podívejte, jakou máte verzi <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong>.
+      </p>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        Pokud máte vzadu RESET tlačítko, jedná se o 2. generaci. Firmware pro 1. a 2. generaci jsou jiné (jiný ovladač displeje). Nicméně pokud omylem přehrajete špatný firmware, nahrátím správného se to opraví – nic nepokazíte.
+      </p>
 
-<h1>Podporované střídače</h1>
-<h2>SOLAX</h2>
-<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> se standardně automaticky připojuje
-    ke
-    střídači pomocí základního nastavení. Pokud se tak nestane, postupujte následovně:</p>
-<ol>
-    <li>Zkontrolujte, zda je dostupná WiFi síť s názvem <em>Wifi_XXXXXX</em> (WiFi síť vysílaná donglem
-        střídače). Pokud
-        není viditelná, může být skrytá – deaktivujte skrytí sítě v mobilní aplikaci SOLAX Cloud (Menu ->
-        Nastavení ->
-        Síť -> Pocket WiFi SSID Broadcast).</li>
-    <li>WiFi síť donglu není chráněna heslem, ale přístup k API je zabezpečen. Výchozí heslo API je uvedeno na
-        WiFi
-        donglu a začíná písmenem „S“.</li>
-</ol>
+      <ul style="margin:0; padding-left:20px; color:#111827;">
+        <li>1. generace: <a href="https://solar-station.cz/user/documents/solar-station-live/solar-station-live.html"><strong>Návod zde</strong></a></li>
+        <li>2. generace: <a href="https://www.solar-station.cz/user/documents/solar-station-live/solar-station-live-advance.html"><strong>Návod zde</strong></a></li>
+      </ul>
+    </div>
 
-<h2>GOODWE</h2>
-<ol>
-    <li>Zkontrolujte dostupnost WiFi sítě <em>SolarWifiXXXXXX</em> (XXXXXX odpovídá sériovému číslu donglu).
-        Výchozí
-        heslo k této síti je <strong>12345678</strong>.</li>
-    <li>Pokud se dongle nehlásí, resetujte jej krátkým stiskem tlačítka (1s) a vyčkejte cca 3 minuty na jeho restart.
-    </li>
-</ol>
+    <!-- ZOBRAZOVANÉ ÚDAJE -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:24px; margin-bottom:24px;">
+      <!-- Obrázek layoutu -->
+      <div style="border-radius:16px; border:1px solid #e5e7eb; padding:18px 16px; background:#ffffff; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+        <h2 style="margin:0 0 10px 0;">Zobrazované údaje</h2>
+        <p style="margin:0 0 10px 0; color:#4b5563;">
+          Displej <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> je rozdělen do přehledných bloků. Následující obrázek ukazuje rozložení obrazovky:
+        </p>
+        <div style="border-radius:12px; overflow:hidden; border:1px solid #e5e7eb; background:#111827;">
+          <img src="https://cdn.myshoptet.com/usr/www.solar-station.cz/user/documents/upload/solar-station-live-layout.png"
+               alt="solar-station-live-layout"
+               style="display:block; width:100%; height:auto;">
+        </div>
+      </div>
 
-<h2>VICTRON</h2>
-<p>Střídač Victron vysílá WiFi síť <em>venus-XXXXXX</em> (XXXXXX odpovídá sériovému číslu donglu). Připojení k
-    této síti
-    vyžaduje heslo uvedené na donglu.</p>
-<p>Pro správné fungování je nutné aktivovat <strong>Modbus TCP</strong> v menu zařízení (Menu -> Settings ->
-    Services ->
-    Modbus TCP).</p>
+      <!-- Číslovaný seznam -->
+      <div style="border-radius:16px; border:1px solid #e5e7eb; padding:18px 16px; background:#ffffff; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+        <ol style="margin:0; padding-left:22px; color:#111827;">
+          <li>Aktuální výkon FV panelů</li>
+          <li>Výkon jednotlivých stringů (pokud jsou k dispozici)</li>
+          <li>Procentuální soběstačnost ze solární energie</li>
+          <li>Úroveň nabití baterie</li>
+          <li>Výkon nabíjení a vybíjení baterie</li>
+          <li>Teplota baterie</li>
+          <li>Celkový výkon střídače</li>
+          <li>
+            Zatížení jednotlivých fází střídače (červeně označena přetížená fáze). Záporné znaménko značí opačný směr
+            toku na dané fázi – typicky pokud dochází k nabíjení baterie ze sítě apod.
+          </li>
+          <li>Sériové číslo střídače a síla WiFi signálu</li>
+          <li>Teplota střídače</li>
+          <li>Počet aktivních a spárovaných zásuvek (souhrnný výkon sepnutých zásuvek)</li>
+          <li>Celková spotřeba domácnosti</li>
+          <li>Množství nakupované a prodávané energie do sítě</li>
+          <li>Dnešní výroba elektřiny</li>
+          <li>Celková výroba od instalace</li>
+          <li>Dnešní spotřeba elektřiny</li>
+          <li>Dnešní procentuální soběstačnost</li>
+          <li>Dnešní množství uložené energie do baterie</li>
+          <li>Dnešní využití energie z baterie</li>
+          <li>Dnešní přetok do sítě</li>
+          <li>Dnešní odběr ze sítě</li>
+          <li>
+            Grafické znázornění výroby panelů (žlutá), stavu nabití baterie (modrá) a spotřeby domácnosti (zelená).
+          </li>
+        </ol>
+      </div>
+    </div>
 
-<h2>GROWATT SPH</h2>
-<p>Je nutné aktualizovat firmware ve vašem WiFi donglu Shine WiFi-X. Je nutné mít firmware alespoň 3.1.1.1, který povoluje Modbus TCP. Se starším firmware WiFi dongle nebude stanice fungovat.</p>
-<p>Aktualizaci provedete jednoduše pomocí aplikace ShinePhone. Stačí postupovat stejně, jako by jste chtěl wifi dongle přepojit na jinou wifi síť. Při nastavování se vám nabídne aktualizace donglu a tu potvrďte. <a href="https://www.youtube.com/watch?v=Zwuop7KQis8">Odkaz na video návod.</a></p>
-<p>Bohužel wifi dongle nenabízí žádný mechanismus autodetekce IP adresy na vaší wifi síti, jako je tomu u jiných střídačů. Do stanice je potřeba také zadat IP adresu vašeho Shine WiFi-X donglu. Tu naleznete např. v nastavení vašeho WiFi routeru v seznamu připojených zařízení (bude se nejspíše hlásit jako zařízení Espressif) </p>
+    <div style="border-radius:16px; border:1px solid #e5e7eb; padding:16px 16px; background:#f9fafb; margin-bottom:24px;">
+      <p style="margin:0; color:#4b5563;">
+        Některé denní statistiky po startu zobrazují u některých střídačů (Victron, GoodWe) nuly. Je to způsobeno tím,
+        že střídač tuto denní statistiku neeviduje. <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> si
+        ji počítá sám z celkových statistik a proto se zobrazí až po půlnoci.
+      </p>
+    </div>
 
-<h1>SOLAR PLUG</h1>
-<p>Všechny zásuvky SOLAR PLUG jsou plně kompatibilní. Po připojení do sítě jsou automaticky detekovány a zobrazí
-    se ve
-    statistice spotřeby domácnosti.</p>
-<p>První spuštění aktivuje párovací režim. Párování lze kdykoliv vyvolat podržením tlačítka na zásuvce po dobu
-    10 sekund
-    (rozsvítí se modrá kontrolka).</p>
-<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> automaticky vyhledává a páruje
-    dostupné
-    SOLAR PLUG jednotky. Během konfigurace se indikace mění:</p>
-<ul>
-    <li><strong>Modrá:</strong> aktivní párovací režim</li>
-    <li><strong>Červená:</strong> konfigurace probíhá</li>
-    <li><strong>Oranžová:</strong> zařízení je úspěšně připojeno a aktivní.</li>
-</ul>
-<p>Po úspěšném spárování se zásuvka zobrazí v přehledu domácí spotřeby.</p>
-<h2>Spínání zásuvky</h2>
-<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> zásuvky spíná automaticky podle interních
-    pravidel. <strong>Nikde nic nenastavujete.</strong> Kontroluje se energetická bilance a preferuje se nabitá baterie
-    domácnosti.
-    Jakmile je baterie domácnosti nabitá nebo jsou přetoky, začne stanice postupně kaskádově spínat jednotlivé zásuvky.
-    Zásuvky jsou pak zapnuty minimálně 5 minut.</p>
-<p>Zásuvku lze zapnout tlačítkem, pak se vyřadí její automatické ovládání. Pak je potřeba opět tlačítkem zásuvku vypnout
-    a tím se aktivuje automatické ovládání.</p>
-<p>Při zapnuté zásuvce může dojít k čerpání elektřiny z baterie, ale je to maximálně uvedenou dobu 5 minut. Při
-    hraničních výkonech FVE dochází k cyklickému vypínání zásuvek a tím maximalizaci využití energie z FVE.</p>
+    <!-- PROPOJENÍ SE STŘÍDAČEM – ÚVOD -->
+    <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; margin-bottom:24px; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+      <h1 style="margin:0 0 10px 0;">Propojení se střídačem</h1>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        Stanice se připojí automaticky, pokud nalezne právě jeden podporovaný dongle a má k němu veškeré potřebné údaje.
+        Po restartu stanice tedy připojení obnoví.
+      </p>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        V případě, že se stanice nedokáže rozhodnout nebo se spojení nezdaří, zobrazí se nastavovací obrazovka.
+      </p>
+      <p style="margin:0; color:#4b5563;">
+        Stanice se může se střídačem propojit napřímo (připojení přímo na WiFi dongle) nebo ji lze připojit do vaší
+        domácí WiFi sítě, kde si střídač nalezne (nebo se připojí na zadanou IP adresu).
+      </p>
+    </div>
 
-<h1>EcoVolter PRO (2. generace)</h1>
-<p>EcoVolter PRO (2. generace) je plně kompatibilní se stanicí SOLAR STATION <span style="color: #ff0000;">LIVE</span>.</p>
-<p>Je podporováno také dynamické řízení nabíjecího výkonu - režim SMART.</p>
-<p>Stanice SOLAR STATION <span style="color: #ff0000;">LIVE</span> si EcoVolter PRO najde automaticky, pokud je
-    připojen do stejné WiFi sítě. Musíte tedy mít stanici propojenu se střídačem přes vaší domácí WiFi síť. Po spárování stanice s EcoVolter PRO (2. generace) se na displayi objeví nová dlaždice s přepínačem. Pokud zapnete na dlaždici režim SMART, začne stanice optimalizovat nabíjecí výkon podle aktuální energetické bilance domácnosti. V režimu SMART může docházet k částečnému využití energie z baterie domácnosti, vždy vám ale zůstane alespoň 80% baterie.</p>
+    <!-- PROPOJENÍ – DVA REŽIMY: PŘÍMÉ / DOMÁCÍ WIFI -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:24px; margin-bottom:24px;">
+      <!-- Přímé propojení -->
+      <div style="border-radius:16px; border:1px solid #e5e7eb; padding:20px 18px; background:#ffffff; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+        <h2 style="margin:0 0 10px 0;">Přímé propojení</h2>
+        <p style="margin:0 0 10px 0; color:#4b5563;">
+          Stanice se připojuje přímo k WiFi síti donglu střídače. V následující tabulce je uvedeno, co je pro který střídač potřeba vyplnit.
+        </p>
+        <div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background:#f3f4f6;">
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">Připojení</th>
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">WiFi</th>
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">Heslo</th>
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">IP</th>
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">Sériové číslo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Solax</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Wifi_XXXXXX</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Nechat prázdné</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Nechat prázdné</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Ignorováno</td>
+              </tr>
+              <tr style="background:#f9fafb;">
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">GoodWe</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">SolarWifiXXXXXX</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Výchozí: 12345678</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Nechat prázdné</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Ignorováno</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Victron</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">venus-XXXXXX</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Dle donglu</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Nechat prázdné</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Ignorováno</td>
+              </tr>
+              <tr style="background:#f9fafb;">
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Sofar</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">AP_XXXXXX</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Dle donglu</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Nechat prázdné</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">SN donglu: XXXXXX</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">DEYE</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">AP_XXXXXX</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Dle donglu</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Nechat prázdné</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">SN donglu: XXXXXX</td>
+              </tr>
+              <tr style="background:#f9fafb;">
+                <td style="padding:8px 8px;">GROWATT SPH</td>
+                <td style="padding:8px 8px;">Nepodporováno</td>
+                <td style="padding:8px 8px;">Nepodporováno</td>
+                <td style="padding:8px 8px;">Nepodporováno</td>
+                <td style="padding:8px 8px;">Nepodporováno</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Propojení přes domácí WiFi -->
+      <div style="border-radius:16px; border:1px solid #e5e7eb; padding:20px 18px; background:#ffffff; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+        <h2 style="margin:0 0 10px 0;">Propojení přes domácí WiFi</h2>
+        <p style="margin:0 0 10px 0; color:#4b5563;">
+          Pokud chcete stanici připojit do domácí WiFi sítě, zadejte název a heslo k WiFi. Stanice se pak připojí do domácí sítě a následně si střídač najde sama (nebo se připojí na zadanou IP adresu).
+        </p>
+        <p style="margin:0 0 8px 0; color:#4b5563;">
+          V následující tabulce je uvedeno, co je pro který střídač potřeba vyplnit.
+        </p>
+        <div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background:#f3f4f6;">
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">Připojení</th>
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">WiFi</th>
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">Heslo</th>
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">IP měniče</th>
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">SN měniče</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Solax</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Vaše WiFi</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Vaše heslo</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Nechat prázdné nebo zadat IP</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Ignorováno</td>
+              </tr>
+              <tr style="background:#f9fafb;">
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">GoodWe</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Vaše WiFi</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Vaše heslo</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Nechat prázdné nebo zadat IP</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Ignorováno</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Victron</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Vaše WiFi</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Vaše heslo</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Nechat prázdné nebo zadat IP</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Ignorováno</td>
+              </tr>
+              <tr style="background:#f9fafb;">
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Sofar</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Vaše WiFi</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Vaše heslo</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Nechat prázdné nebo zadat IP</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">SN donglu (XXXXXX z AP_XXXXXX), slouží jako heslo</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">DEYE</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Vaše WiFi</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Vaše heslo</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Nechat prázdné nebo zadat IP</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">SN donglu (XXXXXX z AP_XXXXXX), slouží jako heslo</td>
+              </tr>
+              <tr style="background:#f9fafb;">
+                <td style="padding:8px 8px;">GROWATT SPH</td>
+                <td style="padding:8px 8px;">Vaše WiFi</td>
+                <td style="padding:8px 8px;">Vaše heslo</td>
+                <td style="padding:8px 8px;">Zadat IP adresu (naleznete ve WiFi routeru)</td>
+                <td style="padding:8px 8px;">Nevyplňovat</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PODPOROVANÉ STŘÍDAČE – DETAILNĚ -->
+    <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; margin-bottom:24px; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+      <h1 style="margin:0 0 10px 0;">Podporované střídače</h1>
+
+      <h2 style="margin:10px 0 6px 0;">SOLAX</h2>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> se standardně automaticky připojuje ke střídači pomocí základního nastavení. Pokud se tak nestane, postupujte následovně:
+      </p>
+      <ol style="margin:0 0 10px 0; padding-left:22px; color:#111827;">
+        <li>
+          Zkontrolujte, zda je dostupná WiFi síť s názvem <em>Wifi_XXXXXX</em> (WiFi síť vysílaná donglem střídače).
+          Pokud není viditelná, může být skrytá – deaktivujte skrytí sítě v mobilní aplikaci SOLAX Cloud
+          (Menu → Nastavení → Síť → Pocket WiFi SSID Broadcast).
+        </li>
+        <li>
+          WiFi síť donglu není chráněna heslem, ale přístup k API je zabezpečen. Výchozí heslo API je uvedeno na WiFi
+          donglu a začíná písmenem „S“.
+        </li>
+      </ol>
+
+      <h2 style="margin:10px 0 6px 0;">GOODWE</h2>
+      <ol style="margin:0 0 10px 0; padding-left:22px; color:#111827;">
+        <li>
+          Zkontrolujte dostupnost WiFi sítě <em>SolarWifiXXXXXX</em> (XXXXXX odpovídá sériovému číslu donglu).
+          Výchozí heslo k této síti je <strong>12345678</strong>.
+        </li>
+        <li>
+          Pokud se dongle nehlásí, resetujte jej krátkým stiskem tlačítka (1 s) a vyčkejte cca 3 minuty na jeho restart.
+        </li>
+      </ol>
+
+      <h2 style="margin:10px 0 6px 0;">VICTRON</h2>
+      <p style="margin:0 0 6px 0; color:#4b5563;">
+        Střídač Victron vysílá WiFi síť <em>venus-XXXXXX</em> (XXXXXX odpovídá sériovému číslu donglu). Připojení k této síti
+        vyžaduje heslo uvedené na donglu.
+      </p>
+      <p style="margin:0 0 10px 0; color:#4b5563;">
+        Pro správné fungování je nutné aktivovat <strong>Modbus TCP</strong> v menu zařízení (Menu → Settings → Services → Modbus TCP).
+      </p>
+
+      <h2 style="margin:10px 0 6px 0;">GROWATT SPH</h2>
+      <p style="margin:0 0 6px 0; color:#4b5563;">
+        Je nutné aktualizovat firmware ve vašem WiFi donglu Shine WiFi-X. Je potřeba mít firmware alespoň 3.1.1.1, který
+        povoluje Modbus TCP. Se starším firmware WiFi dongle nebude stanice fungovat.
+      </p>
+      <p style="margin:0 0 6px 0; color:#4b5563;">
+        Aktualizaci provedete jednoduše pomocí aplikace ShinePhone. Stačí postupovat stejně, jako byste chtěli WiFi dongle
+        přepojit na jinou WiFi síť. Při nastavování se vám nabídne aktualizace donglu a tu potvrďte.
+        <a href="https://www.youtube.com/watch?v=Zwuop7KQis8">Odkaz na video návod.</a>
+      </p>
+      <p style="margin:0; color:#4b5563;">
+        Bohužel WiFi dongle nenabízí žádný mechanismus autodetekce IP adresy na vaší WiFi síti, jako je tomu u jiných
+        střídačů. Do stanice je potřeba také zadat IP adresu vašeho Shine WiFi-X donglu. Tu naleznete např. v nastavení
+        vašeho WiFi routeru v seznamu připojených zařízení (bude se nejspíše hlásit jako zařízení „Espressif“).
+      </p>
+    </div>
+
+    <!-- SOLAR PLUG -->
+    <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; margin-bottom:24px; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+      <h1 style="margin:0 0 10px 0;">SOLAR PLUG</h1>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        Všechny zásuvky SOLAR PLUG jsou plně kompatibilní. Po připojení do sítě jsou automaticky detekovány
+        a zobrazí se ve statistice spotřeby domácnosti.
+      </p>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        První spuštění aktivuje párovací režim. Párování lze kdykoliv vyvolat podržením tlačítka na zásuvce po dobu
+        10 sekund (rozsvítí se modrá kontrolka).
+      </p>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> automaticky vyhledává a páruje dostupné
+        SOLAR PLUG jednotky. Během konfigurace se indikace mění:
+      </p>
+      <ul style="margin:0 0 10px 0; padding-left:22px; color:#111827;">
+        <li><strong>Modrá:</strong> aktivní párovací režim</li>
+        <li><strong>Červená:</strong> konfigurace probíhá</li>
+        <li><strong>Oranžová:</strong> zařízení je úspěšně připojeno a aktivní</li>
+      </ul>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        Po úspěšném spárování se zásuvka zobrazí v přehledu domácí spotřeby.
+      </p>
+
+      <h2 style="margin:12px 0 6px 0;">Spínání zásuvky</h2>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> zásuvky spíná automaticky podle interních
+        pravidel. <strong>Nikde nic nenastavujete.</strong> Kontroluje se energetická bilance a preferuje se nabitá baterie
+        domácnosti. Jakmile je baterie domácnosti nabitá nebo jsou přetoky, začne stanice postupně kaskádově spínat
+        jednotlivé zásuvky. Zásuvky jsou pak zapnuty minimálně 5 minut.
+      </p>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        Zásuvku lze zapnout tlačítkem, pak se vyřadí její automatické ovládání. Je potřeba ji opět tlačítkem vypnout,
+        čímž se automatické ovládání znovu aktivuje.
+      </p>
+      <p style="margin:0; color:#4b5563;">
+        Při zapnuté zásuvce může dojít k čerpání elektřiny z baterie, ale je to maximálně uvedenou dobu 5 minut.
+        Při hraničních výkonech FVE dochází k cyklickému vypínání zásuvek a tím maximalizaci využití energie z FVE.
+      </p>
+    </div>
+
+    <!-- ECOVOLTER PRO -->
+    <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+      <h1 style="margin:0 0 10px 0;">EcoVolter PRO (2. generace)</h1>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        EcoVolter PRO (2. generace) je plně kompatibilní se stanicí <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong>.
+      </p>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        Je podporováno také dynamické řízení nabíjecího výkonu – režim SMART.
+      </p>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        Stanice <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> si EcoVolter PRO najde automaticky,
+        pokud je připojen do stejné WiFi sítě. Musíte tedy mít stanici propojenou se střídačem přes vaši domácí WiFi síť.
+      </p>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        Po spárování stanice s EcoVolter PRO (2. generace) se na displeji objeví nová dlaždice s přepínačem. Pokud zapnete
+        na dlaždici režim SMART, začne stanice optimalizovat nabíjecí výkon podle aktuální energetické bilance domácnosti.
+      </p>
+      <p style="margin:0; color:#4b5563;">
+        V režimu SMART může docházet k částečnému využití energie z baterie domácnosti, vždy vám ale zůstane alespoň 80&nbsp;% kapacity baterie.
+      </p>
+    </div>
+
+  </div>
+</div>

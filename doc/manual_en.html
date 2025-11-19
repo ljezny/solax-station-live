@@ -1,266 +1,373 @@
-<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> is designed for automatic connection to
-    your inverter without the need for manual configuration.</p>
+<div style="background:#ffffff; padding:32px 24px; margin:0; box-sizing:border-box;">
+  <div style="max-width:1200px; margin:0 auto; box-sizing:border-box;">
 
-<p>However, if <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> does not find a compatible WiFi
-    network,
-    it will display a selection menu of available supported WiFi networks. Only inverter networks are displayed, not
-    your home WiFi
-    network.</p>
+    <!-- INTRO: AUTOMATIC CONNECTION -->
+    <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; margin-bottom:24px; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+      <h1 style="margin:0 0 12px 0;">SOLAR STATION <span style="color:#ef4444;">Live</span> – manual</h1>
+      <p style="margin:0 0 10px 0; color:#4b5563;">
+        <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> is designed to connect to your inverter automatically, without any manual configuration.
+      </p>
+      <p style="margin:0 0 10px 0; color:#4b5563;">
+        If <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> does not find a compatible WiFi network, it will show a selection menu with supported inverter WiFi networks only. Your home WiFi networks are not listed here.
+      </p>
+      <p style="margin:0; color:#4b5563;">
+        Select the correct inverter and enter the WiFi password if required. <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> stores the password and reconnects automatically next time.
+      </p>
+    </div>
 
-<p>Select the correct inverter and, if necessary, enter the WiFi network password. <strong>SOLAR STATION <span
-            style="color: #ff0000;">LIVE</span></strong> will save the password.</p>
+    <!-- FIRMWARE UPDATE -->
+    <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; margin-bottom:24px; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+      <h2 style="margin:0 0 10px 0;">Firmware update</h2>
 
-<h2>Firmware Update</h2>
-<p>First, check which version of <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> you have.</p>
-<p>If you have a RESET button on the back, it is the 2nd generation. The firmware for the 1st and 2nd generations is
-    different (different display controller). However, if you accidentally flash the wrong firmware, uploading the
-    correct one will fix it – nothing will be broken.</p>
-<ul>
-    <li>1st generation: <a
-            href="https://solar-station.cz/user/documents/solar-station-live/solar-station-live.html"><strong>Instructions
-                here</strong></a></li>
-    <li>2nd generation: <a
-            href="https://www.solar-station.cz/user/documents/solar-station-live/solar-station-live-advance.html"><strong>Instructions
-                here</strong></a></li>
-</ul>
-<h2>Displayed Information</h2>
-<p><img src="https://cdn.myshoptet.com/usr/www.solar-station.cz/user/documents/upload/solar-station-live-layout.png"
-        alt="solar-station-live-layout" /></p>
+      <div style="border-radius:10px; border:1px solid #fecaca; background:#fef2f2; padding:12px 14px; margin:0 0 12px 0; color:#991b1b;">
+        <strong>Do not update the firmware without consulting us first.</strong><br>
+        Firmware updates do not add new features – they only fix reported bugs and add support for new inverters.
+        If your device works correctly, there is no reason to update.
+      </div>
 
-<ol>
-    <li>Current PV panel power</li>
-    <li>Power of individual strings (if available)</li>
-    <li>Percentage self-sufficiency from solar energy</li>
-    <li>Battery charge level</li>
-    <li>Battery charging and discharging power</li>
-    <li>Battery temperature</li>
-    <li>Total inverter power</li>
-    <li>Load on individual inverter phases (red indicates overloaded phase). A negative sign indicates the opposite
-        direction of flow on the given phase - typically when charging the battery from the grid, etc.</li>
-    <li>Inverter serial number and WiFi signal strength</li>
-    <li>Inverter temperature</li>
-    <li>Number of active and paired sockets (total power of connected sockets)</li>
-    <li>Total household consumption</li>
-    <li>Amount of energy purchased and sold to the grid</li>
-    <li>Today's electricity production</li>
-    <li>Total production since installation</li>
-    <li>Today's electricity consumption</li>
-    <li>Today's percentage self-sufficiency</li>
-    <li>Today's amount of energy stored in the battery</li>
-    <li>Today's utilization of energy from the battery</li>
-    <li>Today's surplus to the grid</li>
-    <li>Today's grid import</li>
-    <li>Graphical representation of panel production (yellow), battery charge status (blue), and household consumption
-        (green)</li>
-</ol>
-<p>Some daily statistics may show zeros for certain inverters (Victron, GoodWe) after startup. This is because
-    the inverter does not record this daily statistic. <strong>SOLAR STATION <span
-            style="color: #ff0000;">LIVE</span></strong> calculates it itself from the overall statistics and therefore
-    it appears only after midnight.</p>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        First, check which version of <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> you have.
+      </p>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        If there is a RESET button on the back, you have the 2nd generation. Firmware for 1st and 2nd generation is different (different display driver). However, if you accidentally flash the wrong firmware, you can simply flash the correct one again – you will not damage the device.
+      </p>
 
-<h1>Inverter Connection</h1>
-<p>The station connects automatically if it detects exactly one supported dongle and all required data. After reboot, it
-    will reconnect.</p>
-<p>If it can’t decide or connection fails, a setup screen appears.</p>
-<p>The station can connect to the inverter directly (via the dongle’s Wi‑Fi) or it can join your home Wi‑Fi, allowing
-    the inverter to connect (or you can specify its IP).</p>
+      <ul style="margin:0; padding-left:20px; color:#111827;">
+        <li>1st generation: <a href="https://solar-station.cz/user/documents/solar-station-live/solar-station-live.html"><strong>Manual here</strong></a></li>
+        <li>2nd generation: <a href="https://www.solar-station.cz/user/documents/solar-station-live/solar-station-live-advance.html"><strong>Manual here</strong></a></li>
+      </ul>
+    </div>
 
-<h2>Direct connection</h2>
-<p>The table below shows the fields required for each inverter.</p>
-<table style="border-spacing: 15px; border-collapse: separate;">
-    <thead>
-        <tr>
-            <th>Type</th>
-            <th>WiFi</th>
-            <th>Password</th>
-            <th>IP</th>
-            <th>Serial No.</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Solax</td>
-            <td>Wifi_XXXXXX</td>
-            <td>Leave blank</td>
-            <td>Leave blank</td>
-            <td>Ignored</td>
-        </tr>
-        <tr>
-            <td>GoodWe</td>
-            <td>SolarWifiXXXXXX</td>
-            <td>Default: 12345678</td>
-            <td>Leave blank</td>
-            <td>Ignored</td>
-        </tr>
-        <tr>
-            <td>Victron</td>
-            <td>venus-XXXXXX</td>
-            <td>From dongle</td>
-            <td>Leave blank</td>
-            <td>Ignored</td>
-        </tr>
-        <tr>
-            <td>Sofar</td>
-            <td>AP_XXXXXX</td>
-            <td>From dongle</td>
-            <td>Leave blank</td>
-            <td>Dongle SN: XXXXXX</td>
-        </tr>
-        <tr>
-            <td>DEYE</td>
-            <td>AP_XXXXXX</td>
-            <td>From dongle</td>
-            <td>Leave blank</td>
-            <td>Dongle SN: XXXXXX</td>
-        </tr>
-        <tr>
-            <td>GROWATT SPH</td>
-            <td>Not supported</td>
-            <td>Not supported</td>
-            <td>Not supported</td>
-            <td>Not supported</td>
-        </tr>
-    </tbody>
-</table>
+    <!-- DISPLAYED DATA -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:24px; margin-bottom:24px;">
+      <!-- Layout image -->
+      <div style="border-radius:16px; border:1px solid #e5e7eb; padding:18px 16px; background:#ffffff; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+        <h2 style="margin:0 0 10px 0;">Displayed data</h2>
+        <p style="margin:0 0 10px 0; color:#4b5563;">
+          The display of <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> is divided into clear sections. The following image shows the main screen layout:
+        </p>
+        <div style="border-radius:12px; overflow:hidden; border:1px solid #e5e7eb; background:#111827;">
+          <img src="https://cdn.myshoptet.com/usr/www.solar-station.cz/user/documents/upload/solar-station-live-layout.png"
+               alt="solar-station-live-layout"
+               style="display:block; width:100%; height:auto;">
+        </div>
+      </div>
 
-<h2>Home Wi‑Fi connection</h2>
-<p>To connect via your home network, enter your Wi‑Fi name and password. The station joins your network, then finds the
-    inverter automatically.</p>
-<p>The required fields for each inverter are listed below.</p>
-<table style="border-spacing: 15px; border-collapse: separate;">
-    <thead>
-        <tr>
-            <th>Type</th>
-            <th>WiFi</th>
-            <th>Password</th>
-            <th>Inverter IP</th>
-            <th>Serial No.</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Solax</td>
-            <td>Your WiFi</td>
-            <td>Your password</td>
-            <td>Leave blank or enter IP</td>
-            <td>Ignored</td>
-        </tr>
-        <tr>
-            <td>GoodWe</td>
-            <td>Your WiFi</td>
-            <td>Your password</td>
-            <td>Leave blank or enter IP</td>
-            <td>Ignored</td>
-        </tr>
-        <tr>
-            <td>Victron</td>
-            <td>Your WiFi</td>
-            <td>Your password</td>
-            <td>Leave blank or enter IP</td>
-            <td>Ignored</td>
-        </tr>
-        <tr>
-            <td>Sofar</td>
-            <td>Your WiFi</td>
-            <td>Your password</td>
-            <td>Leave blank or enter IP</td>
-            <td>Dongle SN (XXXXXX from AP_XXXXXX), used as auth</td>
-        </tr>
-        <tr>
-            <td>DEYE</td>
-            <td>Your WiFi</td>
-            <td>Your password</td>
-            <td>Leave blank or enter IP</td>
-            <td>Dongle SN (XXXXXX from AP_XXXXXX), used as auth</td>
-        </tr>
-        <tr>
-            <td>GROWATT SPH</td>
-            <td>Your WiFi</td>
-            <td>Your password</td>
-            <td>Enter IP address (found in your WiFi router)</td>
-            <td>Do not fill in</td>
-        </tr>
-    </tbody>
-</table>
+      <!-- Numbered list -->
+      <div style="border-radius:16px; border:1px solid #e5e7eb; padding:18px 16px; background:#ffffff; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+        <ol style="margin:0; padding-left:22px; color:#111827;">
+          <li>Current PV array output</li>
+          <li>String power (if available)</li>
+          <li>Self-consumption ratio from solar energy</li>
+          <li>Battery state of charge</li>
+          <li>Battery charging/discharging power</li>
+          <li>Battery temperature</li>
+          <li>Total inverter power</li>
+          <li>
+            Load on each inverter phase (overloaded phase highlighted in red). A negative value indicates reverse power
+            flow – typically when the battery is charged from the grid.
+          </li>
+          <li>Inverter serial number and WiFi signal strength</li>
+          <li>Inverter temperature</li>
+          <li>Number of active and paired SOLAR PLUG sockets (total power of switched-on sockets)</li>
+          <li>Total household consumption</li>
+          <li>Power imported from and exported to the grid</li>
+          <li>Today’s PV production</li>
+          <li>Total production since installation</li>
+          <li>Today’s electricity consumption</li>
+          <li>Today’s self-consumption ratio</li>
+          <li>Today’s energy stored into the battery</li>
+          <li>Today’s energy taken from the battery</li>
+          <li>Today’s export to the grid</li>
+          <li>Today’s import from the grid</li>
+          <li>
+            Graph of PV production (yellow), battery state of charge (blue) and household consumption (green).
+          </li>
+        </ol>
+      </div>
+    </div>
 
-<h1>Supported Inverters</h1>
+    <div style="border-radius:16px; border:1px solid #e5e7eb; padding:16px 16px; background:#f9fafb; margin-bottom:24px;">
+      <p style="margin:0; color:#4b5563;">
+        Some daily statistics show zeros after startup for certain inverters (Victron, GoodWe). This is because the inverter
+        does not provide these daily counters. <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> calculates
+        them itself from total counters, so they become valid after midnight.
+      </p>
+    </div>
 
-<h2>SOLAX</h2>
-<p><strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> automatically connects to
-    the inverter using default settings by default. If this does not happen, follow these steps:</p>
-<ol>
-    <li>Check if a WiFi network named <em>Wifi_XXXXXX</em> (WiFi network broadcasted by the inverter dongle) is
-        available. If
-        it is not visible, it might be hidden – disable network hiding in the SOLAX Cloud mobile app (Menu -> Settings
-        ->
-        Network -> Pocket WiFi SSID Broadcast).</li>
-    <li>The dongle's WiFi network is not password protected, but API access is secured. The default API password is
-        printed on the WiFi
-        dongle and starts with the letter "S".</li>
-</ol>
+    <!-- CONNECTION TO INVERTER – INTRO -->
+    <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; margin-bottom:24px; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+      <h1 style="margin:0 0 10px 0;">Connection to inverter</h1>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        The station connects automatically if it finds exactly one supported dongle and has all required credentials.
+        After a restart it will restore the connection by itself.
+      </p>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        If the station cannot decide which device to use, or the connection fails, a configuration screen is shown.
+      </p>
+      <p style="margin:0; color:#4b5563;">
+        The station can connect directly to the inverter dongle WiFi, or it can join your home WiFi and find the inverter
+        there (or use a manually entered IP address).
+      </p>
+    </div>
 
-<h2>GOODWE</h2>
-<ol>
-    <li>Check the availability of the WiFi network <em>SolarWifiXXXXXX</em> (XXXXXX corresponds to the dongle's serial
-        number). The default
-        password for this network is <strong>12345678</strong>.</li>
-    <li>If the dongle does not respond, reset it by pressing the button briefly and wait about 3 minutes for it to
-        restart.</li>
-</ol>
+    <!-- CONNECTION MODES: DIRECT / HOME WIFI -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); gap:24px; margin-bottom:24px;">
+      <!-- Direct connection -->
+      <div style="border-radius:16px; border:1px solid #e5e7eb; padding:20px 18px; background:#ffffff; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+        <h2 style="margin:0 0 10px 0;">Direct connection</h2>
+        <p style="margin:0 0 10px 0; color:#4b5563;">
+          The station connects directly to the WiFi network broadcast by the inverter dongle.
+          The table below shows what to fill in for each inverter type.
+        </p>
+        <div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background:#f3f4f6;">
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">Connection</th>
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">WiFi</th>
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">Password</th>
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">IP</th>
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">Serial number</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Solax</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Wifi_XXXXXX</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Leave empty</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Leave empty</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Ignored</td>
+              </tr>
+              <tr style="background:#f9fafb;">
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">GoodWe</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">SolarWifiXXXXXX</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Default: 12345678</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Leave empty</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Ignored</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Victron</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">venus-XXXXXX</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">On dongle label</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Leave empty</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Ignored</td>
+              </tr>
+              <tr style="background:#f9fafb;">
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Sofar</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">AP_XXXXXX</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">On dongle label</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Leave empty</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Dongle SN: XXXXXX</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">DEYE</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">AP_XXXXXX</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">On dongle label</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Leave empty</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Dongle SN: XXXXXX</td>
+              </tr>
+              <tr style="background:#f9fafb;">
+                <td style="padding:8px 8px;">GROWATT SPH</td>
+                <td style="padding:8px 8px;">Not supported</td>
+                <td style="padding:8px 8px;">Not supported</td>
+                <td style="padding:8px 8px;">Not supported</td>
+                <td style="padding:8px 8px;">Not supported</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-<h2>VICTRON</h2>
-<p>The Victron inverter broadcasts the WiFi network <em>venus-XXXXXX</em> (XXXXXX corresponds to the dongle's serial
-    number). Connecting to this network
-    requires the password provided on the dongle.</p>
-<p>For proper functioning, it is necessary to activate <strong>Modbus TCP</strong> in the device menu (Menu -> Settings
-    -> Services ->
-    Modbus TCP).</p>
-<h2>GROWATT SPH</h2>
-<p>You need to update the firmware on your Shine WiFi-X dongle. Firmware version 3.1.1.1 or higher is required, as it
-    enables Modbus TCP. With older firmware, the station will not work.</p>
-<p>You can easily update it using the ShinePhone app. Simply follow the same steps as if you were reconnecting the WiFi
-    dongle to a different Wi-Fi network. During the setup, you will be prompted to update the dongle’s firmware –
-    confirm the update. <a href="https://www.youtube.com/watch?v=Zwuop7KQis8">Link to the video guide.</a></p>
-<p>Unfortunately, the WiFi dongle does not offer any automatic IP address detection on your Wi-Fi network, unlike other
-    inverters. You must also manually enter the IP address of your Shine WiFi-X dongle into the station. You can find
-    it, for example, in your Wi-Fi router settings in the list of connected devices (it will most likely appear as a
-    device named “Espressif”).</p>
+      <!-- Home WiFi connection -->
+      <div style="border-radius:16px; border:1px solid #e5e7eb; padding:20px 18px; background:#ffffff; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+        <h2 style="margin:0 0 10px 0;">Connection via home WiFi</h2>
+        <p style="margin:0 0 10px 0; color:#4b5563;">
+          If you want to connect the station to your home WiFi network, enter the network name and password.
+          The station will join your home network and then find the inverter there (or use the IP address you enter).
+        </p>
+        <p style="margin:0 0 8px 0; color:#4b5563;">
+          The table below shows what to fill in for each inverter.
+        </p>
+        <div style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse;">
+            <thead>
+              <tr style="background:#f3f4f6;">
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">Connection</th>
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">WiFi</th>
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">Password</th>
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">Inverter IP</th>
+                <th style="padding:8px 8px; text-align:left; border-bottom:1px solid #e5e7eb;">Inverter SN</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Solax</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Your WiFi</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Your password</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Leave empty or enter IP</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Ignored</td>
+              </tr>
+              <tr style="background:#f9fafb;">
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">GoodWe</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Your WiFi</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Your password</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Leave empty or enter IP</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Ignored</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Victron</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Your WiFi</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Your password</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Leave empty or enter IP</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Ignored</td>
+              </tr>
+              <tr style="background:#f9fafb;">
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Sofar</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Your WiFi</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Your password</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Leave empty or enter IP</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Dongle SN (XXXXXX from AP_XXXXXX), used as password</td>
+              </tr>
+              <tr>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">DEYE</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Your WiFi</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Your password</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Leave empty or enter IP</td>
+                <td style="padding:8px 8px; border-bottom:1px solid #e5e7eb;">Dongle SN (XXXXXX from AP_XXXXXX), used as password</td>
+              </tr>
+              <tr style="background:#f9fafb;">
+                <td style="padding:8px 8px;">GROWATT SPH</td>
+                <td style="padding:8px 8px;">Your WiFi</td>
+                <td style="padding:8px 8px;">Your password</td>
+                <td style="padding:8px 8px;">Enter IP address (find it in your router)</td>
+                <td style="padding:8px 8px;">Leave empty</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-<h1>SOLAR PLUG</h1>
-<p>All SOLAR PLUG outlets and relays are fully compatible.</p>
-<p>We always deliver the outlet already in pairing mode. Just plug the outlet into the power, and the station will find
-    and connect it automatically.</p>
-<p>If for some reason you need to put the outlet into pairing mode, you can trigger this at any time by holding the
-    button on the outlet for 10 seconds (the blue indicator will light up).</p>
-<p>Pairing the outlet may take several minutes. If you want to speed it up, you can restart the station. But even then,
-    the outlet will be found.</p>
-<p>The paired outlet is not connected to your home network or the internet. It is exclusively controlled by the
-    <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> station. Therefore, it cannot be connected
-    to the original Shelly app.
-</p>
-<p>During configuration, the indicators change:</p>
-<ul>
-    <li><strong>Blue:</strong> active pairing mode</li>
-    <li><strong>Red:</strong> configuration in progress</li>
-    <li><strong>Orange:</strong> device is successfully connected and active.</li>
-</ul>
-<p>After successful pairing, the outlet will appear in the home consumption overview.</p>
-<h2>Switching the Outlet</h2>
-<p>The <strong>SOLAR STATION <span style="color: #ff0000;">LIVE</span></strong> station automatically switches the
-    outlets according to internal rules. <strong>You don’t set anything manually.</strong> The energy balance is
-    monitored and the charged home battery is given priority. Once the home battery is charged or surplus power is
-    available, the station will gradually switch on the individual outlets in a cascading manner. The outlets will then
-    remain on for at least 5 minutes.</p>
-<p>When an outlet is switched on, electricity may be drawn from the battery, but only for a maximum of 5 minutes. In
-    cases of borderline output from the photovoltaic system (FVE), the outlets are cyclically switched off, thus
-    maximizing the utilization of energy from the photovoltaic system.</p>
-<h1>EcoVolter PRO (2nd Generation)</h1>
-<p>EcoVolter PRO (2nd Generation) is fully compatible with the SOLAR STATION <span style="color: #ff0000;">LIVE</span>.
-</p>
-<p>Dynamic charging power control is also supported – the SMART mode.</p>
-<p>The SOLAR STATION <span style="color: #ff0000;">LIVE</span> will automatically detect EcoVolter PRO if it is
-    connected to the same WiFi network. Therefore, the station must be linked to the inverter via your home WiFi
-    network. Once paired with EcoVolter PRO (2nd Generation), a new tile with a switch will appear on the display. If
-    you enable the SMART mode on the tile, the station will start optimizing charging power according to the current
-    household energy balance. In SMART mode, partial use of household battery energy may occur, but at least 80% of the
-    battery will always remain available.</p>
+    <!-- SUPPORTED INVERTERS – DETAILS -->
+    <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; margin-bottom:24px; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+      <h1 style="margin:0 0 10px 0;">Supported inverters</h1>
+
+      <h2 style="margin:10px 0 6px 0;">SOLAX</h2>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> usually connects to SOLAX automatically with default settings. If it does not, follow these steps:
+      </p>
+      <ol style="margin:0 0 10px 0; padding-left:22px; color:#111827;">
+        <li>
+          Check if the WiFi network <em>Wifi_XXXXXX</em> (dongle WiFi) is visible. If not, it might be hidden – disable SSID hiding
+          in the SOLAX Cloud mobile app (Menu → Settings → Network → Pocket WiFi SSID Broadcast).
+        </li>
+        <li>
+          The dongle WiFi is open (no WiFi password), but the API access is protected. The default API password is printed
+          on the dongle label and starts with the letter “S”.
+        </li>
+      </ol>
+
+      <h2 style="margin:10px 0 6px 0;">GOODWE</h2>
+      <ol style="margin:0 0 10px 0; padding-left:22px; color:#111827;">
+        <li>
+          Check that WiFi network <em>SolarWifiXXXXXX</em> (XXXXXX = dongle serial number) is visible.
+          The default password is <strong>12345678</strong>.
+        </li>
+        <li>
+          If the dongle is not visible, press the dongle button briefly (1 s) to reset it and wait about 3 minutes for it to restart.
+        </li>
+      </ol>
+
+      <h2 style="margin:10px 0 6px 0;">VICTRON</h2>
+      <p style="margin:0 0 6px 0; color:#4b5563;">
+        Victron broadcasts a WiFi network <em>venus-XXXXXX</em> (XXXXXX = device serial). The password is printed on the label.
+      </p>
+      <p style="margin:0 0 10px 0; color:#4b5563;">
+        For proper operation you must enable <strong>Modbus TCP</strong> in the menu (Menu → Settings → Services → Modbus TCP).
+      </p>
+
+      <h2 style="margin:10px 0 6px 0;">GROWATT SPH</h2>
+      <p style="margin:0 0 6px 0; color:#4b5563;">
+        You must update the firmware of your Shine WiFi-X dongle. Firmware version 3.1.1.1 or newer is required,
+        with Modbus TCP enabled. With older firmware the station will not work.
+      </p>
+      <p style="margin:0 0 6px 0; color:#4b5563;">
+        The update is done via the ShinePhone app. Proceed as if you were changing the WiFi network for the dongle.
+        During the process, the app will offer a firmware update – confirm it.
+        <a href="https://www.youtube.com/watch?v=Zwuop7KQis8">Video tutorial (YouTube).</a>
+      </p>
+      <p style="margin:0; color:#4b5563;">
+        Unfortunately, the WiFi dongle does not provide any auto-discovery for its IP address in your LAN, unlike some
+        other inverters. You must enter the IP of your Shine WiFi-X dongle into the station manually. You can find it in your
+        router device list – it usually appears as a device named “Espressif”.
+      </p>
+    </div>
+
+    <!-- SOLAR PLUG -->
+    <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; margin-bottom:24px; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+      <h1 style="margin:0 0 10px 0;">SOLAR PLUG</h1>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        All SOLAR PLUG sockets are fully compatible. Once connected to power, they are automatically detected
+        and shown in the household consumption overview.
+      </p>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        On first power-up, the socket enters pairing mode. You can trigger pairing at any time by holding the button on
+        the socket for 10 seconds (the blue LED will light up).
+      </p>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> automatically searches for and pairs available
+        SOLAR PLUG units. During configuration, the LED colour indicates the state:
+      </p>
+      <ul style="margin:0 0 10px 0; padding-left:22px; color:#111827;">
+        <li><strong>Blue:</strong> pairing mode active</li>
+        <li><strong>Red:</strong> configuration in progress</li>
+        <li><strong>Orange:</strong> device successfully configured and active</li>
+      </ul>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        After successful pairing, the socket appears in the household consumption overview.
+      </p>
+
+      <h2 style="margin:12px 0 6px 0;">Socket switching</h2>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> controls sockets automatically according to internal rules.
+        <strong>No manual configuration is required.</strong> The energy balance is monitored and the home battery
+        is prioritised. As soon as the battery is charged and/or there are PV surpluses, the station starts switching sockets
+        on in a cascade. Each socket stays on for at least 5 minutes.
+      </p>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        You can turn the socket on manually with its button – in that case automatic control is temporarily disabled.
+        To re-enable automatic control, simply turn the socket off with the button again.
+      </p>
+      <p style="margin:0; color:#4b5563;">
+        With a socket switched on, some power may be taken from the battery, but never for more than the 5-minute minimum.
+        In borderline PV conditions the station will cycle sockets on and off to maximise the use of PV energy.
+      </p>
+    </div>
+
+    <!-- ECOVOLTER PRO -->
+    <div style="border-radius:16px; border:1px solid #e5e7eb; padding:22px 20px; background:#ffffff; box-shadow:0 18px 50px rgba(15,23,42,0.06);">
+      <h1 style="margin:0 0 10px 0;">EcoVolter PRO (2nd generation)</h1>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        EcoVolter PRO (2nd generation) is fully compatible with <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong>.
+      </p>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        Dynamic charging power control – SMART mode – is supported.
+      </p>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong> will find EcoVolter PRO automatically if both
+        are connected to the same WiFi network. For this you must have the station connected to your inverter via your home WiFi.
+      </p>
+      <p style="margin:0 0 8px 0; color:#4b5563;">
+        After pairing ECOVOLTER PRO (2nd generation), a new tile appears on the display with a switch. When you enable
+        SMART mode on this tile, the station automatically optimises charging power according to the current household
+        energy balance.
+      </p>
+      <p style="margin:0; color:#4b5563;">
+        In SMART mode some battery energy may be used for charging, but at least 80&nbsp;% of your home battery capacity
+        is always kept in reserve.
+      </p>
+    </div>
+
+  </div>
+</div>
