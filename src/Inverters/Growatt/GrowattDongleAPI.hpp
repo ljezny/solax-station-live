@@ -110,8 +110,11 @@ private:
         data.gridSellTotal = response.readUInt32(1050) / 10.0;
         data.gridBuyToday = response.readUInt32(1044) / 10.0;
         data.gridBuyTotal = response.readUInt32(1046) / 10.0;
-        data.gridPowerL1 = response.readInt32(1029) / 10.0 - response.readInt32(1021) / 10.0;
+        // Grid power: negative = import from grid, positive = export to grid
+        // Fixed: inverted sign to match the convention (1021 is grid import, 1029 is grid export)
+        data.gridPowerL1 = response.readInt32(1021) / 10.0 - response.readInt32(1029) / 10.0;
         
+        // Alternative registers (if the above doesn't work, try these):
         // data.gridPowerL1 = response.readInt32(1023) / 10.0 - response.readInt32(1015) / 10.0;
         // data.gridPowerL2 = response.readInt32(1025) / 10.0 - response.readInt32(1017) / 10.0;
         // data.gridPowerL3 = response.readInt32(1027) / 10.0 - response.readInt32(1019) / 10.0;
