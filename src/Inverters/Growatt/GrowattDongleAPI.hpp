@@ -97,24 +97,32 @@ private:
         log_d("Growatt input storage data read successfully");
         data.status = DONGLE_STATUS_OK;
         data.soc = response.readInt16(1014);
+        // Battery power: Pcharge (1011) - Pdischarge (1009)
+        // Positive = charging (to battery), Negative = discharging (from battery)
         data.batteryPower = response.readInt32(1011) / 10 - response.readInt32(1009) / 10;
         data.batteryTemperature = response.readInt16(1040) / 10;
         data.batteryChargedToday = response.readUInt32(1056) / 10.0;
         data.batteryDischargedToday = response.readUInt32(1052) / 10.0;
         data.batteryChargedTotal = response.readUInt32(1058) / 10.0;
         data.batteryDischargedTotal = response.readUInt32(1054) / 10.0;
-        data.loadPower = response.readInt32(1037) / 10;
+        // Register 1037 contains only inverter power to load, not total house consumption
+        // Total load = inverter output - grid power (negative grid = import adds to consumption)
+        // We calculate it after gridPowerL1 is set below
         data.loadToday = response.readUInt32(1060) / 10.0;
         data.loadTotal = response.readUInt32(1062) / 10.0;
         data.gridSellToday = response.readUInt32(1048) / 10.0;
         data.gridSellTotal = response.readUInt32(1050) / 10.0;
         data.gridBuyToday = response.readUInt32(1044) / 10.0;
         data.gridBuyTotal = response.readUInt32(1046) / 10.0;
-        // Grid power: negative = import from grid, positive = export to grid
-        // Fixed: inverted sign to match the convention (1021 is grid import, 1029 is grid export)
-        data.gridPowerL1 = response.readInt32(1021) / 10.0 - response.readInt32(1029) / 10.0;
         
-        // Alternative registers (if the above doesn't work, try these):
+        // Grid power calculation: Pactouser (1021) - Pactogrid (1029)
+        // Negative = import from grid, Positive = export to grid
+        data.gridPowerL1 = response.readInt32(1029) / 10.0 - response.readInt32(1021) / 10.0;
+
+        
+        // Calculate total house consumption: inverter output minus grid export (or plus grid import)
+        data.loadPower = data.L1Power - data.gridPowerL1;
+        
         // data.gridPowerL1 = response.readInt32(1023) / 10.0 - response.readInt32(1015) / 10.0;
         // data.gridPowerL2 = response.readInt32(1025) / 10.0 - response.readInt32(1017) / 10.0;
         // data.gridPowerL3 = response.readInt32(1027) / 10.0 - response.readInt32(1019) / 10.0;
