@@ -75,12 +75,7 @@ private:
         int32_t pv2PowerVal = response.readInt32(9);
         log_d("Register 9: %d (int32_t)", pv2PowerVal);
         data.pv2Power = (pv2PowerVal > 0 ? pv2PowerVal : 0) / 10;
-        int32_t pv3PowerVal = response.readInt32(13);
-        log_d("Register 13: %d (int32_t)", pv3PowerVal);
-        data.pv3Power = (pv3PowerVal > 0 ? pv3PowerVal : 0) / 10;
-        int32_t pv4PowerVal = response.readInt32(17);
-        log_d("Register 17: %d (int32_t)", pv4PowerVal);
-        data.pv4Power = (pv4PowerVal > 0 ? pv4PowerVal : 0) / 10;
+        
         int16_t inverterTempVal = response.readInt16(93);
         log_d("Register 93: %d (int16_t)", inverterTempVal);
         data.inverterTemperature = inverterTempVal / 10;
