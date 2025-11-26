@@ -69,14 +69,30 @@ private:
             return false;
         }
         log_d("Growatt input PV data read successfully");
-        data.pv1Power = response.readUInt32(5) / 10;
-        data.pv2Power = response.readUInt32(9) / 10;
-        data.pv3Power = response.readUInt32(13) / 10;
-        data.pv4Power = response.readUInt32(17) / 10;// + response.readUInt32(21) / 10 + response.readUInt32(25) / 10 + response.readUInt32(29) / 10 + response.readUInt32(33) / 10 + response.readUInt32(37) / 10;
-        data.inverterTemperature = response.readInt16(93) / 10;
-        data.pvToday = response.readUInt32(53) / 10.0;
-        data.pvTotal = response.readUInt32(55) / 10.0;
-        data.L1Power = response.readUInt32(35) / 10.0;
+        uint32_t pv1PowerVal = response.readUInt32(5);
+        log_d("Register 5: %u (uint32_t)", pv1PowerVal);
+        data.pv1Power = pv1PowerVal / 10;
+        uint32_t pv2PowerVal = response.readUInt32(9);
+        log_d("Register 9: %u (uint32_t)", pv2PowerVal);
+        data.pv2Power = pv2PowerVal / 10;
+        uint32_t pv3PowerVal = response.readUInt32(13);
+        log_d("Register 13: %u (uint32_t)", pv3PowerVal);
+        data.pv3Power = pv3PowerVal / 10;
+        uint32_t pv4PowerVal = response.readUInt32(17);
+        log_d("Register 17: %u (uint32_t)", pv4PowerVal);
+        data.pv4Power = pv4PowerVal / 10;
+        int16_t inverterTempVal = response.readInt16(93);
+        log_d("Register 93: %d (int16_t)", inverterTempVal);
+        data.inverterTemperature = inverterTempVal / 10;
+        uint32_t pvTodayVal = response.readUInt32(53);
+        log_d("Register 53: %u (uint32_t)", pvTodayVal);
+        data.pvToday = pvTodayVal / 10.0;
+        uint32_t pvTotalVal = response.readUInt32(55);
+        log_d("Register 55: %u (uint32_t)", pvTotalVal);
+        data.pvTotal = pvTotalVal / 10.0;
+        uint32_t L1PowerVal = response.readUInt32(35);
+        log_d("Register 35: %u (uint32_t)", L1PowerVal);
+        data.L1Power = L1PowerVal / 10.0;
         // data.L1Power = response.readInt32(40) / 10;
         // data.L2Power = response.readInt32(44) / 10;
         // data.L3Power = response.readInt32(48) / 10;
@@ -96,28 +112,60 @@ private:
         }
         log_d("Growatt input storage data read successfully");
         data.status = DONGLE_STATUS_OK;
-        data.soc = response.readInt16(1014);
+        int16_t socVal = response.readInt16(1014);
+        log_d("Register 1014: %d (int16_t)", socVal);
+        data.soc = socVal;
         // Battery power: Pcharge (1011) - Pdischarge (1009)
         // Positive = charging (to battery), Negative = discharging (from battery)
-        data.batteryPower = response.readInt32(1011) / 10 - response.readInt32(1009) / 10;
-        data.batteryTemperature = response.readInt16(1040) / 10;
-        data.batteryChargedToday = response.readUInt32(1056) / 10.0;
-        data.batteryDischargedToday = response.readUInt32(1052) / 10.0;
-        data.batteryChargedTotal = response.readUInt32(1058) / 10.0;
-        data.batteryDischargedTotal = response.readUInt32(1054) / 10.0;
+        int32_t pChargeVal = response.readInt32(1011);
+        log_d("Register 1011: %d (int32_t)", pChargeVal);
+        int32_t pDischargeVal = response.readInt32(1009);
+        log_d("Register 1009: %d (int32_t)", pDischargeVal);
+        data.batteryPower = pChargeVal / 10 - pDischargeVal / 10;
+        int16_t batteryTempVal = response.readInt16(1040);
+        log_d("Register 1040: %d (int16_t)", batteryTempVal);
+        data.batteryTemperature = batteryTempVal / 10;
+        uint32_t batteryChargedTodayVal = response.readUInt32(1056);
+        log_d("Register 1056: %u (uint32_t)", batteryChargedTodayVal);
+        data.batteryChargedToday = batteryChargedTodayVal / 10.0;
+        uint32_t batteryDischargedTodayVal = response.readUInt32(1052);
+        log_d("Register 1052: %u (uint32_t)", batteryDischargedTodayVal);
+        data.batteryDischargedToday = batteryDischargedTodayVal / 10.0;
+        uint32_t batteryChargedTotalVal = response.readUInt32(1058);
+        log_d("Register 1058: %u (uint32_t)", batteryChargedTotalVal);
+        data.batteryChargedTotal = batteryChargedTotalVal / 10.0;
+        uint32_t batteryDischargedTotalVal = response.readUInt32(1054);
+        log_d("Register 1054: %u (uint32_t)", batteryDischargedTotalVal);
+        data.batteryDischargedTotal = batteryDischargedTotalVal / 10.0;
         // Register 1037 contains only inverter power to load, not total house consumption
         // Total load = inverter output - grid power (negative grid = import adds to consumption)
         // We calculate it after gridPowerL1 is set below
-        data.loadToday = response.readUInt32(1060) / 10.0;
-        data.loadTotal = response.readUInt32(1062) / 10.0;
-        data.gridSellToday = response.readUInt32(1048) / 10.0;
-        data.gridSellTotal = response.readUInt32(1050) / 10.0;
-        data.gridBuyToday = response.readUInt32(1044) / 10.0;
-        data.gridBuyTotal = response.readUInt32(1046) / 10.0;
+        uint32_t loadTodayVal = response.readUInt32(1060);
+        log_d("Register 1060: %u (uint32_t)", loadTodayVal);
+        data.loadToday = loadTodayVal / 10.0;
+        uint32_t loadTotalVal = response.readUInt32(1062);
+        log_d("Register 1062: %u (uint32_t)", loadTotalVal);
+        data.loadTotal = loadTotalVal / 10.0;
+        uint32_t gridSellTodayVal = response.readUInt32(1048);
+        log_d("Register 1048: %u (uint32_t)", gridSellTodayVal);
+        data.gridSellToday = gridSellTodayVal / 10.0;
+        uint32_t gridSellTotalVal = response.readUInt32(1050);
+        log_d("Register 1050: %u (uint32_t)", gridSellTotalVal);
+        data.gridSellTotal = gridSellTotalVal / 10.0;
+        uint32_t gridBuyTodayVal = response.readUInt32(1044);
+        log_d("Register 1044: %u (uint32_t)", gridBuyTodayVal);
+        data.gridBuyToday = gridBuyTodayVal / 10.0;
+        uint32_t gridBuyTotalVal = response.readUInt32(1046);
+        log_d("Register 1046: %u (uint32_t)", gridBuyTotalVal);
+        data.gridBuyTotal = gridBuyTotalVal / 10.0;
         
         // Grid power calculation: Pactouser (1021) - Pactogrid (1029)
         // Negative = import from grid, Positive = export to grid
-        data.gridPowerL1 = response.readInt32(1029) / 10.0 - response.readInt32(1021) / 10.0;
+        int32_t pacToUserVal = response.readInt32(1021);
+        log_d("Register 1021: %d (int32_t)", pacToUserVal);
+        int32_t pacToGridVal = response.readInt32(1029);
+        log_d("Register 1029: %d (int32_t)", pacToGridVal);
+        data.gridPowerL1 = pacToGridVal / 10.0 - pacToUserVal / 10.0;
 
         
         // Calculate total house consumption: inverter output minus grid export (or plus grid import)
@@ -149,7 +197,9 @@ private:
         }
         log_d("Growatt holding inverter data read successfully");
         data.status = DONGLE_STATUS_OK;
-        data.sn = response.readString(23 , 10);
+        String snVal = response.readString(23 , 10);
+        log_d("Register 23-32: %s (string)", snVal.c_str());
+        data.sn = snVal;
         sn = data.sn;
         return true;
     }
