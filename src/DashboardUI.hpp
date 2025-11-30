@@ -17,6 +17,35 @@ lv_color_t green = lv_color_hex(0x4CAF50);
 
 static bool isDarkMode = false;
 
+/**
+ * Struktura pro kombinovaná data grafu spotových cen + plán inteligence
+ */
+typedef struct SpotChartData {
+    ElectricityPriceResult_t* priceResult;
+    InverterMode_t intelligencePlan[QUARTERS_OF_DAY];  // Plán pro každou čtvrthodinu
+    bool hasIntelligencePlan;                          // Zda máme platný plán
+} SpotChartData_t;
+
+/**
+ * Vrátí barvu pro režim inteligence
+ */
+static lv_color_t getIntelligenceModeColor(InverterMode_t mode)
+{
+    switch (mode)
+    {
+    case INVERTER_MODE_SELF_USE:
+        return lv_color_hex(0x4CAF50);  // Zelená
+    case INVERTER_MODE_CHARGE_FROM_GRID:
+        return lv_color_hex(0x2196F3);  // Modrá
+    case INVERTER_MODE_DISCHARGE_TO_GRID:
+        return lv_color_hex(0xFF9800);  // Oranžová
+    case INVERTER_MODE_HOLD_BATTERY:
+        return lv_color_hex(0x9E9E9E);  // Šedá
+    default:
+        return lv_color_hex(0x000000);  // Černá pro unknown
+    }
+}
+
 static lv_color_t getPriceLevelColor(PriceLevel_t level)
 {
     switch (level)
@@ -38,7 +67,10 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
 {
     lv_obj_draw_part_dsc_t *dsc = lv_event_get_draw_part_dsc(e);
     lv_obj_t *obj = lv_event_get_target(e);
-    ElectricityPriceResult_t *electricityPriceResult = (ElectricityPriceResult_t *)lv_obj_get_user_data(obj);
+    SpotChartData_t *chartData = (SpotChartData_t *)lv_obj_get_user_data(obj);
+    
+    if (chartData == nullptr || chartData->priceResult == nullptr) return;
+    ElectricityPriceResult_t *electricityPriceResult = chartData->priceResult;
 
     if (dsc->part == LV_PART_MAIN)
     {
@@ -86,19 +118,11 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         cq_a.y2 = obj->coords.y2 - pad_bottom;
         lv_draw_rect(dsc->draw_ctx, &current_quarter_dsc, &cq_a);
 
-        // draw price segments
+        // draw price segments with intelligence plan indicators (colored dots on top)
         for (uint32_t i = 0; i < segmentCount; i++)
         {
             float price = electricityPriceResult->prices[i].electricityPrice;
             lv_color_t color = getPriceLevelColor(electricityPriceResult->prices[i].priceLevel);
-
-            // time_t now = time(nullptr);
-            // struct tm *timeinfo = localtime(&now);
-            // int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
-            // if (i == currentQuarter)
-            // {
-            //     color = isDarkMode ? lv_color_white() : lv_color_black();
-            // }
 
             lv_draw_rect_dsc_t draw_rect_dsc;
             lv_draw_rect_dsc_init(&draw_rect_dsc);
@@ -111,15 +135,43 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
             lv_area_t a;
             a.x1 = obj->coords.x1 + offset_x + i * (segmentWidth + segmentGap);
             a.x2 = a.x1 + segmentWidth - 1;
-            a.y1 = obj->coords.y1 + pad_top + (priceRange - price + minPrice) * h / priceRange;
-            a.y2 = obj->coords.y1 + pad_top + (priceRange + minPrice) * h / priceRange - 1;
+            lv_coord_t barTopY = obj->coords.y1 + pad_top + (priceRange - price + minPrice) * h / priceRange;
+            lv_coord_t barBottomY = obj->coords.y1 + pad_top + (priceRange + minPrice) * h / priceRange - 1;
+            a.y1 = barTopY;
+            a.y2 = barBottomY;
             if (a.y1 > a.y2) // swap
             {
                 lv_coord_t temp = a.y1;
                 a.y1 = a.y2;
                 a.y2 = temp;
+                barTopY = a.y1;  // Update barTopY after swap
             }
             lv_draw_rect(dsc->draw_ctx, &draw_rect_dsc, &a);
+            
+            // Draw intelligence plan dot on top of bar
+            if (chartData->hasIntelligencePlan && i >= (uint32_t)currentQuarter)
+            {
+                InverterMode_t mode = chartData->intelligencePlan[i];
+                if (mode != INVERTER_MODE_UNKNOWN)
+                {
+                    int dotRadius = 1;
+                    lv_draw_rect_dsc_t dot_dsc;
+                    lv_draw_rect_dsc_init(&dot_dsc);
+                    dot_dsc.bg_opa = LV_OPA_COVER;
+                    dot_dsc.bg_color = getIntelligenceModeColor(mode);
+                    dot_dsc.radius = LV_RADIUS_CIRCLE;
+                    
+                    lv_area_t dot_a;
+                    int centerX = a.x1 + segmentWidth / 2;
+                    int dotY = barTopY - dotRadius - 3;  // Position above the bar top
+                    dot_a.x1 = centerX - dotRadius;
+                    dot_a.x2 = centerX + dotRadius;
+                    dot_a.y1 = dotY - dotRadius;
+                    dot_a.y2 = dotY + dotRadius;
+                    
+                    lv_draw_rect(dsc->draw_ctx, &dot_dsc, &dot_a);
+                }
+            }
         }
 
         // draw x-axis line
@@ -252,15 +304,70 @@ class DashboardUI
 {
 private:
     long shownMillis = 0;
+    lv_obj_t *intelligenceModeLabel = nullptr;  // Label pro zobrazení režimu inteligence
 
 public:
     const int UI_REFRESH_PERIOD_MS = 5000;
     lv_timer_t *clocksTimer = nullptr;
-    DashboardUI(void (*onSettingsShow)(lv_event_t *))
+    lv_obj_t *intelligenceButton = nullptr;  // Intelligence settings button
+    
+    DashboardUI(void (*onSettingsShow)(lv_event_t *), void (*onIntelligenceShow)(lv_event_t *) = nullptr)
     {
+        // Initialize spot chart data
+        spotChartData.priceResult = nullptr;
+        spotChartData.hasIntelligencePlan = false;
+        for (int i = 0; i < QUARTERS_OF_DAY; i++) {
+            spotChartData.intelligencePlan[i] = INVERTER_MODE_UNKNOWN;
+        }
+        
         lv_obj_add_event_cb(ui_Chart1, solar_chart_draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
         lv_obj_add_event_cb(ui_spotPriceContainer, electricity_price_draw_event_cb, LV_EVENT_DRAW_PART_END, NULL);
         lv_obj_add_event_cb(ui_settingsButton, onSettingsShow, LV_EVENT_RELEASED, NULL);
+        
+        // Create intelligence button (next to settings button)
+        if (onIntelligenceShow != nullptr) {
+            intelligenceButton = lv_btn_create(ui_Dashboard);
+            lv_obj_set_width(intelligenceButton, 64);
+            lv_obj_set_height(intelligenceButton, 64);
+            lv_obj_set_x(intelligenceButton, lv_pct(-2));
+            lv_obj_set_y(intelligenceButton, lv_pct(-18));  // Above settings button
+            lv_obj_set_align(intelligenceButton, LV_ALIGN_BOTTOM_RIGHT);
+            lv_obj_add_flag(intelligenceButton, LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+            lv_obj_clear_flag(intelligenceButton, LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_SCROLLABLE);
+            lv_obj_set_style_bg_color(intelligenceButton, lv_color_hex(0xFFFFFF), LV_STYLE_SELECTOR_DEFAULT);
+            lv_obj_set_style_bg_opa(intelligenceButton, 255, LV_STYLE_SELECTOR_DEFAULT);
+            lv_obj_set_style_outline_color(intelligenceButton, lv_color_hex(0x00AAFF), LV_STYLE_SELECTOR_DEFAULT);
+            lv_obj_set_style_outline_opa(intelligenceButton, 255, LV_STYLE_SELECTOR_DEFAULT);
+            lv_obj_set_style_outline_width(intelligenceButton, 3, LV_STYLE_SELECTOR_DEFAULT);
+            lv_obj_set_style_shadow_color(intelligenceButton, lv_color_hex(0x00AAFF), LV_STYLE_SELECTOR_DEFAULT);
+            lv_obj_set_style_shadow_opa(intelligenceButton, 255, LV_STYLE_SELECTOR_DEFAULT);
+            lv_obj_set_style_shadow_width(intelligenceButton, 32, LV_STYLE_SELECTOR_DEFAULT);
+            
+            // Add brain/AI icon label
+            lv_obj_t* iconLabel = lv_label_create(intelligenceButton);
+            lv_label_set_text(iconLabel, LV_SYMBOL_SETTINGS);  // Using settings icon, could use custom
+            lv_obj_set_style_text_font(iconLabel, &lv_font_montserrat_24, 0);
+            lv_obj_set_style_text_color(iconLabel, lv_color_hex(0x00AAFF), 0);
+            lv_obj_center(iconLabel);
+            
+            lv_obj_add_event_cb(intelligenceButton, onIntelligenceShow, LV_EVENT_RELEASED, NULL);
+        }
+
+        // Create intelligence mode label (below dongleFWVersion on inverter tile)
+        intelligenceModeLabel = lv_label_create(ui_inverterContainer);
+        lv_obj_set_width(intelligenceModeLabel, LV_SIZE_CONTENT);
+        lv_obj_set_height(intelligenceModeLabel, LV_SIZE_CONTENT);
+        lv_obj_set_x(intelligenceModeLabel, -10);
+        lv_obj_set_y(intelligenceModeLabel, 15);  // Below dongleFWVersion which is at -10
+        lv_label_set_text(intelligenceModeLabel, "");
+        lv_obj_add_flag(intelligenceModeLabel, LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_HIDDEN);
+        lv_obj_set_style_text_font(intelligenceModeLabel, &ui_font_OpenSansExtraSmall, 0);
+        lv_obj_set_style_radius(intelligenceModeLabel, 12, 0);
+        lv_obj_set_style_bg_opa(intelligenceModeLabel, 255, 0);
+        lv_obj_set_style_pad_left(intelligenceModeLabel, 6, 0);
+        lv_obj_set_style_pad_right(intelligenceModeLabel, 6, 0);
+        lv_obj_set_style_pad_top(intelligenceModeLabel, 4, 0);
+        lv_obj_set_style_pad_bottom(intelligenceModeLabel, 4, 0);
 
         pvAnimator.setup(ui_LeftContainer, _ui_theme_color_pvColor);
         batteryAnimator.setup(ui_LeftContainer, _ui_theme_color_batteryColor);
@@ -321,12 +428,69 @@ public:
         return lv_obj_get_state(ui_wallboxSmartCheckbox) & LV_STATE_CHECKED;
     }
 
+    /**
+     * Update intelligence mode label based on current inverter mode
+     * Colors:
+     * - SELF_USE: Green (normal operation)
+     * - CHARGE_FROM_GRID: Blue (buying cheap electricity)
+     * - DISCHARGE_TO_GRID: Orange (selling expensive electricity)
+     * - HOLD_BATTERY: Gray (holding)
+     * - UNKNOWN: Hidden
+     */
+    void updateIntelligenceModeLabel(InverterMode_t mode) {
+        if (intelligenceModeLabel == nullptr) {
+            return;
+        }
+        
+        if (mode == INVERTER_MODE_UNKNOWN) {
+            lv_obj_add_flag(intelligenceModeLabel, LV_OBJ_FLAG_HIDDEN);
+            return;
+        }
+        
+        lv_obj_clear_flag(intelligenceModeLabel, LV_OBJ_FLAG_HIDDEN);
+        
+        const char* text = "";
+        lv_color_t bgColor;
+        lv_color_t textColor = lv_color_white();
+        
+        switch (mode) {
+            case INVERTER_MODE_SELF_USE:
+                text = "SELF USE";
+                bgColor = lv_color_hex(0x4CAF50);  // Green
+                break;
+            case INVERTER_MODE_CHARGE_FROM_GRID:
+                text = "CHARGING";
+                bgColor = lv_color_hex(0x2196F3);  // Blue
+                break;
+            case INVERTER_MODE_DISCHARGE_TO_GRID:
+                text = "SELLING";
+                bgColor = lv_color_hex(0xFF9800);  // Orange
+                break;
+            case INVERTER_MODE_HOLD_BATTERY:
+                text = "HOLD";
+                bgColor = lv_color_hex(0x9E9E9E);  // Gray
+                break;
+            default:
+                lv_obj_add_flag(intelligenceModeLabel, LV_OBJ_FLAG_HIDDEN);
+                return;
+        }
+        
+        lv_label_set_text(intelligenceModeLabel, text);
+        lv_obj_set_style_bg_color(intelligenceModeLabel, bgColor, 0);
+        lv_obj_set_style_text_color(intelligenceModeLabel, textColor, 0);
+    }
+
     void show()
     {
         lv_scr_load(ui_Dashboard);
 
         // show settings button
         lv_obj_clear_flag(ui_settingsButton, LV_OBJ_FLAG_HIDDEN);
+        
+        // show intelligence button if it exists
+        if (intelligenceButton != nullptr) {
+            lv_obj_clear_flag(intelligenceButton, LV_OBJ_FLAG_HIDDEN);
+        }
         shownMillis = millis();
     }
 
@@ -338,10 +502,13 @@ public:
 
     void update(InverterData_t &inverterData, InverterData_t &previousInverterData, MedianPowerSampler &uiMedianPowerSampler, ShellyResult_t &shellyResult, ShellyResult_t &previousShellyResult, WallboxResult_t &wallboxResult, WallboxResult_t &previousWallboxResult, SolarChartDataProvider &solarChartDataProvider, ElectricityPriceResult_t &electricityPriceResult, ElectricityPriceResult_t &previousElectricityPriceResult, int wifiSignalPercent)
     {
-        // hide settings button after one minute
+        // hide settings and intelligence buttons after one minute
         if (millis() - shownMillis > 60000)
         {
             lv_obj_add_flag(ui_settingsButton, LV_OBJ_FLAG_HIDDEN);
+            if (intelligenceButton != nullptr) {
+                lv_obj_add_flag(intelligenceButton, LV_OBJ_FLAG_HIDDEN);
+            }
         }
         int previousGridPower = previousInverterData.gridPowerL1 + previousInverterData.gridPowerL2 + previousInverterData.gridPowerL3;
         int gridPower = inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3;
@@ -800,6 +967,9 @@ public:
             break;
         }
 
+        // Update intelligence mode label
+        updateIntelligenceModeLabel(inverterData.inverterMode);
+
         updateFlowAnimations(inverterData, shellyResult);
 
         // electricity spot price block
@@ -872,6 +1042,29 @@ public:
         }
     }
 
+    /**
+     * Aktualizuje plán inteligence pro zobrazení v grafu spotových cen
+     * @param plan Pole režimů pro každou čtvrthodinu dne
+     */
+    void updateIntelligencePlan(const InverterMode_t plan[QUARTERS_OF_DAY])
+    {
+        for (int i = 0; i < QUARTERS_OF_DAY; i++)
+        {
+            spotChartData.intelligencePlan[i] = plan[i];
+        }
+        spotChartData.hasIntelligencePlan = true;
+        lv_obj_invalidate(ui_spotPriceContainer);
+    }
+
+    /**
+     * Vymaže plán inteligence z grafu
+     */
+    void clearIntelligencePlan()
+    {
+        spotChartData.hasIntelligencePlan = false;
+        lv_obj_invalidate(ui_spotPriceContainer);
+    }
+
 private:
     int const UI_TEXT_CHANGE_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS;
     int const UI_BACKGROUND_ANIMATION_DURATION = UI_REFRESH_PERIOD_MS / 3;
@@ -893,6 +1086,8 @@ private:
     UIBallAnimator gridAnimator;
     UIBallAnimator loadAnimator;
     UIBallAnimator shellyAnimator;
+
+    SpotChartData_t spotChartData;  // Data pro graf spotových cen včetně plánu inteligence
 
     lv_chart_series_t *pvPowerSeries;
     lv_chart_series_t *acPowerSeries;
@@ -947,7 +1142,9 @@ private:
 
     void updateElectricityPriceChart(ElectricityPriceResult_t &electricityPriceResult, bool isDarkMode)
     {
-        lv_obj_set_user_data(ui_spotPriceContainer, (void *)&electricityPriceResult);
+        spotChartData.priceResult = &electricityPriceResult;
+        // Intelligence plan se aktualizuje separátně přes updateIntelligencePlan()
+        lv_obj_set_user_data(ui_spotPriceContainer, (void *)&spotChartData);
         lv_obj_invalidate(ui_spotPriceContainer);
     }
 

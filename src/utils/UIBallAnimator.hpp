@@ -6,6 +6,10 @@
 
 #define BALLS_RADIUS 8
 #define MAX_BALLS_COUNT 6
+
+// Pre-computed style selector to avoid enum bitwise warning
+static const lv_style_selector_t LV_STYLE_SELECTOR_DEFAULT = (lv_style_selector_t)((int)LV_PART_MAIN | (int)LV_STATE_DEFAULT);
+
 typedef struct UIBallAnimationItem
 {
     lv_obj_t *ball;
@@ -29,14 +33,14 @@ public:
             lv_obj_set_width(items[i].ball, radius);
             lv_obj_set_height(items[i].ball, radius);
             lv_obj_clear_flag(items[i].ball, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
-            lv_obj_set_style_radius(items[i].ball, radius / 2, LV_PART_MAIN | LV_STATE_DEFAULT);
-            ui_object_set_themeable_style_property(items[i].ball, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_COLOR, color);
-            ui_object_set_themeable_style_property(items[i].ball, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_SHADOW_COLOR, color);
-            //lv_obj_set_style_shadow_opa(items[i].ball, 64, LV_PART_MAIN | LV_STATE_DEFAULT);
-            lv_obj_set_style_shadow_width(items[i].ball, 16, LV_PART_MAIN | LV_STATE_DEFAULT);
+            lv_obj_set_style_radius(items[i].ball, radius / 2, LV_STYLE_SELECTOR_DEFAULT);
+            ui_object_set_themeable_style_property(items[i].ball, LV_STYLE_SELECTOR_DEFAULT, LV_STYLE_BG_COLOR, color);
+            ui_object_set_themeable_style_property(items[i].ball, LV_STYLE_SELECTOR_DEFAULT, LV_STYLE_SHADOW_COLOR, color);
+            //lv_obj_set_style_shadow_opa(items[i].ball, 64, LV_STYLE_SELECTOR_DEFAULT);
+            lv_obj_set_style_shadow_width(items[i].ball, 16, LV_STYLE_SELECTOR_DEFAULT);
 
-            // ui_object_set_themeable_style_property(items[i].ball, LV_PART_MAIN | LV_STATE_DEFAULT, LV_STYLE_BG_OPA, _ui_theme_alpha_pvColor);
-            lv_obj_set_style_bg_opa(items[i].ball, opa, LV_PART_MAIN | LV_STATE_DEFAULT);
+            // ui_object_set_themeable_style_property(items[i].ball, LV_STYLE_SELECTOR_DEFAULT, LV_STYLE_BG_OPA, _ui_theme_alpha_pvColor);
+            lv_obj_set_style_bg_opa(items[i].ball, opa, LV_STYLE_SELECTOR_DEFAULT);
             lv_obj_move_background(items[i].ball);
 
             lv_anim_init(&items[i].posXAnimation);
@@ -49,13 +53,13 @@ public:
         }
 
         hLine = lv_obj_create(parent);
-        lv_obj_set_style_bg_color(hLine, lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_color(hLine, lv_color_black(), LV_STYLE_SELECTOR_DEFAULT);
 
         vLine = lv_obj_create(parent);
-        lv_obj_set_style_bg_color(vLine, lv_color_black(), LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_line_dash_gap(vLine, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_line_width(vLine, 3, LV_PART_MAIN | LV_STATE_DEFAULT);
-        lv_obj_set_style_line_rounded(vLine, 6, LV_PART_MAIN | LV_STATE_DEFAULT);
+        lv_obj_set_style_bg_color(vLine, lv_color_black(), LV_STYLE_SELECTOR_DEFAULT);
+        lv_obj_set_style_line_dash_gap(vLine, 3, LV_STYLE_SELECTOR_DEFAULT);
+        lv_obj_set_style_line_width(vLine, 3, LV_STYLE_SELECTOR_DEFAULT);
+        lv_obj_set_style_line_rounded(vLine, 6, LV_STYLE_SELECTOR_DEFAULT);
         
 
         lv_obj_move_background(hLine);

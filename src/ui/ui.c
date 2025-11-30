@@ -35,6 +35,7 @@ lv_disp_set_theme(dispp, theme);
 ui_Splash_screen_init();
 ui_Dashboard_screen_init();
 ui_WifiSetup_screen_init();
+ui_IntelligenceSetup_screen_init();
 ui____initial_actions0 = lv_obj_create(NULL);
 lv_disp_load_scr( ui_Splash);
 }
@@ -43,4 +44,5 @@ void ui_destroy( void )
 {ui_Splash_screen_destroy();
 ui_Dashboard_screen_destroy();
 ui_WifiSetup_screen_destroy();
+ui_IntelligenceSetup_screen_destroy();
 }

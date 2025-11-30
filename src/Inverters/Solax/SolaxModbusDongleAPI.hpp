@@ -30,7 +30,8 @@ public:
             !readMainInverterData(inverterData) ||
             !readPowerData(inverterData) ||
             !readPhaseData(inverterData) ||
-            !readPV3Power(inverterData))
+            !readPV3Power(inverterData) ||
+            !readWorkMode(inverterData))
         {
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             channel.disconnect();
@@ -41,6 +42,47 @@ public:
         logInverterData(inverterData);
         channel.disconnect();
         return inverterData;
+    }
+
+    /**
+     * Nastaví work mode střídače Solax
+     * @param ipAddress IP adresa donglu
+     * @param mode Požadovaný režim (InverterMode_t)
+     * @return true pokud se nastavení podařilo
+     */
+    bool setWorkMode(const String &ipAddress, InverterMode_t mode)
+    {
+        if (!connectToDongle(ipAddress))
+        {
+            log_d("Failed to connect for setWorkMode");
+            return false;
+        }
+
+        uint16_t solaxWorkMode, solaxManualMode;
+        inverterModeToSolaxMode(mode, solaxWorkMode, solaxManualMode);
+
+        // First set the work mode (0x008B)
+        bool success = channel.writeSingleRegister(UNIT_ID, REG_SOLAR_CHARGER_USE_MODE, solaxWorkMode);
+        
+        // If switching to Manual mode, also set the manual mode register (0x008C)
+        if (success && solaxWorkMode == SOLAX_WORK_MODE_MANUAL)
+        {
+            success = channel.writeSingleRegister(UNIT_ID, REG_MANUAL_MODE, solaxManualMode);
+        }
+        
+        channel.disconnect();
+        
+        if (success)
+        {
+            log_d("Successfully set work mode to %d (Solax WorkMode: %d, ManualMode: %d)", 
+                  mode, solaxWorkMode, solaxManualMode);
+        }
+        else
+        {
+            log_d("Failed to set work mode to %d", mode);
+        }
+        
+        return success;
     }
 
 protected:
@@ -54,6 +96,89 @@ private:
     static constexpr uint8_t UNIT_ID = 1;
     static constexpr uint8_t FUNCTION_CODE_READ_HOLDING = 0x03;
     static constexpr uint8_t FUNCTION_CODE_READ_INPUT = 0x04;
+    
+    // Solax Ultra Work Mode register addresses (from solax ultra.pdf)
+    static constexpr uint16_t REG_SOLAR_CHARGER_USE_MODE = 0x008B;  // SolarChargerUseMode - read current work mode
+    static constexpr uint16_t REG_MANUAL_MODE = 0x008C;             // Manual Mode register for control
+    
+    // Solax Work Mode values (SolarChargerUseMode register 0x008B)
+    static constexpr uint16_t SOLAX_WORK_MODE_SELF_USE = 0;         // Self use mode
+    static constexpr uint16_t SOLAX_WORK_MODE_FEEDIN_PRIORITY = 1;  // Feedin Priority
+    static constexpr uint16_t SOLAX_WORK_MODE_BACK_UP = 2;          // Back up mode
+    static constexpr uint16_t SOLAX_WORK_MODE_MANUAL = 3;           // Manual mode
+    
+    // Manual Mode values (register 0x008C) - when in Manual mode (mode 3)
+    static constexpr uint16_t SOLAX_MANUAL_STOP = 0;                // Stop charge & discharge
+    static constexpr uint16_t SOLAX_MANUAL_FORCE_CHARGE = 1;        // Force charge
+    static constexpr uint16_t SOLAX_MANUAL_FORCE_DISCHARGE = 2;     // Force discharge
+
+    /**
+     * Převede InverterMode_t na Solax work mode a manual mode hodnoty
+     * @param mode Požadovaný režim
+     * @param outWorkMode Výstup: hodnota pro registr 0x008B (SolarChargerUseMode)
+     * @param outManualMode Výstup: hodnota pro registr 0x008C (ManualMode)
+     */
+    void inverterModeToSolaxMode(InverterMode_t mode, uint16_t &outWorkMode, uint16_t &outManualMode)
+    {
+        switch (mode)
+        {
+        case INVERTER_MODE_SELF_USE:
+            outWorkMode = SOLAX_WORK_MODE_SELF_USE;
+            outManualMode = SOLAX_MANUAL_STOP;
+            break;
+        case INVERTER_MODE_CHARGE_FROM_GRID:
+            // Pro nabíjení ze sítě použijeme Manual mode s Force Charge
+            outWorkMode = SOLAX_WORK_MODE_MANUAL;
+            outManualMode = SOLAX_MANUAL_FORCE_CHARGE;
+            break;
+        case INVERTER_MODE_DISCHARGE_TO_GRID:
+            // Pro prodej do sítě použijeme Manual mode s Force Discharge
+            outWorkMode = SOLAX_WORK_MODE_MANUAL;
+            outManualMode = SOLAX_MANUAL_FORCE_DISCHARGE;
+            break;
+        case INVERTER_MODE_HOLD_BATTERY:
+            // Pro držení baterie použijeme Manual mode se Stop
+            outWorkMode = SOLAX_WORK_MODE_MANUAL;
+            outManualMode = SOLAX_MANUAL_STOP;
+            break;
+        default:
+            outWorkMode = SOLAX_WORK_MODE_SELF_USE;
+            outManualMode = SOLAX_MANUAL_STOP;
+            break;
+        }
+    }
+
+    /**
+     * Převede Solax work mode a manual mode hodnoty na InverterMode_t
+     * @param solaxMode Hodnota z registru 0x008B (SolarChargerUseMode)
+     * @param manualMode Hodnota z registru 0x008C (ManualMode)
+     */
+    InverterMode_t solaxModeToInverterMode(uint16_t solaxMode, uint16_t manualMode = 0)
+    {
+        switch (solaxMode)
+        {
+        case SOLAX_WORK_MODE_SELF_USE:
+            return INVERTER_MODE_SELF_USE;
+        case SOLAX_WORK_MODE_FEEDIN_PRIORITY:
+            return INVERTER_MODE_DISCHARGE_TO_GRID;
+        case SOLAX_WORK_MODE_BACK_UP:
+            return INVERTER_MODE_HOLD_BATTERY;
+        case SOLAX_WORK_MODE_MANUAL:
+            // V manual mode záleží na hodnotě manualMode registru
+            switch (manualMode)
+            {
+            case SOLAX_MANUAL_FORCE_CHARGE:
+                return INVERTER_MODE_CHARGE_FROM_GRID;
+            case SOLAX_MANUAL_FORCE_DISCHARGE:
+                return INVERTER_MODE_DISCHARGE_TO_GRID;
+            case SOLAX_MANUAL_STOP:
+            default:
+                return INVERTER_MODE_HOLD_BATTERY;
+            }
+        default:
+            return INVERTER_MODE_UNKNOWN;
+        }
+    }
 
     bool connectToDongle(const String &ipAddress)
     {
@@ -125,6 +250,22 @@ private:
         log_d("Battery capacity (0x26): %d Wh", data.batteryCapacityWh);
         data.minSoc = 10;
         data.maxSoc = 100;
+        return true;
+    }
+
+    bool readWorkMode(InverterData_t &data)
+    {
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, REG_SOLAR_CHARGER_USE_MODE, 2);
+        if (!response.isValid)
+        {
+            log_d("Failed to read work mode register");
+            return false;
+        }
+
+        uint16_t solaxMode = response.readUInt16(REG_SOLAR_CHARGER_USE_MODE);
+        uint16_t manualMode = response.readUInt16(REG_MANUAL_MODE);
+        data.inverterMode = solaxModeToInverterMode(solaxMode, manualMode);
+        log_d("Read work mode: SolarChargerUseMode=%d, ManualMode=%d, InverterMode=%d", solaxMode, manualMode, data.inverterMode);
         return true;
     }
 

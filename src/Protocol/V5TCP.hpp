@@ -91,7 +91,7 @@ public:
         modbusRTURequest[2] = addr >> 8;
         modbusRTURequest[3] = addr & 0xff;
         modbusRTURequest[5] = len;
-        unsigned c = crc16(modbusRTURequest, 6, 0x8005, 0xFFFF, 0, true, true);
+        unsigned c = calcCRC16(modbusRTURequest, 6, 0x8005, 0xFFFF, 0, true, true);
         modbusRTURequest[6] = c;
         modbusRTURequest[7] = c >> 8;
 

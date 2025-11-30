@@ -10,6 +10,17 @@ typedef enum DongleStatus {
     DONGLE_STATUS_UNSUPPORTED_DONGLE = -5,
 } DongleStatus_t;
 
+/**
+ * Příkazy pro režim střídače (inteligentní řízení)
+ */
+typedef enum InverterMode {
+    INVERTER_MODE_UNKNOWN = 0,         // Neznámý stav / inteligence vypnutá
+    INVERTER_MODE_SELF_USE,            // Normální provoz - spotřeba z baterie pro vlastní potřebu
+    INVERTER_MODE_CHARGE_FROM_GRID,    // Nabíjet baterii ze sítě
+    INVERTER_MODE_DISCHARGE_TO_GRID,   // Vybíjet baterii do sítě (prodej)
+    INVERTER_MODE_HOLD_BATTERY,        // Držet baterii - nepoužívat ani nenabíjet
+} InverterMode_t;
+
 typedef struct
 {
     DongleStatus_t status = DONGLE_STATUS_UNKNOWN;
@@ -49,6 +60,7 @@ typedef struct
     double pvToday = 0;
     double pvTotal = 0;
     bool hasBattery = true;
+    InverterMode_t inverterMode = INVERTER_MODE_UNKNOWN;  // Aktuální režim střídače (inteligence)
 } InverterData_t;
 
 void logInverterData(InverterData_t& inverterData) {

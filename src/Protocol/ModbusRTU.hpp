@@ -55,7 +55,7 @@ public:
         d[2] = addr >> 8;
         d[3] = addr & 0xff;
         d[5] = len;
-        unsigned c = crc16(d, 6, 0x8005, 0xFFFF, 0, true, true);
+        unsigned c = calcCRC16(d, 6, 0x8005, 0xFFFF, 0, true, true);
         d[6] = c;
         d[7] = c >> 8;
         udp.write(d, sizeof(d));
@@ -91,7 +91,7 @@ public:
         }
         log_d("Response data: %s", dataHex.c_str());
 
-        c = crc16(response.data + 2, respLen - 2, 0x8005, 0xFFFF, 0, true, true);
+        c = calcCRC16(response.data + 2, respLen - 2, 0x8005, 0xFFFF, 0, true, true);
         if (c != 0)
         {
             log_d("CRC error: %04X", c);

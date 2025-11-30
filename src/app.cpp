@@ -20,10 +20,15 @@
 #include "DashboardUI.hpp"
 #include "SplashUI.hpp"
 #include "WiFiSetupUI.hpp"
+#include "IntelligenceSetupUI.hpp"
 #include "utils/SoftAP.hpp"
 #include "utils/SmartControlRuleResolver.hpp"
 #include "utils/MedianPowerSampler.hpp"
 #include "Spot/ElectricityPriceLoader.hpp"
+#include "utils/IntelligenceSettings.hpp"
+#include "utils/IntelligenceResolver.hpp"
+#include "utils/ConsumptionPredictor.hpp"
+#include "utils/ProductionPredictor.hpp"
 
 #define UI_REFRESH_INTERVAL 5000            // Define the UI refresh interval in milliseconds
 #define INVERTER_DATA_REFRESH_INTERVAL 5000 // Seems that 3s is problematic for some dongles (GoodWe), so we use 5s
@@ -77,9 +82,17 @@ MedianPowerSampler uiMedianPowerSampler;
 SmartControlRuleResolver shellyRuleResolver(shellyMedianPowerSampler);
 SmartControlRuleResolver wallboxRuleResolver(wallboxMedianPowerSampler);
 
+// Intelligence components
+ConsumptionPredictor consumptionPredictor;
+ProductionPredictor productionPredictor;
+IntelligenceResult_t lastIntelligenceResult;
+static long lastIntelligenceAttempt = 0;
+#define INTELLIGENCE_REFRESH_INTERVAL 60000  // 1 minute
+
 SplashUI *splashUI = NULL;
 WiFiSetupUI *wifiSetupUI = NULL;
 DashboardUI *dashboardUI = NULL;
+IntelligenceSetupUI *intelligenceSetupUI = NULL;
 
 WiFiDiscoveryResult_t wifiDiscoveryResult;
 
@@ -88,10 +101,14 @@ typedef enum
     BOOT,
     STATE_SPLASH,
     STATE_WIFI_SETUP,
+    STATE_INTELLIGENCE_SETUP,
     STATE_DASHBOARD
 } state_t;
 state_t state;
 state_t previousState;
+
+bool showSettings = false;
+bool showIntelligenceSettings = false;
 
 /* Display flushing */
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
@@ -185,10 +202,14 @@ void lvglTimerTask(void *param)
     }
 }
 
-bool showSettings = false;
 void onSettingsShow(lv_event_t *e)
 {
     showSettings = true;
+}
+
+void onIntelligenceShow(lv_event_t *e)
+{
+    showIntelligenceSettings = true;
 }
 
 void setupWiFi()
@@ -239,8 +260,14 @@ void setupLVGL()
 
     ui_init();
     splashUI = new SplashUI();
-    dashboardUI = new DashboardUI(onSettingsShow);
+    dashboardUI = new DashboardUI(onSettingsShow, onIntelligenceShow);
     wifiSetupUI = new WiFiSetupUI(dongleDiscovery);
+    intelligenceSetupUI = new IntelligenceSetupUI();
+    
+    // Load predictors from storage
+    consumptionPredictor.loadFromPreferences();
+    productionPredictor.loadFromPreferences();
+    
     xTaskCreate(lvglTimerTask, "lvglTimerTask", 12 * 1024, NULL, 10, NULL);
 }
 
@@ -263,6 +290,7 @@ void resetAllTasks() {
     lastShellyPairAttempt = 0;
     lastWiFiScanAttempt = 0;
     lastInverterDataAttempt = 0;
+    lastIntelligenceAttempt = 0;
 }
 
 bool discoverDonglesTask()
@@ -347,6 +375,19 @@ bool loadInverterDataTask()
                 shellyMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
                 uiMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
                 wallboxMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
+                
+                // Add samples for intelligence predictors
+                int pvPower = inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power;
+                bool consumptionQuarterChanged = consumptionPredictor.addSample(inverterData.loadPower);
+                bool productionQuarterChanged = productionPredictor.addSample(pvPower);
+                
+                // Save predictors to flash when quarter changes
+                if (consumptionQuarterChanged || productionQuarterChanged) {
+                    log_d("Quarter changed, saving predictors to flash");
+                    consumptionPredictor.saveToPreferences();
+                    productionPredictor.saveToPreferences();
+                }
+                
                 dongleDiscovery.storeLastConnectedSSID(wifiDiscoveryResult.ssid);
             }
             else
@@ -443,6 +484,106 @@ bool loadElectricityPriceTask()
         electricityPriceResult = loader.getElectricityPrice(loader.getStoredElectricityPriceProvider(), false);
         
         lastElectricityPriceAttempt = millis();
+        run = true;
+    }
+    return run;
+}
+
+bool runIntelligenceTask()
+{
+    bool run = false;
+    static InverterMode_t lastSentMode = INVERTER_MODE_UNKNOWN;
+    static InverterMode_t intelligencePlan[QUARTERS_OF_DAY];
+    
+    if (lastIntelligenceAttempt == 0 || millis() - lastIntelligenceAttempt > INTELLIGENCE_REFRESH_INTERVAL)
+    {
+        log_d("Running intelligence resolver");
+        
+        IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
+        
+        if (settings.enabled && inverterData.status == DONGLE_STATUS_OK && electricityPriceResult.updated > 0)
+        {
+            IntelligenceResolver resolver(consumptionPredictor, productionPredictor);
+            
+            // Resolve current quarter for immediate action
+            lastIntelligenceResult = resolver.resolve(inverterData, electricityPriceResult, settings);
+            
+            // Generate plan for all future quarters (for chart display)
+            time_t now = time(nullptr);
+            struct tm* timeinfo = localtime(&now);
+            int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
+            
+            for (int q = 0; q < QUARTERS_OF_DAY; q++)
+            {
+                if (q < currentQuarter)
+                {
+                    // Past quarters - unknown
+                    intelligencePlan[q] = INVERTER_MODE_UNKNOWN;
+                }
+                else if (q == currentQuarter)
+                {
+                    // Current quarter - use already resolved result
+                    intelligencePlan[q] = lastIntelligenceResult.command;
+                }
+                else
+                {
+                    // Future quarters - resolve for each
+                    IntelligenceResult_t futureResult = resolver.resolve(inverterData, electricityPriceResult, settings, q);
+                    intelligencePlan[q] = futureResult.command;
+                }
+            }
+            
+            // Update UI with intelligence plan
+            xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+            if (dashboardUI != nullptr)
+            {
+                dashboardUI->updateIntelligencePlan(intelligencePlan);
+            }
+            xSemaphoreGive(lvgl_mutex);
+            
+            log_d("Intelligence result: %s - %s (current inverter mode: %d)", 
+                  IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str(),
+                  lastIntelligenceResult.reason.c_str(),
+                  inverterData.inverterMode);
+            
+            // Send command to inverter if mode changed from what we last sent
+            if (lastIntelligenceResult.command != INVERTER_MODE_UNKNOWN && 
+                lastIntelligenceResult.command != lastSentMode)
+            {
+                if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX)
+                {
+                    static SolaxModbusDongleAPI solaxAPI;
+                    bool success = solaxAPI.setWorkMode(wifiDiscoveryResult.inverterIP, lastIntelligenceResult.command);
+                    if (success)
+                    {
+                        log_d("Successfully sent work mode to Solax inverter");
+                        lastSentMode = lastIntelligenceResult.command;
+                    }
+                    else
+                    {
+                        log_d("Failed to send work mode to Solax inverter");
+                    }
+                }
+                else
+                {
+                    // Other inverter types not yet implemented
+                    log_d("Work mode control not implemented for inverter type %d", wifiDiscoveryResult.type);
+                }
+            }
+        }
+        else
+        {
+            // Intelligence disabled - clear the plan from UI
+            lastSentMode = INVERTER_MODE_UNKNOWN;
+            xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+            if (dashboardUI != nullptr)
+            {
+                dashboardUI->clearIntelligencePlan();
+            }
+            xSemaphoreGive(lvgl_mutex);
+        }
+        
+        lastIntelligenceAttempt = millis();
         run = true;
     }
     return run;
@@ -703,6 +844,11 @@ void onEntering(state_t newState)
         wifiSetupUI->show();
         xSemaphoreGive(lvgl_mutex);
         break;
+    case STATE_INTELLIGENCE_SETUP:
+        xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+        intelligenceSetupUI->show();
+        xSemaphoreGive(lvgl_mutex);
+        break;
     case STATE_DASHBOARD:
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         dashboardUI->show();
@@ -736,6 +882,8 @@ void onLeaving(state_t oldState)
         xSemaphoreGive(lvgl_mutex);
         break;
     case STATE_WIFI_SETUP:
+        break;
+    case STATE_INTELLIGENCE_SETUP:
         break;
     case STATE_DASHBOARD:
         break;
@@ -840,11 +988,22 @@ void updateState()
         moveToState(STATE_DASHBOARD);
 #endif
         break;
+    case STATE_INTELLIGENCE_SETUP:
+        if (intelligenceSetupUI->resultSaved || intelligenceSetupUI->resultCancelled)
+        {
+            moveToState(STATE_DASHBOARD);
+        }
+        break;
     case STATE_DASHBOARD:
         if (showSettings)
         {
             showSettings = false;
             moveToState(STATE_WIFI_SETUP);
+        }
+        else if (showIntelligenceSettings)
+        {
+            showIntelligenceSettings = false;
+            moveToState(STATE_INTELLIGENCE_SETUP);
         }
         else if ((millis() - previousInverterData.millis) > UI_REFRESH_INTERVAL)
         {
@@ -868,6 +1027,10 @@ void updateState()
                 break;
             }
             if(loadElectricityPriceTask())
+            {
+                break;
+            }
+            if (runIntelligenceTask())
             {
                 break;
             }
