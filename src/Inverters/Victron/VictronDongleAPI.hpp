@@ -41,6 +41,11 @@ public:
     {
     }
 
+    /**
+     * Returns true if this inverter supports intelligence mode control
+     */
+    bool supportsIntelligence() { return false; }
+
     InverterData_t loadData(String ipAddress)
     {
         InverterData_t inverterData{};
@@ -272,5 +277,11 @@ public:
         channel.disconnect();
 
         return inverterData;
+    }
+
+    bool setWorkMode(const String& ipAddress, InverterMode_t mode)
+    {
+        // TODO: Not implemented yet
+        return false;
     }
 };

@@ -29,6 +29,7 @@
 #include "utils/IntelligenceResolver.hpp"
 #include "utils/ConsumptionPredictor.hpp"
 #include "utils/ProductionPredictor.hpp"
+#include "utils/SocPredictor.hpp"
 
 #define UI_REFRESH_INTERVAL 5000            // Define the UI refresh interval in milliseconds
 #define INVERTER_DATA_REFRESH_INTERVAL 5000 // Seems that 3s is problematic for some dongles (GoodWe), so we use 5s
@@ -86,8 +87,10 @@ SmartControlRuleResolver wallboxRuleResolver(wallboxMedianPowerSampler);
 ConsumptionPredictor consumptionPredictor;
 ProductionPredictor productionPredictor;
 IntelligenceResult_t lastIntelligenceResult;
+static InverterMode_t lastSentMode = INVERTER_MODE_UNKNOWN;  // Last mode sent to inverter
 static long lastIntelligenceAttempt = 0;
-#define INTELLIGENCE_REFRESH_INTERVAL 60000  // 1 minute
+static int lastProcessedQuarter = -1;  // Track last quarter when we processed intelligence
+#define INTELLIGENCE_REFRESH_INTERVAL 60000  // 1 minute - recalculate every minute
 
 SplashUI *splashUI = NULL;
 WiFiSetupUI *wifiSetupUI = NULL;
@@ -264,6 +267,32 @@ void setupLVGL()
     wifiSetupUI = new WiFiSetupUI(dongleDiscovery);
     intelligenceSetupUI = new IntelligenceSetupUI();
     
+    // Set callback for inverter mode change from dashboard menu
+    dashboardUI->setModeChangeCallback([](InverterMode_t mode, bool enableIntelligence) {
+        log_d("Mode change requested: mode=%d, intelligence=%d", mode, enableIntelligence);
+        
+        // Update intelligence settings
+        IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
+        settings.enabled = enableIntelligence;
+        IntelligenceSettingsStorage::save(settings);
+        
+        // If not intelligence mode, send command directly to inverter
+        if (!enableIntelligence && mode != INVERTER_MODE_UNKNOWN) {
+            if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX) {
+                static SolaxModbusDongleAPI solaxAPI;
+                bool success = solaxAPI.setWorkMode(wifiDiscoveryResult.inverterIP, mode);
+                if (success) {
+                    log_d("Successfully sent work mode %d to Solax inverter", mode);
+                    lastSentMode = mode;
+                }
+            }
+        }
+        
+        // Reset quarter tracking and trigger immediate intelligence task run
+        lastProcessedQuarter = -1;
+        lastIntelligenceAttempt = 0;
+    });
+    
     // Load predictors from storage
     consumptionPredictor.loadFromPreferences();
     productionPredictor.loadFromPreferences();
@@ -342,6 +371,20 @@ InverterData_t loadInverterData(WiFiDiscoveryResult_t &discoveryResult)
     }
     log_d("Inverter data loaded in %d ms", millis() - millisBefore);
     return d;
+}
+
+/**
+ * Check if current inverter type supports intelligence mode control
+ */
+bool supportsIntelligenceForCurrentInverter(WiFiDiscoveryResult_t &discoveryResult)
+{
+    switch (discoveryResult.type)
+    {
+    case CONNECTION_TYPE_SOLAX:
+        return true;  // Solax supports intelligence
+    default:
+        return false;  // Other inverters don't support intelligence yet
+    }
 }
 
 bool loadInverterDataTask()
@@ -492,7 +535,6 @@ bool loadElectricityPriceTask()
 bool runIntelligenceTask()
 {
     bool run = false;
-    static InverterMode_t lastSentMode = INVERTER_MODE_UNKNOWN;
     static InverterMode_t intelligencePlan[QUARTERS_OF_DAY];
     
     if (lastIntelligenceAttempt == 0 || millis() - lastIntelligenceAttempt > INTELLIGENCE_REFRESH_INTERVAL)
@@ -533,11 +575,16 @@ bool runIntelligenceTask()
                 }
             }
             
-            // Update UI with intelligence plan
+// Update UI with intelligence plan
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
             if (dashboardUI != nullptr)
             {
                 dashboardUI->updateIntelligencePlan(intelligencePlan);
+                
+                // Update prediction rows with remaining production/consumption for today (already in kWh)
+                float remainingProductionKWh = productionPredictor.predictRemainingDayProduction();
+                float remainingConsumptionKWh = consumptionPredictor.predictRemainingDayConsumption();
+                dashboardUI->updatePredictionBadges(remainingProductionKWh, remainingConsumptionKWh);
             }
             xSemaphoreGive(lvgl_mutex);
             
@@ -546,41 +593,88 @@ bool runIntelligenceTask()
                   lastIntelligenceResult.reason.c_str(),
                   inverterData.inverterMode);
             
-            // Send command to inverter if mode changed from what we last sent
-            if (lastIntelligenceResult.command != INVERTER_MODE_UNKNOWN && 
-                lastIntelligenceResult.command != lastSentMode)
+            // Send command to inverter only when quarter changes (spot prices work in 15min intervals)
+            // This prevents unnecessary writes while still recalculating predictions every minute
+            // Note: currentQuarter is already calculated above
+            
+            bool quarterChanged = (currentQuarter != lastProcessedQuarter);
+            bool modeNeedsUpdate = (lastIntelligenceResult.command != INVERTER_MODE_UNKNOWN && 
+                                   lastIntelligenceResult.command != lastSentMode);
+            
+            if (quarterChanged || (modeNeedsUpdate && lastProcessedQuarter == -1))
             {
-                if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX)
+                log_d("Quarter changed (%d -> %d) or first run, checking if mode update needed", 
+                      lastProcessedQuarter, currentQuarter);
+                lastProcessedQuarter = currentQuarter;
+                
+                if (modeNeedsUpdate)
                 {
-                    static SolaxModbusDongleAPI solaxAPI;
-                    bool success = solaxAPI.setWorkMode(wifiDiscoveryResult.inverterIP, lastIntelligenceResult.command);
-                    if (success)
+                    if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX)
                     {
-                        log_d("Successfully sent work mode to Solax inverter");
-                        lastSentMode = lastIntelligenceResult.command;
+                        static SolaxModbusDongleAPI solaxAPI;
+                        bool success = solaxAPI.setWorkMode(wifiDiscoveryResult.inverterIP, lastIntelligenceResult.command);
+                        if (success)
+                        {
+                            log_d("Successfully sent work mode to Solax inverter");
+                            lastSentMode = lastIntelligenceResult.command;
+                        }
+                        else
+                        {
+                            log_d("Failed to send work mode to Solax inverter");
+                        }
                     }
                     else
                     {
-                        log_d("Failed to send work mode to Solax inverter");
+                        // Other inverter types not yet implemented
+                        log_d("Work mode control not implemented for inverter type %d", wifiDiscoveryResult.type);
                     }
                 }
                 else
                 {
-                    // Other inverter types not yet implemented
-                    log_d("Work mode control not implemented for inverter type %d", wifiDiscoveryResult.type);
+                    log_d("Mode unchanged (%s), no update sent", 
+                          IntelligenceResolver::commandToString(lastSentMode).c_str());
                 }
             }
         }
         else
         {
-            // Intelligence disabled - clear the plan from UI
+            // Intelligence disabled - clear the plan from UI and reset tracking
             lastSentMode = INVERTER_MODE_UNKNOWN;
+            lastProcessedQuarter = -1;
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
             if (dashboardUI != nullptr)
             {
                 dashboardUI->clearIntelligencePlan();
+                dashboardUI->updatePredictionBadges(0, 0);  // Hide prediction badges
             }
             xSemaphoreGive(lvgl_mutex);
+        }
+        
+        // Generate predictions for solar chart (always, regardless of intelligence enabled)
+        if (inverterData.status == DONGLE_STATUS_OK)
+        {
+            time_t now = time(nullptr);
+            struct tm* timeinfo = localtime(&now);
+            int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
+            int currentMonth = timeinfo->tm_mon;
+            int currentDay = timeinfo->tm_wday;
+            
+            IntelligenceSettings_t predSettings = IntelligenceSettingsStorage::load();
+            SocPredictor socPredictor(consumptionPredictor, productionPredictor);
+            int predictedSoc[QUARTERS_OF_DAY];
+            float batteryCapacityWh = inverterData.batteryCapacityWh > 0 ? inverterData.batteryCapacityWh : 10000;
+            socPredictor.predictDailySoc(inverterData.soc, batteryCapacityWh, 
+                                         predSettings.minSocPercent, predSettings.maxSocPercent, predictedSoc);
+            
+            // Clear old predictions and set new ones
+            solarChartDataProvider.clearPredictions();
+            
+            for (int q = currentQuarter + 1; q < QUARTERS_OF_DAY; q++)
+            {
+                float predProductionWh = productionPredictor.predictQuarterlyProduction(currentMonth, q);
+                float predConsumptionWh = consumptionPredictor.predictQuarterlyConsumption(currentDay, q);
+                solarChartDataProvider.setPrediction(q, predProductionWh, predConsumptionWh, predictedSoc[q]);
+            }
         }
         
         lastIntelligenceAttempt = millis();
@@ -851,6 +945,8 @@ void onEntering(state_t newState)
         break;
     case STATE_DASHBOARD:
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+        // Set intelligence support based on inverter type
+        dashboardUI->setIntelligenceSupported(supportsIntelligenceForCurrentInverter(wifiDiscoveryResult));
         dashboardUI->show();
         if (inverterData.status == DONGLE_STATUS_OK)
         {
@@ -991,6 +1087,12 @@ void updateState()
     case STATE_INTELLIGENCE_SETUP:
         if (intelligenceSetupUI->resultSaved || intelligenceSetupUI->resultCancelled)
         {
+            // If settings were saved, trigger immediate intelligence recalculation
+            if (intelligenceSetupUI->resultSaved) {
+                lastIntelligenceAttempt = 0;
+                lastProcessedQuarter = -1;
+                log_d("Intelligence settings saved, triggering recalculation");
+            }
             moveToState(STATE_DASHBOARD);
         }
         break;
@@ -1000,10 +1102,15 @@ void updateState()
             showSettings = false;
             moveToState(STATE_WIFI_SETUP);
         }
-        else if (showIntelligenceSettings)
+        else if (showIntelligenceSettings && supportsIntelligenceForCurrentInverter(wifiDiscoveryResult))
         {
             showIntelligenceSettings = false;
             moveToState(STATE_INTELLIGENCE_SETUP);
+        }
+        else if (showIntelligenceSettings)
+        {
+            // Intelligence not supported for this inverter, ignore request
+            showIntelligenceSettings = false;
         }
         else if ((millis() - previousInverterData.millis) > UI_REFRESH_INTERVAL)
         {

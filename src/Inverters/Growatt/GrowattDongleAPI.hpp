@@ -9,6 +9,11 @@ class GrowattDongleAPI
 public:
     GrowattDongleAPI() : ip(0, 0, 0, 0) {}
 
+    /**
+     * Returns true if this inverter supports intelligence mode control
+     */
+    bool supportsIntelligence() { return false; }
+
     InverterData_t loadData(const String &ipAddress)
     {
         InverterData_t inverterData = {};
@@ -233,5 +238,11 @@ private:
 
         log_d("Using IP: %s", ip.toString().c_str());
         return ip;
+    }
+
+    bool setWorkMode(const String& ipAddress, InverterMode_t mode)
+    {
+        // TODO: Not implemented yet
+        return false;
     }
 };

@@ -9,6 +9,11 @@ class SolaxModbusDongleAPI
 public:
     SolaxModbusDongleAPI() : isSupportedDongle(true), ip(0, 0, 0, 0) {}
 
+    /**
+     * Returns true if this inverter supports intelligence mode control
+     */
+    bool supportsIntelligence() { return true; }
+
     InverterData_t loadData(const String &ipAddress)
     {
         InverterData_t inverterData = {};
@@ -61,14 +66,27 @@ public:
         uint16_t solaxWorkMode, solaxManualMode;
         inverterModeToSolaxMode(mode, solaxWorkMode, solaxManualMode);
 
-        // First set the work mode (0x008B)
-        bool success = channel.writeSingleRegister(UNIT_ID, REG_SOLAR_CHARGER_USE_MODE, solaxWorkMode);
+        // First unlock the inverter with Advanced unlock code (6868)
+        bool success = channel.writeSingleRegister(UNIT_ID, REG_LOCK_STATE, LOCK_STATE_UNLOCKED_ADVANCED);
+        if (!success)
+        {
+            log_d("Failed to unlock inverter");
+            channel.disconnect();
+            return false;
+        }
+        log_d("Inverter unlocked (Advanced mode)");
+
+        // Set the work mode using WRITE register 0x1F (GEN4/GEN5/GEN6)
+        success = channel.writeSingleRegister(UNIT_ID, REG_CHARGER_USE_MODE_WRITE, solaxWorkMode);
         
-        // If switching to Manual mode, also set the manual mode register (0x008C)
+        // If switching to Manual mode, also set the manual mode register 0x20
         if (success && solaxWorkMode == SOLAX_WORK_MODE_MANUAL)
         {
-            success = channel.writeSingleRegister(UNIT_ID, REG_MANUAL_MODE, solaxManualMode);
+            success = channel.writeSingleRegister(UNIT_ID, REG_MANUAL_MODE_WRITE, solaxManualMode);
         }
+        
+        // Note: We don't lock the inverter back - it auto-locks after timeout
+        // Trying to lock immediately causes Modbus exception 4 (Slave Device Failure)
         
         channel.disconnect();
         
@@ -97,9 +115,20 @@ private:
     static constexpr uint8_t FUNCTION_CODE_READ_HOLDING = 0x03;
     static constexpr uint8_t FUNCTION_CODE_READ_INPUT = 0x04;
     
-    // Solax Ultra Work Mode register addresses (from solax ultra.pdf)
+    // Lock State register - must unlock before writing mode registers
+    static constexpr uint16_t REG_LOCK_STATE = 0x0000;              // Lock State register
+    static constexpr uint16_t LOCK_STATE_LOCKED = 0;                // Locked
+    static constexpr uint16_t LOCK_STATE_UNLOCKED = 2014;           // Unlocked
+    static constexpr uint16_t LOCK_STATE_UNLOCKED_ADVANCED = 6868;  // Unlocked - Advanced (required for mode changes)
+    
+    // Solax Work Mode register addresses
+    // READ registers (INPUT registers 0x8B, 0x8C) - for reading current state
     static constexpr uint16_t REG_SOLAR_CHARGER_USE_MODE = 0x008B;  // SolarChargerUseMode - read current work mode
-    static constexpr uint16_t REG_MANUAL_MODE = 0x008C;             // Manual Mode register for control
+    static constexpr uint16_t REG_MANUAL_MODE_READ = 0x008C;        // Manual Mode register - for reading
+    
+    // WRITE registers (HOLDING registers 0x1F, 0x20) - for GEN4/GEN5/GEN6 inverters
+    static constexpr uint16_t REG_CHARGER_USE_MODE_WRITE = 0x001F;  // Charger Use Mode - for writing (GEN4+)
+    static constexpr uint16_t REG_MANUAL_MODE_WRITE = 0x0020;       // Manual Mode Select - for writing (GEN4+)
     
     // Solax Work Mode values (SolarChargerUseMode register 0x008B)
     static constexpr uint16_t SOLAX_WORK_MODE_SELF_USE = 0;         // Self use mode
@@ -263,7 +292,7 @@ private:
         }
 
         uint16_t solaxMode = response.readUInt16(REG_SOLAR_CHARGER_USE_MODE);
-        uint16_t manualMode = response.readUInt16(REG_MANUAL_MODE);
+        uint16_t manualMode = response.readUInt16(REG_MANUAL_MODE_READ);
         data.inverterMode = solaxModeToInverterMode(solaxMode, manualMode);
         log_d("Read work mode: SolarChargerUseMode=%d, ManualMode=%d, InverterMode=%d", solaxMode, manualMode, data.inverterMode);
         return true;

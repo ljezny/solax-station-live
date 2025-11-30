@@ -5,6 +5,11 @@
 class DeyeDongleAPI
 {
 public:
+    /**
+     * Returns true if this inverter supports intelligence mode control
+     */
+    bool supportsIntelligence() { return false; }
+
     InverterData_t loadData(String ipAddress, String dongleSN)
     {
         return readData(ipAddress, dongleSN);
@@ -135,5 +140,11 @@ private:
                 inverterData.gridSellToday = channel.readUInt16(packetBuffer, 521 - 514) / 10.0f;
                 inverterData.gridSellTotal = channel.readUInt32(packetBuffer, 524 - 514) / 10.0f; }))
             return;
+    }
+
+    bool setWorkMode(const String& ipAddress, InverterMode_t mode)
+    {
+        // TODO: Not implemented yet
+        return false;
     }
 };

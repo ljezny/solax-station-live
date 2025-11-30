@@ -9,6 +9,11 @@
 class GoodweDongleAPI
 {
 public:
+    /**
+     * Returns true if this inverter supports intelligence mode control
+     */
+    bool supportsIntelligence() { return false; }
+
     InverterData_t loadData(String ipAddress)
     {
         return readData(ipAddress);
@@ -232,5 +237,11 @@ private:
         }
         udp.stop();
         return dongleIP;
+    }
+
+    bool setWorkMode(const String& ipAddress, InverterMode_t mode)
+    {
+        // TODO: Not implemented yet
+        return false;
     }
 };
