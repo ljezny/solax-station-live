@@ -25,9 +25,10 @@ static bool isDarkMode = false;
  * Struktura pro kombinovaná data grafu spotových cen + plán inteligence
  */
 typedef struct SpotChartData {
-    ElectricityPriceResult_t* priceResult;
-    InverterMode_t intelligencePlan[QUARTERS_OF_DAY];  // Plán pro každou čtvrthodinu
-    bool hasIntelligencePlan;                          // Zda máme platný plán
+    ElectricityPriceTwoDays_t* priceResult;
+    InverterMode_t intelligencePlan[QUARTERS_TWO_DAYS];  // Plán pro dnešek + zítřek
+    bool hasIntelligencePlan;                             // Zda máme platný plán
+    bool hasTomorrowPlan;                                 // Zda máme plán na zítřek
 } SpotChartData_t;
 
 /**
@@ -74,7 +75,7 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
     SpotChartData_t *chartData = (SpotChartData_t *)lv_obj_get_user_data(obj);
     
     if (chartData == nullptr || chartData->priceResult == nullptr) return;
-    ElectricityPriceResult_t *electricityPriceResult = chartData->priceResult;
+    ElectricityPriceTwoDays_t *electricityPriceResult = chartData->priceResult;
 
     if (dsc->part == LV_PART_MAIN)
     {
@@ -84,38 +85,40 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         lv_coord_t pad_bottom = lv_obj_get_style_pad_bottom(obj, LV_PART_MAIN);
         lv_coord_t w = (int32_t)lv_obj_get_content_width(obj);
         lv_coord_t h = (int32_t)lv_obj_get_content_height(obj);
-        uint32_t segmentCount = QUARTERS_OF_DAY;
+        
+        // Determine if showing 1 or 2 days
+        bool showTwoDays = electricityPriceResult->hasTomorrowData;
+        uint32_t segmentCount = showTwoDays ? QUARTERS_TWO_DAYS : QUARTERS_OF_DAY;
         uint32_t segmentGap = 0;
-        int32_t segmentWidth = 4;
+        int32_t segmentWidth = showTwoDays ? 2 : 4;  // Narrower bars for 2 days
         int32_t offset_x = w - (segmentCount * segmentWidth + (segmentCount - 1) * segmentGap);
         
         // Reserve space at top for intelligence plan indicators
         int intelligenceRowHeight = chartData->hasIntelligencePlan ? 6 : 0;
         lv_coord_t chartTop = pad_top + intelligenceRowHeight;
 
+        // Find min/max prices across all displayed data
         float minPrice = electricityPriceResult->prices[0].electricityPrice;
         float maxPrice = electricityPriceResult->prices[0].electricityPrice;
         for (uint32_t i = 0; i < segmentCount; i++)
         {
             float price = electricityPriceResult->prices[i].electricityPrice;
-            if (price < minPrice)
-            {
-                minPrice = price;
-            }
-            if (price > maxPrice)
-            {
-                maxPrice = price;
-            }
+            if (price < minPrice) minPrice = price;
+            if (price > maxPrice) maxPrice = price;
         }
         minPrice = min(0.0f, minPrice);
         maxPrice = max(maxPrice, electricityPriceResult->scaleMaxValue);
         float priceRange = maxPrice - minPrice;
-        lv_coord_t chartHeight = h - intelligenceRowHeight;  // Reduced height for price bars
+        lv_coord_t chartHeight = h - intelligenceRowHeight;
 
-        // draw vertical line for current quarter
+        // Current quarter (relative to today)
         time_t now = time(nullptr);
         struct tm *timeinfo = localtime(&now);
         int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
+
+
+
+        // Draw vertical line for current quarter
         lv_draw_rect_dsc_t current_quarter_dsc;
         lv_draw_rect_dsc_init(&current_quarter_dsc);
         current_quarter_dsc.bg_opa = LV_OPA_50;
@@ -130,10 +133,11 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         // Draw intelligence plan row at top (aligned in single line)
         if (chartData->hasIntelligencePlan)
         {
-            int squareSize = 3;
-            lv_coord_t sqY = obj->coords.y1 + pad_top + squareSize / 2 + 1;  // Fixed Y position at top
+            int squareSize = showTwoDays ? 2 : 3;
+            lv_coord_t sqY = obj->coords.y1 + pad_top + squareSize / 2 + 1;
             
-            for (uint32_t i = 0; i < segmentCount; i++)
+            uint32_t planSegments = chartData->hasTomorrowPlan ? segmentCount : QUARTERS_OF_DAY;
+            for (uint32_t i = 0; i < planSegments; i++)
             {
                 if (i >= (uint32_t)currentQuarter)
                 {
@@ -144,7 +148,7 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
                         lv_draw_rect_dsc_init(&sq_dsc);
                         sq_dsc.bg_opa = LV_OPA_COVER;
                         sq_dsc.bg_color = getIntelligenceModeColor(mode);
-                        sq_dsc.radius = 0;  // Square corners
+                        sq_dsc.radius = 0;
                         
                         lv_area_t sq_a;
                         int centerX = obj->coords.x1 + offset_x + i * (segmentWidth + segmentGap) + segmentWidth / 2;
@@ -159,7 +163,7 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
             }
         }
 
-        // draw price segments
+        // Draw price segments
         for (uint32_t i = 0; i < segmentCount; i++)
         {
             float price = electricityPriceResult->prices[i].electricityPrice;
@@ -180,7 +184,7 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
             lv_coord_t barBottomY = obj->coords.y1 + chartTop + (priceRange + minPrice) * chartHeight / priceRange - 1;
             a.y1 = barTopY;
             a.y2 = barBottomY;
-            if (a.y1 > a.y2) // swap
+            if (a.y1 > a.y2)
             {
                 lv_coord_t temp = a.y1;
                 a.y1 = a.y2;
@@ -189,38 +193,44 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
             lv_draw_rect(dsc->draw_ctx, &draw_rect_dsc, &a);
         }
 
-        // draw x-axis line
-        //  lv_draw_rect_dsc_t line_dsc;
-        //  lv_draw_rect_dsc_init(&line_dsc);
-        //  line_dsc.bg_opa = LV_OPA_COVER;
-        //  line_dsc.bg_color = isDarkMode ? lv_color_hex(0x555555) : lv_color_hex(0xAAAAAA);
-        //  lv_area_t a;
-        //  a.x1 = obj->coords.x1 + pad_left;
-        //  a.x2 = obj->coords.x2 - pad_right;
-        //  a.y1 = obj->coords.y1 + pad_top + (priceRange + minPrice) * h / priceRange - 1;
-        //  a.y2 = a.y1;
-        // lv_draw_rect(dsc->draw_ctx, &line_dsc, &a);
-
-        // show times for 6, 12, 18 hours
+        // Draw x-axis time labels
         lv_draw_label_dsc_t label_dsc;
-        // use OpenSans small font
         label_dsc.font = &ui_font_OpenSansExtraSmall;
         lv_draw_label_dsc_init(&label_dsc);
         lv_obj_init_draw_label_dsc(obj, LV_PART_MAIN, &label_dsc);
-        lv_area_t a;
-        a.y1 = obj->coords.y2 - pad_bottom + 2;
-        a.y2 = a.y1 + lv_font_get_line_height(label_dsc.font);
-        for (int hour = 6; hour <= 18; hour += 6)
+        lv_area_t la;
+        la.y1 = obj->coords.y2 - pad_bottom + 2;
+        la.y2 = la.y1 + lv_font_get_line_height(label_dsc.font);
+        
+        if (showTwoDays)
         {
-            int quarter = hour * 4;
-            // center label
-            String text = (hour < 10 ? "0" : "") + String(hour) + ":00";
-            lv_point_t size;
-            lv_txt_get_size(&size, text.c_str(), label_dsc.font, label_dsc.letter_space, label_dsc.line_space, LV_COORD_MAX, label_dsc.flag);
-            a.x1 = obj->coords.x1 + offset_x + quarter * (segmentWidth + segmentGap) + (segmentWidth - size.x) / 2;
-            a.x2 = a.x1 + size.x;
-            -1;
-            lv_draw_label(dsc->draw_ctx, &label_dsc, &a, text.c_str(), NULL);
+            // For 2 days: show 12:00, 00:00 (midnight separator), 12:00
+            int hours[] = {12, 24, 36};  // 12:00 today, 00:00 tomorrow, 12:00 tomorrow
+            for (int i = 0; i < 3; i++)
+            {
+                int quarter = hours[i] * 4;
+                int displayHour = hours[i] % 24;
+                String text = (displayHour < 10 ? "0" : "") + String(displayHour) + ":00";
+                lv_point_t size;
+                lv_txt_get_size(&size, text.c_str(), label_dsc.font, label_dsc.letter_space, label_dsc.line_space, LV_COORD_MAX, label_dsc.flag);
+                la.x1 = obj->coords.x1 + offset_x + quarter * (segmentWidth + segmentGap) + (segmentWidth - size.x) / 2;
+                la.x2 = la.x1 + size.x;
+                lv_draw_label(dsc->draw_ctx, &label_dsc, &la, text.c_str(), NULL);
+            }
+        }
+        else
+        {
+            // For 1 day: show 06:00, 12:00, 18:00
+            for (int hour = 6; hour <= 18; hour += 6)
+            {
+                int quarter = hour * 4;
+                String text = (hour < 10 ? "0" : "") + String(hour) + ":00";
+                lv_point_t size;
+                lv_txt_get_size(&size, text.c_str(), label_dsc.font, label_dsc.letter_space, label_dsc.line_space, LV_COORD_MAX, label_dsc.flag);
+                la.x1 = obj->coords.x1 + offset_x + quarter * (segmentWidth + segmentGap) + (segmentWidth - size.x) / 2;
+                la.x2 = la.x1 + size.x;
+                lv_draw_label(dsc->draw_ctx, &label_dsc, &la, text.c_str(), NULL);
+            }
         }
     }
 }
@@ -230,6 +240,10 @@ static void solar_chart_draw_event_cb(lv_event_t *e)
     lv_obj_t *obj = lv_event_get_target(e);
     /*Add the faded area before the lines are drawn*/
     lv_obj_draw_part_dsc_t *dsc = lv_event_get_draw_part_dsc(e);
+    
+    // Zjistíme počet bodů v grafu (96 = 1 den, 192 = 2 dny)
+    uint16_t pointCount = lv_chart_get_point_count(obj);
+    bool showTwoDays = (pointCount > QUARTERS_OF_DAY);
     
     // Vykreslení vertikální čáry aktuálního času
     if (dsc->part == LV_PART_MAIN)
@@ -245,11 +259,11 @@ static void solar_chart_draw_event_cb(lv_event_t *e)
         struct tm *timeinfo = localtime(&now);
         int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
         
-        // Pozice čáry (96 bodů = 96 čtvrthodin)
-        float quarterWidth = (float)w / 96.0f;
+        // Pozice čáry
+        float quarterWidth = (float)w / (float)pointCount;
         lv_coord_t lineX = obj->coords.x1 + pad_left + (lv_coord_t)(currentQuarter * quarterWidth + quarterWidth / 2);
         
-        // Vykreslení čáry
+        // Vykreslení čáry aktuálního času
         lv_draw_rect_dsc_t line_dsc;
         lv_draw_rect_dsc_init(&line_dsc);
         line_dsc.bg_opa = LV_OPA_50;
@@ -324,6 +338,9 @@ static void solar_chart_draw_event_cb(lv_event_t *e)
     }
     else if (dsc->part == LV_PART_TICKS)
     {
+        uint16_t pointCount = lv_chart_get_point_count(obj);
+        bool showTwoDays = (pointCount > QUARTERS_OF_DAY);
+        
         if (dsc->id == LV_CHART_AXIS_PRIMARY_Y)
         {
             lv_snprintf(dsc->text, dsc->text_length, "%d%%", (int)dsc->value);
@@ -334,20 +351,43 @@ static void solar_chart_draw_event_cb(lv_event_t *e)
         }
         else if (dsc->id == LV_CHART_AXIS_PRIMARY_X)
         {
-            // Zobrazujeme hodiny jako u spotových cen (06:00, 12:00, 18:00)
-            // Graf má 96 bodů (čtvrthodin), osa X má typicky 5 ticků (0, 1, 2, 3, 4)
+            // Osa X - tick popisky
             int tickCount = 5;
-            int quartersPerTick = 96 / (tickCount - 1);  // 24 čtvrthodin = 6 hodin
+            int quartersPerTick = pointCount / (tickCount - 1);
             int quarter = dsc->value * quartersPerTick;
-            int hour = quarter / 4;
             
-            if (hour == 0 || hour == 24)
+            if (showTwoDays)
             {
-                memset(dsc->text, 0, dsc->text_length);
+                // Pro 2 dny: ukaž hodiny s označením dne
+                int day = quarter / QUARTERS_OF_DAY;
+                int hourInDay = (quarter % QUARTERS_OF_DAY) / 4;
+                
+                if (quarter == 0 || quarter >= pointCount)
+                {
+                    memset(dsc->text, 0, dsc->text_length);
+                }
+                else if (quarter == QUARTERS_OF_DAY)
+                {
+                    lv_snprintf(dsc->text, dsc->text_length, "00:00");
+                }
+                else
+                {
+                    lv_snprintf(dsc->text, dsc->text_length, "%02d:00", hourInDay);
+                }
             }
             else
             {
-                lv_snprintf(dsc->text, dsc->text_length, "%02d:00", hour);
+                // Pro 1 den
+                int hour = quarter / 4;
+                
+                if (hour == 0 || hour == 24)
+                {
+                    memset(dsc->text, 0, dsc->text_length);
+                }
+                else
+                {
+                    lv_snprintf(dsc->text, dsc->text_length, "%02d:00", hour);
+                }
             }
         }
     }
@@ -380,7 +420,8 @@ public:
         // Initialize spot chart data
         spotChartData.priceResult = nullptr;
         spotChartData.hasIntelligencePlan = false;
-        for (int i = 0; i < QUARTERS_OF_DAY; i++) {
+        spotChartData.hasTomorrowPlan = false;
+        for (int i = 0; i < QUARTERS_TWO_DAYS; i++) {
             spotChartData.intelligencePlan[i] = INVERTER_MODE_UNKNOWN;
         }
         
@@ -901,7 +942,7 @@ public:
         return constrain(inverterData.loadPower > 0 ? (100 * (inverterData.loadPower + gridPower)) / inverterData.loadPower : 0, 0, 100);
     }
 
-    void update(InverterData_t &inverterData, InverterData_t &previousInverterData, MedianPowerSampler &uiMedianPowerSampler, ShellyResult_t &shellyResult, ShellyResult_t &previousShellyResult, WallboxResult_t &wallboxResult, WallboxResult_t &previousWallboxResult, SolarChartDataProvider &solarChartDataProvider, ElectricityPriceResult_t &electricityPriceResult, ElectricityPriceResult_t &previousElectricityPriceResult, int wifiSignalPercent)
+    void update(InverterData_t &inverterData, InverterData_t &previousInverterData, MedianPowerSampler &uiMedianPowerSampler, ShellyResult_t &shellyResult, ShellyResult_t &previousShellyResult, WallboxResult_t &wallboxResult, WallboxResult_t &previousWallboxResult, SolarChartDataProvider &solarChartDataProvider, ElectricityPriceTwoDays_t &electricityPriceResult, ElectricityPriceTwoDays_t &previousElectricityPriceResult, int wifiSignalPercent)
     {
         // hide settings and intelligence buttons after timeout from last touch
         if (lastTouchMillis > 0 && millis() - lastTouchMillis > BUTTONS_HIDE_TIMEOUT_MS)
@@ -1445,15 +1486,17 @@ public:
 
     /**
      * Aktualizuje plán inteligence pro zobrazení v grafu spotových cen
-     * @param plan Pole režimů pro každou čtvrthodinu dne
+     * @param plan Pole režimů pro dnešek a zítřek (QUARTERS_TWO_DAYS)
+     * @param hasTomorrow Zda jsou k dispozici data pro zítřek
      */
-    void updateIntelligencePlan(const InverterMode_t plan[QUARTERS_OF_DAY])
+    void updateIntelligencePlan(const InverterMode_t plan[QUARTERS_TWO_DAYS], bool hasTomorrow = false)
     {
-        for (int i = 0; i < QUARTERS_OF_DAY; i++)
+        for (int i = 0; i < QUARTERS_TWO_DAYS; i++)
         {
             spotChartData.intelligencePlan[i] = plan[i];
         }
         spotChartData.hasIntelligencePlan = true;
+        spotChartData.hasTomorrowPlan = hasTomorrow;
         lv_obj_invalidate(ui_spotPriceContainer);
     }
 
@@ -1463,6 +1506,7 @@ public:
     void clearIntelligencePlan()
     {
         spotChartData.hasIntelligencePlan = false;
+        spotChartData.hasTomorrowPlan = false;
         lv_obj_invalidate(ui_spotPriceContainer);
     }
 
@@ -1507,14 +1551,17 @@ private:
         if (acPredictionSeries) acPredictionSeries->start_point = 0;
         if (socPredictionSeries) socPredictionSeries->start_point = 0;
         
-        // Nastavíme počet bodů na 96 (celý den)
-        lv_chart_set_point_count(ui_Chart1, CHART_QUARTERS_PER_DAY);
+        // Zjistíme jestli máme data na zítřek
+        int totalQuarters = solarChartDataProvider.getTotalQuarters();
+        
+        // Nastavíme počet bodů podle dostupných dat (96 nebo 192)
+        lv_chart_set_point_count(ui_Chart1, totalQuarters);
         
         float maxPower = 5000.0f;
         int currentQuarter = solarChartDataProvider.getCurrentQuarterIndex();
         
-        // Projdeme všechny čtvrthodiny od 00:00 do 23:59
-        for (int i = 0; i < CHART_QUARTERS_PER_DAY; i++)
+        // Projdeme všechny čtvrthodiny
+        for (int i = 0; i < totalQuarters; i++)
         {
             SolarChartDataItem_t item = solarChartDataProvider.getQuarter(i);
             
@@ -1563,9 +1610,13 @@ private:
         lv_chart_refresh(ui_Chart1);
     }
 
-    void updateCurrentPrice(ElectricityPriceResult_t &electricityPriceResult, bool isDarkMode)
+    void updateCurrentPrice(ElectricityPriceTwoDays_t &electricityPriceResult, bool isDarkMode)
     {
-        ElectricityPriceItem_t currentPrice = getCurrentQuarterElectricityPrice(electricityPriceResult);
+        // Get current quarter price from two-day structure
+        time_t now = time(nullptr);
+        struct tm *timeinfo = localtime(&now);
+        int currentQuarter = timeinfo->tm_hour * 4 + timeinfo->tm_min / 15;
+        ElectricityPriceItem_t currentPrice = electricityPriceResult.prices[currentQuarter];
         String priceText = String(currentPrice.electricityPrice, 2) + " " + electricityPriceResult.currency + " / " + electricityPriceResult.energyUnit;
         priceText.replace(".", ",");
         lv_label_set_text(ui_currentPriceLabel, priceText.c_str());
@@ -1574,9 +1625,14 @@ private:
         lv_obj_set_style_bg_color(ui_currentPriceLabel, color, 0);
         lv_obj_set_style_text_color(ui_currentPriceLabel, isDarkMode ? lv_color_black() : lv_color_white(), 0);
         lv_obj_set_style_shadow_color(ui_currentPriceLabel, color, 0);
+        
+        // Posun badge o jeho výšku nahoru
+        lv_obj_update_layout(ui_currentPriceLabel);
+        int badgeHeight = lv_obj_get_height(ui_currentPriceLabel);
+        lv_obj_set_y(ui_currentPriceLabel, -badgeHeight);
     }
 
-    void updateElectricityPriceChart(ElectricityPriceResult_t &electricityPriceResult, bool isDarkMode)
+    void updateElectricityPriceChart(ElectricityPriceTwoDays_t &electricityPriceResult, bool isDarkMode)
     {
         spotChartData.priceResult = &electricityPriceResult;
         // Intelligence plan se aktualizuje separátně přes updateIntelligencePlan()

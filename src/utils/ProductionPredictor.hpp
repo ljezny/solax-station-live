@@ -11,6 +11,9 @@
  * Výroba je silně závislá na ročním období a počasí.
  * Používá exponenciální klouzavý průměr pro vyhlazení.
  * 
+ * Obsahuje adaptivní korekci - porovnává skutečnou výrobu s predikcí
+ * a upravuje budoucí predikce podle aktuálního počasí.
+ * 
  * Velká pole jsou alokována v PSRAM pro úsporu interní RAM.
  */
 
@@ -40,6 +43,14 @@ private:
     
     // Instalovaný výkon FVE pro škálování výchozích hodnot
     int installedPowerWp;
+    
+    // === ADAPTIVNÍ KOREKCE ===
+    // Kumulativní chyba pro korekci budoucích predikcí
+    float cumulativeError;
+    static constexpr float CORRECTION_ALPHA = 0.3f;  // Rychlejší adaptace pro počasí
+    // Poslední skutečná výroba pro aktualizaci korekce
+    float lastActualProductionWh;
+    int lastCorrectionQuarter;
     
     /**
      * Vrací číslo čtvrthodiny (0-95) z času
@@ -97,6 +108,11 @@ public:
         currentQuarterSampleCount = 0;
         lastRecordedQuarter = -1;
         lastRecordedMonth = -1;
+        
+        // Inicializace adaptivní korekce
+        cumulativeError = 0;
+        lastActualProductionWh = 0;
+        lastCorrectionQuarter = -1;
     }
     
     ~ProductionPredictor() {
@@ -218,6 +234,12 @@ public:
         // Wh = W * 0.25h (čtvrthodina)
         float productionWh = powerW * 0.25f;
         
+        // === AKTUALIZACE ADAPTIVNÍ KOREKCE ===
+        // Pouze během slunečních hodin (8:00 - 16:00 = čtvrthodiny 32-64)
+        if (quarter >= 32 && quarter <= 64) {
+            updateCorrectionFactor(month, quarter, productionWh);
+        }
+        
         if (sampleCountAt(month, quarter) == 0) {
             productionAt(month, quarter) = productionWh;
         } else {
@@ -226,27 +248,82 @@ public:
         
         sampleCountAt(month, quarter)++;
         
-        log_d("Updated production for month %d, quarter %d: %.1f Wh (samples: %d)", 
-              month, quarter, productionAt(month, quarter), sampleCountAt(month, quarter));
+        log_d("Updated production for month %d, quarter %d: %.1f Wh (samples: %d, correction: %.1f)", 
+              month, quarter, productionAt(month, quarter), sampleCountAt(month, quarter), cumulativeError);
     }
     
     /**
-     * Predikuje výrobu pro danou čtvrthodinu
-     * @param month měsíc (0=leden)
-     * @param quarter čtvrthodina (0-95)
-     * @return predikovaná výroba v Wh
+     * Aktualizuje korekční faktor na základě rozdílu skutečné a predikované výroby
+     * Používá exponenciální vyhlazování s α=0.3
      */
-    float predictQuarterlyProduction(int month, int quarter) const {
+    void updateCorrectionFactor(int month, int quarter, float actualWh) {
+        // Získáme základní predikci (bez korekce)
+        float basePrediction = getBasePrediction(month, quarter);
+        
+        // Spočítáme chybu
+        float error = actualWh - basePrediction;
+        
+        // Exponenciální vyhlazování chyby
+        cumulativeError = CORRECTION_ALPHA * error + (1 - CORRECTION_ALPHA) * cumulativeError;
+        
+        // Reset korekce o půlnoci
+        if (quarter < lastCorrectionQuarter) {
+            cumulativeError = 0;
+            log_d("Production correction reset at midnight");
+        }
+        lastCorrectionQuarter = quarter;
+        
+        log_d("Production correction updated: actual=%.1f, predicted=%.1f, error=%.1f, cumError=%.1f",
+              actualWh, basePrediction, error, cumulativeError);
+    }
+    
+    /**
+     * Vrátí základní predikci BEZ korekce (pro výpočet chyby)
+     */
+    float getBasePrediction(int month, int quarter) const {
         if (month < 0 || month >= MONTHS_PER_YEAR || quarter < 0 || quarter >= QUARTERS_PER_DAY) {
             return getDefaultProduction(month, quarter);
         }
         
-        // Pokud nemáme data, použijeme výchozí
         if (sampleCountAt(month, quarter) == 0) {
             return getDefaultProduction(month, quarter);
         }
         
         return productionAt(month, quarter);
+    }
+    
+    /**
+     * Predikuje výrobu pro danou čtvrthodinu S KOREKCÍ
+     * @param month měsíc (0=leden)
+     * @param quarter čtvrthodina (0-95)
+     * @return predikovaná výroba v Wh (korigovaná podle aktuálního počasí)
+     */
+    float predictQuarterlyProduction(int month, int quarter) const {
+        float basePrediction = getBasePrediction(month, quarter);
+        
+        // Aplikujeme korekci
+        float corrected = basePrediction + cumulativeError;
+        
+        // Omezení: min 0, max 3× základní predikce (pro případ velmi jasného dne)
+        float maxCorrection = basePrediction * 3.0f;
+        corrected = constrain(corrected, 0.0f, maxCorrection);
+        
+        return corrected;
+    }
+    
+    /**
+     * Vrátí aktuální korekční chybu (pro debug/UI)
+     */
+    float getCorrectionError() const {
+        return cumulativeError;
+    }
+    
+    /**
+     * Resetuje korekci (např. při změně počasí)
+     */
+    void resetCorrection() {
+        cumulativeError = 0;
+        lastCorrectionQuarter = -1;
     }
     
     /**

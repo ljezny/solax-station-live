@@ -57,13 +57,21 @@ private:
     ProductionPredictor& productionPredictor;
     
     /**
+     * Získá počet dostupných čtvrthodin (96 pro dnešek, 192 pokud máme i zítřek)
+     */
+    int getAvailableQuarters(const ElectricityPriceTwoDays_t& prices) {
+        return prices.hasTomorrowData ? QUARTERS_TWO_DAYS : QUARTERS_OF_DAY;
+    }
+    
+    /**
      * Najde nejlevnější hodinu pro nákup v daném časovém okně
      */
-    int findCheapestHour(const ElectricityPriceResult_t& prices, int fromQuarter, int toQuarter, const IntelligenceSettings_t& settings) {
+    int findCheapestHour(const ElectricityPriceTwoDays_t& prices, int fromQuarter, int toQuarter, const IntelligenceSettings_t& settings) {
         float minPrice = FLT_MAX;
         int cheapestQuarter = fromQuarter;
+        int maxQuarter = min(toQuarter, getAvailableQuarters(prices));
         
-        for (int q = fromQuarter; q < toQuarter && q < QUARTERS_OF_DAY; q++) {
+        for (int q = fromQuarter; q < maxQuarter; q++) {
             float buyPrice = IntelligenceSettingsStorage::calculateBuyPrice(prices.prices[q].electricityPrice, settings);
             if (buyPrice < minPrice) {
                 minPrice = buyPrice;
@@ -77,11 +85,12 @@ private:
     /**
      * Najde nejdražší hodinu pro prodej v daném časovém okně
      */
-    int findMostExpensiveHour(const ElectricityPriceResult_t& prices, int fromQuarter, int toQuarter, const IntelligenceSettings_t& settings) {
+    int findMostExpensiveHour(const ElectricityPriceTwoDays_t& prices, int fromQuarter, int toQuarter, const IntelligenceSettings_t& settings) {
         float maxPrice = -FLT_MAX;
         int expensiveQuarter = fromQuarter;
+        int maxQuarter = min(toQuarter, getAvailableQuarters(prices));
         
-        for (int q = fromQuarter; q < toQuarter && q < QUARTERS_OF_DAY; q++) {
+        for (int q = fromQuarter; q < maxQuarter; q++) {
             float sellPrice = IntelligenceSettingsStorage::calculateSellPrice(prices.prices[q].electricityPrice, settings);
             if (sellPrice > maxPrice) {
                 maxPrice = sellPrice;
@@ -93,13 +102,14 @@ private:
     }
     
     /**
-     * Vypočítá průměrnou nákupní cenu pro zbytek dne
+     * Vypočítá průměrnou nákupní cenu pro budoucí čtvrthodiny
      */
-    float calculateAverageBuyPrice(const ElectricityPriceResult_t& prices, int fromQuarter, const IntelligenceSettings_t& settings) {
+    float calculateAverageBuyPrice(const ElectricityPriceTwoDays_t& prices, int fromQuarter, const IntelligenceSettings_t& settings) {
         float sum = 0;
         int count = 0;
+        int maxQuarter = getAvailableQuarters(prices);
         
-        for (int q = fromQuarter; q < QUARTERS_OF_DAY; q++) {
+        for (int q = fromQuarter; q < maxQuarter; q++) {
             sum += IntelligenceSettingsStorage::calculateBuyPrice(prices.prices[q].electricityPrice, settings);
             count++;
         }
@@ -108,12 +118,13 @@ private:
     }
     
     /**
-     * Vypočítá minimální nákupní cenu pro zbytek dne
+     * Vypočítá minimální nákupní cenu pro budoucí čtvrthodiny
      */
-    float findMinBuyPrice(const ElectricityPriceResult_t& prices, int fromQuarter, const IntelligenceSettings_t& settings) {
+    float findMinBuyPrice(const ElectricityPriceTwoDays_t& prices, int fromQuarter, const IntelligenceSettings_t& settings) {
         float minPrice = FLT_MAX;
+        int maxQuarter = getAvailableQuarters(prices);
         
-        for (int q = fromQuarter; q < QUARTERS_OF_DAY; q++) {
+        for (int q = fromQuarter; q < maxQuarter; q++) {
             float price = IntelligenceSettingsStorage::calculateBuyPrice(prices.prices[q].electricityPrice, settings);
             if (price < minPrice) {
                 minPrice = price;
@@ -124,12 +135,13 @@ private:
     }
     
     /**
-     * Vypočítá maximální prodejní cenu pro zbytek dne
+     * Vypočítá maximální prodejní cenu pro budoucí čtvrthodiny
      */
-    float findMaxSellPrice(const ElectricityPriceResult_t& prices, int fromQuarter, const IntelligenceSettings_t& settings) {
+    float findMaxSellPrice(const ElectricityPriceTwoDays_t& prices, int fromQuarter, const IntelligenceSettings_t& settings) {
         float maxPrice = -FLT_MAX;
+        int maxQuarter = getAvailableQuarters(prices);
         
-        for (int q = fromQuarter; q < QUARTERS_OF_DAY; q++) {
+        for (int q = fromQuarter; q < maxQuarter; q++) {
             float price = IntelligenceSettingsStorage::calculateSellPrice(prices.prices[q].electricityPrice, settings);
             if (price > maxPrice) {
                 maxPrice = price;
@@ -154,7 +166,7 @@ public:
      */
     IntelligenceResult_t resolve(
         const InverterData_t& inverterData,
-        const ElectricityPriceResult_t& prices,
+        const ElectricityPriceTwoDays_t& prices,
         const IntelligenceSettings_t& settings,
         int forQuarter = -1
     ) {
@@ -174,16 +186,20 @@ public:
         
         // Získání času - buď aktuálního nebo zadaného quarteru
         int currentHour;
-        int currentQuarter;
+        int priceQuarter;    // Index do pole cen (0-191)
+        int dayQuarter;      // Čtvrthodina v rámci dne (0-95) pro prediktory
         
-        if (forQuarter >= 0 && forQuarter < QUARTERS_OF_DAY) {
-            currentQuarter = forQuarter;
-            currentHour = forQuarter / 4;
+        // forQuarter může být 0-191 (pro 2 dny)
+        if (forQuarter >= 0 && forQuarter < QUARTERS_TWO_DAYS) {
+            priceQuarter = forQuarter;
+            dayQuarter = forQuarter % QUARTERS_OF_DAY;  // 0-95 v rámci dne
+            currentHour = dayQuarter / 4;  // Hodina v rámci dne (0-23)
         } else {
             time_t now = time(nullptr);
             struct tm* timeinfo = localtime(&now);
             currentHour = timeinfo->tm_hour;
-            currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
+            priceQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
+            dayQuarter = priceQuarter;  // Pro dnešek jsou stejné
         }
         
         int currentSoc = inverterData.soc;
@@ -200,21 +216,21 @@ public:
         float currentEnergyKwh = batteryCapacityKwh * (currentSoc - settings.minSocPercent) / 100.0f;
         if (currentEnergyKwh < 0) currentEnergyKwh = 0;
         
-        // Predikce na zbytek dne - používáme čtvrthodiny
-        float remainingConsumption = consumptionPredictor.predictRemainingDayConsumption(currentQuarter);
-        float remainingProduction = productionPredictor.predictRemainingDayProduction(currentQuarter);
+        // Predikce na zbytek dne - používáme čtvrthodinu v rámci dne (0-95)
+        float remainingConsumption = consumptionPredictor.predictRemainingDayConsumption(dayQuarter);
+        float remainingProduction = productionPredictor.predictRemainingDayProduction(dayQuarter);
         float netEnergy = remainingProduction - remainingConsumption;
         
-        // Aktuální ceny
-        float currentSpotPrice = prices.prices[currentQuarter].electricityPrice;
+        // Aktuální ceny - používáme index do pole cen (0-191)
+        float currentSpotPrice = prices.prices[priceQuarter].electricityPrice;
         float currentBuyPrice = IntelligenceSettingsStorage::calculateBuyPrice(currentSpotPrice, settings);
         float currentSellPrice = IntelligenceSettingsStorage::calculateSellPrice(currentSpotPrice, settings);
         float batteryCost = settings.batteryCostPerKwh;
         
         // Budoucí ceny
-        float minFutureBuyPrice = findMinBuyPrice(prices, currentQuarter + 1, settings);
-        float maxFutureSellPrice = findMaxSellPrice(prices, currentQuarter + 1, settings);
-        float avgFutureBuyPrice = calculateAverageBuyPrice(prices, currentQuarter + 1, settings);
+        float minFutureBuyPrice = findMinBuyPrice(prices, priceQuarter + 1, settings);
+        float maxFutureSellPrice = findMaxSellPrice(prices, priceQuarter + 1, settings);
+        float avgFutureBuyPrice = calculateAverageBuyPrice(prices, priceQuarter + 1, settings);
         
         log_d("Intelligence analysis: SOC=%d%%, consumption=%.1fkWh, production=%.1fkWh, net=%.1fkWh",
               currentSoc, remainingConsumption, remainingProduction, netEnergy);
@@ -244,7 +260,18 @@ public:
             return result;
         }
         
-        // 3. Analýza: Je výhodnější NABÍJET ZE SÍTĚ teď?
+        // 3. KLÍČOVÁ LOGIKA: Je levnější koupit ze sítě než použít baterii?
+        // Pokud aktuální nákupní cena < cena energie z baterie, držíme baterii a jedeme ze sítě
+        // Toto je případ kdy např. spot je 6.70 Kč a baterie stojí 23 Kč/kWh
+        if (currentBuyPrice < batteryCost) {
+            log_d("Grid cheaper than battery: buy=%.2f < battery=%.2f", currentBuyPrice, batteryCost);
+            result.command = INVERTER_MODE_HOLD_BATTERY;
+            result.expectedSavings = (batteryCost - currentBuyPrice) * remainingConsumption;
+            result.reason = String("Grid cheaper (") + String(currentBuyPrice, 1) + ") than battery (" + String(batteryCost, 1) + ")";
+            return result;
+        }
+        
+        // 4. Analýza: Je výhodnější NABÍJET ZE SÍTĚ teď?
         // Nabíjíme pokud: aktuální nákupní cena + náklady baterie < budoucí průměrná cena
         // A zároveň: vyplatí se to (nejlevnější nákup)
         if (currentSoc < settings.maxSocPercent) {
@@ -263,7 +290,7 @@ public:
             }
         }
         
-        // 4. Analýza: Je výhodnější VYBÍJET DO SÍTĚ teď?
+        // 5. Analýza: Je výhodnější VYBÍJET DO SÍTĚ teď?
         // Vybíjíme pokud: aktuální prodejní cena > náklady baterie + budoucí nákupní cena
         // (vyplatí se prodat teď a koupit později)
         if (currentSoc > settings.minSocPercent) {
@@ -282,7 +309,7 @@ public:
             }
         }
         
-        // 5. Analýza: Držet baterii pro pozdější špičku?
+        // 6. Analýza: Držet baterii pro pozdější špičku?
         // Pokud přijde dražší hodina a máme energii, držíme ji
         if (maxFutureSellPrice > currentSellPrice + batteryCost) {
             // Je výhodnější počkat a prodat později
@@ -293,7 +320,7 @@ public:
             }
         }
         
-        // 6. Pokud přijde levnější hodina a budeme potřebovat energii, také držíme
+        // 7. Pokud přijde levnější hodina pro nákup, použijeme baterii teď a koupíme později
         if (minFutureBuyPrice + batteryCost < currentBuyPrice) {
             // Bude levnější koupit později
             if (currentEnergyKwh > 0) {
@@ -304,7 +331,14 @@ public:
             }
         }
         
-        // 7. Výchozí stav - normální self-use provoz
+        // 8. Výchozí stav - pokud máme energii v baterii a je levnější než síť, použijeme ji
+        if (currentEnergyKwh > 0 && batteryCost < currentBuyPrice) {
+            result.command = INVERTER_MODE_SELF_USE;
+            result.reason = "Battery cheaper than grid";
+            return result;
+        }
+        
+        // 9. Výchozí stav - normální self-use provoz
         result.command = INVERTER_MODE_SELF_USE;
         result.reason = "Normal self-consumption mode";
         return result;
@@ -315,7 +349,7 @@ public:
      */
     String getEconomicSummary(
         const InverterData_t& inverterData,
-        const ElectricityPriceResult_t& prices,
+        const ElectricityPriceTwoDays_t& prices,
         const IntelligenceSettings_t& settings
     ) {
         time_t now = time(nullptr);

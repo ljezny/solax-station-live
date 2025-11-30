@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <esp_heap_caps.h>
 #include "ElectricityPriceResult.hpp"
 
 #include "Spot/Providers/OTE_CZ_API.hpp"
@@ -80,7 +81,79 @@ const int TIMEZONE_COUNT = sizeof(TIMEZONES) / sizeof(TIMEZONES[0]);
 class ElectricityPriceLoader
 {
 public:
-    ElectricityPriceResult_t getElectricityPrice(ElectricityPriceProvider_t provider, bool tommorow)
+    /**
+     * Načte pouze dnešní spotové ceny do dvoudenní struktury
+     * @param provider Poskytovatel cen
+     * @param outResult Pointer na dvoudenní strukturu (musí být předalokována v PSRAM)
+     * @return true pokud se podařilo načíst data
+     */
+    bool loadTodayPrices(ElectricityPriceProvider_t provider, ElectricityPriceTwoDays_t* outResult)
+    {
+        if (!outResult) return false;
+        
+        outResult->updated = 0;
+        outResult->hasTomorrowData = false;
+        memset(outResult->currency, 0, CURRENCY_LENGTH);
+        memset(outResult->energyUnit, 0, ENERGY_UNIT_LENGTH);
+        
+        // Načteme dnešní data
+        ElectricityPriceResult_t result = getElectricityPriceInternal(provider, false);
+        
+        if (result.updated == 0) {
+            return false;
+        }
+        
+        // Zkopírujeme do výstupní struktury
+        outResult->updated = result.updated;
+        strcpy(outResult->currency, result.currency);
+        strcpy(outResult->energyUnit, result.energyUnit);
+        outResult->scaleMaxValue = result.scaleMaxValue;
+        outResult->pricesHorizontalSeparatorStep = result.pricesHorizontalSeparatorStep;
+        for (int i = 0; i < QUARTERS_OF_DAY; i++) {
+            outResult->prices[i] = result.prices[i];
+        }
+        
+        return true;
+    }
+    
+    /**
+     * Načte zítřejší spotové ceny a přidá je do dvoudenní struktury
+     * @param provider Poskytovatel cen
+     * @param outResult Pointer na dvoudenní strukturu (musí již obsahovat dnešní data)
+     * @return true pokud se podařilo načíst zítřejší data
+     */
+    bool loadTomorrowPrices(ElectricityPriceProvider_t provider, ElectricityPriceTwoDays_t* outResult)
+    {
+        if (!outResult || outResult->updated == 0) return false;
+        
+        // Načteme zítřejší data
+        ElectricityPriceResult_t result = getElectricityPriceInternal(provider, true);
+        
+        if (result.updated == 0) {
+            log_d("Tomorrow electricity prices not yet available");
+            return false;
+        }
+        
+        // Zkopírujeme zítřejší ceny na pozice 96-191
+        for (int i = 0; i < QUARTERS_OF_DAY; i++) {
+            outResult->prices[QUARTERS_OF_DAY + i] = result.prices[i];
+        }
+        outResult->hasTomorrowData = true;
+        log_d("Tomorrow electricity prices loaded successfully");
+        
+        return true;
+    }
+    
+    /**
+     * Načte spotové ceny pouze pro jeden den (původní API)
+     */
+    ElectricityPriceResult_t getElectricityPrice(ElectricityPriceProvider_t provider, bool tomorrow)
+    {
+        return getElectricityPriceInternal(provider, tomorrow);
+    }
+
+private:
+    ElectricityPriceResult_t getElectricityPriceInternal(ElectricityPriceProvider_t provider, bool tomorrow)
     {
         ElectricityPriceResult_t result;
         result.updated = 0;
@@ -97,82 +170,82 @@ public:
             switch (provider)
             {
             case OTE_CZ:
-                result = OTE_CZ_API().reloadData(tommorow);
+                result = OTE_CZ_API().reloadData(tomorrow);
                 break;
             case OTK_SK:
-                result = OTK_SK_API().reloadData(tommorow);
+                result = OTK_SK_API().reloadData(tomorrow);
                 break;
             case PSE_PL:
-                result = PSE_PL_API().reloadData(tommorow);
+                result = PSE_PL_API().reloadData(tomorrow);
                 break;
             case AWATTAR_DE:
-                result = Awattar_API().reloadData("de", tommorow);
+                result = Awattar_API().reloadData("de", tomorrow);
                 break;
             case AWATTAR_AT:
-                result = Awattar_API().reloadData("at", tommorow);
+                result = Awattar_API().reloadData("at", tomorrow);
                 break;
             case ELPRIS_SE1:
-                result = Elpris_API().reloadData("SE1", tommorow);
+                result = Elpris_API().reloadData("SE1", tomorrow);
                 break;
             case ELPRIS_SE2:
-                result = Elpris_API().reloadData("SE2", tommorow);
+                result = Elpris_API().reloadData("SE2", tomorrow);
                 break;
             case ELPRIS_SE3:
-                result = Elpris_API().reloadData("SE3", tommorow);
+                result = Elpris_API().reloadData("SE3", tomorrow);
                 break;
             case ELPRIS_SE4:
-                result = Elpris_API().reloadData("SE4", tommorow);
+                result = Elpris_API().reloadData("SE4", tomorrow);
                 break;
             case SPOT_HINTA_FI_DK1:
-                result = SpotHinta_API().reloadData("DK1", tommorow);
+                result = SpotHinta_API().reloadData("DK1", tomorrow);
                 break;
             case SPOT_HINTA_FI_DK2:
-                result = SpotHinta_API().reloadData("DK2", tommorow);
+                result = SpotHinta_API().reloadData("DK2", tomorrow);
                 break;
             case SPOT_HINTA_FI_EE:
-                result = SpotHinta_API().reloadData("EE", tommorow);
+                result = SpotHinta_API().reloadData("EE", tomorrow);
                 break;
             case SPOT_HINTA_FIFI:
-                result = SpotHinta_API().reloadData("FI", tommorow);
+                result = SpotHinta_API().reloadData("FI", tomorrow);
                 break;
             case SPOT_HINTA_FI_LT:
-                result = SpotHinta_API().reloadData("LT", tommorow);
+                result = SpotHinta_API().reloadData("LT", tomorrow);
                 break;
             case SPOT_HINTA_FI_LV:
-                result = SpotHinta_API().reloadData("LV", tommorow);
+                result = SpotHinta_API().reloadData("LV", tomorrow);
                 break;
             case SPOT_HINTA_FI_NO1:
-                result = SpotHinta_API().reloadData("NO1", tommorow);
+                result = SpotHinta_API().reloadData("NO1", tomorrow);
                 break;
             case SPOT_HINTA_FI_NO2:
-                result = SpotHinta_API().reloadData("NO2", tommorow);
+                result = SpotHinta_API().reloadData("NO2", tomorrow);
                 break;
             case SPOT_HINTA_FI_NO3:
-                result = SpotHinta_API().reloadData("NO3", tommorow);
+                result = SpotHinta_API().reloadData("NO3", tomorrow);
                 break;
             case SPOT_HINTA_FI_NO4:
-                result = SpotHinta_API().reloadData("NO4", tommorow);
+                result = SpotHinta_API().reloadData("NO4", tomorrow);
                 break;
             case SPOT_HINTA_FI_NO5:
-                result = SpotHinta_API().reloadData("NO5", tommorow);
+                result = SpotHinta_API().reloadData("NO5", tomorrow);
                 break;
             case NORDPOOL_AT:
-                result = NordPoolAPI().reloadData("AT", tommorow);
+                result = NordPoolAPI().reloadData("AT", tomorrow);
                 break;
             case NORDPOOL_BE:
-                result = NordPoolAPI().reloadData("BE", tommorow);
+                result = NordPoolAPI().reloadData("BE", tomorrow);
                 break;
             case NORDPOOL_FR:
-                result = NordPoolAPI().reloadData("FR", tommorow);
+                result = NordPoolAPI().reloadData("FR", tomorrow);
                 break;
             case NORDPOOL_GER:
-                result = NordPoolAPI().reloadData("GER", tommorow);
+                result = NordPoolAPI().reloadData("GER", tomorrow);
                 break;
             case NORDPOOL_NL:
-                result = NordPoolAPI().reloadData("NL", tommorow);
+                result = NordPoolAPI().reloadData("NL", tomorrow);
                 break;
             case NORDPOOL_PL:
-                result = NordPoolAPI().reloadData("PL", tommorow);
+                result = NordPoolAPI().reloadData("PL", tomorrow);
                 break;
             }
 
@@ -194,6 +267,7 @@ public:
         return result;
     }
 
+public:
     ElectricityPriceProvider_t getStoredElectricityPriceProvider()
     {
         Preferences preferences;

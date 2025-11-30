@@ -31,8 +31,12 @@ public:
      * @param minSoc minimální povolený SOC (%)
      * @param maxSoc maximální povolený SOC (%)
      * @param outSoc pole pro výstup predikovaných SOC hodnot [QUARTERS_OF_DAY]
+     * @param isTomorrow true pokud predikujeme pro zítřek (všechny čtvrthodiny jsou "budoucí")
+     * @param dayOverride den v týdnu pro predikci spotřeby (-1 = aktuální)
+     * @param monthOverride měsíc pro predikci výroby (-1 = aktuální)
      */
-    void predictDailySoc(int currentSoc, int batteryCapacityWh, int minSoc, int maxSoc, int* outSoc) {
+    void predictDailySoc(int currentSoc, int batteryCapacityWh, int minSoc, int maxSoc, int* outSoc,
+                         bool isTomorrow = false, int dayOverride = -1, int monthOverride = -1) {
         if (!outSoc) return;
         
         // Pokud neznáme kapacitu, použijeme default 10kWh
@@ -43,9 +47,9 @@ public:
         // Aktuální čas
         time_t now = time(nullptr);
         struct tm* timeinfo = localtime(&now);
-        int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
-        int currentDay = timeinfo->tm_wday;
-        int currentMonth = timeinfo->tm_mon;
+        int currentQuarter = isTomorrow ? -1 : (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
+        int currentDay = (dayOverride >= 0) ? dayOverride : timeinfo->tm_wday;
+        int currentMonth = (monthOverride >= 0) ? monthOverride : timeinfo->tm_mon;
         
         // Aktuální energie v baterii
         float batteryEnergyWh = (float)currentSoc / 100.0f * batteryCapacityWh;

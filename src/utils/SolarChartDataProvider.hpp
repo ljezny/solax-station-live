@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 #include <esp_heap_caps.h>
-#include "../Spot/ElectricityPriceResult.hpp"  // Pro QUARTERS_OF_DAY
+#include "../Spot/ElectricityPriceResult.hpp"  // Pro QUARTERS_OF_DAY, QUARTERS_TWO_DAYS
 
 /**
  * Struktura pro jeden slot grafu (čtvrthodina)
@@ -17,19 +17,24 @@ typedef struct SolarChartDataItem
 } SolarChartDataItem_t;
 
 #define CHART_QUARTERS_PER_DAY QUARTERS_OF_DAY  // 96 čtvrthodin
+#define CHART_QUARTERS_TWO_DAYS QUARTERS_TWO_DAYS  // 192 čtvrthodin (2 dny)
 #define CHART_SAMPLES_PER_DAY CHART_QUARTERS_PER_DAY  // Pro zpětnou kompatibilitu
 
 /**
  * Provider dat pro solar chart
  * 
- * Ukládá data od 00:00 do 23:59 aktuálního dne.
- * Pro čtvrthodiny, které ještě nenastaly, může obsahovat predikci.
+ * Ukládá data pro 2 dny:
+ * - Index 0-95: dnešní den (00:00 - 23:59)
+ * - Index 96-191: zítřejší den (00:00 - 23:59)
+ * 
+ * Reálná data se ukládají pouze pro dnešek.
+ * Pro zítřek jsou pouze predikce.
  */
 class SolarChartDataProvider
 {
 private:
-    // Data pro aktuální den - alokováno v PSRAM
-    SolarChartDataItem_t* todayData;
+    // Data pro 2 dny - alokováno v PSRAM
+    SolarChartDataItem_t* chartData;
     
     // Akumulátory pro aktuální čtvrthodinu
     float pvAccumulator = 0;
@@ -38,6 +43,9 @@ private:
     int currentSampleCount = 0;
     int lastRecordedQuarter = -1;
     int lastRecordedDay = -1;
+    
+    // Příznak dostupnosti zítřejších predikcí
+    bool hasTomorrowPredictions = false;
     
     /**
      * Získá aktuální čtvrthodinu (0-95)
@@ -58,12 +66,20 @@ private:
     }
     
     /**
-     * Resetuje data pro nový den
+     * Resetuje data pro nový den - posune zítřejší predikce na dnešek
      */
     void resetForNewDay() {
+        // Posun zítřejších predikcí na dnešek
         for (int i = 0; i < CHART_QUARTERS_PER_DAY; i++) {
-            todayData[i] = SolarChartDataItem_t();
+            chartData[i] = chartData[i + CHART_QUARTERS_PER_DAY];
         }
+        
+        // Vymazání zítřejších dat
+        for (int i = CHART_QUARTERS_PER_DAY; i < CHART_QUARTERS_TWO_DAYS; i++) {
+            chartData[i] = SolarChartDataItem_t();
+        }
+        
+        hasTomorrowPredictions = false;
         pvAccumulator = 0;
         loadAccumulator = 0;
         socAccumulator = 0;
@@ -73,33 +89,33 @@ private:
 
 public:
     SolarChartDataProvider() {
-        // Alokace v PSRAM
-        todayData = (SolarChartDataItem_t*)heap_caps_malloc(
-            CHART_QUARTERS_PER_DAY * sizeof(SolarChartDataItem_t), MALLOC_CAP_SPIRAM);
+        // Alokace v PSRAM pro 2 dny
+        chartData = (SolarChartDataItem_t*)heap_caps_malloc(
+            CHART_QUARTERS_TWO_DAYS * sizeof(SolarChartDataItem_t), MALLOC_CAP_SPIRAM);
         
-        if (!todayData) {
+        if (!chartData) {
             log_e("Failed to allocate SolarChartDataProvider in PSRAM!");
-            todayData = (SolarChartDataItem_t*)malloc(CHART_QUARTERS_PER_DAY * sizeof(SolarChartDataItem_t));
+            chartData = (SolarChartDataItem_t*)malloc(CHART_QUARTERS_TWO_DAYS * sizeof(SolarChartDataItem_t));
         } else {
             log_d("SolarChartDataProvider allocated in PSRAM (%d bytes)", 
-                  CHART_QUARTERS_PER_DAY * sizeof(SolarChartDataItem_t));
+                  CHART_QUARTERS_TWO_DAYS * sizeof(SolarChartDataItem_t));
         }
         
         // Inicializace
-        if (todayData) {
-            for (int i = 0; i < CHART_QUARTERS_PER_DAY; i++) {
-                todayData[i] = SolarChartDataItem_t();
+        if (chartData) {
+            for (int i = 0; i < CHART_QUARTERS_TWO_DAYS; i++) {
+                chartData[i] = SolarChartDataItem_t();
             }
         }
         lastRecordedDay = -1;
     }
     
     ~SolarChartDataProvider() {
-        if (todayData) heap_caps_free(todayData);
+        if (chartData) heap_caps_free(chartData);
     }
     
     /**
-     * Přidá vzorek aktuálních hodnot
+     * Přidá vzorek aktuálních hodnot (pouze pro dnešek, index 0-95)
      * @param timestampMS časové razítko (nepoužívá se přímo, zachováno pro kompatibilitu)
      * @param pvPowerW aktuální výkon FVE ve wattech
      * @param loadPowerW aktuální výkon spotřeby ve wattech
@@ -119,11 +135,11 @@ public:
         if (lastRecordedQuarter != currentQuarter) {
             if (lastRecordedQuarter >= 0 && lastRecordedQuarter < CHART_QUARTERS_PER_DAY && currentSampleCount > 0) {
                 // Průměrný výkon * 0.25h = Wh za čtvrthodinu
-                todayData[lastRecordedQuarter].pvPowerWh = (pvAccumulator / currentSampleCount) * 0.25f;
-                todayData[lastRecordedQuarter].loadPowerWh = (loadAccumulator / currentSampleCount) * 0.25f;
-                todayData[lastRecordedQuarter].soc = socAccumulator / currentSampleCount;
-                todayData[lastRecordedQuarter].samples = currentSampleCount;
-                todayData[lastRecordedQuarter].isPrediction = false;
+                chartData[lastRecordedQuarter].pvPowerWh = (pvAccumulator / currentSampleCount) * 0.25f;
+                chartData[lastRecordedQuarter].loadPowerWh = (loadAccumulator / currentSampleCount) * 0.25f;
+                chartData[lastRecordedQuarter].soc = socAccumulator / currentSampleCount;
+                chartData[lastRecordedQuarter].samples = currentSampleCount;
+                chartData[lastRecordedQuarter].isPrediction = false;
             }
             
             // Reset akumulátorů
@@ -142,69 +158,95 @@ public:
         
         // Aktualizace aktuální čtvrthodiny (průběžná hodnota)
         if (currentQuarter >= 0 && currentQuarter < CHART_QUARTERS_PER_DAY && currentSampleCount > 0) {
-            todayData[currentQuarter].pvPowerWh = (pvAccumulator / currentSampleCount) * 0.25f;
-            todayData[currentQuarter].loadPowerWh = (loadAccumulator / currentSampleCount) * 0.25f;
-            todayData[currentQuarter].soc = socAccumulator / currentSampleCount;
-            todayData[currentQuarter].samples = currentSampleCount;
-            todayData[currentQuarter].isPrediction = false;
+            chartData[currentQuarter].pvPowerWh = (pvAccumulator / currentSampleCount) * 0.25f;
+            chartData[currentQuarter].loadPowerWh = (loadAccumulator / currentSampleCount) * 0.25f;
+            chartData[currentQuarter].soc = socAccumulator / currentSampleCount;
+            chartData[currentQuarter].samples = currentSampleCount;
+            chartData[currentQuarter].isPrediction = false;
         }
     }
     
     /**
-     * Nastaví predikci pro budoucí čtvrthodiny
-     * @param quarter čtvrthodina (0-95)
+     * Nastaví predikci pro budoucí čtvrthodiny (dnešek i zítřek)
+     * @param quarter čtvrthodina (0-191, kde 0-95 je dnešek, 96-191 je zítřek)
      * @param pvPowerWh predikovaná výroba v Wh
      * @param loadPowerWh predikovaná spotřeba v Wh
      * @param soc predikovaný SOC (%)
      */
     void setPrediction(int quarter, float pvPowerWh, float loadPowerWh, int soc) {
-        if (quarter >= 0 && quarter < CHART_QUARTERS_PER_DAY && todayData) {
+        if (quarter >= 0 && quarter < CHART_QUARTERS_TWO_DAYS && chartData) {
             // Nepřepisujeme reálná data
-            if (todayData[quarter].samples == 0 || todayData[quarter].isPrediction) {
-                todayData[quarter].pvPowerWh = pvPowerWh;
-                todayData[quarter].loadPowerWh = loadPowerWh;
-                todayData[quarter].soc = soc;
-                todayData[quarter].samples = 1;
-                todayData[quarter].isPrediction = true;
+            if (chartData[quarter].samples == 0 || chartData[quarter].isPrediction) {
+                chartData[quarter].pvPowerWh = pvPowerWh;
+                chartData[quarter].loadPowerWh = loadPowerWh;
+                chartData[quarter].soc = soc;
+                chartData[quarter].samples = 1;
+                chartData[quarter].isPrediction = true;
+                
+                // Označíme že máme zítřejší predikce
+                if (quarter >= CHART_QUARTERS_PER_DAY) {
+                    hasTomorrowPredictions = true;
+                }
             }
         }
     }
     
     /**
      * Vymaže predikce (volá se před novým generováním)
+     * @param includeTomorrow true = vymaže i zítřejší predikce
      */
-    void clearPredictions() {
-        if (!todayData) return;
-        for (int i = 0; i < CHART_QUARTERS_PER_DAY; i++) {
-            if (todayData[i].isPrediction) {
-                todayData[i] = SolarChartDataItem_t();
+    void clearPredictions(bool includeTomorrow = true) {
+        if (!chartData) return;
+        
+        int maxQuarter = includeTomorrow ? CHART_QUARTERS_TWO_DAYS : CHART_QUARTERS_PER_DAY;
+        for (int i = 0; i < maxQuarter; i++) {
+            if (chartData[i].isPrediction) {
+                chartData[i] = SolarChartDataItem_t();
             }
+        }
+        
+        if (includeTomorrow) {
+            hasTomorrowPredictions = false;
         }
     }
     
     /**
-     * Vrací data pro danou čtvrthodinu
+     * Vrací data pro danou čtvrthodinu (0-191)
      */
     const SolarChartDataItem_t& getQuarter(int quarter) const {
-        if (quarter >= 0 && quarter < CHART_QUARTERS_PER_DAY && todayData) {
-            return todayData[quarter];
+        if (quarter >= 0 && quarter < CHART_QUARTERS_TWO_DAYS && chartData) {
+            return chartData[quarter];
         }
         static SolarChartDataItem_t empty;
         return empty;
     }
     
     /**
-     * Vrací pointer na všechna data
+     * Vrací pointer na všechna data (2 dny)
      */
     SolarChartDataItem_t* getData() {
-        return todayData;
+        return chartData;
     }
     
     /**
-     * Vrací aktuální čtvrthodinu
+     * Vrací aktuální čtvrthodinu v rámci dneška (0-95)
      */
     int getCurrentQuarterIndex() const {
         return getCurrentQuarter();
+    }
+    
+    /**
+     * Vrací true pokud máme predikce na zítřek
+     */
+    bool hasTomorrowData() const {
+        return hasTomorrowPredictions;
+    }
+    
+    /**
+     * Vrací celkový počet čtvrthodin k zobrazení
+     */
+    int getTotalQuarters() const {
+        return hasTomorrowPredictions ? CHART_QUARTERS_TWO_DAYS : CHART_QUARTERS_PER_DAY;
     }
     
     /**
@@ -213,13 +255,14 @@ public:
      */
     float getMaxPower() const {
         float maxPower = 5000.0f;  // Minimum pro škálování
-        if (!todayData) return maxPower;
+        if (!chartData) return maxPower;
         
-        for (int i = 0; i < CHART_QUARTERS_PER_DAY; i++) {
-            if (todayData[i].samples > 0) {
+        int maxQuarters = hasTomorrowPredictions ? CHART_QUARTERS_TWO_DAYS : CHART_QUARTERS_PER_DAY;
+        for (int i = 0; i < maxQuarters; i++) {
+            if (chartData[i].samples > 0) {
                 // Převod Wh za čtvrthodinu na průměrný výkon W
-                float pvPowerW = todayData[i].pvPowerWh * 4.0f;
-                float loadPowerW = todayData[i].loadPowerWh * 4.0f;
+                float pvPowerW = chartData[i].pvPowerWh * 4.0f;
+                float loadPowerW = chartData[i].loadPowerWh * 4.0f;
                 maxPower = max(maxPower, max(pvPowerW, loadPowerW));
             }
         }

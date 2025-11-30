@@ -74,8 +74,9 @@ WallboxResult_t wallboxData;
 WallboxResult_t previousWallboxData;
 ShellyResult_t shellyResult;
 ShellyResult_t previousShellyResult;
-ElectricityPriceResult_t electricityPriceResult;
-ElectricityPriceResult_t previousElectricityPriceResult;
+// Electricity price data - allocated in PSRAM due to size (2 days = ~3KB each)
+ElectricityPriceTwoDays_t* electricityPriceResult = nullptr;
+ElectricityPriceTwoDays_t* previousElectricityPriceResult = nullptr;
 SolarChartDataProvider solarChartDataProvider;
 MedianPowerSampler shellyMedianPowerSampler;
 MedianPowerSampler wallboxMedianPowerSampler;
@@ -304,6 +305,16 @@ void setup()
 {
     Serial.begin(115200);
 
+    // Allocate electricity price structures in PSRAM
+    electricityPriceResult = (ElectricityPriceTwoDays_t*)heap_caps_calloc(1, sizeof(ElectricityPriceTwoDays_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    previousElectricityPriceResult = (ElectricityPriceTwoDays_t*)heap_caps_calloc(1, sizeof(ElectricityPriceTwoDays_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    
+    if (!electricityPriceResult || !previousElectricityPriceResult) {
+        log_e("Failed to allocate electricity price structures in PSRAM!");
+    } else {
+        log_d("Electricity price structures allocated in PSRAM (%d bytes each)", sizeof(ElectricityPriceTwoDays_t));
+    }
+
     setupLVGL();
     setupWiFi();
 
@@ -524,7 +535,23 @@ bool loadElectricityPriceTask()
     {
         log_d("Loading electricity price data");
         ElectricityPriceLoader loader;
-        electricityPriceResult = loader.getElectricityPrice(loader.getStoredElectricityPriceProvider(), false);
+        ElectricityPriceProvider_t provider = loader.getStoredElectricityPriceProvider();
+        
+        if (electricityPriceResult) {
+            // Nejprve načteme dnešní data
+            if (loader.loadTodayPrices(provider, electricityPriceResult)) {
+                log_d("Today electricity prices loaded");
+                
+                // Zkusíme načíst zítřejší data (pokud je po 13h)
+                time_t now = time(nullptr);
+                struct tm timeinfoCopy;
+                localtime_r(&now, &timeinfoCopy);
+                
+                if (timeinfoCopy.tm_hour >= 13) {
+                    loader.loadTomorrowPrices(provider, electricityPriceResult);
+                }
+            }
+        }
         
         lastElectricityPriceAttempt = millis();
         run = true;
@@ -535,7 +562,7 @@ bool loadElectricityPriceTask()
 bool runIntelligenceTask()
 {
     bool run = false;
-    static InverterMode_t intelligencePlan[QUARTERS_OF_DAY];
+    static InverterMode_t intelligencePlan[QUARTERS_TWO_DAYS];  // Plan for today + tomorrow
     
     if (lastIntelligenceAttempt == 0 || millis() - lastIntelligenceAttempt > INTELLIGENCE_REFRESH_INTERVAL)
     {
@@ -543,19 +570,22 @@ bool runIntelligenceTask()
         
         IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
         
-        if (settings.enabled && inverterData.status == DONGLE_STATUS_OK && electricityPriceResult.updated > 0)
+        if (settings.enabled && inverterData.status == DONGLE_STATUS_OK && electricityPriceResult && electricityPriceResult->updated > 0)
         {
             IntelligenceResolver resolver(consumptionPredictor, productionPredictor);
             
             // Resolve current quarter for immediate action
-            lastIntelligenceResult = resolver.resolve(inverterData, electricityPriceResult, settings);
+            lastIntelligenceResult = resolver.resolve(inverterData, *electricityPriceResult, settings);
             
             // Generate plan for all future quarters (for chart display)
             time_t now = time(nullptr);
             struct tm* timeinfo = localtime(&now);
             int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
             
-            for (int q = 0; q < QUARTERS_OF_DAY; q++)
+            // Determine how many quarters to plan (today only or today + tomorrow)
+            int totalQuarters = electricityPriceResult->hasTomorrowData ? QUARTERS_TWO_DAYS : QUARTERS_OF_DAY;
+            
+            for (int q = 0; q < totalQuarters; q++)
             {
                 if (q < currentQuarter)
                 {
@@ -570,16 +600,22 @@ bool runIntelligenceTask()
                 else
                 {
                     // Future quarters - resolve for each
-                    IntelligenceResult_t futureResult = resolver.resolve(inverterData, electricityPriceResult, settings, q);
+                    IntelligenceResult_t futureResult = resolver.resolve(inverterData, *electricityPriceResult, settings, q);
                     intelligencePlan[q] = futureResult.command;
                 }
             }
             
-// Update UI with intelligence plan
+            // Fill remaining quarters with UNKNOWN if no tomorrow data
+            for (int q = totalQuarters; q < QUARTERS_TWO_DAYS; q++)
+            {
+                intelligencePlan[q] = INVERTER_MODE_UNKNOWN;
+            }
+            
+            // Update UI with intelligence plan
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
             if (dashboardUI != nullptr)
             {
-                dashboardUI->updateIntelligencePlan(intelligencePlan);
+                dashboardUI->updateIntelligencePlan(intelligencePlan, electricityPriceResult->hasTomorrowData);
                 
                 // Update prediction rows with remaining production/consumption for today (already in kWh)
                 float remainingProductionKWh = productionPredictor.predictRemainingDayProduction();
@@ -654,26 +690,57 @@ bool runIntelligenceTask()
         if (inverterData.status == DONGLE_STATUS_OK)
         {
             time_t now = time(nullptr);
-            struct tm* timeinfo = localtime(&now);
-            int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
-            int currentMonth = timeinfo->tm_mon;
-            int currentDay = timeinfo->tm_wday;
+            struct tm timeinfoCopy;
+            localtime_r(&now, &timeinfoCopy);  // Thread-safe version
+            int currentQuarter = (timeinfoCopy.tm_hour * 60 + timeinfoCopy.tm_min) / 15;
+            int currentMonth = timeinfoCopy.tm_mon;
+            int currentDay = timeinfoCopy.tm_wday;
+            int tomorrowDay = (currentDay + 1) % 7;
+            
+            // Calculate tomorrow's month (handle month boundaries)
+            time_t tomorrowTime = now + 24 * 60 * 60;
+            struct tm tomorrowInfoCopy;
+            localtime_r(&tomorrowTime, &tomorrowInfoCopy);  // Thread-safe version
+            int tomorrowMonth = tomorrowInfoCopy.tm_mon;
             
             IntelligenceSettings_t predSettings = IntelligenceSettingsStorage::load();
             SocPredictor socPredictor(consumptionPredictor, productionPredictor);
+            
+            // Predict SOC for today
             int predictedSoc[QUARTERS_OF_DAY];
             float batteryCapacityWh = inverterData.batteryCapacityWh > 0 ? inverterData.batteryCapacityWh : 10000;
             socPredictor.predictDailySoc(inverterData.soc, batteryCapacityWh, 
                                          predSettings.minSocPercent, predSettings.maxSocPercent, predictedSoc);
             
             // Clear old predictions and set new ones
-            solarChartDataProvider.clearPredictions();
+            solarChartDataProvider.clearPredictions(true);  // Include tomorrow
             
+            // Predictions for rest of today
             for (int q = currentQuarter + 1; q < QUARTERS_OF_DAY; q++)
             {
                 float predProductionWh = productionPredictor.predictQuarterlyProduction(currentMonth, q);
                 float predConsumptionWh = consumptionPredictor.predictQuarterlyConsumption(currentDay, q);
                 solarChartDataProvider.setPrediction(q, predProductionWh, predConsumptionWh, predictedSoc[q]);
+            }
+            
+            // Predictions for tomorrow (if we have tomorrow's spot prices)
+            if (electricityPriceResult && electricityPriceResult->hasTomorrowData)
+            {
+                // Estimate end-of-day SOC for tomorrow's prediction start
+                int endOfDaySoc = predictedSoc[QUARTERS_OF_DAY - 1];
+                int predictedSocTomorrow[QUARTERS_OF_DAY];
+                // Use isTomorrow=true so all quarters are treated as "future"
+                socPredictor.predictDailySoc(endOfDaySoc, batteryCapacityWh,
+                                             predSettings.minSocPercent, predSettings.maxSocPercent, 
+                                             predictedSocTomorrow, true, tomorrowDay, tomorrowMonth);
+                
+                for (int q = 0; q < QUARTERS_OF_DAY; q++)
+                {
+                    float predProductionWh = productionPredictor.predictQuarterlyProduction(tomorrowMonth, q);
+                    float predConsumptionWh = consumptionPredictor.predictQuarterlyConsumption(tomorrowDay, q);
+                    // Index for tomorrow: QUARTERS_OF_DAY + q
+                    solarChartDataProvider.setPrediction(QUARTERS_OF_DAY + q, predProductionWh, predConsumptionWh, predictedSocTomorrow[q]);
+                }
             }
         }
         
@@ -948,13 +1015,13 @@ void onEntering(state_t newState)
         // Set intelligence support based on inverter type
         dashboardUI->setIntelligenceSupported(supportsIntelligenceForCurrentInverter(wifiDiscoveryResult));
         dashboardUI->show();
-        if (inverterData.status == DONGLE_STATUS_OK)
+        if (inverterData.status == DONGLE_STATUS_OK && electricityPriceResult && previousElectricityPriceResult)
         {
-            dashboardUI->update(inverterData, inverterData, uiMedianPowerSampler, shellyResult, shellyResult, wallboxData, wallboxData, solarChartDataProvider, electricityPriceResult, previousElectricityPriceResult, wifiSignalPercent());
+            dashboardUI->update(inverterData, inverterData, uiMedianPowerSampler, shellyResult, shellyResult, wallboxData, wallboxData, solarChartDataProvider, *electricityPriceResult, *previousElectricityPriceResult, wifiSignalPercent());
             previousShellyResult = shellyResult;
             previousInverterData = inverterData;
             previousWallboxData = wallboxData;
-            previousElectricityPriceResult = electricityPriceResult;
+            *previousElectricityPriceResult = *electricityPriceResult;
             previousInverterData.millis = 0;
         }
         xSemaphoreGive(lvgl_mutex);
@@ -1112,10 +1179,10 @@ void updateState()
             // Intelligence not supported for this inverter, ignore request
             showIntelligenceSettings = false;
         }
-        else if ((millis() - previousInverterData.millis) > UI_REFRESH_INTERVAL)
+        else if ((millis() - previousInverterData.millis) > UI_REFRESH_INTERVAL && electricityPriceResult && previousElectricityPriceResult)
         {
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-            dashboardUI->update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, uiMedianPowerSampler, shellyResult, previousShellyResult, wallboxData, previousWallboxData, solarChartDataProvider, electricityPriceResult, previousElectricityPriceResult, wifiSignalPercent());
+            dashboardUI->update(inverterData, previousInverterData.status == DONGLE_STATUS_OK ? previousInverterData : inverterData, uiMedianPowerSampler, shellyResult, previousShellyResult, wallboxData, previousWallboxData, solarChartDataProvider, *electricityPriceResult, *previousElectricityPriceResult, wifiSignalPercent());
             xSemaphoreGive(lvgl_mutex);
 
             previousShellyResult = shellyResult;

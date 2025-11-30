@@ -16,6 +16,10 @@ public:
     bool resultSaved = false;
     bool resultCancelled = false;
     
+private:
+    bool eventHandlersAdded = false;
+    
+public:
     IntelligenceSetupUI() {
     }
     
@@ -34,31 +38,38 @@ public:
         IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
         loadSettingsToUI(settings);
         
-        // Add event handlers
-        lv_obj_add_event_cb(ui_intelligenceSaveButton, intelligenceSaveHandler, LV_EVENT_CLICKED, this);
-        lv_obj_add_event_cb(ui_intelligenceCancelButton, intelligenceCancelHandler, LV_EVENT_CLICKED, this);
-        
-        // Focus handlers for keyboard
-        lv_obj_add_event_cb(ui_intelligenceBatteryCostInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
-        lv_obj_add_event_cb(ui_intelligenceMinSocInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
-        lv_obj_add_event_cb(ui_intelligenceMaxSocInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
-        lv_obj_add_event_cb(ui_intelligenceBuyKInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
-        lv_obj_add_event_cb(ui_intelligenceBuyQInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
-        lv_obj_add_event_cb(ui_intelligenceSellKInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
-        lv_obj_add_event_cb(ui_intelligenceSellQInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
-        
-        // Defocus handlers to hide keyboard
-        lv_obj_add_event_cb(ui_intelligenceBatteryCostInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
-        lv_obj_add_event_cb(ui_intelligenceMinSocInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
-        lv_obj_add_event_cb(ui_intelligenceMaxSocInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
-        lv_obj_add_event_cb(ui_intelligenceBuyKInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
-        lv_obj_add_event_cb(ui_intelligenceBuyQInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
-        lv_obj_add_event_cb(ui_intelligenceSellKInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
-        lv_obj_add_event_cb(ui_intelligenceSellQInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
+        // Add event handlers only once
+        if (!eventHandlersAdded) {
+            lv_obj_add_event_cb(ui_intelligenceSaveButton, intelligenceSaveHandler, LV_EVENT_CLICKED, this);
+            lv_obj_add_event_cb(ui_intelligenceCancelButton, intelligenceCancelHandler, LV_EVENT_CLICKED, this);
+            
+            // Focus handlers for keyboard
+            lv_obj_add_event_cb(ui_intelligenceBatteryCostInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceMinSocInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceMaxSocInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceBuyKInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceBuyQInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceSellKInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceSellQInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
+            
+            // Defocus handlers to hide keyboard
+            lv_obj_add_event_cb(ui_intelligenceBatteryCostInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceMinSocInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceMaxSocInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceBuyKInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceBuyQInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceSellKInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceSellQInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
+            
+            eventHandlersAdded = true;
+        }
     }
     
     void onSaveClick() {
         IntelligenceSettings_t settings = readSettingsFromUI();
+        log_d("Saving intelligence settings: batCost=%.2f, minSoc=%d, maxSoc=%d, buyK=%.2f, buyQ=%.2f, sellK=%.2f, sellQ=%.2f",
+              settings.batteryCostPerKwh, settings.minSocPercent, settings.maxSocPercent,
+              settings.buyK, settings.buyQ, settings.sellK, settings.sellQ);
         IntelligenceSettingsStorage::save(settings);
         resultSaved = true;
         log_d("Intelligence settings saved");
@@ -85,6 +96,9 @@ public:
     
 private:
     void loadSettingsToUI(const IntelligenceSettings_t& settings) {
+        log_d("Loading settings to UI: batCost=%.2f, minSoc=%d, maxSoc=%d",
+              settings.batteryCostPerKwh, settings.minSocPercent, settings.maxSocPercent);
+        
         // Enable switch
         if (settings.enabled) {
             lv_obj_add_state(ui_intelligenceEnableSwitch, LV_STATE_CHECKED);

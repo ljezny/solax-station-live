@@ -65,14 +65,15 @@ public:
         
         Preferences preferences;
         if (preferences.begin(NAMESPACE, true)) {  // read-only
-            settings.enabled = preferences.getBool("enabled", settings.enabled);
-            settings.batteryCostPerKwh = preferences.getFloat("batCost", settings.batteryCostPerKwh);
-            settings.buyK = preferences.getFloat("buyK", settings.buyK);
-            settings.buyQ = preferences.getFloat("buyQ", settings.buyQ);
-            settings.sellK = preferences.getFloat("sellK", settings.sellK);
-            settings.sellQ = preferences.getFloat("sellQ", settings.sellQ);
-            settings.minSocPercent = preferences.getInt("minSoc", settings.minSocPercent);
-            settings.maxSocPercent = preferences.getInt("maxSoc", settings.maxSocPercent);
+            // Use short keys matching save()
+            settings.enabled = preferences.getBool("en", settings.enabled);
+            settings.batteryCostPerKwh = preferences.getFloat("bc", settings.batteryCostPerKwh);
+            settings.buyK = preferences.getFloat("bk", settings.buyK);
+            settings.buyQ = preferences.getFloat("bq", settings.buyQ);
+            settings.sellK = preferences.getFloat("sk", settings.sellK);
+            settings.sellQ = preferences.getFloat("sq", settings.sellQ);
+            settings.minSocPercent = preferences.getInt("mn", settings.minSocPercent);
+            settings.maxSocPercent = preferences.getInt("mx", settings.maxSocPercent);
             preferences.end();
         }
         
@@ -89,17 +90,26 @@ public:
     static void save(const IntelligenceSettings_t& settings) {
         Preferences preferences;
         if (preferences.begin(NAMESPACE, false)) {  // read-write
-            preferences.putBool("enabled", settings.enabled);
-            preferences.putFloat("batCost", settings.batteryCostPerKwh);
-            preferences.putFloat("buyK", settings.buyK);
-            preferences.putFloat("buyQ", settings.buyQ);
-            preferences.putFloat("sellK", settings.sellK);
-            preferences.putFloat("sellQ", settings.sellQ);
-            preferences.putInt("minSoc", settings.minSocPercent);
-            preferences.putInt("maxSoc", settings.maxSocPercent);
+            // Clear old entries first to prevent fragmentation
+            preferences.clear();
+            
+            // Use shorter keys to save space
+            bool ok = true;
+            ok &= preferences.putBool("en", settings.enabled);
+            ok &= preferences.putFloat("bc", settings.batteryCostPerKwh);
+            ok &= preferences.putFloat("bk", settings.buyK);
+            ok &= preferences.putFloat("bq", settings.buyQ);
+            ok &= preferences.putFloat("sk", settings.sellK);
+            ok &= preferences.putFloat("sq", settings.sellQ);
+            ok &= preferences.putInt("mn", settings.minSocPercent);
+            ok &= preferences.putInt("mx", settings.maxSocPercent);
             preferences.end();
             
-            log_d("Intelligence settings saved");
+            if (ok) {
+                log_d("Intelligence settings saved");
+            } else {
+                log_e("Failed to save some intelligence settings");
+            }
         } else {
             log_e("Failed to open preferences for writing");
         }

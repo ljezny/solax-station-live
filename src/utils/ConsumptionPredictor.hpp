@@ -12,6 +12,9 @@
  * Udržuje historii 2 týdnů - tedy 2 vzorky pro každý den týdne.
  * Predikce pro sobotu vychází z předchozích dvou sobot atd.
  * 
+ * Obsahuje adaptivní korekci - porovnává skutečnou spotřebu s predikcí
+ * a upravuje budoucí predikce podle aktuálního vzoru spotřeby.
+ * 
  * Velká pole jsou alokována v PSRAM pro úsporu interní RAM.
  */
 
@@ -37,6 +40,12 @@ private:
     int lastRecordedQuarter;
     int lastRecordedDay;
     int lastRecordedWeek;  // Číslo týdne v roce pro detekci přechodu týdne
+    
+    // === ADAPTIVNÍ KOREKCE ===
+    // Kumulativní chyba pro korekci budoucích predikcí
+    float cumulativeError;
+    static constexpr float CORRECTION_ALPHA = 0.2f;  // Pomalejší adaptace pro spotřebu (špičky)
+    int lastCorrectionQuarter;
     
     // Pomocné metody pro přístup k lineárnímu poli
     inline int getIndex(int week, int day, int quarter) const {
@@ -90,6 +99,10 @@ public:
         lastRecordedQuarter = -1;
         lastRecordedDay = -1;
         lastRecordedWeek = -1;
+        
+        // Inicializace adaptivní korekce
+        cumulativeError = 0;
+        lastCorrectionQuarter = -1;
     }
     
     ~ConsumptionPredictor() {
@@ -205,21 +218,45 @@ public:
             return;
         }
         
+        // === AKTUALIZACE ADAPTIVNÍ KOREKCE ===
+        updateCorrectionFactor(day, quarter, consumptionWh);
+        
         consumptionAt(0, day, quarter) = consumptionWh;
         hasDataAt(0, day, quarter) = true;
         
-        log_d("Updated consumption for day %d, quarter %d: %.1f Wh", 
-              day, quarter, consumptionWh);
+        log_d("Updated consumption for day %d, quarter %d: %.1f Wh (correction: %.1f)", 
+              day, quarter, consumptionWh, cumulativeError);
     }
     
     /**
-     * Predikuje spotřebu pro danou čtvrthodinu
-     * Vrací průměr z dostupných dat pro stejný den v týdnu za poslední 2 týdny
-     * @param day den v týdnu (0=neděle)
-     * @param quarter čtvrthodina (0-95)
-     * @return predikovaná spotřeba v Wh za čtvrthodinu
+     * Aktualizuje korekční faktor na základě rozdílu skutečné a predikované spotřeby
+     * Používá exponenciální vyhlazování s α=0.2 (pomalejší než výroba)
      */
-    float predictQuarterlyConsumption(int day, int quarter) const {
+    void updateCorrectionFactor(int day, int quarter, float actualWh) {
+        // Získáme základní predikci (bez korekce)
+        float basePrediction = getBasePrediction(day, quarter);
+        
+        // Spočítáme chybu
+        float error = actualWh - basePrediction;
+        
+        // Exponenciální vyhlazování chyby
+        cumulativeError = CORRECTION_ALPHA * error + (1 - CORRECTION_ALPHA) * cumulativeError;
+        
+        // Reset korekce o půlnoci
+        if (quarter < lastCorrectionQuarter) {
+            cumulativeError = 0;
+            log_d("Consumption correction reset at midnight");
+        }
+        lastCorrectionQuarter = quarter;
+        
+        log_d("Consumption correction updated: actual=%.1f, predicted=%.1f, error=%.1f, cumError=%.1f",
+              actualWh, basePrediction, error, cumulativeError);
+    }
+    
+    /**
+     * Vrátí základní predikci BEZ korekce (pro výpočet chyby)
+     */
+    float getBasePrediction(int day, int quarter) const {
         if (day < 0 || day >= DAYS_PER_WEEK || quarter < 0 || quarter >= QUARTERS_OF_DAY) {
             return getDefaultConsumption(quarter / 4);
         }
@@ -239,6 +276,43 @@ public:
         }
         
         return sum / count;
+    }
+    
+    /**
+     * Predikuje spotřebu pro danou čtvrthodinu S KOREKCÍ
+     * Vrací průměr z dostupných dat pro stejný den v týdnu za poslední 2 týdny
+     * + korekce na základě aktuálního vzoru spotřeby
+     * @param day den v týdnu (0=neděle)
+     * @param quarter čtvrthodina (0-95)
+     * @return predikovaná spotřeba v Wh za čtvrthodinu
+     */
+    float predictQuarterlyConsumption(int day, int quarter) const {
+        float basePrediction = getBasePrediction(day, quarter);
+        
+        // Aplikujeme korekci
+        float corrected = basePrediction + cumulativeError;
+        
+        // Omezení: min 0.3× základní predikce, max 3× základní predikce
+        float minCorrection = basePrediction * 0.3f;
+        float maxCorrection = basePrediction * 3.0f;
+        corrected = constrain(corrected, minCorrection, maxCorrection);
+        
+        return corrected;
+    }
+    
+    /**
+     * Vrátí aktuální korekční chybu (pro debug/UI)
+     */
+    float getCorrectionError() const {
+        return cumulativeError;
+    }
+    
+    /**
+     * Resetuje korekci
+     */
+    void resetCorrection() {
+        cumulativeError = 0;
+        lastCorrectionQuarter = -1;
     }
     
     /**
