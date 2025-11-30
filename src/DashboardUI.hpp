@@ -359,8 +359,17 @@ private:
     lv_obj_t *intelligencePlanSummary = nullptr;
     lv_obj_t *intelligencePlanDetail = nullptr;
     lv_obj_t *intelligenceDetailTitle = nullptr;
-    lv_obj_t *intelligenceScheduleLabel = nullptr;
-    lv_obj_t *intelligenceStatsLabel = nullptr;
+    // Upcoming plans container and rows
+    lv_obj_t *intelligenceUpcomingContainer = nullptr;
+    lv_obj_t *intelligenceUpcomingRows[3] = {nullptr, nullptr, nullptr};
+    lv_obj_t *intelligenceUpcomingModes[3] = {nullptr, nullptr, nullptr};
+    lv_obj_t *intelligenceUpcomingTimes[3] = {nullptr, nullptr, nullptr};
+    lv_obj_t *intelligenceUpcomingReasons[3] = {nullptr, nullptr, nullptr};
+    // Stats container
+    lv_obj_t *intelligenceStatsContainer = nullptr;
+    lv_obj_t *intelligenceStatsProduction = nullptr;
+    lv_obj_t *intelligenceStatsConsumption = nullptr;
+    lv_obj_t *intelligenceStatsSavings = nullptr;
 
 public:
     const int UI_REFRESH_PERIOD_MS = 5000;
@@ -397,7 +406,8 @@ public:
         intelligencePlanTile = lv_obj_create(ui_RightContainer);
         lv_obj_remove_style_all(intelligencePlanTile);
         lv_obj_set_width(intelligencePlanTile, lv_pct(100));
-        lv_obj_set_height(intelligencePlanTile, 36);
+        lv_obj_set_height(intelligencePlanTile, LV_SIZE_CONTENT);
+        lv_obj_set_flex_grow(intelligencePlanTile, 0);  // No flex grow when collapsed, will be set to 1 when expanded
         lv_obj_set_style_radius(intelligencePlanTile, 24, 0);
         lv_obj_set_style_bg_color(intelligencePlanTile, lv_color_hex(0xFFFFFF), 0);
         lv_obj_set_style_bg_opa(intelligencePlanTile, 255, 0);
@@ -421,43 +431,138 @@ public:
         lv_obj_set_style_text_font(intelligencePlanSummary, &ui_font_OpenSansSmall, 0);
         lv_obj_set_style_text_align(intelligencePlanSummary, LV_TEXT_ALIGN_CENTER, 0);
         
-        // Detail container (shown in expanded state)
+        // Detail container (shown in expanded state) - COLUMN layout (rows)
         intelligencePlanDetail = lv_obj_create(intelligencePlanTile);
         lv_obj_remove_style_all(intelligencePlanDetail);
         lv_obj_set_width(intelligencePlanDetail, lv_pct(100));
         lv_obj_set_flex_grow(intelligencePlanDetail, 1);
         lv_obj_set_flex_flow(intelligencePlanDetail, LV_FLEX_FLOW_COLUMN);
-        lv_obj_set_flex_align(intelligencePlanDetail, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-        lv_obj_set_style_pad_row(intelligencePlanDetail, 4, 0);
+        lv_obj_set_flex_align(intelligencePlanDetail, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+        lv_obj_set_style_pad_row(intelligencePlanDetail, 8, 0);
         lv_obj_clear_flag(intelligencePlanDetail, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_add_flag(intelligencePlanDetail, LV_OBJ_FLAG_HIDDEN);
         
-        // Title in detail view
-        intelligenceDetailTitle = lv_label_create(intelligencePlanDetail);
-        lv_label_set_text(intelligenceDetailTitle, "Intelligence Plan");
+        // --- TOP: Upcoming plans container ---
+        intelligenceUpcomingContainer = lv_obj_create(intelligencePlanDetail);
+        lv_obj_remove_style_all(intelligenceUpcomingContainer);
+        lv_obj_set_width(intelligenceUpcomingContainer, lv_pct(100));
+        lv_obj_set_height(intelligenceUpcomingContainer, LV_SIZE_CONTENT);
+        lv_obj_set_flex_flow(intelligenceUpcomingContainer, LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_flex_align(intelligenceUpcomingContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+        lv_obj_set_style_pad_row(intelligenceUpcomingContainer, 2, 0);
+        lv_obj_clear_flag(intelligenceUpcomingContainer, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_add_flag(intelligenceUpcomingContainer, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_event_cb(intelligenceUpcomingContainer, [](lv_event_t *e) {
+            DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
+            self->toggleChartExpand(self->intelligencePlanTile);
+        }, LV_EVENT_CLICKED, this);
+        
+        // Title for upcoming
+        intelligenceDetailTitle = lv_label_create(intelligenceUpcomingContainer);
+        lv_label_set_text(intelligenceDetailTitle, "Upcoming Plan");
         lv_obj_set_style_text_font(intelligenceDetailTitle, &ui_font_OpenSansMedium, 0);
         lv_obj_set_style_text_color(intelligenceDetailTitle, lv_color_hex(0x00AAFF), 0);
         
-        // Schedule section
-        intelligenceScheduleLabel = lv_label_create(intelligencePlanDetail);
-        lv_obj_set_width(intelligenceScheduleLabel, lv_pct(100));
-        lv_label_set_text(intelligenceScheduleLabel, "Schedule:\n  No scheduled actions");
-        lv_obj_set_style_text_font(intelligenceScheduleLabel, &ui_font_OpenSansSmall, 0);
-        lv_obj_set_style_text_color(intelligenceScheduleLabel, lv_color_hex(0x333333), 0);
+        // Create 3 upcoming plan rows - each has header (Time - Mode) and reason below
+        for (int i = 0; i < 3; i++) {
+            // Container for one plan entry
+            intelligenceUpcomingRows[i] = lv_obj_create(intelligenceUpcomingContainer);
+            lv_obj_remove_style_all(intelligenceUpcomingRows[i]);
+            lv_obj_set_width(intelligenceUpcomingRows[i], lv_pct(100));
+            lv_obj_set_height(intelligenceUpcomingRows[i], LV_SIZE_CONTENT);
+            lv_obj_set_flex_flow(intelligenceUpcomingRows[i], LV_FLEX_FLOW_COLUMN);
+            lv_obj_set_style_pad_row(intelligenceUpcomingRows[i], 0, 0);
+            lv_obj_clear_flag(intelligenceUpcomingRows[i], LV_OBJ_FLAG_SCROLLABLE);
+            
+            // Header row: Time - Mode
+            lv_obj_t *headerRow = lv_obj_create(intelligenceUpcomingRows[i]);
+            lv_obj_remove_style_all(headerRow);
+            lv_obj_set_width(headerRow, lv_pct(100));
+            lv_obj_set_height(headerRow, LV_SIZE_CONTENT);
+            lv_obj_set_flex_flow(headerRow, LV_FLEX_FLOW_ROW);
+            lv_obj_set_flex_align(headerRow, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+            lv_obj_set_style_pad_gap(headerRow, 8, 0);
+            lv_obj_clear_flag(headerRow, LV_OBJ_FLAG_SCROLLABLE);
+            
+            // Time label
+            intelligenceUpcomingTimes[i] = lv_label_create(headerRow);
+            lv_label_set_text(intelligenceUpcomingTimes[i], "--:--");
+            lv_obj_set_style_text_font(intelligenceUpcomingTimes[i], &ui_font_OpenSansSmall, 0);
+            lv_obj_set_style_text_color(intelligenceUpcomingTimes[i], lv_color_hex(0x666666), 0);
+            
+            // Separator
+            lv_obj_t *sep = lv_label_create(headerRow);
+            lv_label_set_text(sep, "-");
+            lv_obj_set_style_text_font(sep, &ui_font_OpenSansSmall, 0);
+            lv_obj_set_style_text_color(sep, lv_color_hex(0x666666), 0);
+            
+            // Mode label
+            intelligenceUpcomingModes[i] = lv_label_create(headerRow);
+            lv_label_set_text(intelligenceUpcomingModes[i], "---");
+            lv_obj_set_style_text_font(intelligenceUpcomingModes[i], &ui_font_OpenSansSmall, 0);
+            lv_obj_set_style_text_color(intelligenceUpcomingModes[i], lv_color_hex(0x333333), 0);
+            
+            // Reason label (below header)
+            intelligenceUpcomingReasons[i] = lv_label_create(intelligenceUpcomingRows[i]);
+            lv_label_set_text(intelligenceUpcomingReasons[i], "");
+            lv_obj_set_style_text_font(intelligenceUpcomingReasons[i], &ui_font_OpenSansSmall, 0);
+            lv_obj_set_style_text_color(intelligenceUpcomingReasons[i], lv_color_hex(0x888888), 0);
+            lv_obj_set_style_pad_left(intelligenceUpcomingReasons[i], 8, 0);  // Indent reason
+        }
         
-        // Statistics section
-        intelligenceStatsLabel = lv_label_create(intelligencePlanDetail);
-        lv_obj_set_width(intelligenceStatsLabel, lv_pct(100));
-        lv_label_set_text(intelligenceStatsLabel, "Statistics:\n  Savings today: -- CZK\n  Avg price paid: -- CZK/kWh\n  Grid import: -- kWh");
-        lv_obj_set_style_text_font(intelligenceStatsLabel, &ui_font_OpenSansSmall, 0);
-        lv_obj_set_style_text_color(intelligenceStatsLabel, lv_color_hex(0x666666), 0);
-        
-        // Add click handler for intelligence tile expand
-        lv_obj_set_user_data(intelligencePlanTile, this);
-        lv_obj_add_event_cb(intelligencePlanTile, [](lv_event_t *e) {
-            DashboardUI* self = (DashboardUI*)lv_obj_get_user_data(lv_event_get_target(e));
+        // --- BOTTOM: Statistics container ---
+        intelligenceStatsContainer = lv_obj_create(intelligencePlanDetail);
+        lv_obj_remove_style_all(intelligenceStatsContainer);
+        lv_obj_set_width(intelligenceStatsContainer, lv_pct(100));
+        lv_obj_set_height(intelligenceStatsContainer, LV_SIZE_CONTENT);
+        lv_obj_set_flex_flow(intelligenceStatsContainer, LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_flex_align(intelligenceStatsContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+        lv_obj_set_style_pad_row(intelligenceStatsContainer, 2, 0);
+        lv_obj_clear_flag(intelligenceStatsContainer, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_add_flag(intelligenceStatsContainer, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_event_cb(intelligenceStatsContainer, [](lv_event_t *e) {
+            DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
             self->toggleChartExpand(self->intelligencePlanTile);
-        }, LV_EVENT_CLICKED, NULL);
+        }, LV_EVENT_CLICKED, this);
+        
+        // Title for stats
+        lv_obj_t *statsTitle = lv_label_create(intelligenceStatsContainer);
+        lv_label_set_text(statsTitle, "Today's Stats");
+        lv_obj_set_style_text_font(statsTitle, &ui_font_OpenSansMedium, 0);
+        lv_obj_set_style_text_color(statsTitle, lv_color_hex(0x00AAFF), 0);
+        
+        // Production estimate (no icon)
+        intelligenceStatsProduction = lv_label_create(intelligenceStatsContainer);
+        lv_label_set_text(intelligenceStatsProduction, "Production: ~-- kWh");
+        lv_obj_set_style_text_font(intelligenceStatsProduction, &ui_font_OpenSansSmall, 0);
+        lv_obj_set_style_text_color(intelligenceStatsProduction, lv_color_hex(0xF5A623), 0);
+        
+        // Consumption estimate (no icon)
+        intelligenceStatsConsumption = lv_label_create(intelligenceStatsContainer);
+        lv_label_set_text(intelligenceStatsConsumption, "Consumption: ~-- kWh");
+        lv_obj_set_style_text_font(intelligenceStatsConsumption, &ui_font_OpenSansSmall, 0);
+        lv_obj_set_style_text_color(intelligenceStatsConsumption, lv_color_hex(0x7ED321), 0);
+        
+        // Savings (no icon)
+        intelligenceStatsSavings = lv_label_create(intelligenceStatsContainer);
+        lv_label_set_text(intelligenceStatsSavings, "Savings: ~-- CZK");
+        lv_obj_set_style_text_font(intelligenceStatsSavings, &ui_font_OpenSansSmall, 0);
+        lv_obj_set_style_text_color(intelligenceStatsSavings, lv_color_hex(0x00AA00), 0);
+        
+        // Add click handler for intelligence tile expand/collapse
+        lv_obj_set_user_data(intelligencePlanTile, this);
+        lv_obj_add_flag(intelligencePlanTile, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_event_cb(intelligencePlanTile, [](lv_event_t *e) {
+            DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
+            self->toggleChartExpand(self->intelligencePlanTile);
+        }, LV_EVENT_CLICKED, this);
+        
+        // Also add click handler on detail container so clicks inside work too
+        lv_obj_add_flag(intelligencePlanDetail, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_event_cb(intelligencePlanDetail, [](lv_event_t *e) {
+            DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
+            self->toggleChartExpand(self->intelligencePlanTile);
+        }, LV_EVENT_CLICKED, this);
         
         // Move to position 1 (after TopRightContainer, before RightBottomContainer/solar chart)
         lv_obj_move_to_index(intelligencePlanTile, 1);
@@ -816,10 +921,11 @@ public:
                 }
                 lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
             }
-            // If collapsing intelligence tile, show summary and hide detail
+            // If collapsing intelligence tile, show summary and hide detail, restore small flex grow
             if (chart == intelligencePlanTile) {
                 lv_obj_clear_flag(intelligencePlanSummary, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_add_flag(intelligencePlanDetail, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_set_flex_grow(intelligencePlanTile, 0);  // No flex grow when collapsed
             }
             expandedChart = nullptr;
         } else {
@@ -831,10 +937,11 @@ public:
                     lv_obj_add_flag(child, LV_OBJ_FLAG_HIDDEN);
                 }
             }
-            // If expanding intelligence tile, hide summary and show detail
+            // If expanding intelligence tile, hide summary and show detail, use flex grow
             if (chart == intelligencePlanTile) {
                 lv_obj_add_flag(intelligencePlanSummary, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_clear_flag(intelligencePlanDetail, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_set_flex_grow(intelligencePlanTile, 1);  // Take all available space when expanded
             }
             expandedChart = chart;
         }
@@ -862,34 +969,6 @@ public:
         }
         
         // Intelligence button visibility will be handled in show() method based on this flag
-    }
-
-    /**
-     * Update intelligence plan display with schedule and statistics
-     * @param summaryText Short text for collapsed view (e.g., "Next: Charge at 14:00")
-     * @param scheduleText Detailed schedule (e.g., "14:00-16:00 Charge (cheap)\n22:00-06:00 Discharge (peak)")
-     * @param savingsToday Estimated savings in CZK
-     * @param avgPricePaid Average price paid per kWh
-     * @param gridImport Total grid import in kWh
-     */
-    void updateIntelligencePlan(const char* summaryText, const char* scheduleText, 
-                                 float savingsToday, float avgPricePaid, float gridImport) {
-        if (intelligencePlanSummary == nullptr) return;
-        
-        // Update summary
-        lv_label_set_text(intelligencePlanSummary, summaryText);
-        
-        // Update schedule
-        char schedule[256];
-        snprintf(schedule, sizeof(schedule), "Schedule:\n%s", scheduleText);
-        lv_label_set_text(intelligenceScheduleLabel, schedule);
-        
-        // Update statistics
-        char stats[128];
-        snprintf(stats, sizeof(stats), 
-                 "Statistics:\n  Savings today: %.1f CZK\n  Avg price paid: %.2f CZK/kWh\n  Grid import: %.1f kWh",
-                 savingsToday, avgPricePaid, gridImport);
-        lv_label_set_text(intelligenceStatsLabel, stats);
     }
 
     void showModeChangeSpinner() {
@@ -1051,6 +1130,97 @@ public:
         }
         
         lv_label_set_text(intelligencePlanSummary, summary);
+    }
+    
+    /**
+     * Update upcoming plans in the expanded intelligence tile
+     * @param plan Array of planned modes for each quarter
+     * @param currentQuarter Current quarter index
+     * @param totalQuarters Total number of quarters in plan
+     */
+    void updateIntelligenceUpcomingPlans(const InverterMode_t plan[], int currentQuarter, int totalQuarters) {
+        if (intelligenceUpcomingRows[0] == nullptr) return;
+        
+        // Helper to get mode name
+        auto getModeName = [](InverterMode_t mode) -> const char* {
+            switch (mode) {
+                case INVERTER_MODE_SELF_USE: return "Self Use";
+                case INVERTER_MODE_CHARGE_FROM_GRID: return "Charge";
+                case INVERTER_MODE_DISCHARGE_TO_GRID: return "Sell";
+                case INVERTER_MODE_HOLD_BATTERY: return "Hold";
+                default: return "---";
+            }
+        };
+        
+        auto getModeColor = [](InverterMode_t mode) -> lv_color_t {
+            switch (mode) {
+                case INVERTER_MODE_SELF_USE: return lv_color_hex(0x7ED321);  // Green
+                case INVERTER_MODE_CHARGE_FROM_GRID: return lv_color_hex(0xF5A623);  // Orange
+                case INVERTER_MODE_DISCHARGE_TO_GRID: return lv_color_hex(0x4A90D9);  // Blue
+                case INVERTER_MODE_HOLD_BATTERY: return lv_color_hex(0x888888);  // Gray
+                default: return lv_color_hex(0x666666);
+            }
+        };
+        
+        auto getModeReason = [](InverterMode_t mode) -> const char* {
+            switch (mode) {
+                case INVERTER_MODE_SELF_USE: return "Normal operation";
+                case INVERTER_MODE_CHARGE_FROM_GRID: return "Cheap electricity";
+                case INVERTER_MODE_DISCHARGE_TO_GRID: return "High price";
+                case INVERTER_MODE_HOLD_BATTERY: return "Save battery";
+                default: return "";
+            }
+        };
+        
+        // Find next 3 mode changes
+        int foundChanges = 0;
+        InverterMode_t lastMode = (currentQuarter >= 0 && currentQuarter < totalQuarters) ? plan[currentQuarter] : INVERTER_MODE_UNKNOWN;
+        
+        for (int q = currentQuarter + 1; q < totalQuarters && foundChanges < 3; q++) {
+            if (plan[q] != lastMode && plan[q] != INVERTER_MODE_UNKNOWN) {
+                // Calculate time
+                int hour = (q % QUARTERS_OF_DAY) / 4;
+                int minute = ((q % QUARTERS_OF_DAY) % 4) * 15;
+                
+                char timeStr[8];
+                snprintf(timeStr, sizeof(timeStr), "%02d:%02d", hour, minute);
+                
+                lv_label_set_text(intelligenceUpcomingTimes[foundChanges], timeStr);
+                lv_label_set_text(intelligenceUpcomingModes[foundChanges], getModeName(plan[q]));
+                lv_obj_set_style_text_color(intelligenceUpcomingModes[foundChanges], getModeColor(plan[q]), 0);
+                lv_label_set_text(intelligenceUpcomingReasons[foundChanges], getModeReason(plan[q]));
+                lv_obj_clear_flag(intelligenceUpcomingRows[foundChanges], LV_OBJ_FLAG_HIDDEN);
+                
+                lastMode = plan[q];
+                foundChanges++;
+            }
+        }
+        
+        // Hide unused rows
+        for (int i = foundChanges; i < 3; i++) {
+            lv_obj_add_flag(intelligenceUpcomingRows[i], LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+    
+    /**
+     * Update statistics in the expanded intelligence tile
+     * @param productionKWh Estimated production in kWh
+     * @param consumptionKWh Estimated consumption in kWh
+     * @param savingsCZK Estimated savings in CZK
+     */
+    void updateIntelligenceStats(float productionKWh, float consumptionKWh, float savingsCZK) {
+        if (intelligenceStatsProduction == nullptr) return;
+        
+        char buf[48];
+        
+        snprintf(buf, sizeof(buf), "Production: ~%.1f kWh", productionKWh);
+        lv_label_set_text(intelligenceStatsProduction, buf);
+        
+        snprintf(buf, sizeof(buf), "Consumption: ~%.1f kWh", consumptionKWh);
+        lv_label_set_text(intelligenceStatsConsumption, buf);
+        
+        snprintf(buf, sizeof(buf), "Savings: ~%.0f CZK", savingsCZK);
+        lv_label_set_text(intelligenceStatsSavings, buf);
     }
 
     /**
@@ -1617,8 +1787,18 @@ public:
         lv_obj_set_style_bg_color(intelligencePlanTile, isDarkMode ? black : white, 0);
         lv_obj_set_style_bg_opa(intelligencePlanTile, isDarkMode ? LV_OPA_80 : LV_OPA_80, 0);
         lv_obj_set_style_text_color(intelligencePlanSummary, isDarkMode ? white : lv_color_hex(0x333333), 0);
-        lv_obj_set_style_text_color(intelligenceScheduleLabel, isDarkMode ? white : lv_color_hex(0x333333), 0);
-        lv_obj_set_style_text_color(intelligenceStatsLabel, isDarkMode ? lv_color_hex(0xAAAAAA) : lv_color_hex(0x666666), 0);
+        // Update detail view colors
+        if (intelligenceDetailTitle != nullptr) {
+            lv_obj_set_style_text_color(intelligenceDetailTitle, lv_color_hex(0x00AAFF), 0);  // Title stays blue
+        }
+        for (int i = 0; i < 3; i++) {
+            if (intelligenceUpcomingTimes[i] != nullptr) {
+                lv_obj_set_style_text_color(intelligenceUpcomingTimes[i], isDarkMode ? lv_color_hex(0xAAAAAA) : lv_color_hex(0x666666), 0);
+            }
+            if (intelligenceUpcomingReasons[i] != nullptr) {
+                lv_obj_set_style_text_color(intelligenceUpcomingReasons[i], isDarkMode ? lv_color_hex(0x888888) : lv_color_hex(0x888888), 0);
+            }
+        }
         
         lv_obj_set_style_text_color(ui_Dashboard, isDarkMode ? white : black, 0);
         lv_obj_set_style_text_color(ui_selfUsePercentLabel, isDarkMode ? black : white, 0);

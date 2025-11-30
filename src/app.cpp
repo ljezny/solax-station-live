@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <lvgl.h>
+#include <esp_task_wdt.h>
 
 #include <SPI.h>
 #include "consts.h"
@@ -197,12 +198,18 @@ int wifiSignalPercent()
 
 void lvglTimerTask(void *param)
 {
+    // Subscribe this task to watchdog
+    esp_task_wdt_add(NULL);
+    
     for (;;)
     {
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         lv_timer_handler();
         xSemaphoreGive(lvgl_mutex);
-        vTaskDelay(10);
+        
+        // Reset watchdog to prevent timeout during long renders
+        esp_task_wdt_reset();
+        vTaskDelay(pdMS_TO_TICKS(5));  // Shorter delay, give more time to other tasks
     }
 }
 
@@ -574,8 +581,12 @@ bool runIntelligenceTask()
         {
             IntelligenceResolver resolver(consumptionPredictor, productionPredictor);
             
-            // Resolve current quarter for immediate action
-            lastIntelligenceResult = resolver.resolve(inverterData, *electricityPriceResult, settings);
+            // Resolve current quarter for immediate action (with verbose logging)
+            lastIntelligenceResult = resolver.resolve(inverterData, *electricityPriceResult, settings, -1, true);
+            
+            log_i("Intelligence decision: %s - %s", 
+                  IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str(),
+                  lastIntelligenceResult.reason.c_str());
             
             // Generate plan for all future quarters (for chart display)
             time_t now = time(nullptr);
@@ -603,7 +614,15 @@ bool runIntelligenceTask()
                     IntelligenceResult_t futureResult = resolver.resolve(inverterData, *electricityPriceResult, settings, q);
                     intelligencePlan[q] = futureResult.command;
                 }
+                
+                // Yield every 8 quarters to prevent watchdog timeout
+                if (q % 8 == 7) {
+                    vTaskDelay(1);
+                }
             }
+            
+            // Log plan summary for current day
+            log_i("Intelligence plan generated for %d quarters (from Q%d)", totalQuarters, currentQuarter);
             
             // Fill remaining quarters with UNKNOWN if no tomorrow data
             for (int q = totalQuarters; q < QUARTERS_TWO_DAYS; q++)
@@ -611,16 +630,16 @@ bool runIntelligenceTask()
                 intelligencePlan[q] = INVERTER_MODE_UNKNOWN;
             }
             
-            // Update UI with intelligence state - active and working
+            // Get prediction data BEFORE taking mutex (these can be slow)
+            float remainingProductionKWh = productionPredictor.predictRemainingDayProduction();
+            float remainingConsumptionKWh = consumptionPredictor.predictRemainingDayConsumption();
+            
+            // Update UI with intelligence state - only UI updates inside mutex
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
             if (dashboardUI != nullptr)
             {
                 dashboardUI->setIntelligenceState(true, true, true);
                 dashboardUI->updateIntelligencePlanSummary(lastIntelligenceResult.command, intelligencePlan, currentQuarter, totalQuarters);
-                
-                // Update prediction rows with remaining production/consumption for today (already in kWh)
-                float remainingProductionKWh = productionPredictor.predictRemainingDayProduction();
-                float remainingConsumptionKWh = consumptionPredictor.predictRemainingDayConsumption();
                 dashboardUI->updatePredictionBadges(remainingProductionKWh, remainingConsumptionKWh);
             }
             xSemaphoreGive(lvgl_mutex);

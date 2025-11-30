@@ -135,6 +135,23 @@ private:
     }
     
     /**
+     * Vypočítá maximální nákupní cenu pro budoucí čtvrthodiny
+     */
+    float findMaxBuyPrice(const ElectricityPriceTwoDays_t& prices, int fromQuarter, const IntelligenceSettings_t& settings) {
+        float maxPrice = -FLT_MAX;
+        int maxQuarter = getAvailableQuarters(prices);
+        
+        for (int q = fromQuarter; q < maxQuarter; q++) {
+            float price = IntelligenceSettingsStorage::calculateBuyPrice(prices.prices[q].electricityPrice, settings);
+            if (price > maxPrice) {
+                maxPrice = price;
+            }
+        }
+        
+        return maxPrice;
+    }
+    
+    /**
      * Vypočítá maximální prodejní cenu pro budoucí čtvrthodiny
      */
     float findMaxSellPrice(const ElectricityPriceTwoDays_t& prices, int fromQuarter, const IntelligenceSettings_t& settings) {
@@ -162,13 +179,15 @@ public:
      * @param prices spotové ceny (aktuální den)
      * @param settings nastavení inteligence
      * @param forQuarter čtvrthodina pro kterou chceme rozhodnutí (-1 = aktuální čas)
+     * @param verbose zda logovat detailně (true jen pro aktuální čtvrthodinu)
      * @return doporučený příkaz pro střídač
      */
     IntelligenceResult_t resolve(
         const InverterData_t& inverterData,
         const ElectricityPriceTwoDays_t& prices,
         const IntelligenceSettings_t& settings,
-        int forQuarter = -1
+        int forQuarter = -1,
+        bool verbose = false
     ) {
         IntelligenceResult_t result = IntelligenceResult_t::createDefault();
         
@@ -229,118 +248,213 @@ public:
         
         // Budoucí ceny
         float minFutureBuyPrice = findMinBuyPrice(prices, priceQuarter + 1, settings);
+        float maxFutureBuyPrice = findMaxBuyPrice(prices, priceQuarter + 1, settings);
         float maxFutureSellPrice = findMaxSellPrice(prices, priceQuarter + 1, settings);
         float avgFutureBuyPrice = calculateAverageBuyPrice(prices, priceQuarter + 1, settings);
         
-        log_d("Intelligence analysis: SOC=%d%%, consumption=%.1fkWh, production=%.1fkWh, net=%.1fkWh",
-              currentSoc, remainingConsumption, remainingProduction, netEnergy);
-        log_d("Prices: buy=%.2f, sell=%.2f, battery=%.2f, minFutureBuy=%.2f, maxFutureSell=%.2f",
-              currentBuyPrice, currentSellPrice, batteryCost, minFutureBuyPrice, maxFutureSellPrice);
+        // Predikce budoucí výroby (pro rozhodnutí o odložení nabíjení)
+        float futureProduction = remainingProduction;  // Už máme z prediktorů
+        bool expectSolarSurplus = futureProduction > remainingConsumption;
+        
+        // Logování pouze pro aktuální čtvrthodinu (verbose mode)
+        if (verbose) {
+            log_i("=== Intelligence Q%d: SOC=%d%%, buy=%.2f, sell=%.2f ===", 
+                  priceQuarter, currentSoc, currentBuyPrice, currentSellPrice);
+        }
         
         // === ROZHODOVACÍ LOGIKA ===
+        // Priorita: 1) Ochrana baterie, 2) Speciální příležitosti, 3) Ekonomická optimalizace, 4) Self-use
         
-        // 1. Ochrana baterie - pokud je SOC pod minimem, nenabízíme vybíjení
+        // ═══════════════════════════════════════════════════════════════════
+        // 1. OCHRANA BATERIE - SOC pod minimem
+        // ═══════════════════════════════════════════════════════════════════
         if (currentSoc <= settings.minSocPercent) {
-            result.command = INVERTER_MODE_HOLD_BATTERY;
-            result.reason = "SOC at minimum, protecting battery";
-            
-            // Pokud je aktuální cena výhodná, můžeme nabíjet
-            if (currentBuyPrice < minFutureBuyPrice && currentSoc < settings.maxSocPercent) {
+            log_v("Rule 1: SOC at minimum (%d%% <= %d%%)", currentSoc, settings.minSocPercent);
+            // Baterie je prázdná - musíme buď nabíjet nebo držet
+            if (currentBuyPrice <= minFutureBuyPrice && currentSoc < settings.maxSocPercent) {
                 result.command = INVERTER_MODE_CHARGE_FROM_GRID;
                 result.targetSocPercent = settings.maxSocPercent;
-                result.reason = "SOC low & cheap price - charging";
+                result.reason = "SOC low & cheapest time - charging";
+                log_v("-> CHARGE: cheapest time (%.2f <= %.2f)", currentBuyPrice, minFutureBuyPrice);
+                return result;
             }
+            result.command = INVERTER_MODE_HOLD_BATTERY;
+            result.reason = "SOC at minimum, protecting battery";
+            log_v("-> HOLD: protecting battery");
             return result;
         }
         
-        // 2. Baterie plná a máme přebytek výroby
-        if (currentSoc >= settings.maxSocPercent && remainingProduction > remainingConsumption) {
-            result.command = INVERTER_MODE_SELF_USE;
-            result.reason = "Battery full, using self-consumption";
-            return result;
-        }
-        
-        // 3. KLÍČOVÁ LOGIKA: Je levnější koupit ze sítě než použít baterii?
-        // Pokud aktuální nákupní cena < cena energie z baterie, držíme baterii a jedeme ze sítě
-        // Toto je případ kdy např. spot je 6.70 Kč a baterie stojí 23 Kč/kWh
-        if (currentBuyPrice < batteryCost) {
-            log_d("Grid cheaper than battery: buy=%.2f < battery=%.2f", currentBuyPrice, batteryCost);
+        // ═══════════════════════════════════════════════════════════════════
+        // 2. SPECIÁLNÍ PŘÍLEŽITOST: Síť je levnější než baterie
+        // ═══════════════════════════════════════════════════════════════════
+        // Příklad: noční tarif, záporné ceny, velmi levná energie
+        // HOLD baterii a kupuj ze sítě, ALE jen pokud budeme baterii potřebovat později
+        if (currentBuyPrice < batteryCost && maxFutureBuyPrice > batteryCost) {
+            log_v("Rule 2: Grid cheaper than battery (%.2f < %.2f) and will need later (%.2f > %.2f)",
+                  currentBuyPrice, batteryCost, maxFutureBuyPrice, batteryCost);
             result.command = INVERTER_MODE_HOLD_BATTERY;
             result.expectedSavings = (batteryCost - currentBuyPrice) * remainingConsumption;
-            result.reason = String("Grid cheaper (") + String(currentBuyPrice, 1) + ") than battery (" + String(batteryCost, 1) + ")";
+            result.reason = String("Grid (") + String(currentBuyPrice, 1) + ") cheaper than battery (" + String(batteryCost, 1) + ")";
+            log_v("-> HOLD: save battery, buy from grid, savings=%.1f", result.expectedSavings);
             return result;
         }
         
-        // 4. Analýza: Je výhodnější NABÍJET ZE SÍTĚ teď?
-        // Nabíjíme pokud: aktuální nákupní cena + náklady baterie < budoucí průměrná cena
-        // A zároveň: vyplatí se to (nejlevnější nákup)
+        // ═══════════════════════════════════════════════════════════════════
+        // 3. SPECIÁLNÍ PŘÍLEŽITOST: Odložení nabíjení - čekáme na solární výrobu
+        // ═══════════════════════════════════════════════════════════════════
+        // Ráno: místo vybíjení baterie (self-use) → HOLD a kup ze sítě
+        // Baterie se nabije zadarmo ze slunce
+        // Podmínky: očekáváme přebytek výroby A cena teď je vyšší než později
+        if (expectSolarSurplus && currentSoc < settings.maxSocPercent) {
+            log_v("Rule 3: Solar surplus expected (prod=%.1f > cons=%.1f), SOC=%d%% < max=%d%%",
+                  remainingProduction, remainingConsumption, currentSoc, settings.maxSocPercent);
+            // Baterie se nabije ze slunce - nemá smysl ji teď vybíjet
+            // HOLD jen pokud je aktuální cena rozumná (ne extrémně drahá)
+            if (currentBuyPrice < avgFutureBuyPrice * 1.5) {
+                result.command = INVERTER_MODE_HOLD_BATTERY;
+                result.reason = "Holding - solar will charge battery later";
+                log_v("-> HOLD: waiting for solar (buy=%.2f < avgFuture*1.5=%.2f)", 
+                      currentBuyPrice, avgFutureBuyPrice * 1.5);
+                return result;
+            }
+            log_v("-> SKIP: grid too expensive (%.2f >= %.2f)", currentBuyPrice, avgFutureBuyPrice * 1.5);
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // 4. NABÍJENÍ ZE SÍTĚ - nejlevnější čas pro nákup
+        // ═══════════════════════════════════════════════════════════════════
         if (currentSoc < settings.maxSocPercent) {
             bool isCheapestTime = currentBuyPrice <= minFutureBuyPrice;
             bool worthCharging = currentBuyPrice + batteryCost < avgFutureBuyPrice;
-            
-            // Budeme potřebovat energii? (spotřeba > výroba + baterie)
             bool willNeedEnergy = remainingConsumption > remainingProduction + currentEnergyKwh;
+            
+            log_v("Rule 4: Charge check - cheapest=%s (%.2f<=%.2f), worth=%s (%.2f+%.2f<%.2f), need=%s (%.1f>%.1f+%.1f)",
+                  isCheapestTime ? "YES" : "NO", currentBuyPrice, minFutureBuyPrice,
+                  worthCharging ? "YES" : "NO", currentBuyPrice, batteryCost, avgFutureBuyPrice,
+                  willNeedEnergy ? "YES" : "NO", remainingConsumption, remainingProduction, currentEnergyKwh);
             
             if (isCheapestTime && worthCharging && willNeedEnergy) {
                 result.command = INVERTER_MODE_CHARGE_FROM_GRID;
                 result.targetSocPercent = settings.maxSocPercent;
                 result.expectedSavings = (avgFutureBuyPrice - currentBuyPrice - batteryCost) * usableCapacityKwh;
                 result.reason = String("Cheapest time to charge, saving ") + String(result.expectedSavings, 1) + " " + prices.currency;
+                log_v("-> CHARGE: for consumption, savings=%.1f", result.expectedSavings);
                 return result;
             }
         }
         
-        // 5. Analýza: Je výhodnější VYBÍJET DO SÍTĚ teď?
-        // Vybíjíme pokud: aktuální prodejní cena > náklady baterie + budoucí nákupní cena
-        // (vyplatí se prodat teď a koupit později)
-        if (currentSoc > settings.minSocPercent) {
+        // ═══════════════════════════════════════════════════════════════════
+        // 4b. ARBITRÁŽ: Koupit levně teď, prodat draze později
+        // ═══════════════════════════════════════════════════════════════════
+        // Nabíjíme nad rámec vlastní spotřeby pokud se vyplatí arbitráž
+        // Podmínka: prodejní cena později > nákupní cena teď + 2x náklady baterie
+        // (2x protože energie projde baterií dvakrát - dovnitř a ven)
+        if (currentSoc < settings.maxSocPercent) {
+            float arbitrageProfit = maxFutureSellPrice - currentBuyPrice - (2 * batteryCost);
+            bool worthArbitrage = arbitrageProfit > 0;
+            bool isCheapTime = currentBuyPrice <= minFutureBuyPrice * 1.1;  // Tolerance 10%
+            
+            // Kolik energie můžeme koupit navíc (nad vlastní spotřebu)?
+            float excessCapacity = usableCapacityKwh - (remainingConsumption - remainingProduction);
+            if (excessCapacity < 0) excessCapacity = 0;
+            
+            log_v("Rule 4b: Arbitrage - profit=%.2f (%.2f-%.2f-2*%.2f), worth=%s, cheapTime=%s, excessCap=%.1f",
+                  arbitrageProfit, maxFutureSellPrice, currentBuyPrice, batteryCost,
+                  worthArbitrage ? "YES" : "NO", isCheapTime ? "YES" : "NO", excessCapacity);
+            
+            if (worthArbitrage && isCheapTime && excessCapacity > 0) {
+                result.command = INVERTER_MODE_CHARGE_FROM_GRID;
+                result.targetSocPercent = settings.maxSocPercent;
+                result.expectedSavings = arbitrageProfit * excessCapacity;
+                result.reason = String("Arbitrage: buy ") + String(currentBuyPrice, 1) + ", sell " + String(maxFutureSellPrice, 1) + ", profit " + String(result.expectedSavings, 1) + " " + prices.currency;
+                log_v("-> CHARGE: arbitrage, profit=%.1f", result.expectedSavings);
+                return result;
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // 5. PRODEJ DO SÍTĚ - nejdražší čas pro prodej
+        // ═══════════════════════════════════════════════════════════════════
+        // Jen pokud máme přebytek (výroba > spotřeba) a je to výhodné
+        if (netEnergy > 0 && currentSoc > settings.minSocPercent) {
             bool isExpensiveTime = currentSellPrice >= maxFutureSellPrice;
             bool worthSelling = currentSellPrice > batteryCost + minFutureBuyPrice;
             
-            // Máme přebytek energie? (baterie + výroba > spotřeba)
-            bool hasExcessEnergy = currentEnergyKwh + remainingProduction > remainingConsumption;
+            log_v("Rule 5: Sell check - netEnergy=%.1f>0, expensive=%s (%.2f>=%.2f), worth=%s (%.2f>%.2f+%.2f)",
+                  netEnergy, isExpensiveTime ? "YES" : "NO", currentSellPrice, maxFutureSellPrice,
+                  worthSelling ? "YES" : "NO", currentSellPrice, batteryCost, minFutureBuyPrice);
             
-            if (isExpensiveTime && worthSelling && hasExcessEnergy) {
+            if (isExpensiveTime && worthSelling) {
                 result.command = INVERTER_MODE_DISCHARGE_TO_GRID;
-                result.maxDischargePowerW = 5000;  // Omezíme výkon, lze parametrizovat
+                result.maxDischargePowerW = 5000;
                 result.expectedSavings = (currentSellPrice - batteryCost - minFutureBuyPrice) * currentEnergyKwh;
                 result.reason = String("Best time to sell, profit ") + String(result.expectedSavings, 1) + " " + prices.currency;
+                log_v("-> DISCHARGE: best sell time, profit=%.1f", result.expectedSavings);
                 return result;
             }
         }
         
-        // 6. Analýza: Držet baterii pro pozdější špičku?
-        // Pokud přijde dražší hodina a máme energii, držíme ji
-        if (maxFutureSellPrice > currentSellPrice + batteryCost) {
-            // Je výhodnější počkat a prodat později
-            if (currentEnergyKwh > 0 && netEnergy > -currentEnergyKwh) {
-                result.command = INVERTER_MODE_HOLD_BATTERY;
-                result.reason = "Holding for better sell price later";
+        // ═══════════════════════════════════════════════════════════════════
+        // 5b. PRODEJ Z ARBITRÁŽE - máme přebytek nad vlastní spotřebu
+        // ═══════════════════════════════════════════════════════════════════
+        // Pokud máme více energie v baterii než potřebujeme a je dobrá cena
+        if (currentSoc > settings.minSocPercent) {
+            // Kolik energie máme navíc nad budoucí spotřebu?
+            float excessEnergy = currentEnergyKwh - (remainingConsumption - remainingProduction);
+            if (excessEnergy < 0) excessEnergy = 0;
+            
+            bool isExpensiveTime = currentSellPrice >= maxFutureSellPrice * 0.95;  // Tolerance 5%
+            bool worthSelling = currentSellPrice > batteryCost + minFutureBuyPrice;
+            
+            log_v("Rule 5b: Sell excess - excessEnergy=%.1f, expensive=%s (%.2f>=%.2f*0.95), worth=%s",
+                  excessEnergy, isExpensiveTime ? "YES" : "NO", currentSellPrice, maxFutureSellPrice,
+                  worthSelling ? "YES" : "NO");
+            
+            if (excessEnergy > 0 && isExpensiveTime && worthSelling) {
+                result.command = INVERTER_MODE_DISCHARGE_TO_GRID;
+                result.maxDischargePowerW = 5000;
+                result.expectedSavings = (currentSellPrice - batteryCost) * excessEnergy;
+                result.reason = String("Selling excess: ") + String(excessEnergy, 1) + "kWh @ " + String(currentSellPrice, 1) + " " + prices.currency;
+                log_v("-> DISCHARGE: selling excess %.1fkWh, profit=%.1f", excessEnergy, result.expectedSavings);
                 return result;
             }
         }
         
-        // 7. Pokud přijde levnější hodina pro nákup, použijeme baterii teď a koupíme později
-        if (minFutureBuyPrice + batteryCost < currentBuyPrice) {
-            // Bude levnější koupit později
-            if (currentEnergyKwh > 0) {
-                // Použijeme baterii místo nákupu teď
-                result.command = INVERTER_MODE_SELF_USE;
-                result.reason = "Using battery, will buy cheaper later";
-                return result;
-            }
-        }
-        
-        // 8. Výchozí stav - pokud máme energii v baterii a je levnější než síť, použijeme ji
-        if (currentEnergyKwh > 0 && batteryCost < currentBuyPrice) {
-            result.command = INVERTER_MODE_SELF_USE;
-            result.reason = "Battery cheaper than grid";
+        // ═══════════════════════════════════════════════════════════════════
+        // 6. HOLD PRO POZDĚJŠÍ PRODEJ
+        // ═══════════════════════════════════════════════════════════════════
+        // Máme přebytek energie a později bude lepší cena
+        // POZOR: Jen pokud máme přebytek! Jinak bychom kupovali ze sítě
+        if (netEnergy > 0 && maxFutureSellPrice > currentSellPrice + batteryCost) {
+            log_v("Rule 6: Hold for later - netEnergy=%.1f>0, futurePrice=%.2f > current=%.2f + bat=%.2f",
+                  netEnergy, maxFutureSellPrice, currentSellPrice, batteryCost);
+            result.command = INVERTER_MODE_HOLD_BATTERY;
+            result.reason = String("Holding for better price later (") + String(maxFutureSellPrice, 1) + " vs " + String(currentSellPrice, 1) + ")";
+            log_v("-> HOLD: waiting for better sell price");
             return result;
         }
         
-        // 9. Výchozí stav - normální self-use provoz
+        // ═══════════════════════════════════════════════════════════════════
+        // 7. SELF-USE - standardní režim
+        // ═══════════════════════════════════════════════════════════════════
+        // Máme spotřebu a baterii - použij baterii (je levnější než síť)
+        if (currentEnergyKwh > 0 && batteryCost <= currentBuyPrice) {
+            log_v("Rule 7: Self-use - battery=%.1fkWh>0, batteryCost=%.2f <= gridBuy=%.2f",
+                  currentEnergyKwh, batteryCost, currentBuyPrice);
+            result.command = INVERTER_MODE_SELF_USE;
+            result.expectedSavings = (currentBuyPrice - batteryCost) * min(remainingConsumption, currentEnergyKwh);
+            result.reason = String("Self-use: battery (") + String(batteryCost, 1) + ") cheaper than grid (" + String(currentBuyPrice, 1) + ")";
+            log_v("-> SELF_USE: using battery, savings=%.1f", result.expectedSavings);
+            return result;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // 8. VÝCHOZÍ STAV - normální self-use
+        // ═══════════════════════════════════════════════════════════════════
+        log_v("Rule 8: Default self-use mode");
         result.command = INVERTER_MODE_SELF_USE;
         result.reason = "Normal self-consumption mode";
+        log_v("-> SELF_USE: default mode");
         return result;
     }
     
