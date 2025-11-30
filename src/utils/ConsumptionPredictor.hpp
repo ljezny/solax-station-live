@@ -396,20 +396,38 @@ public:
     void saveToPreferences() {
         Preferences preferences;
         if (preferences.begin(NAMESPACE, false)) {
+            // Komprimovaná data: uint16_t místo float (úspora 50%)
+            // hasData jako bitfield (12 bytes místo 96)
+            uint16_t compressedData[QUARTERS_OF_DAY];
+            uint8_t hasDataBits[12];  // 96 bitů = 12 bytes
+            
             for (int week = 0; week < WEEKS_HISTORY; week++) {
                 for (int day = 0; day < DAYS_PER_WEEK; day++) {
-                    char key[16];
-                    snprintf(key, sizeof(key), "c_w%dd%d", week, day);
-                    // Pointer na začátek řádku v lineárním poli
-                    preferences.putBytes(key, &consumptionAt(week, day, 0), QUARTERS_OF_DAY * sizeof(float));
+                    // Komprimace consumption na uint16_t
+                    for (int q = 0; q < QUARTERS_OF_DAY; q++) {
+                        float val = consumptionAt(week, day, q);
+                        compressedData[q] = (uint16_t)constrain(val, 0.0f, 65535.0f);
+                    }
                     
-                    snprintf(key, sizeof(key), "h_w%dd%d", week, day);
-                    preferences.putBytes(key, &hasDataAt(week, day, 0), QUARTERS_OF_DAY * sizeof(bool));
+                    // Komprimace hasData na bitfield
+                    memset(hasDataBits, 0, sizeof(hasDataBits));
+                    for (int q = 0; q < QUARTERS_OF_DAY; q++) {
+                        if (hasDataAt(week, day, q)) {
+                            hasDataBits[q / 8] |= (1 << (q % 8));
+                        }
+                    }
+                    
+                    char key[16];
+                    snprintf(key, sizeof(key), "c%d%d", week, day);
+                    preferences.putBytes(key, compressedData, sizeof(compressedData));
+                    
+                    snprintf(key, sizeof(key), "h%d%d", week, day);
+                    preferences.putBytes(key, hasDataBits, sizeof(hasDataBits));
                 }
             }
             preferences.putInt("lastWeek", lastRecordedWeek);
             preferences.end();
-            log_d("Consumption history saved");
+            log_d("Consumption history saved (compressed)");
         }
     }
     
@@ -419,19 +437,32 @@ public:
     void loadFromPreferences() {
         Preferences preferences;
         if (preferences.begin(NAMESPACE, true)) {
+            uint16_t compressedData[QUARTERS_OF_DAY];
+            uint8_t hasDataBits[12];
+            
             for (int week = 0; week < WEEKS_HISTORY; week++) {
                 for (int day = 0; day < DAYS_PER_WEEK; day++) {
                     char key[16];
-                    snprintf(key, sizeof(key), "c_w%dd%d", week, day);
-                    if (preferences.getBytes(key, &consumptionAt(week, day, 0), QUARTERS_OF_DAY * sizeof(float)) == 0) {
-                        // Žádná data - použijeme výchozí
+                    
+                    // Načtení komprimovaných dat
+                    snprintf(key, sizeof(key), "c%d%d", week, day);
+                    if (preferences.getBytes(key, compressedData, sizeof(compressedData)) > 0) {
+                        for (int q = 0; q < QUARTERS_OF_DAY; q++) {
+                            consumptionAt(week, day, q) = (float)compressedData[q];
+                        }
+                    } else {
                         for (int quarter = 0; quarter < QUARTERS_OF_DAY; quarter++) {
                             consumptionAt(week, day, quarter) = getDefaultConsumption(quarter / 4);
                         }
                     }
                     
-                    snprintf(key, sizeof(key), "h_w%dd%d", week, day);
-                    if (preferences.getBytes(key, &hasDataAt(week, day, 0), QUARTERS_OF_DAY * sizeof(bool)) == 0) {
+                    // Načtení hasData bitfield
+                    snprintf(key, sizeof(key), "h%d%d", week, day);
+                    if (preferences.getBytes(key, hasDataBits, sizeof(hasDataBits)) > 0) {
+                        for (int q = 0; q < QUARTERS_OF_DAY; q++) {
+                            hasDataAt(week, day, q) = (hasDataBits[q / 8] & (1 << (q % 8))) != 0;
+                        }
+                    } else {
                         for (int quarter = 0; quarter < QUARTERS_OF_DAY; quarter++) {
                             hasDataAt(week, day, quarter) = false;
                         }

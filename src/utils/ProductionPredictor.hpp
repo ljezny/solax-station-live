@@ -413,16 +413,27 @@ public:
         if (preferences.begin(NAMESPACE, false)) {
             preferences.putInt("instPwr", installedPowerWp);
             
+            // Komprimovaná data: uint16_t místo float, uint8_t místo int
+            uint16_t compressedProd[QUARTERS_PER_DAY];
+            uint8_t compressedCnt[QUARTERS_PER_DAY];
+            
             for (int month = 0; month < MONTHS_PER_YEAR; month++) {
-                char key[16];
-                snprintf(key, sizeof(key), "prod_m%d", month);
-                preferences.putBytes(key, &productionAt(month, 0), QUARTERS_PER_DAY * sizeof(float));
+                // Komprimace production na uint16_t (Wh hodnoty 0-65535)
+                for (int q = 0; q < QUARTERS_PER_DAY; q++) {
+                    float val = productionAt(month, q);
+                    compressedProd[q] = (uint16_t)constrain(val, 0.0f, 65535.0f);
+                    compressedCnt[q] = (uint8_t)min(sampleCountAt(month, q), 255);
+                }
                 
-                snprintf(key, sizeof(key), "cnt_m%d", month);
-                preferences.putBytes(key, &sampleCountAt(month, 0), QUARTERS_PER_DAY * sizeof(int));
+                char key[16];
+                snprintf(key, sizeof(key), "p%d", month);
+                preferences.putBytes(key, compressedProd, sizeof(compressedProd));
+                
+                snprintf(key, sizeof(key), "n%d", month);
+                preferences.putBytes(key, compressedCnt, sizeof(compressedCnt));
             }
             preferences.end();
-            log_d("Production history saved");
+            log_d("Production history saved (compressed)");
         }
     }
     
@@ -434,17 +445,35 @@ public:
         if (preferences.begin(NAMESPACE, true)) {
             installedPowerWp = preferences.getInt("instPwr", installedPowerWp);
             
+            uint16_t compressedProd[QUARTERS_PER_DAY];
+            uint8_t compressedCnt[QUARTERS_PER_DAY];
+            
             for (int month = 0; month < MONTHS_PER_YEAR; month++) {
                 char key[16];
-                snprintf(key, sizeof(key), "prod_m%d", month);
-                if (preferences.getBytes(key, &productionAt(month, 0), QUARTERS_PER_DAY * sizeof(float)) == 0) {
+                
+                // Načtení komprimovaných dat výroby
+                snprintf(key, sizeof(key), "p%d", month);
+                if (preferences.getBytes(key, compressedProd, sizeof(compressedProd)) > 0) {
+                    for (int q = 0; q < QUARTERS_PER_DAY; q++) {
+                        productionAt(month, q) = (float)compressedProd[q];
+                    }
+                } else {
                     for (int quarter = 0; quarter < QUARTERS_PER_DAY; quarter++) {
                         productionAt(month, quarter) = getDefaultProduction(month, quarter);
                     }
                 }
                 
-                snprintf(key, sizeof(key), "cnt_m%d", month);
-                preferences.getBytes(key, &sampleCountAt(month, 0), QUARTERS_PER_DAY * sizeof(int));
+                // Načtení sampleCount
+                snprintf(key, sizeof(key), "n%d", month);
+                if (preferences.getBytes(key, compressedCnt, sizeof(compressedCnt)) > 0) {
+                    for (int q = 0; q < QUARTERS_PER_DAY; q++) {
+                        sampleCountAt(month, q) = (int)compressedCnt[q];
+                    }
+                } else {
+                    for (int q = 0; q < QUARTERS_PER_DAY; q++) {
+                        sampleCountAt(month, q) = 0;
+                    }
+                }
             }
             preferences.end();
             log_d("Production history loaded");

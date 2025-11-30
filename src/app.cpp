@@ -611,11 +611,12 @@ bool runIntelligenceTask()
                 intelligencePlan[q] = INVERTER_MODE_UNKNOWN;
             }
             
-            // Update UI with intelligence plan
+            // Update UI with intelligence state - active and working
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
             if (dashboardUI != nullptr)
             {
-                dashboardUI->updateIntelligencePlan(intelligencePlan, electricityPriceResult->hasTomorrowData);
+                dashboardUI->setIntelligenceState(true, true, true);
+                dashboardUI->updateIntelligencePlanSummary(lastIntelligenceResult.command, intelligencePlan, currentQuarter, totalQuarters);
                 
                 // Update prediction rows with remaining production/consumption for today (already in kWh)
                 float remainingProductionKWh = productionPredictor.predictRemainingDayProduction();
@@ -674,13 +675,16 @@ bool runIntelligenceTask()
         }
         else
         {
-            // Intelligence disabled - clear the plan from UI and reset tracking
+            // Intelligence disabled or missing data - update UI state
+            IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
+            bool hasSpotPrices = electricityPriceResult && electricityPriceResult->updated > 0;
+            
             lastSentMode = INVERTER_MODE_UNKNOWN;
             lastProcessedQuarter = -1;
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
             if (dashboardUI != nullptr)
             {
-                dashboardUI->clearIntelligencePlan();
+                dashboardUI->setIntelligenceState(false, settings.enabled, hasSpotPrices);
                 dashboardUI->updatePredictionBadges(0, 0);  // Hide prediction badges
             }
             xSemaphoreGive(lvgl_mutex);

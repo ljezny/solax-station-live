@@ -26,30 +26,8 @@ static bool isDarkMode = false;
  */
 typedef struct SpotChartData {
     ElectricityPriceTwoDays_t* priceResult;
-    InverterMode_t intelligencePlan[QUARTERS_TWO_DAYS];  // Plán pro dnešek + zítřek
     bool hasIntelligencePlan;                             // Zda máme platný plán
-    bool hasTomorrowPlan;                                 // Zda máme plán na zítřek
 } SpotChartData_t;
-
-/**
- * Vrátí barvu pro režim inteligence
- */
-static lv_color_t getIntelligenceModeColor(InverterMode_t mode)
-{
-    switch (mode)
-    {
-    case INVERTER_MODE_SELF_USE:
-        return lv_color_hex(0x4CAF50);  // Zelená
-    case INVERTER_MODE_CHARGE_FROM_GRID:
-        return lv_color_hex(0x2196F3);  // Modrá
-    case INVERTER_MODE_DISCHARGE_TO_GRID:
-        return lv_color_hex(0xFF9800);  // Oranžová
-    case INVERTER_MODE_HOLD_BATTERY:
-        return lv_color_hex(0x9E9E9E);  // Šedá
-    default:
-        return lv_color_hex(0x000000);  // Černá pro unknown
-    }
-}
 
 static lv_color_t getPriceLevelColor(PriceLevel_t level)
 {
@@ -90,12 +68,10 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         bool showTwoDays = electricityPriceResult->hasTomorrowData;
         uint32_t segmentCount = showTwoDays ? QUARTERS_TWO_DAYS : QUARTERS_OF_DAY;
         uint32_t segmentGap = 0;
-        int32_t segmentWidth = showTwoDays ? 2 : 4;  // Narrower bars for 2 days
-        int32_t offset_x = w - (segmentCount * segmentWidth + (segmentCount - 1) * segmentGap);
-        
-        // Reserve space at top for intelligence plan indicators
-        int intelligenceRowHeight = chartData->hasIntelligencePlan ? 6 : 0;
-        lv_coord_t chartTop = pad_top + intelligenceRowHeight;
+        // Calculate segment width dynamically based on available width
+        int32_t segmentWidth = w / segmentCount;
+        if (segmentWidth < 1) segmentWidth = 1;
+        int32_t offset_x = (w - (segmentCount * segmentWidth)) / 2;  // Center the chart
 
         // Find min/max prices across all displayed data
         float minPrice = electricityPriceResult->prices[0].electricityPrice;
@@ -109,14 +85,12 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         minPrice = min(0.0f, minPrice);
         maxPrice = max(maxPrice, electricityPriceResult->scaleMaxValue);
         float priceRange = maxPrice - minPrice;
-        lv_coord_t chartHeight = h - intelligenceRowHeight;
+        lv_coord_t chartHeight = h;
 
         // Current quarter (relative to today)
         time_t now = time(nullptr);
         struct tm *timeinfo = localtime(&now);
         int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
-
-
 
         // Draw vertical line for current quarter
         lv_draw_rect_dsc_t current_quarter_dsc;
@@ -126,42 +100,9 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         lv_area_t cq_a;
         cq_a.x1 = obj->coords.x1 + offset_x + currentQuarter * (segmentWidth + segmentGap) - segmentGap / 2;
         cq_a.x2 = cq_a.x1 + segmentWidth + segmentGap - 1;
-        cq_a.y1 = obj->coords.y1 + chartTop;
+        cq_a.y1 = obj->coords.y1 + pad_top;
         cq_a.y2 = obj->coords.y2 - pad_bottom;
         lv_draw_rect(dsc->draw_ctx, &current_quarter_dsc, &cq_a);
-
-        // Draw intelligence plan row at top (aligned in single line)
-        if (chartData->hasIntelligencePlan)
-        {
-            int squareSize = showTwoDays ? 2 : 3;
-            lv_coord_t sqY = obj->coords.y1 + pad_top + squareSize / 2 + 1;
-            
-            uint32_t planSegments = chartData->hasTomorrowPlan ? segmentCount : QUARTERS_OF_DAY;
-            for (uint32_t i = 0; i < planSegments; i++)
-            {
-                if (i >= (uint32_t)currentQuarter)
-                {
-                    InverterMode_t mode = chartData->intelligencePlan[i];
-                    if (mode != INVERTER_MODE_UNKNOWN)
-                    {
-                        lv_draw_rect_dsc_t sq_dsc;
-                        lv_draw_rect_dsc_init(&sq_dsc);
-                        sq_dsc.bg_opa = LV_OPA_COVER;
-                        sq_dsc.bg_color = getIntelligenceModeColor(mode);
-                        sq_dsc.radius = 0;
-                        
-                        lv_area_t sq_a;
-                        int centerX = obj->coords.x1 + offset_x + i * (segmentWidth + segmentGap) + segmentWidth / 2;
-                        sq_a.x1 = centerX - squareSize / 2;
-                        sq_a.x2 = centerX + squareSize / 2;
-                        sq_a.y1 = sqY - squareSize / 2;
-                        sq_a.y2 = sqY + squareSize / 2;
-                        
-                        lv_draw_rect(dsc->draw_ctx, &sq_dsc, &sq_a);
-                    }
-                }
-            }
-        }
 
         // Draw price segments
         for (uint32_t i = 0; i < segmentCount; i++)
@@ -180,8 +121,8 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
             lv_area_t a;
             a.x1 = obj->coords.x1 + offset_x + i * (segmentWidth + segmentGap);
             a.x2 = a.x1 + segmentWidth - 1;
-            lv_coord_t barTopY = obj->coords.y1 + chartTop + (priceRange - price + minPrice) * chartHeight / priceRange;
-            lv_coord_t barBottomY = obj->coords.y1 + chartTop + (priceRange + minPrice) * chartHeight / priceRange - 1;
+            lv_coord_t barTopY = obj->coords.y1 + pad_top + (priceRange - price + minPrice) * chartHeight / priceRange;
+            lv_coord_t barBottomY = obj->coords.y1 + pad_top + (priceRange + minPrice) * chartHeight / priceRange - 1;
             a.y1 = barTopY;
             a.y2 = barBottomY;
             if (a.y1 > a.y2)
@@ -409,6 +350,17 @@ private:
     lv_obj_t *inverterModeOverlay = nullptr; // Overlay za popup menu
     lv_obj_t *modeChangeSpinner = nullptr;  // Spinner overlay při změně režimu
     InverterModeChangeCallback modeChangeCallback = nullptr;
+    
+    // Chart zoom state - which chart is currently expanded (nullptr = none)
+    lv_obj_t *expandedChart = nullptr;
+    
+    // Intelligence plan tile
+    lv_obj_t *intelligencePlanTile = nullptr;
+    lv_obj_t *intelligencePlanSummary = nullptr;
+    lv_obj_t *intelligencePlanDetail = nullptr;
+    lv_obj_t *intelligenceDetailTitle = nullptr;
+    lv_obj_t *intelligenceScheduleLabel = nullptr;
+    lv_obj_t *intelligenceStatsLabel = nullptr;
 
 public:
     const int UI_REFRESH_PERIOD_MS = 5000;
@@ -420,14 +372,102 @@ public:
         // Initialize spot chart data
         spotChartData.priceResult = nullptr;
         spotChartData.hasIntelligencePlan = false;
-        spotChartData.hasTomorrowPlan = false;
-        for (int i = 0; i < QUARTERS_TWO_DAYS; i++) {
-            spotChartData.intelligencePlan[i] = INVERTER_MODE_UNKNOWN;
-        }
         
         lv_obj_add_event_cb(ui_Chart1, solar_chart_draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
         lv_obj_add_event_cb(ui_spotPriceContainer, electricity_price_draw_event_cb, LV_EVENT_DRAW_PART_END, NULL);
         lv_obj_add_event_cb(ui_settingsButton, onSettingsShow, LV_EVENT_RELEASED, NULL);
+        
+        // Add click handlers for chart expand/collapse
+        // For solar chart, add click on ui_Chart1 since it covers the whole container
+        lv_obj_add_flag(ui_Chart1, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_set_user_data(ui_Chart1, this);
+        lv_obj_add_event_cb(ui_Chart1, [](lv_event_t *e) {
+            DashboardUI* self = (DashboardUI*)lv_obj_get_user_data(lv_event_get_target(e));
+            self->toggleChartExpand(ui_RightBottomContainer);
+        }, LV_EVENT_CLICKED, NULL);
+        
+        lv_obj_add_flag(ui_spotPriceContainer, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_set_user_data(ui_spotPriceContainer, this);
+        lv_obj_add_event_cb(ui_spotPriceContainer, [](lv_event_t *e) {
+            DashboardUI* self = (DashboardUI*)lv_obj_get_user_data(lv_event_get_target(e));
+            self->toggleChartExpand(ui_spotPriceContainer);
+        }, LV_EVENT_CLICKED, NULL);
+        
+        // Create intelligence plan tile (thin bar, same style as other tiles)
+        intelligencePlanTile = lv_obj_create(ui_RightContainer);
+        lv_obj_remove_style_all(intelligencePlanTile);
+        lv_obj_set_width(intelligencePlanTile, lv_pct(100));
+        lv_obj_set_height(intelligencePlanTile, 36);
+        lv_obj_set_style_radius(intelligencePlanTile, 24, 0);
+        lv_obj_set_style_bg_color(intelligencePlanTile, lv_color_hex(0xFFFFFF), 0);
+        lv_obj_set_style_bg_opa(intelligencePlanTile, 255, 0);
+        lv_obj_set_style_shadow_color(intelligencePlanTile, lv_color_hex(0x000000), 0);
+        lv_obj_set_style_shadow_opa(intelligencePlanTile, 64, 0);
+        lv_obj_set_style_shadow_width(intelligencePlanTile, 32, 0);
+        lv_obj_set_style_shadow_spread(intelligencePlanTile, 0, 0);
+        lv_obj_set_style_pad_left(intelligencePlanTile, 8, 0);
+        lv_obj_set_style_pad_right(intelligencePlanTile, 8, 0);
+        lv_obj_set_style_pad_top(intelligencePlanTile, 8, 0);
+        lv_obj_set_style_pad_bottom(intelligencePlanTile, 8, 0);
+        lv_obj_clear_flag(intelligencePlanTile, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_add_flag(intelligencePlanTile, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_set_flex_flow(intelligencePlanTile, LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_flex_align(intelligencePlanTile, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+        
+        // Summary label (shown in collapsed state)
+        intelligencePlanSummary = lv_label_create(intelligencePlanTile);
+        lv_obj_set_width(intelligencePlanSummary, lv_pct(100));
+        lv_label_set_text(intelligencePlanSummary, "Intelligence: No plan");
+        lv_obj_set_style_text_font(intelligencePlanSummary, &ui_font_OpenSansSmall, 0);
+        lv_obj_set_style_text_align(intelligencePlanSummary, LV_TEXT_ALIGN_CENTER, 0);
+        
+        // Detail container (shown in expanded state)
+        intelligencePlanDetail = lv_obj_create(intelligencePlanTile);
+        lv_obj_remove_style_all(intelligencePlanDetail);
+        lv_obj_set_width(intelligencePlanDetail, lv_pct(100));
+        lv_obj_set_flex_grow(intelligencePlanDetail, 1);
+        lv_obj_set_flex_flow(intelligencePlanDetail, LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_flex_align(intelligencePlanDetail, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+        lv_obj_set_style_pad_row(intelligencePlanDetail, 4, 0);
+        lv_obj_clear_flag(intelligencePlanDetail, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_add_flag(intelligencePlanDetail, LV_OBJ_FLAG_HIDDEN);
+        
+        // Title in detail view
+        intelligenceDetailTitle = lv_label_create(intelligencePlanDetail);
+        lv_label_set_text(intelligenceDetailTitle, "Intelligence Plan");
+        lv_obj_set_style_text_font(intelligenceDetailTitle, &ui_font_OpenSansMedium, 0);
+        lv_obj_set_style_text_color(intelligenceDetailTitle, lv_color_hex(0x00AAFF), 0);
+        
+        // Schedule section
+        intelligenceScheduleLabel = lv_label_create(intelligencePlanDetail);
+        lv_obj_set_width(intelligenceScheduleLabel, lv_pct(100));
+        lv_label_set_text(intelligenceScheduleLabel, "Schedule:\n  No scheduled actions");
+        lv_obj_set_style_text_font(intelligenceScheduleLabel, &ui_font_OpenSansSmall, 0);
+        lv_obj_set_style_text_color(intelligenceScheduleLabel, lv_color_hex(0x333333), 0);
+        
+        // Statistics section
+        intelligenceStatsLabel = lv_label_create(intelligencePlanDetail);
+        lv_obj_set_width(intelligenceStatsLabel, lv_pct(100));
+        lv_label_set_text(intelligenceStatsLabel, "Statistics:\n  Savings today: -- CZK\n  Avg price paid: -- CZK/kWh\n  Grid import: -- kWh");
+        lv_obj_set_style_text_font(intelligenceStatsLabel, &ui_font_OpenSansSmall, 0);
+        lv_obj_set_style_text_color(intelligenceStatsLabel, lv_color_hex(0x666666), 0);
+        
+        // Add click handler for intelligence tile expand
+        lv_obj_set_user_data(intelligencePlanTile, this);
+        lv_obj_add_event_cb(intelligencePlanTile, [](lv_event_t *e) {
+            DashboardUI* self = (DashboardUI*)lv_obj_get_user_data(lv_event_get_target(e));
+            self->toggleChartExpand(self->intelligencePlanTile);
+        }, LV_EVENT_CLICKED, NULL);
+        
+        // Move to position 1 (after TopRightContainer, before RightBottomContainer/solar chart)
+        lv_obj_move_to_index(intelligencePlanTile, 1);
+        
+        // Initially hidden - shown only when intelligence is active
+        lv_obj_add_flag(intelligencePlanTile, LV_OBJ_FLAG_HIDDEN);
+        
+        // Adjust flex grow weights - solar chart bigger, spot smaller
+        lv_obj_set_flex_grow(ui_RightBottomContainer, 2);  // Solar chart - 2x weight
+        lv_obj_set_flex_grow(ui_spotPriceContainer, 1);    // Spot prices - 1x weight
         
         // Create intelligence button (next to settings button)
         if (onIntelligenceShow != nullptr) {
@@ -758,6 +798,49 @@ public:
         }, LV_EVENT_CLICKED, NULL);
     }
 
+    // Toggle chart expand - hide siblings to let the clicked chart fill the container
+    void toggleChartExpand(lv_obj_t *chart) {
+        if (expandedChart == chart) {
+            // Collapse - show all siblings
+            uint32_t childCount = lv_obj_get_child_cnt(ui_RightContainer);
+            for (uint32_t i = 0; i < childCount; i++) {
+                lv_obj_t *child = lv_obj_get_child(ui_RightContainer, i);
+                // Don't show intelligence tile if it wasn't visible before expand
+                if (child == intelligencePlanTile && !spotChartData.hasIntelligencePlan) {
+                    continue;
+                }
+                // Don't show spot price container if no data available
+                if (child == ui_spotPriceContainer && 
+                    (spotChartData.priceResult == nullptr || spotChartData.priceResult->updated == 0)) {
+                    continue;
+                }
+                lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
+            }
+            // If collapsing intelligence tile, show summary and hide detail
+            if (chart == intelligencePlanTile) {
+                lv_obj_clear_flag(intelligencePlanSummary, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_add_flag(intelligencePlanDetail, LV_OBJ_FLAG_HIDDEN);
+            }
+            expandedChart = nullptr;
+        } else {
+            // Expand - hide all siblings except clicked chart
+            uint32_t childCount = lv_obj_get_child_cnt(ui_RightContainer);
+            for (uint32_t i = 0; i < childCount; i++) {
+                lv_obj_t *child = lv_obj_get_child(ui_RightContainer, i);
+                if (child != chart) {
+                    lv_obj_add_flag(child, LV_OBJ_FLAG_HIDDEN);
+                }
+            }
+            // If expanding intelligence tile, hide summary and show detail
+            if (chart == intelligencePlanTile) {
+                lv_obj_add_flag(intelligencePlanSummary, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(intelligencePlanDetail, LV_OBJ_FLAG_HIDDEN);
+            }
+            expandedChart = chart;
+        }
+        lv_obj_invalidate(ui_RightContainer);
+    }
+
     void setModeChangeCallback(InverterModeChangeCallback callback) {
         modeChangeCallback = callback;
     }
@@ -774,9 +857,39 @@ public:
             lv_obj_add_flag(ui_inverterContainer, LV_OBJ_FLAG_CLICKABLE);
         } else {
             lv_obj_clear_flag(ui_inverterContainer, LV_OBJ_FLAG_CLICKABLE);
+            // Hide intelligence tile if inverter doesn't support intelligence
+            lv_obj_add_flag(intelligencePlanTile, LV_OBJ_FLAG_HIDDEN);
         }
         
         // Intelligence button visibility will be handled in show() method based on this flag
+    }
+
+    /**
+     * Update intelligence plan display with schedule and statistics
+     * @param summaryText Short text for collapsed view (e.g., "Next: Charge at 14:00")
+     * @param scheduleText Detailed schedule (e.g., "14:00-16:00 Charge (cheap)\n22:00-06:00 Discharge (peak)")
+     * @param savingsToday Estimated savings in CZK
+     * @param avgPricePaid Average price paid per kWh
+     * @param gridImport Total grid import in kWh
+     */
+    void updateIntelligencePlan(const char* summaryText, const char* scheduleText, 
+                                 float savingsToday, float avgPricePaid, float gridImport) {
+        if (intelligencePlanSummary == nullptr) return;
+        
+        // Update summary
+        lv_label_set_text(intelligencePlanSummary, summaryText);
+        
+        // Update schedule
+        char schedule[256];
+        snprintf(schedule, sizeof(schedule), "Schedule:\n%s", scheduleText);
+        lv_label_set_text(intelligenceScheduleLabel, schedule);
+        
+        // Update statistics
+        char stats[128];
+        snprintf(stats, sizeof(stats), 
+                 "Statistics:\n  Savings today: %.1f CZK\n  Avg price paid: %.2f CZK/kWh\n  Grid import: %.1f kWh",
+                 savingsToday, avgPricePaid, gridImport);
+        lv_label_set_text(intelligenceStatsLabel, stats);
     }
 
     void showModeChangeSpinner() {
@@ -860,24 +973,29 @@ public:
         lv_obj_clear_flag(intelligenceModeLabel, LV_OBJ_FLAG_HIDDEN);
         
         const char* text = "";
+        const char* summaryText = "Intelligence: ";
         lv_color_t bgColor;
         lv_color_t textColor = lv_color_white();
         
         switch (mode) {
             case INVERTER_MODE_SELF_USE:
                 text = "SELF USE";
+                summaryText = "Intelligence: Self Use";
                 bgColor = lv_color_hex(0x4CAF50);  // Green
                 break;
             case INVERTER_MODE_CHARGE_FROM_GRID:
                 text = "CHARGING";
+                summaryText = "Intelligence: Charging from Grid";
                 bgColor = lv_color_hex(0x2196F3);  // Blue
                 break;
             case INVERTER_MODE_DISCHARGE_TO_GRID:
                 text = "SELLING";
+                summaryText = "Intelligence: Selling to Grid";
                 bgColor = lv_color_hex(0xFF9800);  // Orange
                 break;
             case INVERTER_MODE_HOLD_BATTERY:
                 text = "HOLD";
+                summaryText = "Intelligence: Hold Battery";
                 bgColor = lv_color_hex(0x9E9E9E);  // Gray
                 break;
             default:
@@ -890,6 +1008,49 @@ public:
         lv_obj_set_style_shadow_color(intelligenceModeLabel, bgColor, 0);
         lv_obj_set_style_shadow_opa(intelligenceModeLabel, 255, 0);
         lv_obj_set_style_text_color(intelligenceModeLabel, textColor, 0);
+    }
+    
+    /**
+     * Update intelligence plan summary with current mode and time until next change
+     * @param currentMode Current inverter mode
+     * @param plan Array of planned modes for each quarter
+     * @param currentQuarter Current quarter index
+     * @param totalQuarters Total number of quarters in plan
+     */
+    void updateIntelligencePlanSummary(InverterMode_t currentMode, const InverterMode_t plan[], int currentQuarter, int totalQuarters) {
+        if (intelligencePlanSummary == nullptr) return;
+        
+        // Get mode name
+        const char* modeName = "";
+        switch (currentMode) {
+            case INVERTER_MODE_SELF_USE: modeName = "Self Use"; break;
+            case INVERTER_MODE_CHARGE_FROM_GRID: modeName = "Charging"; break;
+            case INVERTER_MODE_DISCHARGE_TO_GRID: modeName = "Selling"; break;
+            case INVERTER_MODE_HOLD_BATTERY: modeName = "Hold"; break;
+            default: modeName = "Unknown"; break;
+        }
+        
+        // Find when the mode will change
+        int nextChangeQuarter = -1;
+        for (int q = currentQuarter + 1; q < totalQuarters; q++) {
+            if (plan[q] != currentMode && plan[q] != INVERTER_MODE_UNKNOWN) {
+                nextChangeQuarter = q;
+                break;
+            }
+        }
+        
+        char summary[64];
+        if (nextChangeQuarter >= 0) {
+            // Calculate time of next change
+            int hour = (nextChangeQuarter % QUARTERS_OF_DAY) / 4;
+            int minute = ((nextChangeQuarter % QUARTERS_OF_DAY) % 4) * 15;
+            snprintf(summary, sizeof(summary), "%s until %02d:%02d", modeName, hour, minute);
+        } else {
+            // No change planned
+            snprintf(summary, sizeof(summary), "%s (no change planned)", modeName);
+        }
+        
+        lv_label_set_text(intelligencePlanSummary, summary);
     }
 
     /**
@@ -1414,16 +1575,18 @@ public:
 
         updateFlowAnimations(inverterData, shellyResult);
 
-        // electricity spot price block
-        if (electricityPriceResult.updated > 0)
-        {
-            // show
-            lv_obj_clear_flag(ui_spotPriceContainer, LV_OBJ_FLAG_HIDDEN);
-        }
-        else
-        {
-            // hide
-            lv_obj_add_flag(ui_spotPriceContainer, LV_OBJ_FLAG_HIDDEN);
+        // electricity spot price block - only update visibility if no chart is expanded
+        if (expandedChart == nullptr) {
+            if (electricityPriceResult.updated > 0)
+            {
+                // show
+                lv_obj_clear_flag(ui_spotPriceContainer, LV_OBJ_FLAG_HIDDEN);
+            }
+            else
+            {
+                // hide
+                lv_obj_add_flag(ui_spotPriceContainer, LV_OBJ_FLAG_HIDDEN);
+            }
         }
 
         updateElectricityPriceChart(electricityPriceResult, isDarkMode);
@@ -1449,6 +1612,14 @@ public:
         lv_obj_set_style_bg_color(ui_loadContainer, isDarkMode ? black : white, 0);
         lv_obj_set_style_bg_color(ui_spotPriceContainer, isDarkMode ? black : white, 0);
         lv_obj_set_style_bg_opa(ui_spotPriceContainer, isDarkMode ? LV_OPA_80 : LV_OPA_80, 0);
+        
+        // Intelligence plan tile dark mode
+        lv_obj_set_style_bg_color(intelligencePlanTile, isDarkMode ? black : white, 0);
+        lv_obj_set_style_bg_opa(intelligencePlanTile, isDarkMode ? LV_OPA_80 : LV_OPA_80, 0);
+        lv_obj_set_style_text_color(intelligencePlanSummary, isDarkMode ? white : lv_color_hex(0x333333), 0);
+        lv_obj_set_style_text_color(intelligenceScheduleLabel, isDarkMode ? white : lv_color_hex(0x333333), 0);
+        lv_obj_set_style_text_color(intelligenceStatsLabel, isDarkMode ? lv_color_hex(0xAAAAAA) : lv_color_hex(0x666666), 0);
+        
         lv_obj_set_style_text_color(ui_Dashboard, isDarkMode ? white : black, 0);
         lv_obj_set_style_text_color(ui_selfUsePercentLabel, isDarkMode ? black : white, 0);
 
@@ -1485,29 +1656,30 @@ public:
     }
 
     /**
-     * Aktualizuje plán inteligence pro zobrazení v grafu spotových cen
-     * @param plan Pole režimů pro dnešek a zítřek (QUARTERS_TWO_DAYS)
-     * @param hasTomorrow Zda jsou k dispozici data pro zítřek
+     * Nastaví stav inteligence a aktualizuje dlaždici
+     * @param active Zda je inteligence aktivní a má platná data
+     * @param enabled Zda je inteligence zapnutá v nastavení
+     * @param hasSpotPrices Zda jsou k dispozici spotové ceny
      */
-    void updateIntelligencePlan(const InverterMode_t plan[QUARTERS_TWO_DAYS], bool hasTomorrow = false)
+    void setIntelligenceState(bool active, bool enabled, bool hasSpotPrices)
     {
-        for (int i = 0; i < QUARTERS_TWO_DAYS; i++)
-        {
-            spotChartData.intelligencePlan[i] = plan[i];
+        spotChartData.hasIntelligencePlan = active;
+        
+        if (!enabled) {
+            // Intelligence is disabled - hide tile
+            lv_obj_add_flag(intelligencePlanTile, LV_OBJ_FLAG_HIDDEN);
+        } else if (!hasSpotPrices) {
+            // Intelligence enabled but no spot prices - show waiting state
+            lv_obj_clear_flag(intelligencePlanTile, LV_OBJ_FLAG_HIDDEN);
+            lv_label_set_text(intelligencePlanSummary, "Intelligence: Waiting for spot prices...");
+        } else if (active) {
+            // Intelligence is working
+            lv_obj_clear_flag(intelligencePlanTile, LV_OBJ_FLAG_HIDDEN);
+            // Summary will be updated by updateIntelligenceModeLabel
+        } else {
+            // Intelligence enabled but not active for some reason
+            lv_obj_add_flag(intelligencePlanTile, LV_OBJ_FLAG_HIDDEN);
         }
-        spotChartData.hasIntelligencePlan = true;
-        spotChartData.hasTomorrowPlan = hasTomorrow;
-        lv_obj_invalidate(ui_spotPriceContainer);
-    }
-
-    /**
-     * Vymaže plán inteligence z grafu
-     */
-    void clearIntelligencePlan()
-    {
-        spotChartData.hasIntelligencePlan = false;
-        spotChartData.hasTomorrowPlan = false;
-        lv_obj_invalidate(ui_spotPriceContainer);
     }
 
 private:
