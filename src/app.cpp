@@ -645,17 +645,12 @@ bool runIntelligenceTask()
                 intelligencePlan[q] = INVERTER_MODE_UNKNOWN;
             }
             
-            // Get prediction data BEFORE taking mutex (these can be slow)
-            float remainingProductionKWh = productionPredictor.predictRemainingDayProduction();
-            float remainingConsumptionKWh = consumptionPredictor.predictRemainingDayConsumption();
-            
-            // Update UI with intelligence state - only UI updates inside mutex
+            // Update UI with intelligence state
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
             if (dashboardUI != nullptr)
             {
                 dashboardUI->setIntelligenceState(true, true, true);
                 dashboardUI->updateIntelligencePlanSummary(lastIntelligenceResult.command, intelligencePlan, currentQuarter, totalQuarters);
-                dashboardUI->updatePredictionBadges(remainingProductionKWh, remainingConsumptionKWh);
             }
             xSemaphoreGive(lvgl_mutex);
             
@@ -719,7 +714,6 @@ bool runIntelligenceTask()
             if (dashboardUI != nullptr)
             {
                 dashboardUI->setIntelligenceState(false, settings.enabled, hasSpotPrices);
-                dashboardUI->updatePredictionBadges(0, 0);  // Hide prediction badges
             }
             xSemaphoreGive(lvgl_mutex);
         }

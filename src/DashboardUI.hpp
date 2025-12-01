@@ -342,10 +342,6 @@ private:
     static const long BUTTONS_HIDE_TIMEOUT_MS = 10000;  // Hide buttons after 10 seconds
     bool intelligenceSupported = false;  // Whether current inverter supports intelligence
     lv_obj_t *intelligenceModeLabel = nullptr;  // Label pro zobrazení režimu inteligence
-    lv_obj_t *productionPredictionBadge = nullptr;  // Label pro predikci výroby
-    lv_obj_t *consumptionPredictionBadge = nullptr; // Label pro predikci spotřeby
-    lv_obj_t *productionPredRow = nullptr;  // Řádek pro predikci výroby
-    lv_obj_t *consumptionPredRow = nullptr; // Řádek pro predikci spotřeby
     lv_obj_t *inverterModeMenu = nullptr;   // Popup menu pro výběr režimu střídače
     lv_obj_t *inverterModeOverlay = nullptr; // Overlay za popup menu
     lv_obj_t *modeChangeSpinner = nullptr;  // Spinner overlay při změně režimu
@@ -621,60 +617,6 @@ public:
         lv_obj_set_style_pad_row(ui_Container34, 0, 0);  // pvStats column
         lv_obj_set_style_pad_row(ui_Container37, 0, 0);  // loadStats column
 
-        // Create production prediction row (inserted between today and total in pvStats)
-        // ui_Container34 is the column containing rows, ui_Container5 is the total row
-        productionPredRow = lv_obj_create(ui_Container34);
-        lv_obj_remove_style_all(productionPredRow);
-        lv_obj_set_width(productionPredRow, lv_pct(100));
-        lv_obj_set_height(productionPredRow, LV_SIZE_CONTENT);
-        lv_obj_set_flex_flow(productionPredRow, LV_FLEX_FLOW_ROW);
-        lv_obj_set_flex_align(productionPredRow, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
-        lv_obj_clear_flag(productionPredRow, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
-        lv_obj_set_style_pad_column(productionPredRow, 4, 0);
-        lv_obj_move_to_index(productionPredRow, 1);  // Move after today row (index 0)
-        lv_obj_add_flag(productionPredRow, LV_OBJ_FLAG_HIDDEN);  // Hidden by default
-
-        productionPredictionBadge = lv_label_create(productionPredRow);
-        lv_obj_set_height(productionPredictionBadge, LV_SIZE_CONTENT);
-        lv_obj_set_flex_grow(productionPredictionBadge, 3);
-        lv_label_set_text(productionPredictionBadge, "~0");
-        lv_obj_set_style_text_align(productionPredictionBadge, LV_TEXT_ALIGN_RIGHT, 0);
-        lv_obj_set_style_text_font(productionPredictionBadge, &ui_font_OpenSansExtraSmall, 0);
-
-        lv_obj_t* productionPredUnit = lv_label_create(productionPredRow);
-        lv_obj_set_height(productionPredUnit, LV_SIZE_CONTENT);
-        lv_obj_set_flex_grow(productionPredUnit, 1);
-        lv_label_set_text(productionPredUnit, "kWh");
-        lv_obj_set_style_text_align(productionPredUnit, LV_TEXT_ALIGN_LEFT, 0);
-        lv_obj_set_style_text_font(productionPredUnit, &ui_font_OpenSansExtraSmall, 0);
-
-        // Create consumption prediction row (inserted between today and selfUse in loadStats)
-        // ui_Container37 is the column containing rows
-        consumptionPredRow = lv_obj_create(ui_Container37);
-        lv_obj_remove_style_all(consumptionPredRow);
-        lv_obj_set_width(consumptionPredRow, lv_pct(100));
-        lv_obj_set_height(consumptionPredRow, LV_SIZE_CONTENT);
-        lv_obj_set_flex_flow(consumptionPredRow, LV_FLEX_FLOW_ROW);
-        lv_obj_set_flex_align(consumptionPredRow, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
-        lv_obj_clear_flag(consumptionPredRow, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);
-        lv_obj_set_style_pad_column(consumptionPredRow, 4, 0);
-        lv_obj_move_to_index(consumptionPredRow, 1);  // Move after today row (index 0)
-        lv_obj_add_flag(consumptionPredRow, LV_OBJ_FLAG_HIDDEN);  // Hidden by default
-
-        consumptionPredictionBadge = lv_label_create(consumptionPredRow);
-        lv_obj_set_height(consumptionPredictionBadge, LV_SIZE_CONTENT);
-        lv_obj_set_flex_grow(consumptionPredictionBadge, 3);
-        lv_label_set_text(consumptionPredictionBadge, "~0");
-        lv_obj_set_style_text_align(consumptionPredictionBadge, LV_TEXT_ALIGN_RIGHT, 0);
-        lv_obj_set_style_text_font(consumptionPredictionBadge, &ui_font_OpenSansExtraSmall, 0);
-
-        lv_obj_t* consumptionPredUnit = lv_label_create(consumptionPredRow);
-        lv_obj_set_height(consumptionPredUnit, LV_SIZE_CONTENT);
-        lv_obj_set_flex_grow(consumptionPredUnit, 1);
-        lv_label_set_text(consumptionPredUnit, "kWh");
-        lv_obj_set_style_text_align(consumptionPredUnit, LV_TEXT_ALIGN_LEFT, 0);
-        lv_obj_set_style_text_font(consumptionPredUnit, &ui_font_OpenSansExtraSmall, 0);
-
         pvAnimator.setup(ui_LeftContainer, _ui_theme_color_pvColor);
         batteryAnimator.setup(ui_LeftContainer, _ui_theme_color_batteryColor);
         gridAnimator.setup(ui_LeftContainer, _ui_theme_color_gridColor);
@@ -919,6 +861,7 @@ public:
                 lv_obj_clear_flag(intelligencePlanSummary, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_add_flag(intelligencePlanDetail, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_set_flex_grow(intelligencePlanTile, 0);  // No flex grow when collapsed
+                lv_obj_set_height(intelligencePlanTile, LV_SIZE_CONTENT);  // Reset height to content
             }
             expandedChart = nullptr;
         } else {
@@ -938,6 +881,8 @@ public:
             }
             expandedChart = chart;
         }
+        // Force layout recalculation for proper height distribution
+        lv_obj_update_layout(ui_RightContainer);
         lv_obj_invalidate(ui_RightContainer);
     }
 
@@ -1214,35 +1159,6 @@ public:
         
         snprintf(buf, sizeof(buf), "Savings: ~%.0f CZK", savingsCZK);
         lv_label_set_text(intelligenceStatsSavings, buf);
-    }
-
-    /**
-     * Update prediction rows with remaining production and consumption for today
-     * @param remainingProductionKWh Remaining production for today in kWh (0 to hide)
-     * @param remainingConsumptionKWh Remaining consumption for today in kWh (0 to hide)
-     */
-    void updatePredictionBadges(float remainingProductionKWh, float remainingConsumptionKWh) {
-        if (productionPredRow != nullptr && productionPredictionBadge != nullptr) {
-            if (remainingProductionKWh > 0) {
-                char buf[20];
-                snprintf(buf, sizeof(buf), "~%.1f", remainingProductionKWh);
-                lv_label_set_text(productionPredictionBadge, buf);
-                lv_obj_clear_flag(productionPredRow, LV_OBJ_FLAG_HIDDEN);
-            } else {
-                lv_obj_add_flag(productionPredRow, LV_OBJ_FLAG_HIDDEN);
-            }
-        }
-        
-        if (consumptionPredRow != nullptr && consumptionPredictionBadge != nullptr) {
-            if (remainingConsumptionKWh > 0) {
-                char buf[20];
-                snprintf(buf, sizeof(buf), "~%.1f", remainingConsumptionKWh);
-                lv_label_set_text(consumptionPredictionBadge, buf);
-                lv_obj_clear_flag(consumptionPredRow, LV_OBJ_FLAG_HIDDEN);
-            } else {
-                lv_obj_add_flag(consumptionPredRow, LV_OBJ_FLAG_HIDDEN);
-            }
-        }
     }
 
     void show()
