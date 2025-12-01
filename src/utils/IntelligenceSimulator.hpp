@@ -233,23 +233,19 @@ public:
     
     /**
      * Nastaví parametry simulace
+     * Hodnoty baterie se berou vždy z nastavení (kam se automaticky aktualizují ze střídače)
      */
     void configure(const InverterData_t& inverterData, const IntelligenceSettings_t& settings) {
-        batteryCapacityKwh = inverterData.batteryCapacityWh > 0 
-            ? inverterData.batteryCapacityWh / 1000.0f 
-            : 10.0f;
+        // Všechny parametry baterie se berou z nastavení
+        // (hodnoty ze střídače se automaticky aktualizují do nastavení při načtení dat)
+        batteryCapacityKwh = settings.batteryCapacityKwh;
         minSocPercent = settings.minSocPercent;
         maxSocPercent = settings.maxSocPercent;
         batteryCostPerKwh = settings.batteryCostPerKwh;
-        // Use values from inverter if available, otherwise default to 5kW
-        maxChargePowerKw = inverterData.maxChargePowerW > 0 
-            ? inverterData.maxChargePowerW / 1000.0f 
-            : 5.0f;
-        maxDischargePowerKw = inverterData.maxDischargePowerW > 0 
-            ? inverterData.maxDischargePowerW / 1000.0f 
-            : 5.0f;
+        maxChargePowerKw = settings.maxChargePowerKw;
+        maxDischargePowerKw = settings.maxDischargePowerKw;
         
-        // Inicializace stavu baterie
+        // Inicializace stavu baterie (aktuální SOC ze střídače)
         currentBatteryKwh = socToKwh(inverterData.soc);
     }
     
@@ -285,37 +281,6 @@ public:
         int maxQuarters = prices.hasTomorrowData ? QUARTERS_TWO_DAYS : QUARTERS_OF_DAY;
         int quartersToSimulate = maxQuarters - currentQuarter;
         
-        // Pre-calculate future prices once (O(n) instead of O(n²))
-        float minFutureBuyPrices[QUARTERS_TWO_DAYS];
-        float maxFutureBuyPrices[QUARTERS_TWO_DAYS];
-        float maxFutureSellPrices[QUARTERS_TWO_DAYS];
-        float avgFutureBuyPrices[QUARTERS_TWO_DAYS];
-        
-        // Calculate from end backwards for min/max (single pass)
-        minFutureBuyPrices[maxQuarters - 1] = IntelligenceSettingsStorage::calculateBuyPrice(
-            prices.prices[maxQuarters - 1].electricityPrice, settings);
-        maxFutureBuyPrices[maxQuarters - 1] = minFutureBuyPrices[maxQuarters - 1];
-        maxFutureSellPrices[maxQuarters - 1] = IntelligenceSettingsStorage::calculateSellPrice(
-            prices.prices[maxQuarters - 1].electricityPrice, settings);
-        
-        float sumBuy = minFutureBuyPrices[maxQuarters - 1];
-        int count = 1;
-        
-        for (int q = maxQuarters - 2; q >= currentQuarter; q--) {
-            float buyPrice = IntelligenceSettingsStorage::calculateBuyPrice(
-                prices.prices[q].electricityPrice, settings);
-            float sellPrice = IntelligenceSettingsStorage::calculateSellPrice(
-                prices.prices[q].electricityPrice, settings);
-            
-            minFutureBuyPrices[q] = min(buyPrice, minFutureBuyPrices[q + 1]);
-            maxFutureBuyPrices[q] = max(buyPrice, maxFutureBuyPrices[q + 1]);
-            maxFutureSellPrices[q] = max(sellPrice, maxFutureSellPrices[q + 1]);
-            
-            sumBuy += buyPrice;
-            count++;
-            avgFutureBuyPrices[q] = sumBuy / count;
-        }
-        
         // Reset baterie na aktuální stav
         currentBatteryKwh = socToKwh(inverterData.soc);
         
@@ -338,18 +303,18 @@ public:
             float buyPrice = IntelligenceSettingsStorage::calculateBuyPrice(spotPrice, settings);
             float sellPrice = IntelligenceSettingsStorage::calculateSellPrice(spotPrice, settings);
             
-            // Budoucí ceny (použijeme předpočítané hodnoty)
+            // Budoucí ceny (pro rozhodování)
             float minFutureBuyPrice = (q + 1 < maxQuarters) 
-                ? minFutureBuyPrices[q + 1] 
+                ? findMinFutureBuyPrice(prices, q + 1, maxQuarters, settings) 
                 : buyPrice;
             float maxFutureBuyPrice = (q + 1 < maxQuarters)
-                ? maxFutureBuyPrices[q + 1]
+                ? findMaxFutureBuyPrice(prices, q + 1, maxQuarters, settings)
                 : buyPrice;
             float maxFutureSellPrice = (q + 1 < maxQuarters)
-                ? maxFutureSellPrices[q + 1]
+                ? findMaxFutureSellPrice(prices, q + 1, maxQuarters, settings)
                 : sellPrice;
             float avgFutureBuyPrice = (q + 1 < maxQuarters)
-                ? avgFutureBuyPrices[q + 1]
+                ? calculateAvgFutureBuyPrice(prices, q + 1, maxQuarters, settings)
                 : buyPrice;
             
             // Budoucí energie

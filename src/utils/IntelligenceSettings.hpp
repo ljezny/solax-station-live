@@ -34,6 +34,11 @@ typedef struct IntelligenceSettings {
     int minSocPercent;                 // Minimální SOC (ochrana baterie), default 10%
     int maxSocPercent;                 // Maximální SOC pro nabíjení ze sítě, default 95%
     
+    // Parametry baterie (použijí se pokud se nepodaří načíst ze střídače)
+    float batteryCapacityKwh;          // Kapacita baterie v kWh, default 10
+    float maxChargePowerKw;            // Maximální nabíjecí výkon v kW, default 5
+    float maxDischargePowerKw;         // Maximální vybíjecí výkon v kW, default 5
+    
     // Výchozí hodnoty
     static IntelligenceSettings getDefault() {
         IntelligenceSettings settings;
@@ -45,6 +50,9 @@ typedef struct IntelligenceSettings {
         settings.sellQ = 0.0f;              // žádná fixní srážka
         settings.minSocPercent = 10;
         settings.maxSocPercent = 95;
+        settings.batteryCapacityKwh = 10.0f;   // 10 kWh
+        settings.maxChargePowerKw = 5.0f;      // 5 kW
+        settings.maxDischargePowerKw = 5.0f;   // 5 kW
         return settings;
     }
 } IntelligenceSettings_t;
@@ -74,12 +82,16 @@ public:
             settings.sellQ = preferences.getFloat("sq", settings.sellQ);
             settings.minSocPercent = preferences.getInt("mn", settings.minSocPercent);
             settings.maxSocPercent = preferences.getInt("mx", settings.maxSocPercent);
+            settings.batteryCapacityKwh = preferences.getFloat("cap", settings.batteryCapacityKwh);
+            settings.maxChargePowerKw = preferences.getFloat("mcp", settings.maxChargePowerKw);
+            settings.maxDischargePowerKw = preferences.getFloat("mdp", settings.maxDischargePowerKw);
             preferences.end();
         }
         
-        log_d("Intelligence settings loaded: enabled=%d, batCost=%.2f, buyK=%.2f, buyQ=%.2f, sellK=%.2f, sellQ=%.2f, minSoc=%d, maxSoc=%d",
+        log_d("Intelligence settings loaded: enabled=%d, batCost=%.2f, buyK=%.2f, buyQ=%.2f, sellK=%.2f, sellQ=%.2f, minSoc=%d, maxSoc=%d, cap=%.1f, chg=%.1f, dis=%.1f",
               settings.enabled, settings.batteryCostPerKwh, settings.buyK, settings.buyQ, 
-              settings.sellK, settings.sellQ, settings.minSocPercent, settings.maxSocPercent);
+              settings.sellK, settings.sellQ, settings.minSocPercent, settings.maxSocPercent,
+              settings.batteryCapacityKwh, settings.maxChargePowerKw, settings.maxDischargePowerKw);
         
         return settings;
     }
@@ -103,6 +115,9 @@ public:
             ok &= preferences.putFloat("sq", settings.sellQ);
             ok &= preferences.putInt("mn", settings.minSocPercent);
             ok &= preferences.putInt("mx", settings.maxSocPercent);
+            ok &= preferences.putFloat("cap", settings.batteryCapacityKwh);
+            ok &= preferences.putFloat("mcp", settings.maxChargePowerKw);
+            ok &= preferences.putFloat("mdp", settings.maxDischargePowerKw);
             preferences.end();
             
             if (ok) {
@@ -120,6 +135,58 @@ public:
      */
     static void reset() {
         save(IntelligenceSettings_t::getDefault());
+    }
+    
+    /**
+     * Aktualizuje nastavení hodnotami ze střídače (pokud jsou k dispozici)
+     * Volat po úspěšném načtení dat ze střídače.
+     * 
+     * @param batteryCapacityWh kapacita baterie ve Wh (0 = neaktualizovat)
+     * @param maxChargePowerW max nabíjecí výkon ve W (0 = neaktualizovat)
+     * @param maxDischargePowerW max vybíjecí výkon ve W (0 = neaktualizovat)
+     * @return true pokud byly hodnoty aktualizovány
+     */
+    static bool updateFromInverter(uint16_t batteryCapacityWh, uint16_t maxChargePowerW, uint16_t maxDischargePowerW) {
+        // Pouze pokud máme nějaké hodnoty ze střídače
+        if (batteryCapacityWh == 0 && maxChargePowerW == 0 && maxDischargePowerW == 0) {
+            return false;
+        }
+        
+        IntelligenceSettings_t settings = load();
+        bool changed = false;
+        
+        if (batteryCapacityWh > 0) {
+            float newCapacity = batteryCapacityWh / 1000.0f;
+            if (abs(settings.batteryCapacityKwh - newCapacity) > 0.1f) {
+                settings.batteryCapacityKwh = newCapacity;
+                changed = true;
+                log_d("Updated battery capacity from inverter: %.1f kWh", newCapacity);
+            }
+        }
+        
+        if (maxChargePowerW > 0) {
+            float newPower = maxChargePowerW / 1000.0f;
+            if (abs(settings.maxChargePowerKw - newPower) > 0.1f) {
+                settings.maxChargePowerKw = newPower;
+                changed = true;
+                log_d("Updated max charge power from inverter: %.1f kW", newPower);
+            }
+        }
+        
+        if (maxDischargePowerW > 0) {
+            float newPower = maxDischargePowerW / 1000.0f;
+            if (abs(settings.maxDischargePowerKw - newPower) > 0.1f) {
+                settings.maxDischargePowerKw = newPower;
+                changed = true;
+                log_d("Updated max discharge power from inverter: %.1f kW", newPower);
+            }
+        }
+        
+        if (changed) {
+            save(settings);
+        }
+        
+        return changed;
     }
     
     /**

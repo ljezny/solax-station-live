@@ -118,14 +118,42 @@ bool showSettings = false;
 bool showIntelligenceSettings = false;
 
 /* Display flushing */
+static uint32_t flushCount = 0;
+static uint32_t lastFlushLog = 0;
+static uint32_t maxFlushTime = 0;
+static uint32_t totalFlushTime = 0;
+
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
+    uint32_t startTime = micros();
+    
     uint32_t w = (area->x2 - area->x1 + 1);
     uint32_t h = (area->y2 - area->y1 + 1);
 
+    // Wait for previous DMA to complete before starting new one
+    tft.waitDMA();
+    
+    // Start DMA transfer
     tft.pushImageDMA(area->x1, area->y1, w, h, (lgfx::rgb565_t *)&color_p->full);
-
+    
     lv_disp_flush_ready(disp);
+    
+    uint32_t elapsed = micros() - startTime;
+    totalFlushTime += elapsed;
+    if (elapsed > maxFlushTime) maxFlushTime = elapsed;
+    flushCount++;
+    
+    // Log flush stats every 5 seconds
+    if (millis() - lastFlushLog > 5000) {
+        log_d("LVGL flush: %d calls (%.1f/s), avg: %dus, max: %dus", 
+              flushCount, flushCount / 5.0f,
+              flushCount > 0 ? totalFlushTime / flushCount : 0,
+              maxFlushTime);
+        flushCount = 0;
+        totalFlushTime = 0;
+        maxFlushTime = 0;
+        lastFlushLog = millis();
+    }
 }
 
 void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
@@ -198,16 +226,55 @@ int wifiSignalPercent()
     }
 }
 
+// Forward declarations for tasks
+void mainUpdateTask(void *param);
+
 void lvglTimerTask(void *param)
 {
     // Subscribe this task to watchdog
     esp_task_wdt_add(NULL);
     
+    static uint32_t lastLvglLog = 0;
+    static uint32_t lvglCallCount = 0;
+    static uint32_t maxLvglTime = 0;
+    static uint32_t totalLvglTime = 0;
+    static uint32_t maxMutexWait = 0;
+    
     for (;;)
     {
-        xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+        uint32_t mutexWaitStart = micros();
+        
+        // Try to take mutex with timeout - if it takes too long, something is blocking
+        if (xSemaphoreTake(lvgl_mutex, pdMS_TO_TICKS(100)) != pdTRUE) {
+            log_w("LVGL mutex timeout - something blocking UI!");
+            vTaskDelay(pdMS_TO_TICKS(5));
+            continue;
+        }
+        
+        uint32_t mutexWait = micros() - mutexWaitStart;
+        if (mutexWait > maxMutexWait) maxMutexWait = mutexWait;
+        
+        uint32_t startTime = micros();
         lv_timer_handler();
+        uint32_t elapsed = micros() - startTime;
+        
         xSemaphoreGive(lvgl_mutex);
+        totalLvglTime += elapsed;
+        if (elapsed > maxLvglTime) maxLvglTime = elapsed;
+        lvglCallCount++;
+        
+        // Log every 5 seconds
+        if (millis() - lastLvglLog > 5000) {
+            log_d("LVGL handler: %d calls (%.1f/s), avg: %dus, max: %dus, maxMutexWait: %dus", 
+                  lvglCallCount, lvglCallCount / 5.0f,
+                  lvglCallCount > 0 ? totalLvglTime / lvglCallCount : 0,
+                  maxLvglTime, maxMutexWait);
+            lvglCallCount = 0;
+            totalLvglTime = 0;
+            maxLvglTime = 0;
+            maxMutexWait = 0;
+            lastLvglLog = millis();
+        }
         
         // Reset watchdog to prevent timeout during long renders
         esp_task_wdt_reset();
@@ -253,20 +320,30 @@ void setupLVGL()
     // touch setup
     touch.init();
 
-    // Allocate full-screen double buffers in PSRAM (800x480x2 = 768KB each, 1.5MB total)
-    size_t bufferSize = screenWidth * screenHeight * sizeof(lv_color_t);
-    disp_draw_buf1 = (lv_color_t*)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
-    disp_draw_buf2 = (lv_color_t*)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
+    // Use smaller buffers in internal DMA-capable RAM for faster rendering
+    // 1/10 of screen = 800*48 pixels = ~77KB per buffer (fits in internal RAM)
+    size_t bufferLines = 48;  // Number of lines per buffer
+    size_t bufferSize = screenWidth * bufferLines * sizeof(lv_color_t);
+    
+    // Try to allocate in internal DMA-capable RAM first
+    disp_draw_buf1 = (lv_color_t*)heap_caps_malloc(bufferSize, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    disp_draw_buf2 = (lv_color_t*)heap_caps_malloc(bufferSize, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
     
     if (!disp_draw_buf1 || !disp_draw_buf2) {
-        log_e("Failed to allocate display buffers in PSRAM!");
-        // Fallback to smaller buffers in regular RAM
-        disp_draw_buf1 = (lv_color_t*)malloc(bufferSize / 4);
-        disp_draw_buf2 = (lv_color_t*)malloc(bufferSize / 4);
-        lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight / 4);
-    } else {
-        log_d("Display buffers allocated in PSRAM: 2x %.1f KB", bufferSize / 1024.0f);
+        log_w("Failed to allocate in internal RAM, falling back to PSRAM");
+        // Free any partial allocation
+        if (disp_draw_buf1) heap_caps_free(disp_draw_buf1);
+        if (disp_draw_buf2) heap_caps_free(disp_draw_buf2);
+        
+        // Fallback to PSRAM with full screen buffers
+        bufferSize = screenWidth * screenHeight * sizeof(lv_color_t);
+        disp_draw_buf1 = (lv_color_t*)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
+        disp_draw_buf2 = (lv_color_t*)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
         lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight);
+        log_d("Display buffers in PSRAM: 2x %.1f KB", bufferSize / 1024.0f);
+    } else {
+        lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * bufferLines);
+        log_d("Display buffers in internal DMA RAM: 2x %.1f KB (%d lines)", bufferSize / 1024.0f, bufferLines);
     }
     /* Initialize the display */
     lv_disp_drv_init(&disp_drv);
@@ -321,8 +398,12 @@ void setupLVGL()
     consumptionPredictor.loadFromPreferences();
     productionPredictor.loadFromPreferences();
     
-    // Pin LVGL task to Core 1 (separate from WiFi/network on Core 0)
-    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 12 * 1024, NULL, 10, NULL, 1);
+    // Pin LVGL task to Core 1 with HIGH priority for smooth UI
+    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 12 * 1024, NULL, 24, NULL, 1);
+    
+    // Pin main update task to Core 0 (same as WiFi) with LOW priority so WiFi is not blocked
+    // Priority 1 is lower than WiFi (priority 23), so WiFi operations are not blocked
+    xTaskCreatePinnedToCore(mainUpdateTask, "mainUpdateTask", 16 * 1024, NULL, 1, NULL, 0);
 }
 
 void setup()
@@ -453,6 +534,13 @@ bool loadInverterDataTask()
                 shellyMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
                 uiMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
                 wallboxMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
+                
+                // Update intelligence settings with battery parameters from inverter
+                IntelligenceSettingsStorage::updateFromInverter(
+                    inverterData.batteryCapacityWh,
+                    inverterData.maxChargePowerW,
+                    inverterData.maxDischargePowerW
+                );
                 
                 // Add samples for intelligence predictors
                 int pvPower = inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power;
@@ -1323,8 +1411,23 @@ void updateState()
     }
 }
 
+// Main update task runs on Core 0 to avoid blocking LVGL on Core 1
+void mainUpdateTask(void *param)
+{
+    // Wait for WiFi and system to fully initialize
+    vTaskDelay(pdMS_TO_TICKS(3000));
+    
+    log_d("mainUpdateTask started on Core %d", xPortGetCoreID());
+    
+    for (;;)
+    {
+        updateState();
+        vTaskDelay(pdMS_TO_TICKS(50));
+    }
+}
+
 void loop()
 {
-    updateState();
-    delay(50);
+    // Main loop is now empty - work is done in mainUpdateTask on Core 0
+    vTaskDelay(pdMS_TO_TICKS(1000));
 }

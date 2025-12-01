@@ -28,6 +28,12 @@ extern lv_obj_t *ui_intelligenceMinSocLabel;
 extern lv_obj_t *ui_intelligenceMinSocInput;
 extern lv_obj_t *ui_intelligenceMaxSocLabel;
 extern lv_obj_t *ui_intelligenceMaxSocInput;
+extern lv_obj_t *ui_intelligenceBatteryCapLabel;
+extern lv_obj_t *ui_intelligenceBatteryCapInput;
+extern lv_obj_t *ui_intelligenceMaxChargeLabel;
+extern lv_obj_t *ui_intelligenceMaxChargeInput;
+extern lv_obj_t *ui_intelligenceMaxDischargeLabel;
+extern lv_obj_t *ui_intelligenceMaxDischargeInput;
 
 // Middle column - Buy coefficients
 extern lv_obj_t *ui_intelligenceMiddleColumn;

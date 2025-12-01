@@ -68,71 +68,81 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
         // Determine if showing 1 or 2 days
         bool showTwoDays = electricityPriceResult->hasTomorrowData;
         uint32_t segmentCount = showTwoDays ? QUARTERS_TWO_DAYS : QUARTERS_OF_DAY;
-        uint32_t segmentGap = 0;
+        
         // Calculate segment width dynamically based on available width
         int32_t segmentWidth = w / segmentCount;
         if (segmentWidth < 1) segmentWidth = 1;
         int32_t offset_x = (w - (segmentCount * segmentWidth)) / 2;  // Center the chart
 
-        // Find min/max prices across all displayed data
-        float minPrice = electricityPriceResult->prices[0].electricityPrice;
-        float maxPrice = electricityPriceResult->prices[0].electricityPrice;
-        for (uint32_t i = 0; i < segmentCount; i++)
-        {
+        // Use pre-calculated max from the price result, calculate min on the fly (it's fast)
+        float minPrice = 0.0f;
+        float maxPrice = electricityPriceResult->scaleMaxValue;
+        for (uint32_t i = 0; i < segmentCount; i++) {
             float price = electricityPriceResult->prices[i].electricityPrice;
             if (price < minPrice) minPrice = price;
             if (price > maxPrice) maxPrice = price;
         }
-        minPrice = min(0.0f, minPrice);
-        maxPrice = max(maxPrice, electricityPriceResult->scaleMaxValue);
         float priceRange = maxPrice - minPrice;
+        if (priceRange < 0.1f) priceRange = 0.1f;  // Avoid division by zero
         lv_coord_t chartHeight = h;
 
-        // Current quarter (relative to today)
+        // Current quarter
         time_t now = time(nullptr);
         struct tm *timeinfo = localtime(&now);
         int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
 
-        // Draw vertical line for current quarter
+        // Draw current quarter highlight
         lv_draw_rect_dsc_t current_quarter_dsc;
         lv_draw_rect_dsc_init(&current_quarter_dsc);
         current_quarter_dsc.bg_opa = LV_OPA_50;
         current_quarter_dsc.bg_color = isDarkMode ? lv_color_hex(0x555555) : lv_color_hex(0xAAAAAA);
         lv_area_t cq_a;
-        cq_a.x1 = obj->coords.x1 + offset_x + currentQuarter * (segmentWidth + segmentGap) - segmentGap / 2;
-        cq_a.x2 = cq_a.x1 + segmentWidth + segmentGap - 1;
+        cq_a.x1 = obj->coords.x1 + offset_x + currentQuarter * segmentWidth;
+        cq_a.x2 = cq_a.x1 + segmentWidth - 1;
         cq_a.y1 = obj->coords.y1 + pad_top;
         cq_a.y2 = obj->coords.y2 - pad_bottom;
         lv_draw_rect(dsc->draw_ctx, &current_quarter_dsc, &cq_a);
 
-        // Draw price segments
-        for (uint32_t i = 0; i < segmentCount; i++)
+        // Draw price segments - merge consecutive segments with same price level
+        lv_draw_rect_dsc_t draw_rect_dsc;
+        lv_draw_rect_dsc_init(&draw_rect_dsc);
+        draw_rect_dsc.bg_opa = LV_OPA_30;
+        draw_rect_dsc.border_opa = LV_OPA_80;
+        draw_rect_dsc.border_width = 1;
+        
+        uint32_t i = 0;
+        while (i < segmentCount)
         {
+            PriceLevel_t currentLevel = electricityPriceResult->prices[i].priceLevel;
             float price = electricityPriceResult->prices[i].electricityPrice;
-            lv_color_t color = getPriceLevelColor(electricityPriceResult->prices[i].priceLevel);
-
-            lv_draw_rect_dsc_t draw_rect_dsc;
-            lv_draw_rect_dsc_init(&draw_rect_dsc);
-            draw_rect_dsc.bg_opa = LV_OPA_30;
-            draw_rect_dsc.bg_color = color;
-            draw_rect_dsc.border_opa = LV_OPA_80;
-            draw_rect_dsc.border_color = color;
-            draw_rect_dsc.border_width = 1;
-
-            lv_area_t a;
-            a.x1 = obj->coords.x1 + offset_x + i * (segmentWidth + segmentGap);
-            a.x2 = a.x1 + segmentWidth - 1;
-            lv_coord_t barTopY = obj->coords.y1 + pad_top + (priceRange - price + minPrice) * chartHeight / priceRange;
-            lv_coord_t barBottomY = obj->coords.y1 + pad_top + (priceRange + minPrice) * chartHeight / priceRange - 1;
-            a.y1 = barTopY;
-            a.y2 = barBottomY;
-            if (a.y1 > a.y2)
-            {
-                lv_coord_t temp = a.y1;
-                a.y1 = a.y2;
-                a.y2 = temp;
+            uint32_t runStart = i;
+            
+            // Find run of same price level (for merging)
+            while (i < segmentCount && electricityPriceResult->prices[i].priceLevel == currentLevel) {
+                i++;
             }
-            lv_draw_rect(dsc->draw_ctx, &draw_rect_dsc, &a);
+            
+            // Draw merged segment (but individual bars for price accuracy)
+            lv_color_t color = getPriceLevelColor(currentLevel);
+            draw_rect_dsc.bg_color = color;
+            draw_rect_dsc.border_color = color;
+            
+            for (uint32_t j = runStart; j < i; j++) {
+                float segPrice = electricityPriceResult->prices[j].electricityPrice;
+                lv_area_t a;
+                a.x1 = obj->coords.x1 + offset_x + j * segmentWidth;
+                a.x2 = a.x1 + segmentWidth - 1;
+                lv_coord_t barTopY = obj->coords.y1 + pad_top + (priceRange - segPrice + minPrice) * chartHeight / priceRange;
+                lv_coord_t barBottomY = obj->coords.y1 + pad_top + (priceRange + minPrice) * chartHeight / priceRange - 1;
+                a.y1 = barTopY;
+                a.y2 = barBottomY;
+                if (a.y1 > a.y2) {
+                    lv_coord_t temp = a.y1;
+                    a.y1 = a.y2;
+                    a.y2 = temp;
+                }
+                lv_draw_rect(dsc->draw_ctx, &draw_rect_dsc, &a);
+            }
         }
 
         // Draw x-axis time labels
@@ -155,7 +165,7 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
                 String text = (displayHour < 10 ? "0" : "") + String(displayHour) + ":00";
                 lv_point_t size;
                 lv_txt_get_size(&size, text.c_str(), label_dsc.font, label_dsc.letter_space, label_dsc.line_space, LV_COORD_MAX, label_dsc.flag);
-                la.x1 = obj->coords.x1 + offset_x + quarter * (segmentWidth + segmentGap) + (segmentWidth - size.x) / 2;
+                la.x1 = obj->coords.x1 + offset_x + quarter * segmentWidth + (segmentWidth - size.x) / 2;
                 la.x2 = la.x1 + size.x;
                 lv_draw_label(dsc->draw_ctx, &label_dsc, &la, text.c_str(), NULL);
             }
@@ -169,7 +179,7 @@ static void electricity_price_draw_event_cb(lv_event_t *e)
                 String text = (hour < 10 ? "0" : "") + String(hour) + ":00";
                 lv_point_t size;
                 lv_txt_get_size(&size, text.c_str(), label_dsc.font, label_dsc.letter_space, label_dsc.line_space, LV_COORD_MAX, label_dsc.flag);
-                la.x1 = obj->coords.x1 + offset_x + quarter * (segmentWidth + segmentGap) + (segmentWidth - size.x) / 2;
+                la.x1 = obj->coords.x1 + offset_x + quarter * segmentWidth + (segmentWidth - size.x) / 2;
                 la.x2 = la.x1 + size.x;
                 lv_draw_label(dsc->draw_ctx, &label_dsc, &la, text.c_str(), NULL);
             }
@@ -2159,23 +2169,40 @@ private:
     lv_chart_series_t *acPowerSeries;
     lv_chart_series_t *socSeries;
     
+    // External arrays for chart data - avoid per-point invalidation
+    static constexpr int MAX_CHART_POINTS = 192;  // Max 2 days
+    lv_coord_t pvPowerData[MAX_CHART_POINTS];
+    lv_coord_t acPowerData[MAX_CHART_POINTS];
+    lv_coord_t socData[MAX_CHART_POINTS];
+    uint32_t lastChartUpdateHash = 0;
+    
     void updateSolarChart(InverterData_t &inverterData, SolarChartDataProvider &solarChartDataProvider, bool isDarkMode)
     {
-        // Reset series start points
-        pvPowerSeries->start_point = 0;
-        acPowerSeries->start_point = 0;
-        socSeries->start_point = 0;
-        
         // Zjistíme jestli máme data na zítřek
         int totalQuarters = solarChartDataProvider.getTotalQuarters();
+        if (totalQuarters > MAX_CHART_POINTS) totalQuarters = MAX_CHART_POINTS;
+        
+        // Calculate simple hash to detect if data changed
+        uint32_t hash = totalQuarters;
+        int currentQuarter = solarChartDataProvider.getCurrentQuarterIndex();
+        SolarChartDataItem_t currentItem = solarChartDataProvider.getQuarter(currentQuarter);
+        hash ^= (uint32_t)(currentItem.pvPowerWh * 100) << 8;
+        hash ^= (uint32_t)(currentItem.loadPowerWh * 100) << 16;
+        hash ^= (uint32_t)currentItem.soc << 24;
+        hash ^= (uint32_t)currentQuarter;
+        
+        // Skip update if data hasn't changed significantly
+        if (hash == lastChartUpdateHash) {
+            return;
+        }
+        lastChartUpdateHash = hash;
         
         // Nastavíme počet bodů podle dostupných dat (96 nebo 192)
         lv_chart_set_point_count(ui_Chart1, totalQuarters);
         
         float maxPower = 5000.0f;
-        int currentQuarter = solarChartDataProvider.getCurrentQuarterIndex();
         
-        // Projdeme všechny čtvrthodiny
+        // Fill external arrays - no LVGL calls here, just data
         for (int i = 0; i < totalQuarters; i++)
         {
             SolarChartDataItem_t item = solarChartDataProvider.getQuarter(i);
@@ -2185,27 +2212,30 @@ private:
             float loadPowerW = item.loadPowerWh * 4.0f;
             
             if (item.samples > 0) {
-                // Všechna data (reálná i predikce) jdou do stejných series
-                lv_chart_set_value_by_id(ui_Chart1, pvPowerSeries, i, (lv_coord_t)pvPowerW);
-                lv_chart_set_value_by_id(ui_Chart1, acPowerSeries, i, (lv_coord_t)loadPowerW);
-                if (inverterData.hasBattery) {
-                    // SOC < 0 znamená "nezobrazovat" (intelligence vypnutá)
-                    if (item.soc >= 0) {
-                        lv_chart_set_value_by_id(ui_Chart1, socSeries, i, item.soc);
-                    } else {
-                        lv_chart_set_value_by_id(ui_Chart1, socSeries, i, LV_CHART_POINT_NONE);
-                    }
+                pvPowerData[i] = (lv_coord_t)pvPowerW;
+                acPowerData[i] = (lv_coord_t)loadPowerW;
+                if (inverterData.hasBattery && item.soc >= 0) {
+                    socData[i] = item.soc;
+                } else {
+                    socData[i] = LV_CHART_POINT_NONE;
                 }
                 maxPower = max(maxPower, max(pvPowerW, loadPowerW));
             } else {
-                // Prázdný slot
-                lv_chart_set_value_by_id(ui_Chart1, pvPowerSeries, i, LV_CHART_POINT_NONE);
-                lv_chart_set_value_by_id(ui_Chart1, acPowerSeries, i, LV_CHART_POINT_NONE);
-                if (inverterData.hasBattery) {
-                    lv_chart_set_value_by_id(ui_Chart1, socSeries, i, LV_CHART_POINT_NONE);
-                }
+                pvPowerData[i] = LV_CHART_POINT_NONE;
+                acPowerData[i] = LV_CHART_POINT_NONE;
+                socData[i] = LV_CHART_POINT_NONE;
             }
         }
+        
+        // Reset series start points
+        pvPowerSeries->start_point = 0;
+        acPowerSeries->start_point = 0;
+        socSeries->start_point = 0;
+        
+        // Use external arrays - single LVGL call per series instead of 96+ calls
+        lv_chart_set_ext_y_array(ui_Chart1, pvPowerSeries, pvPowerData);
+        lv_chart_set_ext_y_array(ui_Chart1, acPowerSeries, acPowerData);
+        lv_chart_set_ext_y_array(ui_Chart1, socSeries, socData);
         
         lv_chart_set_range(ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, (lv_coord_t)maxPower);
         lv_obj_set_style_text_color(ui_Chart1, isDarkMode ? lv_color_white() : lv_color_black(), LV_PART_TICKS);

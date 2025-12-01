@@ -51,6 +51,9 @@ public:
             lv_obj_add_event_cb(ui_intelligenceBuyQInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
             lv_obj_add_event_cb(ui_intelligenceSellKInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
             lv_obj_add_event_cb(ui_intelligenceSellQInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceBatteryCapInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceMaxChargeInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceMaxDischargeInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
             
             // Defocus handlers to hide keyboard
             lv_obj_add_event_cb(ui_intelligenceBatteryCostInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
@@ -60,6 +63,9 @@ public:
             lv_obj_add_event_cb(ui_intelligenceBuyQInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
             lv_obj_add_event_cb(ui_intelligenceSellKInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
             lv_obj_add_event_cb(ui_intelligenceSellQInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceBatteryCapInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceMaxChargeInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
+            lv_obj_add_event_cb(ui_intelligenceMaxDischargeInput, intelligenceInputFocusHandler, LV_EVENT_DEFOCUSED, this);
             
             eventHandlersAdded = true;
         }
@@ -67,9 +73,10 @@ public:
     
     void onSaveClick() {
         IntelligenceSettings_t settings = readSettingsFromUI();
-        log_d("Saving intelligence settings: batCost=%.2f, minSoc=%d, maxSoc=%d, buyK=%.2f, buyQ=%.2f, sellK=%.2f, sellQ=%.2f",
+        log_d("Saving intelligence settings: batCost=%.2f, minSoc=%d, maxSoc=%d, buyK=%.2f, buyQ=%.2f, sellK=%.2f, sellQ=%.2f, cap=%.1f, chg=%.1f, dis=%.1f",
               settings.batteryCostPerKwh, settings.minSocPercent, settings.maxSocPercent,
-              settings.buyK, settings.buyQ, settings.sellK, settings.sellQ);
+              settings.buyK, settings.buyQ, settings.sellK, settings.sellQ,
+              settings.batteryCapacityKwh, settings.maxChargePowerKw, settings.maxDischargePowerKw);
         IntelligenceSettingsStorage::save(settings);
         resultSaved = true;
         log_d("Intelligence settings saved");
@@ -85,12 +92,35 @@ public:
             // Show keyboard and attach to focused input
             lv_keyboard_set_textarea(ui_intelligenceKeyboard, obj);
             lv_obj_clear_flag(ui_intelligenceKeyboard, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_align(ui_intelligenceKeyboard, LV_ALIGN_BOTTOM_MID, 0, 0);
             
-            // Scroll to make sure input is visible
-            lv_obj_scroll_to_view(obj, LV_ANIM_ON);
+            // Scroll the main container to make the input visible above keyboard
+            // Keyboard height is 200px, add some margin
+            lv_coord_t kbHeight = 220;
+            
+            // Get input position relative to main container
+            lv_obj_t* mainContainer = ui_intelligenceMainContainer;
+            lv_area_t inputArea;
+            lv_obj_get_coords(obj, &inputArea);
+            
+            lv_area_t containerArea;
+            lv_obj_get_coords(mainContainer, &containerArea);
+            
+            // Calculate visible area (screen height minus keyboard)
+            lv_coord_t scrHeight = lv_obj_get_height(ui_IntelligenceSetup);
+            lv_coord_t visibleBottom = scrHeight - kbHeight;
+            
+            // If input bottom is below visible area, scroll
+            if (inputArea.y2 > visibleBottom) {
+                lv_coord_t scrollY = inputArea.y2 - visibleBottom + 30;  // 30px extra margin
+                lv_obj_scroll_by(mainContainer, 0, -scrollY, LV_ANIM_ON);
+            }
         } else if (code == LV_EVENT_DEFOCUSED) {
             // Hide keyboard
             lv_obj_add_flag(ui_intelligenceKeyboard, LV_OBJ_FLAG_HIDDEN);
+            
+            // Scroll back to top
+            lv_obj_scroll_to_y(ui_intelligenceMainContainer, 0, LV_ANIM_ON);
         }
     }
     
@@ -131,6 +161,16 @@ private:
         
         snprintf(buf, sizeof(buf), "%.2f", settings.sellQ);
         lv_textarea_set_text(ui_intelligenceSellQInput, buf);
+        
+        // Battery parameters
+        snprintf(buf, sizeof(buf), "%.1f", settings.batteryCapacityKwh);
+        lv_textarea_set_text(ui_intelligenceBatteryCapInput, buf);
+        
+        snprintf(buf, sizeof(buf), "%.1f", settings.maxChargePowerKw);
+        lv_textarea_set_text(ui_intelligenceMaxChargeInput, buf);
+        
+        snprintf(buf, sizeof(buf), "%.1f", settings.maxDischargePowerKw);
+        lv_textarea_set_text(ui_intelligenceMaxDischargeInput, buf);
     }
     
     IntelligenceSettings_t readSettingsFromUI() {
@@ -157,6 +197,16 @@ private:
         // Sell coefficients
         settings.sellK = atof(lv_textarea_get_text(ui_intelligenceSellKInput));
         settings.sellQ = atof(lv_textarea_get_text(ui_intelligenceSellQInput));
+        
+        // Battery parameters
+        settings.batteryCapacityKwh = atof(lv_textarea_get_text(ui_intelligenceBatteryCapInput));
+        settings.maxChargePowerKw = atof(lv_textarea_get_text(ui_intelligenceMaxChargeInput));
+        settings.maxDischargePowerKw = atof(lv_textarea_get_text(ui_intelligenceMaxDischargeInput));
+        
+        // Validate battery parameters
+        if (settings.batteryCapacityKwh <= 0) settings.batteryCapacityKwh = 10.0f;
+        if (settings.maxChargePowerKw <= 0) settings.maxChargePowerKw = 5.0f;
+        if (settings.maxDischargePowerKw <= 0) settings.maxDischargePowerKw = 5.0f;
         
         return settings;
     }

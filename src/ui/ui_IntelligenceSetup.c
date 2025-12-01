@@ -17,6 +17,12 @@ lv_obj_t *ui_intelligenceMinSocLabel = NULL;
 lv_obj_t *ui_intelligenceMinSocInput = NULL;
 lv_obj_t *ui_intelligenceMaxSocLabel = NULL;
 lv_obj_t *ui_intelligenceMaxSocInput = NULL;
+lv_obj_t *ui_intelligenceBatteryCapLabel = NULL;
+lv_obj_t *ui_intelligenceBatteryCapInput = NULL;
+lv_obj_t *ui_intelligenceMaxChargeLabel = NULL;
+lv_obj_t *ui_intelligenceMaxChargeInput = NULL;
+lv_obj_t *ui_intelligenceMaxDischargeLabel = NULL;
+lv_obj_t *ui_intelligenceMaxDischargeInput = NULL;
 
 // Middle column - Buy coefficients
 lv_obj_t *ui_intelligenceMiddleColumn = NULL;
@@ -91,17 +97,17 @@ void ui_IntelligenceSetup_screen_init(void)
     lv_obj_set_flex_grow(ui_intelligenceMainContainer, 1);
     lv_obj_set_flex_flow(ui_intelligenceMainContainer, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_intelligenceMainContainer, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_clear_flag(ui_intelligenceMainContainer, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_flag(ui_intelligenceMainContainer, LV_OBJ_FLAG_SCROLLABLE);  // Enable scrolling
+    lv_obj_set_scroll_dir(ui_intelligenceMainContainer, LV_DIR_VER);  // Vertical scroll only
     lv_obj_set_style_pad_column(ui_intelligenceMainContainer, 16, LV_PART_MAIN);
     
     // ===== LEFT COLUMN - Enable & Battery =====
     ui_intelligenceLeftColumn = lv_obj_create(ui_intelligenceMainContainer);
     lv_obj_remove_style_all(ui_intelligenceLeftColumn);
-    lv_obj_set_height(ui_intelligenceLeftColumn, lv_pct(100));
+    lv_obj_set_height(ui_intelligenceLeftColumn, LV_SIZE_CONTENT);  // Content height for scrolling
     lv_obj_set_flex_grow(ui_intelligenceLeftColumn, 1);
     lv_obj_set_flex_flow(ui_intelligenceLeftColumn, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_flex_align(ui_intelligenceLeftColumn, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_clear_flag(ui_intelligenceLeftColumn, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_pad_row(ui_intelligenceLeftColumn, 8, LV_PART_MAIN);
     
     // Section title
@@ -135,6 +141,18 @@ void ui_IntelligenceSetup_screen_init(void)
     // Max SOC input
     create_input_row(ui_intelligenceLeftColumn, "Max SOC %:", 
                      &ui_intelligenceMaxSocLabel, &ui_intelligenceMaxSocInput, "95");
+    
+    // Battery capacity input
+    create_input_row(ui_intelligenceLeftColumn, "Capacity kWh:", 
+                     &ui_intelligenceBatteryCapLabel, &ui_intelligenceBatteryCapInput, "10");
+    
+    // Max charge power input
+    create_input_row(ui_intelligenceLeftColumn, "Max charge kW:", 
+                     &ui_intelligenceMaxChargeLabel, &ui_intelligenceMaxChargeInput, "5");
+    
+    // Max discharge power input
+    create_input_row(ui_intelligenceLeftColumn, "Max disch. kW:", 
+                     &ui_intelligenceMaxDischargeLabel, &ui_intelligenceMaxDischargeInput, "5");
     
     // ===== MIDDLE COLUMN - Buy coefficients =====
     ui_intelligenceMiddleColumn = lv_obj_create(ui_intelligenceMainContainer);
@@ -234,7 +252,8 @@ void ui_IntelligenceSetup_screen_init(void)
     lv_obj_set_height(ui_intelligenceKeyboard, 200);
     lv_obj_set_width(ui_intelligenceKeyboard, lv_pct(100));
     lv_keyboard_set_mode(ui_intelligenceKeyboard, LV_KEYBOARD_MODE_NUMBER);
-    lv_obj_add_flag(ui_intelligenceKeyboard, LV_OBJ_FLAG_HIDDEN);  // Hidden by default
+    lv_obj_add_flag(ui_intelligenceKeyboard, LV_OBJ_FLAG_HIDDEN | LV_OBJ_FLAG_FLOATING);  // Hidden and floating
+    lv_obj_align(ui_intelligenceKeyboard, LV_ALIGN_BOTTOM_MID, 0, 0);  // Align to bottom
 }
 
 void ui_IntelligenceSetup_screen_destroy(void)
@@ -253,6 +272,12 @@ void ui_IntelligenceSetup_screen_destroy(void)
     ui_intelligenceMinSocInput = NULL;
     ui_intelligenceMaxSocLabel = NULL;
     ui_intelligenceMaxSocInput = NULL;
+    ui_intelligenceBatteryCapLabel = NULL;
+    ui_intelligenceBatteryCapInput = NULL;
+    ui_intelligenceMaxChargeLabel = NULL;
+    ui_intelligenceMaxChargeInput = NULL;
+    ui_intelligenceMaxDischargeLabel = NULL;
+    ui_intelligenceMaxDischargeInput = NULL;
     ui_intelligenceMiddleColumn = NULL;
     ui_intelligenceBuyLabel = NULL;
     ui_intelligenceBuyKLabel = NULL;
