@@ -54,8 +54,10 @@ struct SimulationSummary {
     float totalFromGridKwh;
     float totalToGridKwh;
     float totalCostCzk;
-    float totalSavingsCzk;
-    float finalBatterySoc;
+    float totalSavingsCzk;        // Úspora oproti hloupému Self-Use (včetně hodnoty baterie)
+    float baselineCostCzk;        // Náklady při hloupém Self-Use
+    float finalBatterySoc;        // Finální SOC inteligentní simulace
+    float baselineFinalSoc;       // Finální SOC baseline simulace
     int quartersSimulated;
 };
 
@@ -562,9 +564,87 @@ public:
     }
     
     /**
-     * Vrátí souhrn simulace
+     * Simuluje "hloupé" Self-Use chování (bez inteligence)
+     * 
+     * Pravidla:
+     * 1. Spotřeba se pokrývá: výroba → baterie → síť
+     * 2. Přebytek výroby: baterie → prodej
+     * 3. Nikdy nenabíjí ze sítě
+     * 4. Nikdy aktivně neprodává z baterie
+     * 
+     * @param intelligentResults Výsledky inteligentní simulace (pro ceny a predikce)
+     * @param startingBatterySoc Počáteční SOC baterie
+     * @param outFinalBatteryKwh Výstupní parametr - finální stav baterie v kWh
+     * @return Celkové náklady za simulované období
      */
-    SimulationSummary getSummary(const std::vector<QuarterSimulationResult>& results) {
+    float simulateBaseline(const std::vector<QuarterSimulationResult>& intelligentResults,
+                           float startingBatterySoc,
+                           float& outFinalBatteryKwh) {
+        float totalCost = 0;
+        float batteryKwh = socToKwh(startingBatterySoc);
+        
+        for (const auto& r : intelligentResults) {
+            float productionKwh = r.productionKwh;
+            float consumptionKwh = r.consumptionKwh;
+            float buyPrice = r.buyPrice;
+            float sellPrice = r.sellPrice;
+            
+            // Aktuální stav baterie
+            float availableFromBattery = max(0.0f, batteryKwh - getMinBatteryKwh());
+            float spaceInBattery = max(0.0f, getMaxBatteryKwh() - batteryKwh);
+            float maxChargeQuarter = maxChargePowerKw * 0.25f;
+            
+            // === KROK 1: Pokrytí spotřeby ===
+            float remainingConsumption = consumptionKwh;
+            
+            // 1a) Ze solární výroby (zdarma)
+            float solarForConsumption = min(productionKwh, remainingConsumption);
+            remainingConsumption -= solarForConsumption;
+            float solarSurplus = productionKwh - solarForConsumption;
+            
+            // 1b) Z baterie (náklad = opotřebení baterie)
+            float fromBattery = 0;
+            if (remainingConsumption > 0 && availableFromBattery > 0) {
+                fromBattery = min(availableFromBattery, remainingConsumption);
+                batteryKwh -= fromBattery;
+                remainingConsumption -= fromBattery;
+                totalCost += fromBattery * batteryCostPerKwh;  // Opotřebení baterie
+            }
+            
+            // 1c) Ze sítě (platíme plnou cenu)
+            if (remainingConsumption > 0) {
+                totalCost += remainingConsumption * buyPrice;
+            }
+            
+            // === KROK 2: Přebytek výroby ===
+            if (solarSurplus > 0) {
+                // 2a) Nabíjíme baterii
+                float toCharge = min(solarSurplus, min(spaceInBattery, maxChargeQuarter));
+                batteryKwh += toCharge;
+                solarSurplus -= toCharge;
+                
+                // 2b) Zbytek prodáváme
+                if (solarSurplus > 0) {
+                    totalCost -= solarSurplus * sellPrice;  // Záporné = výdělek
+                }
+            }
+            
+            // Omezení baterie
+            batteryKwh = constrain(batteryKwh, getMinBatteryKwh(), getMaxBatteryKwh());
+        }
+        
+        outFinalBatteryKwh = batteryKwh;
+        return totalCost;
+    }
+    
+    /**
+     * Vrátí souhrn simulace včetně porovnání s baseline
+     * 
+     * Úspora se počítá jako rozdíl nákladů PLUS hodnota energie navíc v baterii.
+     * Pokud inteligence nabije baterii více než baseline, tato energie
+     * nahradí budoucí nákup ze sítě - oceňujeme ji průměrnou nákupní cenou.
+     */
+    SimulationSummary getSummary(const std::vector<QuarterSimulationResult>& results, float startingBatterySoc) {
         SimulationSummary summary;
         summary.totalProductionKwh = 0;
         summary.totalConsumptionKwh = 0;
@@ -572,24 +652,61 @@ public:
         summary.totalToGridKwh = 0;
         summary.totalCostCzk = 0;
         summary.totalSavingsCzk = 0;
+        summary.baselineCostCzk = 0;
+        summary.baselineFinalSoc = startingBatterySoc;
         summary.quartersSimulated = results.size();
         
+        // Spočítej průměrnou nákupní cenu (pro ocenění energie v baterii)
+        float avgBuyPrice = 0;
         for (const auto& r : results) {
             summary.totalProductionKwh += r.productionKwh;
             summary.totalConsumptionKwh += r.consumptionKwh;
             summary.totalFromGridKwh += r.fromGridKwh;
             summary.totalToGridKwh += r.toGridKwh;
             summary.totalCostCzk += r.costCzk;
-            summary.totalSavingsCzk += r.savingsVsGridCzk;
+            avgBuyPrice += r.buyPrice;
+        }
+        if (!results.empty()) {
+            avgBuyPrice /= results.size();
         }
         
+        // Spočítej baseline (hloupé Self-Use) a získej finální stav baterie
+        float baselineFinalBatteryKwh = 0;
+        summary.baselineCostCzk = simulateBaseline(results, startingBatterySoc, baselineFinalBatteryKwh);
+        summary.baselineFinalSoc = kwhToSoc(baselineFinalBatteryKwh);
+        
+        // Finální SOC inteligentní simulace
+        float intelligentFinalBatteryKwh = 0;
         if (!results.empty()) {
             summary.finalBatterySoc = results.back().batterySoc;
+            intelligentFinalBatteryKwh = socToKwh(summary.finalBatterySoc);
         } else {
-            summary.finalBatterySoc = 0;
+            summary.finalBatterySoc = startingBatterySoc;
+            intelligentFinalBatteryKwh = socToKwh(startingBatterySoc);
         }
         
+        // Rozdíl energie v baterii na konci (inteligence - baseline)
+        // Kladná hodnota = inteligence má víc energie v baterii
+        float batteryDifferenceKwh = intelligentFinalBatteryKwh - baselineFinalBatteryKwh;
+        
+        // Hodnota této energie = kolik ušetříme tím, že nemusíme kupovat ze sítě
+        // Oceňujeme průměrnou nákupní cenou (energie v baterii nahradí budoucí nákup)
+        // Opotřebení baterie při budoucím vybíjení už je implicitně započítáno
+        float batteryValueAdjustment = batteryDifferenceKwh * avgBuyPrice;
+        
+        // Úspora = (baseline náklady - inteligentní náklady) + hodnota energie navíc v baterii
+        summary.totalSavingsCzk = (summary.baselineCostCzk - summary.totalCostCzk) + batteryValueAdjustment;
+        
         return summary;
+    }
+    
+    /**
+     * Vrátí souhrn simulace (zpětně kompatibilní verze)
+     */
+    SimulationSummary getSummary(const std::vector<QuarterSimulationResult>& results) {
+        // Použij první SOC z výsledků jako výchozí
+        float startingSoc = results.empty() ? 50.0f : results[0].batterySoc;
+        return getSummary(results, startingSoc);
     }
     
     /**

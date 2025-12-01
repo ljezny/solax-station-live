@@ -760,8 +760,11 @@ bool runIntelligenceTask()
                   summary.totalProductionKwh, summary.totalConsumptionKwh);
             log_i("Grid: bought %.1f kWh, sold %.1f kWh",
                   summary.totalFromGridKwh, summary.totalToGridKwh);
-            log_i("Final SOC: %.0f%%, Total cost: %.1f CZK, Savings: %.1f CZK",
-                  summary.finalBatterySoc, summary.totalCostCzk, summary.totalSavingsCzk);
+            log_i("Intelligent: cost %.1f CZK, final SOC %.0f%%",
+                  summary.totalCostCzk, summary.finalBatterySoc);
+            log_i("Baseline (dumb): cost %.1f CZK, final SOC %.0f%%",
+                  summary.baselineCostCzk, summary.baselineFinalSoc);
+            log_i("Savings vs dumb Self-Use: %.1f CZK (incl. battery value adjustment)", summary.totalSavingsCzk);
 
             // Log summary of mode changes only
             log_i("=== MODE CHANGES ===");

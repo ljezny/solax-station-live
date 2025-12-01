@@ -78,7 +78,8 @@ public:
         
         // Spuštění nové simulace
         lastSimulationResults = simulator.simulate(inverterData, prices, settings);
-        lastSummary = simulator.getSummary(lastSimulationResults);
+        // Předej aktuální SOC pro výpočet baseline
+        lastSummary = simulator.getSummary(lastSimulationResults, (float)inverterData.soc);
         lastSimulationTime = now;
         
         return lastSimulationResults;
