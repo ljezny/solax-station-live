@@ -441,6 +441,11 @@ public:
         lv_obj_set_style_pad_row(intelligencePlanDetail, 8, 0);
         lv_obj_clear_flag(intelligencePlanDetail, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_add_flag(intelligencePlanDetail, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(intelligencePlanDetail, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_event_cb(intelligencePlanDetail, [](lv_event_t *e) {
+            DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
+            self->toggleChartExpand(self->intelligencePlanTile);
+        }, LV_EVENT_CLICKED, this);
         
         // --- TOP: Upcoming plans container ---
         intelligenceUpcomingContainer = lv_obj_create(intelligencePlanDetail);
@@ -450,12 +455,8 @@ public:
         lv_obj_set_flex_flow(intelligenceUpcomingContainer, LV_FLEX_FLOW_COLUMN);
         lv_obj_set_flex_align(intelligenceUpcomingContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
         lv_obj_set_style_pad_row(intelligenceUpcomingContainer, 2, 0);
-        lv_obj_clear_flag(intelligenceUpcomingContainer, LV_OBJ_FLAG_SCROLLABLE);
-        lv_obj_add_flag(intelligenceUpcomingContainer, LV_OBJ_FLAG_CLICKABLE);
-        lv_obj_add_event_cb(intelligenceUpcomingContainer, [](lv_event_t *e) {
-            DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
-            self->toggleChartExpand(self->intelligencePlanTile);
-        }, LV_EVENT_CLICKED, this);
+        lv_obj_clear_flag(intelligenceUpcomingContainer, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_flag(intelligenceUpcomingContainer, LV_OBJ_FLAG_EVENT_BUBBLE);  // Pass clicks to parent
         
         // Title for upcoming
         intelligenceDetailTitle = lv_label_create(intelligenceUpcomingContainer);
@@ -472,7 +473,8 @@ public:
             lv_obj_set_height(intelligenceUpcomingRows[i], LV_SIZE_CONTENT);
             lv_obj_set_flex_flow(intelligenceUpcomingRows[i], LV_FLEX_FLOW_COLUMN);
             lv_obj_set_style_pad_row(intelligenceUpcomingRows[i], 0, 0);
-            lv_obj_clear_flag(intelligenceUpcomingRows[i], LV_OBJ_FLAG_SCROLLABLE);
+            lv_obj_clear_flag(intelligenceUpcomingRows[i], LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_add_flag(intelligenceUpcomingRows[i], LV_OBJ_FLAG_EVENT_BUBBLE);  // Pass clicks to parent
             
             // Header row: Time - Mode
             lv_obj_t *headerRow = lv_obj_create(intelligenceUpcomingRows[i]);
@@ -482,7 +484,8 @@ public:
             lv_obj_set_flex_flow(headerRow, LV_FLEX_FLOW_ROW);
             lv_obj_set_flex_align(headerRow, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
             lv_obj_set_style_pad_gap(headerRow, 8, 0);
-            lv_obj_clear_flag(headerRow, LV_OBJ_FLAG_SCROLLABLE);
+            lv_obj_clear_flag(headerRow, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_add_flag(headerRow, LV_OBJ_FLAG_EVENT_BUBBLE);  // Pass clicks to parent
             
             // Time label
             intelligenceUpcomingTimes[i] = lv_label_create(headerRow);
@@ -518,12 +521,8 @@ public:
         lv_obj_set_flex_flow(intelligenceStatsContainer, LV_FLEX_FLOW_COLUMN);
         lv_obj_set_flex_align(intelligenceStatsContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
         lv_obj_set_style_pad_row(intelligenceStatsContainer, 2, 0);
-        lv_obj_clear_flag(intelligenceStatsContainer, LV_OBJ_FLAG_SCROLLABLE);
-        lv_obj_add_flag(intelligenceStatsContainer, LV_OBJ_FLAG_CLICKABLE);
-        lv_obj_add_event_cb(intelligenceStatsContainer, [](lv_event_t *e) {
-            DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
-            self->toggleChartExpand(self->intelligencePlanTile);
-        }, LV_EVENT_CLICKED, this);
+        lv_obj_clear_flag(intelligenceStatsContainer, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_flag(intelligenceStatsContainer, LV_OBJ_FLAG_EVENT_BUBBLE);  // Pass clicks to parent
         
         // Title for stats
         lv_obj_t *statsTitle = lv_label_create(intelligenceStatsContainer);
@@ -557,14 +556,8 @@ public:
             self->toggleChartExpand(self->intelligencePlanTile);
         }, LV_EVENT_CLICKED, this);
         
-        // Also add click handler on detail container so clicks inside work too
-        lv_obj_add_flag(intelligencePlanDetail, LV_OBJ_FLAG_CLICKABLE);
-        lv_obj_add_event_cb(intelligencePlanDetail, [](lv_event_t *e) {
-            DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
-            self->toggleChartExpand(self->intelligencePlanTile);
-        }, LV_EVENT_CLICKED, this);
-        
         // Move to position 1 (after TopRightContainer, before RightBottomContainer/solar chart)
+        lv_obj_move_to_index(intelligencePlanTile, 1);
         lv_obj_move_to_index(intelligencePlanTile, 1);
         
         // Initially hidden - shown only when intelligence is active
