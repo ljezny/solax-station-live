@@ -191,7 +191,10 @@ public:
 
     void onFocusChanged(lv_obj_t *obj)
     {
+        // Show keyboard
+        lv_obj_clear_flag(ui_keyboard, LV_OBJ_FLAG_HIDDEN);
         lv_keyboard_set_textarea(ui_keyboard, obj);
+        
         if (obj == ui_wifiPassword)
         {
             lv_keyboard_set_mode(ui_keyboard, LV_KEYBOARD_MODE_TEXT_LOWER);
@@ -204,6 +207,31 @@ public:
         {
             lv_keyboard_set_mode(ui_keyboard, LV_KEYBOARD_MODE_TEXT_LOWER);
         }
+        
+        // Auto-scroll to keep focused input visible above keyboard
+        lv_coord_t scrHeight = lv_obj_get_height(ui_WifiSetup);
+        lv_coord_t kbHeight = lv_obj_get_height(ui_keyboard);
+        lv_coord_t inputY = lv_obj_get_y(obj);
+        lv_coord_t inputH = lv_obj_get_height(obj);
+        
+        // Get parent card's Y position
+        lv_obj_t* parent = lv_obj_get_parent(obj);
+        if (parent && parent != ui_WifiSetup) {
+            inputY += lv_obj_get_y(parent);
+            // Check for grandparent (container)
+            lv_obj_t* grandparent = lv_obj_get_parent(parent);
+            if (grandparent && grandparent != ui_WifiSetup) {
+                inputY += lv_obj_get_y(grandparent);
+            }
+        }
+        
+        lv_coord_t visibleBottom = scrHeight - kbHeight - 20;
+        
+        if (inputY + inputH > visibleBottom) {
+            lv_coord_t scrollAmount = (inputY + inputH) - visibleBottom + 10;
+            lv_obj_scroll_by(ui_Container12, 0, -scrollAmount, LV_ANIM_ON);
+        }
+        
         setCompleteButtonVisibility();
     }
 

@@ -94,7 +94,7 @@ IntelligenceResult_t lastIntelligenceResult;
 static InverterMode_t lastSentMode = INVERTER_MODE_UNKNOWN;  // Last mode sent to inverter
 static long lastIntelligenceAttempt = 0;
 static int lastProcessedQuarter = -1;  // Track last quarter when we processed intelligence
-#define INTELLIGENCE_REFRESH_INTERVAL 60000  // 1 minute - recalculate every minute
+#define INTELLIGENCE_REFRESH_INTERVAL 300000  // 5 minutes - recalculate every 5 minutes
 
 SplashUI *splashUI = NULL;
 WiFiSetupUI *wifiSetupUI = NULL;
@@ -676,7 +676,14 @@ bool runIntelligenceTask()
     bool run = false;
     static InverterMode_t intelligencePlan[QUARTERS_TWO_DAYS];  // Plan for today + tomorrow
     
-    if (lastIntelligenceAttempt == 0 || millis() - lastIntelligenceAttempt > INTELLIGENCE_REFRESH_INTERVAL)
+    // Check if current time is aligned to 5-minute boundary (0, 5, 10, 15, 20, ...)
+    time_t now_check = time(nullptr);
+    struct tm* tm_check = localtime(&now_check);
+    int currentMinute = tm_check->tm_min;
+    bool is5MinuteAligned = (currentMinute % 5 == 0);
+    
+    // Run only on 5-minute boundaries and respect the interval
+    if (is5MinuteAligned && (lastIntelligenceAttempt == 0 || millis() - lastIntelligenceAttempt > INTELLIGENCE_REFRESH_INTERVAL))
     {
         log_d("Running intelligence resolver");
         
