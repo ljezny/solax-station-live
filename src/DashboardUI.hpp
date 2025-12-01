@@ -27,6 +27,7 @@ static bool isDarkMode = false;
 typedef struct SpotChartData {
     ElectricityPriceTwoDays_t* priceResult;
     bool hasIntelligencePlan;                             // Zda máme platný plán
+    bool hasValidPrices;                                  // Zda máme platné spotové ceny
 } SpotChartData_t;
 
 static lv_color_t getPriceLevelColor(PriceLevel_t level)
@@ -377,6 +378,7 @@ public:
         // Initialize spot chart data
         spotChartData.priceResult = nullptr;
         spotChartData.hasIntelligencePlan = false;
+        spotChartData.hasValidPrices = false;
         
         lv_obj_add_event_cb(ui_Chart1, solar_chart_draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
         lv_obj_add_event_cb(ui_spotPriceContainer, electricity_price_draw_event_cb, LV_EVENT_DRAW_PART_END, NULL);
@@ -385,24 +387,30 @@ public:
         // Add click handlers for chart expand/collapse
         // For solar chart, add click on ui_Chart1 since it covers the whole container
         lv_obj_add_flag(ui_Chart1, LV_OBJ_FLAG_CLICKABLE);
-        lv_obj_set_user_data(ui_Chart1, this);
         lv_obj_add_event_cb(ui_Chart1, [](lv_event_t *e) {
-            DashboardUI* self = (DashboardUI*)lv_obj_get_user_data(lv_event_get_target(e));
-            self->toggleChartExpand(ui_RightBottomContainer);
-        }, LV_EVENT_CLICKED, NULL);
+            log_d("Solar chart clicked");
+            DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
+            if (self) {
+                log_d("Self valid, calling toggleChartExpand for solar chart");
+                self->toggleChartExpand(ui_RightBottomContainer);
+            }
+        }, LV_EVENT_CLICKED, this);
         
         lv_obj_add_flag(ui_spotPriceContainer, LV_OBJ_FLAG_CLICKABLE);
-        lv_obj_set_user_data(ui_spotPriceContainer, this);
         lv_obj_add_event_cb(ui_spotPriceContainer, [](lv_event_t *e) {
-            DashboardUI* self = (DashboardUI*)lv_obj_get_user_data(lv_event_get_target(e));
-            self->toggleChartExpand(ui_spotPriceContainer);
-        }, LV_EVENT_CLICKED, NULL);
+            log_d("Spot price clicked");
+            DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
+            if (self) {
+                log_d("Self valid, calling toggleChartExpand for spot");
+                self->toggleChartExpand(ui_spotPriceContainer);
+            }
+        }, LV_EVENT_CLICKED, this);
         
         // Create intelligence plan tile (thin bar, same style as other tiles)
         intelligencePlanTile = lv_obj_create(ui_RightContainer);
         lv_obj_remove_style_all(intelligencePlanTile);
         lv_obj_set_width(intelligencePlanTile, lv_pct(100));
-        lv_obj_set_height(intelligencePlanTile, LV_SIZE_CONTENT);
+        lv_obj_set_height(intelligencePlanTile, 40);  // Fixed height for collapsed state
         lv_obj_set_flex_grow(intelligencePlanTile, 0);  // No flex grow when collapsed, will be set to 1 when expanded
         lv_obj_set_style_radius(intelligencePlanTile, 24, 0);
         lv_obj_set_style_bg_color(intelligencePlanTile, lv_color_hex(0xFFFFFF), 0);
@@ -440,7 +448,9 @@ public:
         lv_obj_add_flag(intelligencePlanDetail, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_add_event_cb(intelligencePlanDetail, [](lv_event_t *e) {
             DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
-            self->toggleChartExpand(self->intelligencePlanTile);
+            // Get parent (intelligencePlanTile) from the detail container
+            lv_obj_t* tile = lv_obj_get_parent(lv_event_get_current_target(e));
+            if (self && tile) self->toggleChartExpand(tile);
         }, LV_EVENT_CLICKED, this);
         
         // --- TOP: Upcoming plans container ---
@@ -838,30 +848,67 @@ public:
         }, LV_EVENT_CLICKED, NULL);
     }
 
+    // Helper to check if we have valid price data - uses safe flag instead of pointer access
+    bool hasValidPriceData() {
+        return spotChartData.hasValidPrices;
+    }
+
     // Toggle chart expand - hide siblings to let the clicked chart fill the container
     void toggleChartExpand(lv_obj_t *chart) {
-        if (expandedChart == chart) {
-            // Collapse - show all siblings
+        log_d("toggleChartExpand called with chart=%p, ui_spotPriceContainer=%p, ui_RightBottomContainer=%p", 
+              chart, ui_spotPriceContainer, ui_RightBottomContainer);
+        if (!chart) {
+            log_e("Toggle chart: null chart pointer");
+            return;
+        }
+        
+        bool isCollapsing = (expandedChart == chart);
+        bool isIntelligenceTile = (chart == intelligencePlanTile);
+        log_d("Toggle chart: isCollapsing=%d, isIntelligenceTile=%d, expandedChart=%p, chart=%p", 
+              isCollapsing, isIntelligenceTile, expandedChart, chart);
+        
+        if (isCollapsing) {
+            // Collapse - show all siblings and restore flex grow by iterating children
             uint32_t childCount = lv_obj_get_child_cnt(ui_RightContainer);
             for (uint32_t i = 0; i < childCount; i++) {
                 lv_obj_t *child = lv_obj_get_child(ui_RightContainer, i);
-                // Don't show intelligence tile if it wasn't visible before expand
-                if (child == intelligencePlanTile && !spotChartData.hasIntelligencePlan) {
+                if (!child) continue;
+                
+                // Handle intelligence tile
+                if (child == intelligencePlanTile) {
+                    if (spotChartData.hasIntelligencePlan) {
+                        lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
+                        lv_obj_set_flex_grow(child, 0);
+                        lv_obj_set_height(child, 40);
+                    }
                     continue;
                 }
-                // Don't show spot price container if no data available
-                if (child == ui_spotPriceContainer && 
-                    (spotChartData.priceResult == nullptr || spotChartData.priceResult->updated == 0)) {
+                
+                // Handle spot price container (use global variable)
+                if (child == ui_spotPriceContainer) {
+                    if (hasValidPriceData()) {
+                        lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
+                        lv_obj_set_flex_grow(child, 1);
+                    }
                     continue;
                 }
+                
+                // Handle solar chart (RightBottomContainer) (use global variable)
+                if (child == ui_RightBottomContainer) {
+                    lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_set_flex_grow(child, 2);
+                    continue;
+                }
+                
+                // All other children - just show them
                 lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
             }
-            // If collapsing intelligence tile, show summary and hide detail, restore small flex grow
-            if (chart == intelligencePlanTile) {
+            
+            // If collapsing intelligence tile, show summary and hide detail
+            if (isIntelligenceTile) {
+                log_d("Collapsing intelligence tile: showing summary");
                 lv_obj_clear_flag(intelligencePlanSummary, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_add_flag(intelligencePlanDetail, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_set_flex_grow(intelligencePlanTile, 0);  // No flex grow when collapsed
-                lv_obj_set_height(intelligencePlanTile, LV_SIZE_CONTENT);  // Reset height to content
             }
             expandedChart = nullptr;
         } else {
@@ -873,17 +920,22 @@ public:
                     lv_obj_add_flag(child, LV_OBJ_FLAG_HIDDEN);
                 }
             }
-            // If expanding intelligence tile, hide summary and show detail, use flex grow
-            if (chart == intelligencePlanTile) {
+            
+            // Set expanded chart to fill available space
+            lv_obj_set_flex_grow(chart, 1);
+            
+            // If expanding intelligence tile, hide summary and show detail
+            if (isIntelligenceTile) {
+                log_d("Expanding intelligence tile: showing detail");
                 lv_obj_add_flag(intelligencePlanSummary, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_clear_flag(intelligencePlanDetail, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_set_flex_grow(intelligencePlanTile, 1);  // Take all available space when expanded
+                lv_obj_set_height(intelligencePlanTile, lv_pct(100));
             }
             expandedChart = chart;
         }
-        // Force layout recalculation for proper height distribution
+        // Force layout recalculation
         lv_obj_update_layout(ui_RightContainer);
-        lv_obj_invalidate(ui_RightContainer);
+        log_d("Toggle chart: layout updated, chart height=%d", lv_obj_get_height(chart));
     }
 
     void setModeChangeCallback(InverterModeChangeCallback callback) {
@@ -1896,6 +1948,7 @@ private:
     void updateElectricityPriceChart(ElectricityPriceTwoDays_t &electricityPriceResult, bool isDarkMode)
     {
         spotChartData.priceResult = &electricityPriceResult;
+        spotChartData.hasValidPrices = (electricityPriceResult.updated > 0);
         // Intelligence plan se aktualizuje separátně přes updateIntelligencePlan()
         lv_obj_set_user_data(ui_spotPriceContainer, (void *)&spotChartData);
         lv_obj_invalidate(ui_spotPriceContainer);

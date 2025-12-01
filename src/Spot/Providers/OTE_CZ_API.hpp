@@ -69,7 +69,6 @@ private:
               if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY)
               {
                 String payload = https.getString();
-                log_d("Received payload: %s", payload.c_str());
                 DynamicJsonDocument doc(12 * 1024);
                 DynamicJsonDocument filter(512);
                 filter["data"]["dataLine"][0]["point"][0]["y"] = true;
