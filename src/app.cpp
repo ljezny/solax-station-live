@@ -596,8 +596,27 @@ bool runIntelligenceTask()
         {
             IntelligenceResolver resolver(consumptionPredictor, productionPredictor);
             
+            // Log input values for intelligence decision
+            time_t now_log = time(nullptr);
+            struct tm* timeinfo_log = localtime(&now_log);
+            int currentQuarterLog = (timeinfo_log->tm_hour * 60 + timeinfo_log->tm_min) / 15;
+            float currentSpotPrice = electricityPriceResult->prices[currentQuarterLog].electricityPrice;
+            float buyPrice = IntelligenceSettingsStorage::calculateBuyPrice(currentSpotPrice, settings);
+            float sellPrice = IntelligenceSettingsStorage::calculateSellPrice(currentSpotPrice, settings);
+            float remainingProd = productionPredictor.predictRemainingDayProduction(currentQuarterLog);
+            float remainingCons = consumptionPredictor.predictRemainingDayConsumption(currentQuarterLog);
+            
+            log_i("=== INTELLIGENCE INPUT ===");
+            log_i("Time: %02d:%02d (Q%d), SOC: %d%%", timeinfo_log->tm_hour, timeinfo_log->tm_min, currentQuarterLog, inverterData.soc);
+            log_i("Spot: %.2f %s, Buy: %.2f, Sell: %.2f, Battery cost: %.2f", 
+                  currentSpotPrice, electricityPriceResult->currency, buyPrice, sellPrice, settings.batteryCostPerKwh);
+            log_i("Remaining production: %.1f kWh, consumption: %.1f kWh, net: %.1f kWh",
+                  remainingProd, remainingCons, remainingProd - remainingCons);
+            log_i("Battery: %.1f kWh capacity, min SOC: %d%%, max SOC: %d%%",
+                  inverterData.batteryCapacityWh / 1000.0f, settings.minSocPercent, settings.maxSocPercent);
+            
             // Resolve current quarter for immediate action (with verbose logging)
-            lastIntelligenceResult = resolver.resolve(inverterData, *electricityPriceResult, settings, -1, true);
+            lastIntelligenceResult = resolver.resolve(inverterData, *electricityPriceResult, settings, -1);
             
             log_i("Intelligence decision: %s - %s", 
                   IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str(),
@@ -628,6 +647,20 @@ bool runIntelligenceTask()
                     // Future quarters - resolve for each
                     IntelligenceResult_t futureResult = resolver.resolve(inverterData, *electricityPriceResult, settings, q);
                     intelligencePlan[q] = futureResult.command;
+                    
+                    // Log each quarter on one line with all key values
+                    int hour = (q % QUARTERS_OF_DAY) / 4;
+                    int minute = ((q % QUARTERS_OF_DAY) % 4) * 15;
+                    float spotPrice = electricityPriceResult->prices[q].electricityPrice;
+                    float buyPrice = IntelligenceSettingsStorage::calculateBuyPrice(spotPrice, settings);
+                    float sellPrice = IntelligenceSettingsStorage::calculateSellPrice(spotPrice, settings);
+                    int dayQ = q % QUARTERS_OF_DAY;
+                    float predProd = productionPredictor.predictRemainingDayProduction(dayQ);
+                    float predCons = consumptionPredictor.predictRemainingDayConsumption(dayQ);
+                    
+                    log_i("Q%03d %02d:%02d | spot:%.1f buy:%.1f sell:%.1f | prod:%.1f cons:%.1f | -> %s",
+                          q, hour, minute, spotPrice, buyPrice, sellPrice, predProd, predCons,
+                          IntelligenceResolver::commandToString(futureResult.command).c_str());
                 }
                 
                 // Yield every 8 quarters to prevent watchdog timeout
@@ -639,18 +672,43 @@ bool runIntelligenceTask()
             // Log plan summary for current day
             log_i("Intelligence plan generated for %d quarters (from Q%d)", totalQuarters, currentQuarter);
             
+            // Log summary of mode changes only
+            log_i("=== MODE CHANGES ===");
+            int lastMode = -1;
+            for (int q = currentQuarter; q < totalQuarters; q++) {
+                if (intelligencePlan[q] != lastMode) {
+                    int hour = (q % QUARTERS_OF_DAY) / 4;
+                    int minute = ((q % QUARTERS_OF_DAY) % 4) * 15;
+                    const char* modeName = IntelligenceResolver::commandToString((InverterMode_t)intelligencePlan[q]).c_str();
+                    float spotPrice = (q < (electricityPriceResult->hasTomorrowData ? 192 : 96)) 
+                        ? electricityPriceResult->prices[q].electricityPrice : 0;
+                    log_i("  Q%d (%02d:%02d): %s (spot: %.2f %s)", 
+                          q, hour, minute, modeName, spotPrice, electricityPriceResult->currency);
+                    lastMode = intelligencePlan[q];
+                }
+            }
+            
             // Fill remaining quarters with UNKNOWN if no tomorrow data
             for (int q = totalQuarters; q < QUARTERS_TWO_DAYS; q++)
             {
                 intelligencePlan[q] = INVERTER_MODE_UNKNOWN;
             }
             
+            // Calculate stats for intelligence tile
+            float remainingProduction = productionPredictor.predictRemainingDayProduction(currentQuarter);
+            float remainingConsumption = consumptionPredictor.predictRemainingDayConsumption(currentQuarter);
+            
+            // Calculate total expected savings for today's plan
+            float totalSavings = lastIntelligenceResult.expectedSavings;
+            
             // Update UI with intelligence state
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
             if (dashboardUI != nullptr)
             {
                 dashboardUI->setIntelligenceState(true, true, true);
-                dashboardUI->updateIntelligencePlanSummary(lastIntelligenceResult.command, intelligencePlan, currentQuarter, totalQuarters);
+                dashboardUI->updateIntelligencePlanSummary(lastIntelligenceResult.command, intelligencePlan, currentQuarter, totalQuarters, totalSavings);
+                dashboardUI->updateIntelligenceUpcomingPlans(intelligencePlan, currentQuarter, totalQuarters, electricityPriceResult, &settings);
+                dashboardUI->updateIntelligenceStats(remainingProduction, remainingConsumption);
             }
             xSemaphoreGive(lvgl_mutex);
             
