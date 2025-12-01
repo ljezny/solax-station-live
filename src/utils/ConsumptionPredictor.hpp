@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <Preferences.h>
 #include <esp_heap_caps.h>
+#include <cmath>  // Pro exp()
 #include "../Spot/ElectricityPriceResult.hpp"  // Pro QUARTERS_OF_DAY
 
 /**
@@ -44,8 +45,13 @@ private:
     // === ADAPTIVNÍ KOREKCE ===
     // Kumulativní chyba pro korekci budoucích predikcí
     float cumulativeError;
-    static constexpr float CORRECTION_ALPHA = 0.2f;  // Pomalejší adaptace pro spotřebu (špičky)
+    static constexpr float CORRECTION_ALPHA = 0.3f;  // Rychlejší adaptace pro spotřebu
     int lastCorrectionQuarter;
+    
+    // === REALTIME KOREKCE ===
+    // Aktuální výkon (W) pro průběžnou korekci predikcí
+    float currentPowerW;
+    static constexpr float REALTIME_ALPHA = 0.5f;  // Vyhlazení aktuálního výkonu
     
     // Pomocné metody pro přístup k lineárnímu poli
     inline int getIndex(int week, int day, int quarter) const {
@@ -103,6 +109,9 @@ public:
         // Inicializace adaptivní korekce
         cumulativeError = 0;
         lastCorrectionQuarter = -1;
+        
+        // Inicializace realtime korekce
+        currentPowerW = 0;
     }
     
     ~ConsumptionPredictor() {
@@ -154,6 +163,10 @@ public:
         int weekOfYear = getWeekOfYear(timeinfo);
         
         bool quarterChanged = false;
+        
+        // === REALTIME KOREKCE ===
+        // Exponenciální vyhlazení aktuálního výkonu pro stabilnější predikce
+        currentPowerW = REALTIME_ALPHA * loadPowerW + (1 - REALTIME_ALPHA) * currentPowerW;
         
         // Detekce přechodu na nový týden - posuneme historii
         if (lastRecordedWeek >= 0 && weekOfYear != lastRecordedWeek) {
@@ -279,9 +292,19 @@ public:
     }
     
     /**
+     * Získá aktuální čtvrthodinu (0-95)
+     */
+    int getCurrentQuarter() const {
+        time_t now = time(nullptr);
+        struct tm* timeinfo = localtime(&now);
+        return (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
+    }
+    
+    /**
      * Predikuje spotřebu pro danou čtvrthodinu S KOREKCÍ
-     * Vrací průměr z dostupných dat pro stejný den v týdnu za poslední 2 týdny
-     * + korekce na základě aktuálního vzoru spotřeby
+     * Korekce klesá exponenciálně se vzdáleností od aktuální čtvrthodiny.
+     * Příklad: nabíjíš auto teď → predikce za 1h je vysoká, za 6h už normální.
+     * 
      * @param day den v týdnu (0=neděle)
      * @param quarter čtvrthodina (0-95)
      * @return predikovaná spotřeba v Wh za čtvrthodinu
@@ -289,15 +312,48 @@ public:
     float predictQuarterlyConsumption(int day, int quarter) const {
         float basePrediction = getBasePrediction(day, quarter);
         
-        // Aplikujeme korekci
-        float corrected = basePrediction + cumulativeError;
+        // === VZDÁLENOSTNÍ KOREKCE ===
+        // Chyba se propaguje s klesající vahou podle vzdálenosti od aktuální čtvrthodiny
+        // Poločas rozpadu ~6 hodin (24 quarters) - za 6h je korekce na 37%
+        int currentQ = getCurrentQuarter();
+        int distance = quarter - currentQ;
+        if (distance < 0) distance += QUARTERS_OF_DAY;  // Wrap around pro příští den
         
-        // Omezení: min 0.3× základní predikce, max 3× základní predikce
-        float minCorrection = basePrediction * 0.3f;
-        float maxCorrection = basePrediction * 3.0f;
+        // Exponenciální pokles: e^(-distance/24)
+        // distance=0: 100%, distance=4 (1h): 85%, distance=24 (6h): 37%, distance=48 (12h): 14%
+        float decayFactor = exp(-distance / 24.0f);
+        
+        // Aplikujeme historickou korekci s klesající vahou
+        float corrected = basePrediction + (cumulativeError * decayFactor);
+        
+        // === REALTIME KOREKCE ===
+        // Pokud aktuální výkon je výrazně vyšší než predikce, použijeme aktuální výkon
+        // Toto zajistí rychlou reakci při spuštění velké zátěže (např. nabíječka EV)
+        float currentConsumptionWh = currentPowerW / 4.0f;  // Převod W na Wh za čtvrthodinu
+        
+        // Pokud aktuální spotřeba je vyšší než korigovaná predikce, použijeme mix
+        if (currentConsumptionWh > corrected && distance < 48) {  // Max 12 hodin dopředu
+            // Realtime faktor také klesá se vzdáleností, ale rychleji
+            // Poločas ~3 hodiny (12 quarters)
+            float realtimeFactor = exp(-distance / 12.0f) * 0.8f;  // Max 80% pro aktuální quarter
+            
+            // Mix historické korekce a realtime
+            corrected = (1.0f - realtimeFactor) * corrected + realtimeFactor * currentConsumptionWh;
+        }
+        
+        // Omezení: min 0.1× základní predikce, max 10× (pro EV nabíječky apod.)
+        float minCorrection = basePrediction * 0.1f;
+        float maxCorrection = basePrediction * 10.0f;
         corrected = constrain(corrected, minCorrection, maxCorrection);
         
         return corrected;
+    }
+    
+    /**
+     * Vrátí aktuální výkon pro debug/UI
+     */
+    float getCurrentPowerW() const {
+        return currentPowerW;
     }
     
     /**
@@ -313,6 +369,7 @@ public:
     void resetCorrection() {
         cumulativeError = 0;
         lastCorrectionQuarter = -1;
+        currentPowerW = 0;
     }
     
     /**
