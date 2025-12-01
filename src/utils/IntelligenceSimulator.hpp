@@ -285,6 +285,37 @@ public:
         int maxQuarters = prices.hasTomorrowData ? QUARTERS_TWO_DAYS : QUARTERS_OF_DAY;
         int quartersToSimulate = maxQuarters - currentQuarter;
         
+        // Pre-calculate future prices once (O(n) instead of O(n²))
+        float minFutureBuyPrices[QUARTERS_TWO_DAYS];
+        float maxFutureBuyPrices[QUARTERS_TWO_DAYS];
+        float maxFutureSellPrices[QUARTERS_TWO_DAYS];
+        float avgFutureBuyPrices[QUARTERS_TWO_DAYS];
+        
+        // Calculate from end backwards for min/max (single pass)
+        minFutureBuyPrices[maxQuarters - 1] = IntelligenceSettingsStorage::calculateBuyPrice(
+            prices.prices[maxQuarters - 1].electricityPrice, settings);
+        maxFutureBuyPrices[maxQuarters - 1] = minFutureBuyPrices[maxQuarters - 1];
+        maxFutureSellPrices[maxQuarters - 1] = IntelligenceSettingsStorage::calculateSellPrice(
+            prices.prices[maxQuarters - 1].electricityPrice, settings);
+        
+        float sumBuy = minFutureBuyPrices[maxQuarters - 1];
+        int count = 1;
+        
+        for (int q = maxQuarters - 2; q >= currentQuarter; q--) {
+            float buyPrice = IntelligenceSettingsStorage::calculateBuyPrice(
+                prices.prices[q].electricityPrice, settings);
+            float sellPrice = IntelligenceSettingsStorage::calculateSellPrice(
+                prices.prices[q].electricityPrice, settings);
+            
+            minFutureBuyPrices[q] = min(buyPrice, minFutureBuyPrices[q + 1]);
+            maxFutureBuyPrices[q] = max(buyPrice, maxFutureBuyPrices[q + 1]);
+            maxFutureSellPrices[q] = max(sellPrice, maxFutureSellPrices[q + 1]);
+            
+            sumBuy += buyPrice;
+            count++;
+            avgFutureBuyPrices[q] = sumBuy / count;
+        }
+        
         // Reset baterie na aktuální stav
         currentBatteryKwh = socToKwh(inverterData.soc);
         
@@ -307,18 +338,18 @@ public:
             float buyPrice = IntelligenceSettingsStorage::calculateBuyPrice(spotPrice, settings);
             float sellPrice = IntelligenceSettingsStorage::calculateSellPrice(spotPrice, settings);
             
-            // Budoucí ceny (pro rozhodování)
+            // Budoucí ceny (použijeme předpočítané hodnoty)
             float minFutureBuyPrice = (q + 1 < maxQuarters) 
-                ? findMinFutureBuyPrice(prices, q + 1, maxQuarters, settings) 
+                ? minFutureBuyPrices[q + 1] 
                 : buyPrice;
             float maxFutureBuyPrice = (q + 1 < maxQuarters)
-                ? findMaxFutureBuyPrice(prices, q + 1, maxQuarters, settings)
+                ? maxFutureBuyPrices[q + 1]
                 : buyPrice;
             float maxFutureSellPrice = (q + 1 < maxQuarters)
-                ? findMaxFutureSellPrice(prices, q + 1, maxQuarters, settings)
+                ? maxFutureSellPrices[q + 1]
                 : sellPrice;
             float avgFutureBuyPrice = (q + 1 < maxQuarters)
-                ? calculateAvgFutureBuyPrice(prices, q + 1, maxQuarters, settings)
+                ? avgFutureBuyPrices[q + 1]
                 : buyPrice;
             
             // Budoucí energie

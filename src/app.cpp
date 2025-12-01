@@ -321,12 +321,13 @@ void setupLVGL()
     consumptionPredictor.loadFromPreferences();
     productionPredictor.loadFromPreferences();
     
-    xTaskCreate(lvglTimerTask, "lvglTimerTask", 12 * 1024, NULL, 10, NULL);
+    // Pin LVGL task to Core 1 (separate from WiFi/network on Core 0)
+    xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 12 * 1024, NULL, 10, NULL, 1);
 }
 
 void setup()
 {
-    Serial.begin(115200);
+    Serial.begin(921600);
 
     // Allocate electricity price structures in PSRAM
     electricityPriceResult = (ElectricityPriceTwoDays_t*)heap_caps_calloc(1, sizeof(ElectricityPriceTwoDays_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
@@ -648,20 +649,6 @@ bool runIntelligenceTask()
                 if (q < QUARTERS_TWO_DAYS) {
                     intelligencePlan[q] = simResults[i].decision;
                 }
-                
-                // Log each quarter with simulation data
-                log_i("Q%03d %02d:%02d | SOC:%d%% spot:%.1f buy:%.1f sell:%.1f | prod:%.2f cons:%.2f bat:%.2f | grid:+%.2f/-%.2f | -> %s",
-                      q, simResults[i].hour, simResults[i].minute, 
-                      (int)simResults[i].batterySoc, 
-                      simResults[i].spotPrice, simResults[i].buyPrice, simResults[i].sellPrice,
-                      simResults[i].productionKwh, simResults[i].consumptionKwh, simResults[i].batteryKwh,
-                      simResults[i].fromGridKwh, simResults[i].toGridKwh,
-                      IntelligenceSimulator::decisionToString(simResults[i].decision).c_str());
-                
-                // Yield every 8 quarters to prevent watchdog timeout
-                if (i % 8 == 7) {
-                    vTaskDelay(1);
-                }
             }
             
             // Log simulation summary
@@ -700,16 +687,25 @@ bool runIntelligenceTask()
             float remainingConsumption = summary.totalConsumptionKwh;
             float totalSavings = summary.totalSavingsCzk;
             
-            // Update UI with intelligence state
-            xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+            // Update UI with intelligence state - split into small chunks to avoid blocking LVGL
             if (dashboardUI != nullptr)
             {
+                xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
                 dashboardUI->setIntelligenceState(settings.enabled, settings.enabled, hasSpotPrices);
+                xSemaphoreGive(lvgl_mutex);
+                
+                xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
                 dashboardUI->updateIntelligencePlanSummary(lastIntelligenceResult.command, intelligencePlan, currentQuarter, totalQuarters, totalSavings);
+                xSemaphoreGive(lvgl_mutex);
+                
+                xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
                 dashboardUI->updateIntelligenceUpcomingPlans(intelligencePlan, currentQuarter, totalQuarters, electricityPriceResult, &settings);
+                xSemaphoreGive(lvgl_mutex);
+                
+                xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
                 dashboardUI->updateIntelligenceStats(remainingProduction, remainingConsumption);
+                xSemaphoreGive(lvgl_mutex);
             }
-            xSemaphoreGive(lvgl_mutex);
             
             // Send command to inverter ONLY if intelligence is enabled
             if (settings.enabled)
