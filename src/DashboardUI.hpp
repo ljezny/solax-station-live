@@ -2035,18 +2035,32 @@ public:
             if (intelligenceUpcomingReasons[i] != nullptr) {
                 lv_obj_set_style_text_color(intelligenceUpcomingReasons[i], isDarkMode ? lv_color_hex(0xAAAAAA) : lv_color_hex(0x666666), 0);
             }
+            // Timeline bullets and lines
+            if (intelligenceUpcomingBullets[i] != nullptr) {
+                lv_obj_set_style_bg_color(intelligenceUpcomingBullets[i], isDarkMode ? lv_color_hex(0xAAAAAA) : lv_color_hex(0x333333), 0);
+            }
+            if (intelligenceUpcomingLines[i] != nullptr) {
+                lv_obj_set_style_bg_color(intelligenceUpcomingLines[i], isDarkMode ? lv_color_hex(0x666666) : lv_color_hex(0x333333), 0);
+            }
         }
         // Update "more plans" label color
         if (intelligenceMorePlansLabel != nullptr) {
             lv_obj_set_style_text_color(intelligenceMorePlansLabel, isDarkMode ? lv_color_hex(0x888888) : lv_color_hex(0x999999), 0);
         }
-        // Update stats colors
+        // Update stats colors - values and units same color
         if (intelligenceStatsProduction != nullptr) {
             lv_obj_set_style_text_color(intelligenceStatsProduction, isDarkMode ? lv_color_hex(0xFFFFFF) : lv_color_hex(0x333333), 0);
+        }
+        if (intelligenceStatsProductionUnit != nullptr) {
+            lv_obj_set_style_text_color(intelligenceStatsProductionUnit, isDarkMode ? lv_color_hex(0xFFFFFF) : lv_color_hex(0x333333), 0);
         }
         if (intelligenceStatsConsumption != nullptr) {
             lv_obj_set_style_text_color(intelligenceStatsConsumption, isDarkMode ? lv_color_hex(0xFFFFFF) : lv_color_hex(0x333333), 0);
         }
+        if (intelligenceStatsConsumptionUnit != nullptr) {
+            lv_obj_set_style_text_color(intelligenceStatsConsumptionUnit, isDarkMode ? lv_color_hex(0xFFFFFF) : lv_color_hex(0x333333), 0);
+        }
+        // Stats container border (separator)
         if (intelligenceStatsContainer != nullptr) {
             lv_obj_set_style_border_color(intelligenceStatsContainer, isDarkMode ? lv_color_hex(0x444444) : lv_color_hex(0xE0E0E0), 0);
         }
