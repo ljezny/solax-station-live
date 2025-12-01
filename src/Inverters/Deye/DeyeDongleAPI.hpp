@@ -110,6 +110,20 @@ private:
                                         }))
             return;
 
+        // Read max charge/discharge current from registers 108/109
+        // Scale is 0.1A according to Deye documentation
+        channel.tryReadWithRetries(108, 2, sn, packetBuffer, [&]()
+                                   {
+                                       float maxChargeCurrent = channel.readUInt16(packetBuffer, 108 - 108) * 0.1f;
+                                       float maxDischargeCurrent = channel.readUInt16(packetBuffer, 109 - 108) * 0.1f;
+                                       // Estimate battery voltage from battery power and assume ~50V for HV battery
+                                       float batteryVoltage = 50.0f; // Default for HV batteries
+                                       inverterData.maxChargePowerW = (uint16_t)(maxChargeCurrent * batteryVoltage);
+                                       inverterData.maxDischargePowerW = (uint16_t)(maxDischargeCurrent * batteryVoltage);
+                                       log_d("Deye max charge current: %.1f A, max discharge current: %.1f A", maxChargeCurrent, maxDischargeCurrent);
+                                       log_d("Max charge power: %d W, max discharge power: %d W", inverterData.maxChargePowerW, inverterData.maxDischargePowerW);
+                                   });
+
         if (!channel.tryReadWithRetries(598, 655 - 598 + 1, sn, packetBuffer, [&]()
                                         {
                 inverterData.L1Power = channel.readInt16(packetBuffer, 633 - 598);

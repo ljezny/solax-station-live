@@ -46,6 +46,8 @@ typedef struct
     double gridSellToday = 0;
     double gridBuyTotal = 0;
     double gridSellTotal = 0;
+    uint16_t maxChargePowerW = 0;     // Maximální nabíjecí výkon baterie ve W
+    uint16_t maxDischargePowerW = 0;  // Maximální vybíjecí výkon baterie ve W
     int L1Power = 0;
     int L2Power = 0;
     int L3Power = 0;
@@ -95,5 +97,7 @@ void logInverterData(InverterData_t& inverterData) {
     log_d("PV Today: %f", inverterData.pvToday);
     log_d("PV Total: %f", inverterData.pvTotal);
     log_d("Has Battery: %d", inverterData.hasBattery);
+    log_d("Max Charge Power: %d W", inverterData.maxChargePowerW);
+    log_d("Max Discharge Power: %d W", inverterData.maxDischargePowerW);
 
 } 

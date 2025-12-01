@@ -277,6 +277,18 @@ private:
         data.batteryCapacityWh = response.readUInt16(0x26);
         //log 0x26 register value for debugging
         log_d("Battery capacity (0x26): %d Wh", data.batteryCapacityWh);
+        
+        // Read BMS max charge/discharge current from registers 0x24 and 0x25
+        // Scale is 0.1A, we convert to power using battery voltage
+        float bmsChargeMaxCurrent = response.readUInt16(0x24) * 0.1f;  // Amperes
+        float bmsDischargeMaxCurrent = response.readUInt16(0x25) * 0.1f;  // Amperes
+        // Calculate power: P = U * I, use battery voltage if available
+        float batteryVoltageForCalc = data.batteryVoltage > 0 ? data.batteryVoltage : 50.0f; // Default 50V for HV battery
+        data.maxChargePowerW = (uint16_t)(bmsChargeMaxCurrent * batteryVoltageForCalc);
+        data.maxDischargePowerW = (uint16_t)(bmsDischargeMaxCurrent * batteryVoltageForCalc);
+        log_d("BMS max charge current: %.1f A, max discharge current: %.1f A", bmsChargeMaxCurrent, bmsDischargeMaxCurrent);
+        log_d("Max charge power: %d W, max discharge power: %d W", data.maxChargePowerW, data.maxDischargePowerW);
+        
         data.minSoc = 10;
         data.maxSoc = 100;
         return true;

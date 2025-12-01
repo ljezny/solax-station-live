@@ -241,8 +241,13 @@ public:
         minSocPercent = settings.minSocPercent;
         maxSocPercent = settings.maxSocPercent;
         batteryCostPerKwh = settings.batteryCostPerKwh;
-        maxChargePowerKw = 5.0f;  // TODO: získat z inverterData
-        maxDischargePowerKw = 5.0f;
+        // Use values from inverter if available, otherwise default to 5kW
+        maxChargePowerKw = inverterData.maxChargePowerW > 0 
+            ? inverterData.maxChargePowerW / 1000.0f 
+            : 5.0f;
+        maxDischargePowerKw = inverterData.maxDischargePowerW > 0 
+            ? inverterData.maxDischargePowerW / 1000.0f 
+            : 5.0f;
         
         // Inicializace stavu baterie
         currentBatteryKwh = socToKwh(inverterData.soc);

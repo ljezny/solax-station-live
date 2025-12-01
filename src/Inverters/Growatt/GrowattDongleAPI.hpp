@@ -32,6 +32,9 @@ public:
             channel.disconnect();
             return inverterData;
         }
+        
+        // Try to read battery power limits (optional, won't fail if not available)
+        readBatteryLimits(inverterData);
 
         logInverterData(inverterData);
         channel.disconnect();
@@ -175,6 +178,32 @@ private:
         // data.gridPowerL2 = response.readInt32(1025) / 10.0 - response.readInt32(1017) / 10.0;
         // data.gridPowerL3 = response.readInt32(1027) / 10.0 - response.readInt32(1019) / 10.0;
         //data.batteryCapacityWh = response.readUInt16(1107);
+        return true;
+    }
+
+    bool readBatteryLimits(InverterData_t &data)
+    {
+        // Try to read BMS charge/discharge power from registers 3331 and 3334
+        // These are INPUT registers with scale 0.1W
+        const int baseAddress = 3331;
+        log_d("Reading Growatt BMS power limits from address %d", baseAddress);
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 4);
+        if (!response.isValid)
+        {
+            log_d("Failed to read Growatt BMS power limits (optional)");
+            return false;
+        }
+        log_d("Growatt BMS power limits read successfully");
+        
+        // Register 3331-3332: BMS 1 Charge Power (U32, scale 0.1W)
+        uint32_t chargePowerVal = response.readUInt32(3331);
+        data.maxChargePowerW = (uint16_t)(chargePowerVal / 10);
+        
+        // Register 3334-3335: BMS 1 Discharge Power (U32, scale 0.1W)
+        uint32_t dischargePowerVal = response.readUInt32(3334);
+        data.maxDischargePowerW = (uint16_t)(dischargePowerVal / 10);
+        
+        log_d("Growatt max charge power: %d W, max discharge power: %d W", data.maxChargePowerW, data.maxDischargePowerW);
         return true;
     }
 
