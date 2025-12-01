@@ -53,6 +53,8 @@ extern lv_obj_t *ui_intelligenceSellQInput;
 
 // Bottom - Buttons
 extern lv_obj_t *ui_intelligenceButtonContainer;
+extern lv_obj_t *ui_intelligenceResetButton;
+extern lv_obj_t *ui_intelligenceResetLabel;
 extern lv_obj_t *ui_intelligenceSaveButton;
 extern lv_obj_t *ui_intelligenceSaveLabel;
 extern lv_obj_t *ui_intelligenceCancelButton;

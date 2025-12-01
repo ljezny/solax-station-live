@@ -147,8 +147,12 @@ public:
      * @return true pokud byly hodnoty aktualizovány
      */
     static bool updateFromInverter(uint16_t batteryCapacityWh, uint16_t maxChargePowerW, uint16_t maxDischargePowerW) {
+        log_d("updateFromInverter called: capacity=%d Wh, charge=%d W, discharge=%d W", 
+              batteryCapacityWh, maxChargePowerW, maxDischargePowerW);
+        
         // Pouze pokud máme nějaké hodnoty ze střídače
         if (batteryCapacityWh == 0 && maxChargePowerW == 0 && maxDischargePowerW == 0) {
+            log_d("No inverter values available, skipping update");
             return false;
         }
         
@@ -166,7 +170,8 @@ public:
         
         if (maxChargePowerW > 0) {
             float newPower = maxChargePowerW / 1000.0f;
-            if (abs(settings.maxChargePowerKw - newPower) > 0.1f) {
+            // Ignore values below 1 kW as likely invalid (typical batteries are 3-10 kW)
+            if (newPower >= 1.0f && abs(settings.maxChargePowerKw - newPower) > 0.1f) {
                 settings.maxChargePowerKw = newPower;
                 changed = true;
                 log_d("Updated max charge power from inverter: %.1f kW", newPower);
@@ -175,7 +180,8 @@ public:
         
         if (maxDischargePowerW > 0) {
             float newPower = maxDischargePowerW / 1000.0f;
-            if (abs(settings.maxDischargePowerKw - newPower) > 0.1f) {
+            // Ignore values below 1 kW as likely invalid (typical batteries are 3-10 kW)
+            if (newPower >= 1.0f && abs(settings.maxDischargePowerKw - newPower) > 0.1f) {
                 settings.maxDischargePowerKw = newPower;
                 changed = true;
                 log_d("Updated max discharge power from inverter: %.1f kW", newPower);

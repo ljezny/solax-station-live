@@ -54,6 +54,8 @@ lv_obj_t *ui_intelligenceSellQInput = NULL;
 
 // Bottom - Buttons
 lv_obj_t *ui_intelligenceButtonContainer = NULL;
+lv_obj_t *ui_intelligenceResetButton = NULL;
+lv_obj_t *ui_intelligenceResetLabel = NULL;
 lv_obj_t *ui_intelligenceSaveButton = NULL;
 lv_obj_t *ui_intelligenceSaveLabel = NULL;
 lv_obj_t *ui_intelligenceCancelButton = NULL;
@@ -282,6 +284,23 @@ void ui_IntelligenceSetup_screen_init(void)
     lv_obj_set_style_pad_column(ui_intelligenceButtonContainer, 20, LV_PART_MAIN);
     lv_obj_set_style_pad_top(ui_intelligenceButtonContainer, 10, LV_PART_MAIN);
     
+    // Reset button
+    ui_intelligenceResetButton = lv_btn_create(ui_intelligenceButtonContainer);
+    lv_obj_set_width(ui_intelligenceResetButton, 140);
+    lv_obj_set_height(ui_intelligenceResetButton, 45);
+    lv_obj_add_flag(ui_intelligenceResetButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    lv_obj_clear_flag(ui_intelligenceResetButton, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(ui_intelligenceResetButton, COLOR_CARD_BG, LV_PART_MAIN);
+    lv_obj_set_style_border_color(ui_intelligenceResetButton, COLOR_ACCENT, LV_PART_MAIN);
+    lv_obj_set_style_border_width(ui_intelligenceResetButton, 1, LV_PART_MAIN);
+    lv_obj_set_style_radius(ui_intelligenceResetButton, 8, LV_PART_MAIN);
+    lv_obj_set_style_shadow_width(ui_intelligenceResetButton, 0, LV_PART_MAIN);
+    
+    ui_intelligenceResetLabel = lv_label_create(ui_intelligenceResetButton);
+    lv_obj_set_align(ui_intelligenceResetLabel, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_intelligenceResetLabel, "Reset");
+    lv_obj_set_style_text_color(ui_intelligenceResetLabel, COLOR_ACCENT, 0);
+    
     // Cancel button
     ui_intelligenceCancelButton = lv_btn_create(ui_intelligenceButtonContainer);
     lv_obj_set_width(ui_intelligenceCancelButton, 140);
@@ -364,6 +383,8 @@ void ui_IntelligenceSetup_screen_destroy(void)
     ui_intelligenceSellQLabel = NULL;
     ui_intelligenceSellQInput = NULL;
     ui_intelligenceButtonContainer = NULL;
+    ui_intelligenceResetButton = NULL;
+    ui_intelligenceResetLabel = NULL;
     ui_intelligenceSaveButton = NULL;
     ui_intelligenceSaveLabel = NULL;
     ui_intelligenceCancelButton = NULL;

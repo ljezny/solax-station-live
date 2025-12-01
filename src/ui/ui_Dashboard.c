@@ -1475,7 +1475,6 @@ lv_obj_add_flag( ui_settingsButton, LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_SCRO
 lv_obj_clear_flag( ui_settingsButton, LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 lv_obj_set_style_bg_color(ui_settingsButton, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_bg_opa(ui_settingsButton, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_bg_img_src( ui_settingsButton, &ui_img_settings_png, LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_outline_color(ui_settingsButton, lv_color_hex(0xFFDD00), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_outline_opa(ui_settingsButton, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_outline_width(ui_settingsButton, 3, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -1484,6 +1483,13 @@ lv_obj_set_style_shadow_color(ui_settingsButton, lv_color_hex(0xFFDD00), LV_PART
 lv_obj_set_style_shadow_opa(ui_settingsButton, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_shadow_width(ui_settingsButton, 32, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_shadow_spread(ui_settingsButton, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+// Add gear icon label
+lv_obj_t* settingsIconLabel = lv_label_create(ui_settingsButton);
+lv_label_set_text(settingsIconLabel, LV_SYMBOL_SETTINGS);
+lv_obj_set_style_text_font(settingsIconLabel, &lv_font_montserrat_24, 0);
+lv_obj_set_style_text_color(settingsIconLabel, lv_color_hex(0xFFDD00), 0);
+lv_obj_center(settingsIconLabel);
 
 }
 

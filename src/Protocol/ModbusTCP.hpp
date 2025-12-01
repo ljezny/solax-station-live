@@ -237,6 +237,126 @@ public:
         return true;
     }
 
+    /**
+     * Modbus Function Code 0x10 - Write Multiple Registers
+     * Writes multiple 16-bit values to consecutive holding registers
+     * 
+     * @param unit Unit/Slave ID
+     * @param startAddr Starting register address
+     * @param values Array of 16-bit values to write
+     * @param count Number of registers to write
+     * @return true if write was successful
+     */
+    bool writeMultipleRegisters(uint8_t unit, uint16_t startAddr, const uint16_t* values, uint16_t count)
+    {
+        if (count == 0 || count > 123) { // Max 123 registers per Modbus spec
+            log_d("Invalid register count: %d", count);
+            return false;
+        }
+
+        sequenceNumber++;
+
+        uint16_t dataLength = count * 2;  // Each register is 2 bytes
+        uint16_t pduLength = 7 + dataLength;  // Unit ID + Function + Start Addr (2) + Quantity (2) + Byte Count + Data
+
+        // Build request dynamically
+        uint8_t request[7 + 7 + 246]; // MBAP header (7) + PDU header (7) + max data (123*2)
+        int idx = 0;
+        
+        // MBAP Header
+        request[idx++] = static_cast<uint8_t>(sequenceNumber >> 8);
+        request[idx++] = static_cast<uint8_t>(sequenceNumber & 0xFF);
+        request[idx++] = 0; // Protocol ID high
+        request[idx++] = 0; // Protocol ID low
+        request[idx++] = static_cast<uint8_t>(pduLength >> 8);
+        request[idx++] = static_cast<uint8_t>(pduLength & 0xFF);
+        
+        // PDU
+        request[idx++] = unit;
+        request[idx++] = 0x10;  // Function code: Write Multiple Registers
+        request[idx++] = static_cast<uint8_t>(startAddr >> 8);
+        request[idx++] = static_cast<uint8_t>(startAddr & 0xFF);
+        request[idx++] = static_cast<uint8_t>(count >> 8);
+        request[idx++] = static_cast<uint8_t>(count & 0xFF);
+        request[idx++] = static_cast<uint8_t>(dataLength);  // Byte count
+        
+        // Register values
+        for (uint16_t i = 0; i < count; i++) {
+            request[idx++] = static_cast<uint8_t>(values[i] >> 8);
+            request[idx++] = static_cast<uint8_t>(values[i] & 0xFF);
+        }
+
+        if(!isConnected()) {
+            log_d("Not connected, cannot send write multiple request");
+            return false;
+        }
+
+        int len = client.write(request, idx);
+        if (len != idx) {
+            log_d("Failed to send write multiple request");
+            return false;
+        }
+
+        // Read MBAP header (6 bytes)
+        uint8_t header[6];
+        if (readFully(header, 6, 5000) != 6) {
+            log_d("Write multiple response timeout or incomplete header");
+            return false;
+        }
+
+        uint16_t receivedSequence = (header[0] << 8) | header[1];
+        if (receivedSequence != sequenceNumber) {
+            log_d("Expected sequence number %d, but got %d", sequenceNumber, receivedSequence);
+            return false;
+        }
+
+        uint16_t protocolId = (header[2] << 8) | header[3];
+        if (protocolId != 0) {
+            log_d("Invalid protocol ID: %d", protocolId);
+            return false;
+        }
+
+        uint16_t responseLength = (header[4] << 8) | header[5];
+        if (responseLength < 3) {
+            log_d("Invalid response length: %d", responseLength);
+            return false;
+        }
+
+        uint8_t body[16];
+        if (readFully(body, responseLength, 5000) != responseLength) {
+            log_d("Incomplete write multiple response body");
+            return false;
+        }
+
+        uint8_t receivedFunctionCode = body[1];
+        
+        // Check for exception response
+        if (receivedFunctionCode == (0x10 | 0x80)) {
+            uint8_t exceptionCode = body[2];
+            log_d("Modbus write multiple exception: code %d", exceptionCode);
+            return false;
+        }
+
+        // Successful response: unit, function, start addr (2 bytes), quantity (2 bytes)
+        if (receivedFunctionCode != 0x10) {
+            log_d("Invalid function code in write multiple response: expected 0x10, got 0x%02X", receivedFunctionCode);
+            return false;
+        }
+
+        // Verify echoed address and quantity
+        uint16_t echoedAddr = (body[2] << 8) | body[3];
+        uint16_t echoedCount = (body[4] << 8) | body[5];
+        
+        if (echoedAddr != startAddr || echoedCount != count) {
+            log_d("Write multiple response mismatch: addr=0x%04X (expected 0x%04X), count=%d (expected %d)", 
+                  echoedAddr, startAddr, echoedCount, count);
+            return false;
+        }
+
+        log_d("Successfully wrote %d registers starting at 0x%04X", count, startAddr);
+        return true;
+    }
+
 private:
     CustomNetworkClient client;
     uint16_t sequenceNumber;

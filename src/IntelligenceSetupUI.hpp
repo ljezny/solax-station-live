@@ -9,6 +9,7 @@
 // Forward declarations of event handlers
 static void intelligenceSaveHandler(lv_event_t *e);
 static void intelligenceCancelHandler(lv_event_t *e);
+static void intelligenceResetHandler(lv_event_t *e);
 static void intelligenceInputFocusHandler(lv_event_t *e);
 
 class IntelligenceSetupUI {
@@ -42,6 +43,7 @@ public:
         if (!eventHandlersAdded) {
             lv_obj_add_event_cb(ui_intelligenceSaveButton, intelligenceSaveHandler, LV_EVENT_CLICKED, this);
             lv_obj_add_event_cb(ui_intelligenceCancelButton, intelligenceCancelHandler, LV_EVENT_CLICKED, this);
+            lv_obj_add_event_cb(ui_intelligenceResetButton, intelligenceResetHandler, LV_EVENT_CLICKED, this);
             
             // Focus handlers for keyboard
             lv_obj_add_event_cb(ui_intelligenceBatteryCostInput, intelligenceInputFocusHandler, LV_EVENT_FOCUSED, this);
@@ -85,6 +87,13 @@ public:
     void onCancelClick() {
         resultCancelled = true;
         log_d("Intelligence setup cancelled");
+    }
+    
+    void onResetClick() {
+        // Reset settings to defaults and reload UI
+        IntelligenceSettings_t defaults = IntelligenceSettings_t::getDefault();
+        loadSettingsToUI(defaults);
+        log_d("Intelligence settings reset to defaults");
     }
     
     void onInputFocus(lv_obj_t* obj, lv_event_code_t code) {
@@ -224,6 +233,13 @@ static void intelligenceCancelHandler(lv_event_t *e) {
     IntelligenceSetupUI *ui = (IntelligenceSetupUI *)lv_event_get_user_data(e);
     if (ui) {
         ui->onCancelClick();
+    }
+}
+
+static void intelligenceResetHandler(lv_event_t *e) {
+    IntelligenceSetupUI *ui = (IntelligenceSetupUI *)lv_event_get_user_data(e);
+    if (ui) {
+        ui->onResetClick();
     }
 }
 

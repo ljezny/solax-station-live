@@ -338,6 +338,7 @@ private:
     long lastTouchMillis = 0;  // Time of last touch on dashboard
     static const long BUTTONS_HIDE_TIMEOUT_MS = 10000;  // Hide buttons after 10 seconds
     bool intelligenceSupported = false;  // Whether current inverter supports intelligence
+    bool intelligenceEnabled = false;    // Whether intelligence is enabled in settings
     lv_obj_t *intelligenceModeLabel = nullptr;  // Label pro zobrazení režimu inteligence
     lv_obj_t *inverterModeMenu = nullptr;   // Popup menu pro výběr režimu střídače
     lv_obj_t *inverterModeOverlay = nullptr; // Overlay za popup menu
@@ -368,6 +369,7 @@ private:
     lv_obj_t *intelligenceMorePlansLabel = nullptr;  // "X more plans..." label
     // Stats container
     lv_obj_t *intelligenceStatsContainer = nullptr;
+    lv_obj_t *intelligenceStatsSeparator = nullptr;  // Vertical separator between stats
     lv_obj_t *intelligenceStatsProduction = nullptr;
     lv_obj_t *intelligenceStatsProductionUnit = nullptr;
     lv_obj_t *intelligenceStatsConsumption = nullptr;
@@ -632,12 +634,12 @@ public:
         lv_obj_set_style_text_color(intelligenceStatsProductionUnit, lv_color_hex(0x333333), 0);
         
         // Separator between production and consumption
-        lv_obj_t *statsSeparator = lv_obj_create(intelligenceStatsContainer);
-        lv_obj_remove_style_all(statsSeparator);
-        lv_obj_set_size(statsSeparator, 1, 24);
-        lv_obj_set_style_bg_color(statsSeparator, lv_color_hex(0xE0E0E0), 0);
-        lv_obj_set_style_bg_opa(statsSeparator, LV_OPA_COVER, 0);
-        lv_obj_clear_flag(statsSeparator, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+        intelligenceStatsSeparator = lv_obj_create(intelligenceStatsContainer);
+        lv_obj_remove_style_all(intelligenceStatsSeparator);
+        lv_obj_set_size(intelligenceStatsSeparator, 1, 24);
+        lv_obj_set_style_bg_color(intelligenceStatsSeparator, lv_color_hex(0xE0E0E0), 0);
+        lv_obj_set_style_bg_opa(intelligenceStatsSeparator, LV_OPA_COVER, 0);
+        lv_obj_clear_flag(intelligenceStatsSeparator, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
         
         // --- Consumption stat (like loadStatsContainer) ---
         lv_obj_t *consumptionStatContainer = lv_obj_create(intelligenceStatsContainer);
@@ -746,7 +748,7 @@ public:
             
             // Add brain/AI icon label
             lv_obj_t* iconLabel = lv_label_create(intelligenceButton);
-            lv_label_set_text(iconLabel, LV_SYMBOL_SETTINGS);  // Using settings icon, could use custom
+            lv_label_set_text(iconLabel, LV_SYMBOL_EYE_OPEN);  // Loop icon for automatic/intelligence
             lv_obj_set_style_text_font(iconLabel, &lv_font_montserrat_24, 0);
             lv_obj_set_style_text_color(iconLabel, lv_color_hex(0x00AAFF), 0);
             lv_obj_center(iconLabel);
@@ -1296,10 +1298,39 @@ public:
         
         lv_obj_clear_flag(intelligenceModeLabel, LV_OBJ_FLAG_HIDDEN);
         
-        // When intelligence is active, show just "INTELLIGENCE" badge
-        // The actual mode is shown in the intelligence plan tile
-        lv_label_set_text(intelligenceModeLabel, "INTELLIGENCE");
-        lv_color_t bgColor = lv_color_hex(0x2196F3);  // Blue
+        const char* labelText = "";
+        lv_color_t bgColor;
+        
+        if (intelligenceEnabled) {
+            // When intelligence is active, show "INTELLIGENCE" badge
+            labelText = "INTELLIGENCE";
+            bgColor = lv_color_hex(0x2196F3);  // Blue
+        } else {
+            // When intelligence is disabled, show actual inverter mode
+            switch (mode) {
+                case INVERTER_MODE_SELF_USE:
+                    labelText = "SELF USE";
+                    bgColor = lv_color_hex(0x00AA00);  // Green
+                    break;
+                case INVERTER_MODE_CHARGE_FROM_GRID:
+                    labelText = "CHARGING";
+                    bgColor = lv_color_hex(0x0088FF);  // Blue
+                    break;
+                case INVERTER_MODE_DISCHARGE_TO_GRID:
+                    labelText = "SELLING";
+                    bgColor = lv_color_hex(0xFF8800);  // Orange
+                    break;
+                case INVERTER_MODE_HOLD_BATTERY:
+                    labelText = "HOLD";
+                    bgColor = lv_color_hex(0x888888);  // Gray
+                    break;
+                default:
+                    lv_obj_add_flag(intelligenceModeLabel, LV_OBJ_FLAG_HIDDEN);
+                    return;
+            }
+        }
+        
+        lv_label_set_text(intelligenceModeLabel, labelText);
         lv_obj_set_style_bg_color(intelligenceModeLabel, bgColor, 0);
         lv_obj_set_style_shadow_color(intelligenceModeLabel, bgColor, 0);
         lv_obj_set_style_shadow_opa(intelligenceModeLabel, 255, 0);
@@ -2093,6 +2124,10 @@ public:
         if (intelligenceStatsContainer != nullptr) {
             lv_obj_set_style_border_color(intelligenceStatsContainer, isDarkMode ? lv_color_hex(0x444444) : lv_color_hex(0xE0E0E0), 0);
         }
+        // Vertical separator between stats
+        if (intelligenceStatsSeparator != nullptr) {
+            lv_obj_set_style_bg_color(intelligenceStatsSeparator, isDarkMode ? lv_color_hex(0x444444) : lv_color_hex(0xE0E0E0), 0);
+        }
         
         lv_obj_set_style_text_color(ui_Dashboard, isDarkMode ? white : black, 0);
         lv_obj_set_style_text_color(ui_selfUsePercentLabel, isDarkMode ? black : white, 0);
@@ -2138,6 +2173,7 @@ public:
     void setIntelligenceState(bool active, bool enabled, bool hasSpotPrices)
     {
         spotChartData.hasIntelligencePlan = active;
+        intelligenceEnabled = enabled;  // Store enabled state for mode label
         
         if (!enabled) {
             // Intelligence is disabled - hide tile

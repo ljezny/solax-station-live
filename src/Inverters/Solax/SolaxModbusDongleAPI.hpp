@@ -51,6 +51,7 @@ public:
 
     /**
      * Nastaví work mode střídače Solax
+     * Pokud je střídač v idle/standby, nejprve ho probudí
      * @param ipAddress IP adresa donglu
      * @param mode Požadovaný režim (InverterMode_t)
      * @return true pokud se nastavení podařilo
@@ -63,10 +64,78 @@ public:
             return false;
         }
 
+        // First check if inverter is awake
+        uint16_t runMode = readRunMode();
+        log_d("Current run mode: %d", runMode);
+        
+        // If inverter is in idle/standby mode, try to wake it up
+        // According to forum advice: Switch to Manual Mode + Hold (Stop Charge/Discharge)
+        // This should wake the inverter, then we can set the desired mode
+        if (runMode == RUN_MODE_IDLE || runMode == RUN_MODE_STANDBY)
+        {
+            log_d("Inverter is in idle/standby mode (%d), attempting to wake up via Manual Mode + Hold...", runMode);
+            
+            // First unlock the inverter with advanced code
+            bool unlockSuccess = channel.writeSingleRegister(UNIT_ID, REG_LOCK_STATE, LOCK_STATE_UNLOCKED_ADVANCED);
+            if (!unlockSuccess)
+            {
+                log_w("Failed to unlock inverter for wakeup");
+            }
+            else
+            {
+                log_d("Inverter unlocked for wakeup");
+            }
+            
+            // Step 1: Set Work Mode to Manual (3) 
+            log_d("Setting Work Mode to Manual (3)...");
+            bool workModeSuccess = channel.writeSingleRegister(UNIT_ID, REG_CHARGER_USE_MODE_WRITE, SOLAX_WORK_MODE_MANUAL);
+            log_d("Work Mode = Manual: %s", workModeSuccess ? "success" : "failed");
+            
+            // Step 2: Set Manual Mode to Stop/Hold (0) - this should wake the inverter
+            log_d("Setting Manual Mode to Stop/Hold (0)...");
+            bool manualModeSuccess = channel.writeSingleRegister(UNIT_ID, REG_MANUAL_MODE_WRITE, SOLAX_MANUAL_STOP);
+            log_d("Manual Mode = Stop/Hold: %s", manualModeSuccess ? "success" : "failed");
+            
+            if (workModeSuccess && manualModeSuccess)
+            {
+                // Wait for the inverter to wake up - poll every 5 seconds for up to 5 minutes
+                log_d("Waiting for inverter to wake up (polling every 5s, max 5 min)...");
+                const int maxWaitMs = 300000;  // 5 minutes
+                const int pollIntervalMs = 5000;
+                int elapsedMs = 0;
+                
+                while (elapsedMs < maxWaitMs)
+                {
+                    delay(pollIntervalMs);
+                    elapsedMs += pollIntervalMs;
+                    
+                    runMode = readRunMode();
+                    log_d("Run mode after %d seconds: %d", elapsedMs / 1000, runMode);
+                    
+                    if (runMode != RUN_MODE_IDLE && runMode != RUN_MODE_STANDBY && runMode != 0xFFFF)
+                    {
+                        log_d("Inverter woke up successfully via Manual+Hold after %d seconds!", elapsedMs / 1000);
+                        break;
+                    }
+                }
+                
+                if (runMode == RUN_MODE_IDLE || runMode == RUN_MODE_STANDBY)
+                {
+                    log_w("Inverter still in idle/standby mode after %d seconds, will try to set mode anyway", elapsedMs / 1000);
+                }
+            }
+        }
+        
+        // If waiting, we might be able to proceed after a short delay
+        if (runMode == RUN_MODE_WAITING)
+        {
+            log_d("Inverter is in Waiting mode, will attempt to set mode anyway...");
+        }
+
         uint16_t solaxWorkMode, solaxManualMode;
         inverterModeToSolaxMode(mode, solaxWorkMode, solaxManualMode);
 
-        // First unlock the inverter with Advanced unlock code (6868)
+        // Unlock the inverter with Advanced unlock code (6868)
         bool success = channel.writeSingleRegister(UNIT_ID, REG_LOCK_STATE, LOCK_STATE_UNLOCKED_ADVANCED);
         if (!success)
         {
@@ -102,6 +171,31 @@ public:
         
         return success;
     }
+    
+    /**
+     * Reads the current run mode of the inverter
+     * @return Run mode value (0=Waiting, 2=Normal, 9=Idle, 10=Standby, etc.)
+     */
+    uint16_t readRunMode()
+    {
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, REG_RUN_MODE, 1);
+        if (!response.isValid)
+        {
+            log_d("Failed to read run mode register");
+            return 0xFFFF;  // Return invalid value
+        }
+        return response.readUInt16(REG_RUN_MODE);
+    }
+    
+    /**
+     * Checks if the inverter is awake and in normal operating mode
+     * @return true if inverter is in Normal Mode
+     */
+    bool isInverterAwake()
+    {
+        uint16_t runMode = readRunMode();
+        return runMode == RUN_MODE_NORMAL || runMode == RUN_MODE_EPS;
+    }
 
 protected:
     bool isSupportedDongle;
@@ -114,6 +208,27 @@ private:
     static constexpr uint8_t UNIT_ID = 1;
     static constexpr uint8_t FUNCTION_CODE_READ_HOLDING = 0x03;
     static constexpr uint8_t FUNCTION_CODE_READ_INPUT = 0x04;
+    
+    // Run Mode register - for reading inverter status
+    static constexpr uint16_t REG_RUN_MODE = 0x0009;                // Run Mode (input register)
+    static constexpr uint16_t RUN_MODE_WAITING = 0;                 // Waiting
+    static constexpr uint16_t RUN_MODE_CHECKING = 1;                // Checking
+    static constexpr uint16_t RUN_MODE_NORMAL = 2;                  // Normal Mode - inverter is active
+    static constexpr uint16_t RUN_MODE_OFF = 3;                     // Off Mode
+    static constexpr uint16_t RUN_MODE_PERMANENT_FAULT = 4;         // Permanent Fault Mode
+    static constexpr uint16_t RUN_MODE_UPDATE = 5;                  // Update Mode
+    static constexpr uint16_t RUN_MODE_EPS_CHECK = 6;               // EPS Check Mode
+    static constexpr uint16_t RUN_MODE_EPS = 7;                     // EPS Mode
+    static constexpr uint16_t RUN_MODE_SELF_TEST = 8;               // Self Test
+    static constexpr uint16_t RUN_MODE_IDLE = 9;                    // Idle Mode
+    static constexpr uint16_t RUN_MODE_STANDBY = 10;                // Standby
+    
+    // System On/Off, Battery Awaken and VPP Exit Idle registers
+    static constexpr uint16_t REG_SYSTEM_ON_OFF = 0x001C;           // System On/Off (1=On, 0=Off)
+    static constexpr uint16_t REG_BATTERY_AWAKEN = 0x0056;          // Battery Awaken (write 1 to wake) - only for G2/lead-acid
+    static constexpr uint16_t REG_VPP_EXIT_IDLE = 0x00F4;           // VPP Exit Idle Enable (0=Disabled, 1=Enabled)
+    static constexpr uint16_t REG_REMOTE_POWER_CONTROL = 0x007C;    // Remote Power Control Mode 1-7 start register (0x7C-0x8A)
+    static constexpr uint16_t REG_POWER_CONTROL_MODE_8 = 0x00A0;    // Power Control Mode 8/9 start register (0xA0-0xA7)
     
     // Lock State register - must unlock before writing mode registers
     static constexpr uint16_t REG_LOCK_STATE = 0x0000;              // Lock State register
@@ -283,7 +398,7 @@ private:
         float bmsChargeMaxCurrent = response.readUInt16(0x24) * 0.1f;  // Amperes
         float bmsDischargeMaxCurrent = response.readUInt16(0x25) * 0.1f;  // Amperes
         // Calculate power: P = U * I, use battery voltage if available
-        float batteryVoltageForCalc = data.batteryVoltage > 0 ? data.batteryVoltage : 50.0f; // Default 50V for HV battery
+        float batteryVoltageForCalc = data.batteryVoltage;
         data.maxChargePowerW = (uint16_t)(bmsChargeMaxCurrent * batteryVoltageForCalc);
         data.maxDischargePowerW = (uint16_t)(bmsDischargeMaxCurrent * batteryVoltageForCalc);
         log_d("BMS max charge current: %.1f A, max discharge current: %.1f A", bmsChargeMaxCurrent, bmsDischargeMaxCurrent);

@@ -47,8 +47,8 @@
 SemaphoreHandle_t lvgl_mutex = xSemaphoreCreateMutex();
 static lv_disp_draw_buf_t draw_buf;
 // Full-screen double buffers allocated in PSRAM for best FPS
-static lv_color_t* disp_draw_buf1 = nullptr;
-static lv_color_t* disp_draw_buf2 = nullptr;
+static lv_color_t *disp_draw_buf1 = nullptr;
+static lv_color_t *disp_draw_buf2 = nullptr;
 static lv_disp_drv_t disp_drv;
 
 static long lastElectricityPriceAttempt = 0;
@@ -77,8 +77,8 @@ WallboxResult_t previousWallboxData;
 ShellyResult_t shellyResult;
 ShellyResult_t previousShellyResult;
 // Electricity price data - allocated in PSRAM due to size (2 days = ~3KB each)
-ElectricityPriceTwoDays_t* electricityPriceResult = nullptr;
-ElectricityPriceTwoDays_t* previousElectricityPriceResult = nullptr;
+ElectricityPriceTwoDays_t *electricityPriceResult = nullptr;
+ElectricityPriceTwoDays_t *previousElectricityPriceResult = nullptr;
 SolarChartDataProvider solarChartDataProvider;
 MedianPowerSampler shellyMedianPowerSampler;
 MedianPowerSampler wallboxMedianPowerSampler;
@@ -91,10 +91,14 @@ ConsumptionPredictor consumptionPredictor;
 ProductionPredictor productionPredictor;
 IntelligenceResolver intelligenceResolver(consumptionPredictor, productionPredictor);
 IntelligenceResult_t lastIntelligenceResult;
-static InverterMode_t lastSentMode = INVERTER_MODE_UNKNOWN;  // Last mode sent to inverter
+static InverterMode_t lastSentMode = INVERTER_MODE_UNKNOWN; // Last mode sent to inverter
 static long lastIntelligenceAttempt = 0;
-static int lastProcessedQuarter = -1;  // Track last quarter when we processed intelligence
-#define INTELLIGENCE_REFRESH_INTERVAL 300000  // 5 minutes - recalculate every 5 minutes
+static int lastProcessedQuarter = -1;        // Track last quarter when we processed intelligence
+#define INTELLIGENCE_REFRESH_INTERVAL 300000 // 5 minutes - recalculate every 5 minutes
+
+// Pending mode change from UI - processed in mainUpdateTask to avoid blocking LVGL
+static volatile InverterMode_t pendingModeChange = INVERTER_MODE_UNKNOWN;
+static volatile bool pendingModeChangeRequest = false;
 
 SplashUI *splashUI = NULL;
 WiFiSetupUI *wifiSetupUI = NULL;
@@ -126,34 +130,17 @@ static uint32_t totalFlushTime = 0;
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
     uint32_t startTime = micros();
-    
+
     uint32_t w = (area->x2 - area->x1 + 1);
     uint32_t h = (area->y2 - area->y1 + 1);
 
     // Wait for previous DMA to complete before starting new one
     tft.waitDMA();
-    
+
     // Start DMA transfer
     tft.pushImageDMA(area->x1, area->y1, w, h, (lgfx::rgb565_t *)&color_p->full);
-    
+
     lv_disp_flush_ready(disp);
-    
-    uint32_t elapsed = micros() - startTime;
-    totalFlushTime += elapsed;
-    if (elapsed > maxFlushTime) maxFlushTime = elapsed;
-    flushCount++;
-    
-    // Log flush stats every 5 seconds
-    if (millis() - lastFlushLog > 5000) {
-        log_d("LVGL flush: %d calls (%.1f/s), avg: %dus, max: %dus", 
-              flushCount, flushCount / 5.0f,
-              flushCount > 0 ? totalFlushTime / flushCount : 0,
-              maxFlushTime);
-        flushCount = 0;
-        totalFlushTime = 0;
-        maxFlushTime = 0;
-        lastFlushLog = millis();
-    }
 }
 
 void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
@@ -186,7 +173,7 @@ InverterData_t createRandomMockData()
     inverterData.L1Power = random(500, 600);
     inverterData.L2Power = random(300, 400);
     inverterData.L3Power = random(1000, 1200);
-    //inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
+    // inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
     inverterData.loadPower = random(800, 1200);
     inverterData.loadToday = random(20, 60);
     inverterData.gridPowerL1 = random(-1000, 1000);
@@ -226,46 +213,54 @@ int wifiSignalPercent()
     }
 }
 
-// Forward declarations for tasks
-void mainUpdateTask(void *param);
-
 void lvglTimerTask(void *param)
 {
     // Subscribe this task to watchdog
     esp_task_wdt_add(NULL);
-    
+
     static uint32_t lastLvglLog = 0;
     static uint32_t lvglCallCount = 0;
     static uint32_t maxLvglTime = 0;
     static uint32_t totalLvglTime = 0;
     static uint32_t maxMutexWait = 0;
-    
+
     for (;;)
     {
         uint32_t mutexWaitStart = micros();
-        
+
         // Try to take mutex with timeout - if it takes too long, something is blocking
-        if (xSemaphoreTake(lvgl_mutex, pdMS_TO_TICKS(100)) != pdTRUE) {
-            log_w("LVGL mutex timeout - something blocking UI!");
+        if (xSemaphoreTake(lvgl_mutex, pdMS_TO_TICKS(100)) != pdTRUE)
+        {
+            // Mutex blocked - reset watchdog anyway to prevent timeout
+            esp_task_wdt_reset();
+            static uint32_t lastMutexWarning = 0;
+            if (millis() - lastMutexWarning > 5000)
+            {
+                log_w("LVGL mutex timeout - something blocking UI!");
+                lastMutexWarning = millis();
+            }
             vTaskDelay(pdMS_TO_TICKS(5));
             continue;
         }
-        
+
         uint32_t mutexWait = micros() - mutexWaitStart;
-        if (mutexWait > maxMutexWait) maxMutexWait = mutexWait;
-        
+        if (mutexWait > maxMutexWait)
+            maxMutexWait = mutexWait;
+
         uint32_t startTime = micros();
         lv_timer_handler();
         uint32_t elapsed = micros() - startTime;
-        
+
         xSemaphoreGive(lvgl_mutex);
         totalLvglTime += elapsed;
-        if (elapsed > maxLvglTime) maxLvglTime = elapsed;
+        if (elapsed > maxLvglTime)
+            maxLvglTime = elapsed;
         lvglCallCount++;
-        
+
         // Log every 5 seconds
-        if (millis() - lastLvglLog > 5000) {
-            log_d("LVGL handler: %d calls (%.1f/s), avg: %dus, max: %dus, maxMutexWait: %dus", 
+        if (millis() - lastLvglLog > 5000)
+        {
+            log_d("LVGL handler: %d calls (%.1f/s), avg: %dus, max: %dus, maxMutexWait: %dus",
                   lvglCallCount, lvglCallCount / 5.0f,
                   lvglCallCount > 0 ? totalLvglTime / lvglCallCount : 0,
                   maxLvglTime, maxMutexWait);
@@ -275,10 +270,10 @@ void lvglTimerTask(void *param)
             maxMutexWait = 0;
             lastLvglLog = millis();
         }
-        
+
         // Reset watchdog to prevent timeout during long renders
         esp_task_wdt_reset();
-        vTaskDelay(pdMS_TO_TICKS(15));  // Match LV_DISP_DEF_REFR_PERIOD (15ms = ~66 FPS)
+        vTaskDelay(pdMS_TO_TICKS(15)); // Match LV_DISP_DEF_REFR_PERIOD (15ms = ~66 FPS)
     }
 }
 
@@ -322,26 +317,31 @@ void setupLVGL()
 
     // Use smaller buffers in internal DMA-capable RAM for faster rendering
     // 1/10 of screen = 800*48 pixels = ~77KB per buffer (fits in internal RAM)
-    size_t bufferLines = 48;  // Number of lines per buffer
+    size_t bufferLines = 48; // Number of lines per buffer
     size_t bufferSize = screenWidth * bufferLines * sizeof(lv_color_t);
-    
+
     // Try to allocate in internal DMA-capable RAM first
-    disp_draw_buf1 = (lv_color_t*)heap_caps_malloc(bufferSize, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
-    disp_draw_buf2 = (lv_color_t*)heap_caps_malloc(bufferSize, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
-    
-    if (!disp_draw_buf1 || !disp_draw_buf2) {
+    disp_draw_buf1 = (lv_color_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    disp_draw_buf2 = (lv_color_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+
+    if (!disp_draw_buf1 || !disp_draw_buf2)
+    {
         log_w("Failed to allocate in internal RAM, falling back to PSRAM");
         // Free any partial allocation
-        if (disp_draw_buf1) heap_caps_free(disp_draw_buf1);
-        if (disp_draw_buf2) heap_caps_free(disp_draw_buf2);
-        
+        if (disp_draw_buf1)
+            heap_caps_free(disp_draw_buf1);
+        if (disp_draw_buf2)
+            heap_caps_free(disp_draw_buf2);
+
         // Fallback to PSRAM with full screen buffers
         bufferSize = screenWidth * screenHeight * sizeof(lv_color_t);
-        disp_draw_buf1 = (lv_color_t*)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
-        disp_draw_buf2 = (lv_color_t*)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
+        disp_draw_buf1 = (lv_color_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
+        disp_draw_buf2 = (lv_color_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
         lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight);
         log_d("Display buffers in PSRAM: 2x %.1f KB", bufferSize / 1024.0f);
-    } else {
+    }
+    else
+    {
         lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * bufferLines);
         log_d("Display buffers in internal DMA RAM: 2x %.1f KB (%d lines)", bufferSize / 1024.0f, bufferLines);
     }
@@ -351,7 +351,7 @@ void setupLVGL()
     disp_drv.hor_res = screenWidth;
     disp_drv.ver_res = screenHeight;
     disp_drv.flush_cb = my_disp_flush;
-    disp_drv.full_refresh = 0;  // Only redraw dirty areas for better FPS
+    disp_drv.full_refresh = 0; // Only redraw dirty areas for better FPS
     disp_drv.draw_buf = &draw_buf;
     lv_disp_drv_register(&disp_drv);
 
@@ -367,43 +367,34 @@ void setupLVGL()
     dashboardUI = new DashboardUI(onSettingsShow, onIntelligenceShow);
     wifiSetupUI = new WiFiSetupUI(dongleDiscovery);
     intelligenceSetupUI = new IntelligenceSetupUI();
-    
+
     // Set callback for inverter mode change from dashboard menu
-    dashboardUI->setModeChangeCallback([](InverterMode_t mode, bool enableIntelligence) {
+    // NOTE: This callback is called from LVGL event handler, so we must NOT do network
+    // operations here. Instead, we queue the request and process it in mainUpdateTask.
+    dashboardUI->setModeChangeCallback([](InverterMode_t mode, bool enableIntelligence)
+                                       {
         log_d("Mode change requested: mode=%d, intelligence=%d", mode, enableIntelligence);
         
-        // Update intelligence settings
+        // Update intelligence settings (NVS is fast, OK to do here)
         IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
         settings.enabled = enableIntelligence;
         IntelligenceSettingsStorage::save(settings);
         
-        // If not intelligence mode, send command directly to inverter
+        // If not intelligence mode, queue command for mainUpdateTask (network operation)
         if (!enableIntelligence && mode != INVERTER_MODE_UNKNOWN) {
-            if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX) {
-                static SolaxModbusDongleAPI solaxAPI;
-                bool success = solaxAPI.setWorkMode(wifiDiscoveryResult.inverterIP, mode);
-                if (success) {
-                    log_d("Successfully sent work mode %d to Solax inverter", mode);
-                    lastSentMode = mode;
-                }
-            }
+            pendingModeChange = mode;
+            pendingModeChangeRequest = true;
         }
         
         // Reset quarter tracking and trigger immediate intelligence task run
         lastProcessedQuarter = -1;
-        lastIntelligenceAttempt = 0;
-    });
-    
+        lastIntelligenceAttempt = 0; });
+
     // Load predictors from storage
     consumptionPredictor.loadFromPreferences();
     productionPredictor.loadFromPreferences();
-    
-    // Pin LVGL task to Core 1 with HIGH priority for smooth UI
+
     xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 12 * 1024, NULL, 24, NULL, 1);
-    
-    // Pin main update task to Core 0 (same as WiFi) with LOW priority so WiFi is not blocked
-    // Priority 1 is lower than WiFi (priority 23), so WiFi operations are not blocked
-    xTaskCreatePinnedToCore(mainUpdateTask, "mainUpdateTask", 16 * 1024, NULL, 1, NULL, 0);
 }
 
 void setup()
@@ -411,12 +402,15 @@ void setup()
     Serial.begin(921600);
 
     // Allocate electricity price structures in PSRAM
-    electricityPriceResult = (ElectricityPriceTwoDays_t*)heap_caps_calloc(1, sizeof(ElectricityPriceTwoDays_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-    previousElectricityPriceResult = (ElectricityPriceTwoDays_t*)heap_caps_calloc(1, sizeof(ElectricityPriceTwoDays_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
-    
-    if (!electricityPriceResult || !previousElectricityPriceResult) {
+    electricityPriceResult = (ElectricityPriceTwoDays_t *)heap_caps_calloc(1, sizeof(ElectricityPriceTwoDays_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+    previousElectricityPriceResult = (ElectricityPriceTwoDays_t *)heap_caps_calloc(1, sizeof(ElectricityPriceTwoDays_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
+
+    if (!electricityPriceResult || !previousElectricityPriceResult)
+    {
         log_e("Failed to allocate electricity price structures in PSRAM!");
-    } else {
+    }
+    else
+    {
         log_d("Electricity price structures allocated in PSRAM (%d bytes each)", sizeof(ElectricityPriceTwoDays_t));
     }
 
@@ -426,7 +420,8 @@ void setup()
     esp_log_level_set("wifi", ESP_LOG_VERBOSE);
 }
 
-void resetAllTasks() {
+void resetAllTasks()
+{
     lastElectricityPriceAttempt = 0;
     lastWallboxDiscoveryAttempt = 0;
     lastEcoVolterAttempt = 0;
@@ -497,9 +492,9 @@ bool supportsIntelligenceForCurrentInverter(WiFiDiscoveryResult_t &discoveryResu
     switch (discoveryResult.type)
     {
     case CONNECTION_TYPE_SOLAX:
-        return true;  // Solax supports intelligence
+        return true; // Solax supports intelligence
     default:
-        return false;  // Other inverters don't support intelligence yet
+        return false; // Other inverters don't support intelligence yet
     }
 }
 
@@ -534,26 +529,26 @@ bool loadInverterDataTask()
                 shellyMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
                 uiMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
                 wallboxMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
-                
+
                 // Update intelligence settings with battery parameters from inverter
                 IntelligenceSettingsStorage::updateFromInverter(
                     inverterData.batteryCapacityWh,
                     inverterData.maxChargePowerW,
-                    inverterData.maxDischargePowerW
-                );
-                
+                    inverterData.maxDischargePowerW);
+
                 // Add samples for intelligence predictors
                 int pvPower = inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power;
                 bool consumptionQuarterChanged = consumptionPredictor.addSample(inverterData.loadPower);
                 bool productionQuarterChanged = productionPredictor.addSample(pvPower);
-                
+
                 // Save predictors to flash when quarter changes
-                if (consumptionQuarterChanged || productionQuarterChanged) {
+                if (consumptionQuarterChanged || productionQuarterChanged)
+                {
                     log_d("Quarter changed, saving predictors to flash");
                     consumptionPredictor.saveToPreferences();
                     productionPredictor.saveToPreferences();
                 }
-                
+
                 dongleDiscovery.storeLastConnectedSSID(wifiDiscoveryResult.ssid);
             }
             else
@@ -648,26 +643,29 @@ bool loadElectricityPriceTask()
         log_d("Loading electricity price data");
         ElectricityPriceLoader loader;
         ElectricityPriceProvider_t provider = loader.getStoredElectricityPriceProvider();
-        
-        if (electricityPriceResult) {
+
+        if (electricityPriceResult)
+        {
             // Nejprve načteme dnešní data
-            if (loader.loadTodayPrices(provider, electricityPriceResult)) {
+            if (loader.loadTodayPrices(provider, electricityPriceResult))
+            {
                 log_d("Today electricity prices loaded");
-                
+
                 // Invalidate intelligence to recalculate with new prices
                 lastIntelligenceAttempt = 0;
-                
+
                 // Zkusíme načíst zítřejší data (pokud je po 13h)
                 time_t now = time(nullptr);
                 struct tm timeinfoCopy;
                 localtime_r(&now, &timeinfoCopy);
-                
-                if (timeinfoCopy.tm_hour >= 13) {
+
+                if (timeinfoCopy.tm_hour >= 13)
+                {
                     loader.loadTomorrowPrices(provider, electricityPriceResult);
                 }
             }
         }
-        
+
         lastElectricityPriceAttempt = millis();
         run = true;
     }
@@ -677,150 +675,157 @@ bool loadElectricityPriceTask()
 bool runIntelligenceTask()
 {
     bool run = false;
-    static InverterMode_t intelligencePlan[QUARTERS_TWO_DAYS];  // Plan for today + tomorrow
-    
+    static InverterMode_t intelligencePlan[QUARTERS_TWO_DAYS]; // Plan for today + tomorrow
+
     // Check if current time is aligned to 5-minute boundary (0, 5, 10, 15, 20, ...)
     time_t now_check = time(nullptr);
-    struct tm* tm_check = localtime(&now_check);
+    struct tm *tm_check = localtime(&now_check);
     int currentMinute = tm_check->tm_min;
     bool is5MinuteAligned = (currentMinute % 5 == 0);
-    
+
     // Run immediately if invalidated (lastIntelligenceAttempt == 0), otherwise only on 5-minute boundaries
-    bool shouldRun = (lastIntelligenceAttempt == 0) || 
+    bool shouldRun = (lastIntelligenceAttempt == 0) ||
                      (is5MinuteAligned && millis() - lastIntelligenceAttempt > INTELLIGENCE_REFRESH_INTERVAL);
-    
+
     if (shouldRun)
     {
         log_d("Running intelligence resolver");
-        
+
         IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
         bool hasSpotPrices = electricityPriceResult && electricityPriceResult->updated > 0;
         bool canSimulate = settings.enabled && inverterData.status == DONGLE_STATUS_OK && hasSpotPrices;
-        
+
         // Run simulation only if intelligence is enabled and we have all data
         if (canSimulate)
         {
             // Log input values
             time_t now_log = time(nullptr);
-            struct tm* timeinfo_log = localtime(&now_log);
+            struct tm *timeinfo_log = localtime(&now_log);
             int currentQuarterLog = (timeinfo_log->tm_hour * 60 + timeinfo_log->tm_min) / 15;
             float currentSpotPrice = electricityPriceResult->prices[currentQuarterLog].electricityPrice;
             float buyPrice = IntelligenceSettingsStorage::calculateBuyPrice(currentSpotPrice, settings);
             float sellPrice = IntelligenceSettingsStorage::calculateSellPrice(currentSpotPrice, settings);
-            
+
             log_i("=== INTELLIGENCE SIMULATION ===");
-            log_i("Time: %02d:%02d (Q%d), SOC: %d%%, Enabled: %s", 
+            log_i("Time: %02d:%02d (Q%d), SOC: %d%%, Enabled: %s",
                   timeinfo_log->tm_hour, timeinfo_log->tm_min, currentQuarterLog, inverterData.soc,
                   settings.enabled ? "YES" : "NO");
-            log_i("Spot: %.2f %s, Buy: %.2f, Sell: %.2f, Battery cost: %.2f", 
+            log_i("Spot: %.2f %s, Buy: %.2f, Sell: %.2f, Battery cost: %.2f",
                   currentSpotPrice, electricityPriceResult->currency, buyPrice, sellPrice, settings.batteryCostPerKwh);
             log_i("Battery: %.1f kWh capacity, min SOC: %d%%, max SOC: %d%%",
                   inverterData.batteryCapacityWh / 1000.0f, settings.minSocPercent, settings.maxSocPercent);
-            
+
             // Run simulation to get all quarter decisions at once
-            const auto& simResults = intelligenceResolver.runSimulation(inverterData, *electricityPriceResult, settings, true);
-            const auto& summary = intelligenceResolver.getLastSummary();
-            
+            const auto &simResults = intelligenceResolver.runSimulation(inverterData, *electricityPriceResult, settings, true);
+            const auto &summary = intelligenceResolver.getLastSummary();
+
             // Get current quarter result
-            if (!simResults.empty()) {
+            if (!simResults.empty())
+            {
                 lastIntelligenceResult.command = simResults[0].decision;
                 lastIntelligenceResult.reason = simResults[0].reason;
                 lastIntelligenceResult.expectedSavings = summary.totalSavingsCzk;
             }
-            
-            log_i("Recommended action: %s - %s", 
+
+            log_i("Recommended action: %s - %s",
                   IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str(),
                   lastIntelligenceResult.reason.c_str());
-            
+
             // Generate plan for all future quarters (for chart display)
             time_t now = time(nullptr);
-            struct tm* timeinfo = localtime(&now);
+            struct tm *timeinfo = localtime(&now);
             int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
-            
+
             // Determine how many quarters to plan (today only or today + tomorrow)
             int totalQuarters = electricityPriceResult->hasTomorrowData ? QUARTERS_TWO_DAYS : QUARTERS_OF_DAY;
-            
+
             // Fill intelligencePlan from simulation results
-            for (int q = 0; q < currentQuarter; q++) {
+            for (int q = 0; q < currentQuarter; q++)
+            {
                 intelligencePlan[q] = INVERTER_MODE_UNKNOWN;
             }
-            
-            for (size_t i = 0; i < simResults.size(); i++) {
+
+            for (size_t i = 0; i < simResults.size(); i++)
+            {
                 int q = simResults[i].quarter;
-                if (q < QUARTERS_TWO_DAYS) {
+                if (q < QUARTERS_TWO_DAYS)
+                {
                     intelligencePlan[q] = simResults[i].decision;
                 }
             }
-            
+
             // Log simulation summary
             log_i("=== SIMULATION SUMMARY ===");
-            log_i("Total production: %.1f kWh, consumption: %.1f kWh", 
+            log_i("Total production: %.1f kWh, consumption: %.1f kWh",
                   summary.totalProductionKwh, summary.totalConsumptionKwh);
-            log_i("Grid: bought %.1f kWh, sold %.1f kWh", 
+            log_i("Grid: bought %.1f kWh, sold %.1f kWh",
                   summary.totalFromGridKwh, summary.totalToGridKwh);
-            log_i("Final SOC: %.0f%%, Total cost: %.1f CZK, Savings: %.1f CZK", 
+            log_i("Final SOC: %.0f%%, Total cost: %.1f CZK, Savings: %.1f CZK",
                   summary.finalBatterySoc, summary.totalCostCzk, summary.totalSavingsCzk);
-            
+
             // Log summary of mode changes only
             log_i("=== MODE CHANGES ===");
             int lastMode = -1;
-            for (int q = currentQuarter; q < totalQuarters; q++) {
-                if (intelligencePlan[q] != lastMode) {
+            for (int q = currentQuarter; q < totalQuarters; q++)
+            {
+                if (intelligencePlan[q] != lastMode)
+                {
                     int hour = (q % QUARTERS_OF_DAY) / 4;
                     int minute = ((q % QUARTERS_OF_DAY) % 4) * 15;
-                    const char* modeName = IntelligenceResolver::commandToString((InverterMode_t)intelligencePlan[q]).c_str();
-                    float spotPrice = (q < (electricityPriceResult->hasTomorrowData ? 192 : 96)) 
-                        ? electricityPriceResult->prices[q].electricityPrice : 0;
-                    log_i("  Q%d (%02d:%02d): %s (spot: %.2f %s)", 
+                    const char *modeName = IntelligenceResolver::commandToString((InverterMode_t)intelligencePlan[q]).c_str();
+                    float spotPrice = (q < (electricityPriceResult->hasTomorrowData ? 192 : 96))
+                                          ? electricityPriceResult->prices[q].electricityPrice
+                                          : 0;
+                    log_i("  Q%d (%02d:%02d): %s (spot: %.2f %s)",
                           q, hour, minute, modeName, spotPrice, electricityPriceResult->currency);
                     lastMode = intelligencePlan[q];
                 }
             }
-            
+
             // Fill remaining quarters with UNKNOWN if no tomorrow data
             for (int q = totalQuarters; q < QUARTERS_TWO_DAYS; q++)
             {
                 intelligencePlan[q] = INVERTER_MODE_UNKNOWN;
             }
-            
+
             // Use simulation summary for stats
             float remainingProduction = summary.totalProductionKwh;
             float remainingConsumption = summary.totalConsumptionKwh;
             float totalSavings = summary.totalSavingsCzk;
-            
+
             // Update UI with intelligence state - split into small chunks to avoid blocking LVGL
             if (dashboardUI != nullptr)
             {
                 xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
                 dashboardUI->setIntelligenceState(settings.enabled, settings.enabled, hasSpotPrices);
                 xSemaphoreGive(lvgl_mutex);
-                
+
                 xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
                 dashboardUI->updateIntelligencePlanSummary(lastIntelligenceResult.command, intelligencePlan, currentQuarter, totalQuarters, totalSavings);
                 xSemaphoreGive(lvgl_mutex);
-                
+
                 xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
                 dashboardUI->updateIntelligenceUpcomingPlans(intelligencePlan, currentQuarter, totalQuarters, electricityPriceResult, &settings);
                 xSemaphoreGive(lvgl_mutex);
-                
+
                 xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
                 dashboardUI->updateIntelligenceStats(remainingProduction, remainingConsumption);
                 xSemaphoreGive(lvgl_mutex);
             }
-            
+
             // Send command to inverter ONLY if intelligence is enabled
             if (settings.enabled)
             {
                 bool quarterChanged = (currentQuarter != lastProcessedQuarter);
-                bool modeNeedsUpdate = (lastIntelligenceResult.command != INVERTER_MODE_UNKNOWN && 
-                                       lastIntelligenceResult.command != lastSentMode);
-                
+                bool modeNeedsUpdate = (lastIntelligenceResult.command != INVERTER_MODE_UNKNOWN &&
+                                        lastIntelligenceResult.command != lastSentMode);
+
                 if (quarterChanged || (modeNeedsUpdate && lastProcessedQuarter == -1))
                 {
-                    log_d("Quarter changed (%d -> %d) or first run, checking if mode update needed", 
+                    log_d("Quarter changed (%d -> %d) or first run, checking if mode update needed",
                           lastProcessedQuarter, currentQuarter);
                     lastProcessedQuarter = currentQuarter;
-                    
+
                     if (modeNeedsUpdate)
                     {
                         if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX)
@@ -829,7 +834,7 @@ bool runIntelligenceTask()
                             bool success = solaxAPI.setWorkMode(wifiDiscoveryResult.inverterIP, lastIntelligenceResult.command);
                             if (success)
                             {
-                                log_i("Successfully sent work mode %s to Solax inverter", 
+                                log_i("Successfully sent work mode %s to Solax inverter",
                                       IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str());
                                 lastSentMode = lastIntelligenceResult.command;
                             }
@@ -845,7 +850,7 @@ bool runIntelligenceTask()
                     }
                     else
                     {
-                        log_d("Mode unchanged (%s), no update sent", 
+                        log_d("Mode unchanged (%s), no update sent",
                               IntelligenceResolver::commandToString(lastSentMode).c_str());
                     }
                 }
@@ -856,12 +861,14 @@ bool runIntelligenceTask()
                 lastSentMode = INVERTER_MODE_UNKNOWN;
                 lastProcessedQuarter = -1;
             }
-            
+
             // Update chart predictions from simulation results (with SOC)
             solarChartDataProvider.clearPredictions(true);
-            for (const auto& sim : simResults) {
+            for (const auto &sim : simResults)
+            {
                 int q = sim.quarter;
-                if (q < QUARTERS_TWO_DAYS) {
+                if (q < QUARTERS_TWO_DAYS)
+                {
                     float predProductionWh = sim.productionKwh * 1000.0f;
                     float predConsumptionWh = sim.consumptionKwh * 1000.0f;
                     int predSoc = (int)sim.batterySoc;
@@ -879,23 +886,23 @@ bool runIntelligenceTask()
             int currentMonth = timeinfoCopy.tm_mon;
             int currentDay = timeinfoCopy.tm_wday;
             int tomorrowDay = (currentDay + 1) % 7;
-            
+
             // Calculate tomorrow's month
             time_t tomorrowTime = now + 24 * 60 * 60;
             struct tm tomorrowInfoCopy;
             localtime_r(&tomorrowTime, &tomorrowInfoCopy);
             int tomorrowMonth = tomorrowInfoCopy.tm_mon;
-            
+
             solarChartDataProvider.clearPredictions(true);
-            
+
             // Predictions for rest of today (SOC = -1 means don't show)
             for (int q = currentQuarter + 1; q < QUARTERS_OF_DAY; q++)
             {
                 float predProductionWh = productionPredictor.predictQuarterlyProduction(currentMonth, q);
                 float predConsumptionWh = consumptionPredictor.predictQuarterlyConsumption(currentDay, q);
-                solarChartDataProvider.setPrediction(q, predProductionWh, predConsumptionWh, -1);  // -1 = no SOC
+                solarChartDataProvider.setPrediction(q, predProductionWh, predConsumptionWh, -1); // -1 = no SOC
             }
-            
+
             // Predictions for tomorrow
             for (int q = 0; q < QUARTERS_OF_DAY; q++)
             {
@@ -903,7 +910,7 @@ bool runIntelligenceTask()
                 float predConsumptionWh = consumptionPredictor.predictQuarterlyConsumption(tomorrowDay, q);
                 solarChartDataProvider.setPrediction(QUARTERS_OF_DAY + q, predProductionWh, predConsumptionWh, -1);
             }
-            
+
             // Update UI state
             lastSentMode = INVERTER_MODE_UNKNOWN;
             lastProcessedQuarter = -1;
@@ -926,7 +933,7 @@ bool runIntelligenceTask()
             }
             xSemaphoreGive(lvgl_mutex);
         }
-        
+
         lastIntelligenceAttempt = millis();
         run = true;
     }
@@ -1131,18 +1138,22 @@ void resolveSolaxSmartCharge()
     }
 }
 
-void setTimeZone() {
+void setTimeZone()
+{
     ElectricityPriceLoader loader;
     String tz = loader.getStoredTimeZone();
     log_d("Stored time zone: %s", tz.c_str());
-    if (tz.length() > 0) {
-        
+    if (tz.length() > 0)
+    {
+
         setenv("TZ", tz.c_str(), 1);
         tzset();
 
         log_d("Time zone set to %s", tz.c_str());
-    } else {
-        log_d("No time zone stored, using default"); 
+    }
+    else
+    {
+        log_d("No time zone stored, using default");
     }
 }
 
@@ -1162,13 +1173,12 @@ void syncTime()
 
 void logMemory()
 {
-    xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+    // Don't take lvgl_mutex just for logging - it's not needed and can block LVGL
     log_d("-- Memory Info --");
     log_d("Free heap: %d", ESP.getFreeHeap());
     log_d("Min free heap: %d", ESP.getMinFreeHeap());
     log_d("Min free stack: %d", uxTaskGetStackHighWaterMark(NULL));
     log_d("-- Memory Info End --");
-    xSemaphoreGive(lvgl_mutex);
 }
 
 void onEntering(state_t newState)
@@ -1194,20 +1204,24 @@ void onEntering(state_t newState)
         xSemaphoreGive(lvgl_mutex);
         break;
     case STATE_DASHBOARD:
+        // Split into smaller mutex locks to avoid blocking LVGL timer
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-        // Set intelligence support based on inverter type
         dashboardUI->setIntelligenceSupported(supportsIntelligenceForCurrentInverter(wifiDiscoveryResult));
         dashboardUI->show();
+        xSemaphoreGive(lvgl_mutex);
+
         if (inverterData.status == DONGLE_STATUS_OK && electricityPriceResult && previousElectricityPriceResult)
         {
+            xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
             dashboardUI->update(inverterData, inverterData, uiMedianPowerSampler, shellyResult, shellyResult, wallboxData, wallboxData, solarChartDataProvider, *electricityPriceResult, *previousElectricityPriceResult, wifiSignalPercent());
+            xSemaphoreGive(lvgl_mutex);
+
             previousShellyResult = shellyResult;
             previousInverterData = inverterData;
             previousWallboxData = wallboxData;
             *previousElectricityPriceResult = *electricityPriceResult;
             previousInverterData.millis = 0;
         }
-        xSemaphoreGive(lvgl_mutex);
 
         resetAllTasks();
         setTimeZone();
@@ -1338,7 +1352,8 @@ void updateState()
         if (intelligenceSetupUI->resultSaved || intelligenceSetupUI->resultCancelled)
         {
             // If settings were saved, trigger immediate intelligence recalculation
-            if (intelligenceSetupUI->resultSaved) {
+            if (intelligenceSetupUI->resultSaved)
+            {
                 lastIntelligenceAttempt = 0;
                 lastProcessedQuarter = -1;
                 log_d("Intelligence settings saved, triggering recalculation");
@@ -1378,12 +1393,36 @@ void updateState()
         }
         else
         {
+            // Process pending mode change from UI (network operation moved from LVGL callback)
+            if (pendingModeChangeRequest)
+            {
+                pendingModeChangeRequest = false;
+                InverterMode_t mode = pendingModeChange;
+                log_d("Processing pending mode change: %d", mode);
+
+                if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX)
+                {
+                    static SolaxModbusDongleAPI solaxAPI;
+                    bool success = solaxAPI.setWorkMode(wifiDiscoveryResult.inverterIP, mode);
+                    if (success)
+                    {
+                        log_d("Successfully sent work mode %d to Solax inverter", mode);
+                        lastSentMode = mode;
+                    }
+                    else
+                    {
+                        log_w("Failed to send work mode %d to Solax inverter", mode);
+                    }
+                }
+                break;
+            }
+
             // only one task per state update
             if (loadInverterDataTask())
             {
                 break;
             }
-            if(loadElectricityPriceTask())
+            if (loadElectricityPriceTask())
             {
                 break;
             }
@@ -1408,7 +1447,6 @@ void updateState()
                 resolveEcoVolterSmartCharge();
                 break;
             }
-            
 
             if (!ecoVolterAPI.isDiscovered()) // ecovolter has priority
             {
@@ -1424,23 +1462,7 @@ void updateState()
     }
 }
 
-// Main update task runs on Core 0 to avoid blocking LVGL on Core 1
-void mainUpdateTask(void *param)
-{
-    // Wait for WiFi and system to fully initialize
-    vTaskDelay(pdMS_TO_TICKS(3000));
-    
-    log_d("mainUpdateTask started on Core %d", xPortGetCoreID());
-    
-    for (;;)
-    {
-        updateState();
-        vTaskDelay(pdMS_TO_TICKS(50));
-    }
-}
-
 void loop()
 {
-    // Main loop is now empty - work is done in mainUpdateTask on Core 0
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    updateState();
 }
