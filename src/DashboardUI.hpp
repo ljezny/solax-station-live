@@ -345,12 +345,14 @@ private:
     lv_obj_t *intelligenceDetailTitle = nullptr;
     // Upcoming plans container and rows
     lv_obj_t *intelligenceUpcomingContainer = nullptr;
-    lv_obj_t *intelligenceUpcomingRows[3] = {nullptr, nullptr, nullptr};
-    lv_obj_t *intelligenceUpcomingModes[3] = {nullptr, nullptr, nullptr};
-    lv_obj_t *intelligenceUpcomingTimes[3] = {nullptr, nullptr, nullptr};
-    lv_obj_t *intelligenceUpcomingReasons[3] = {nullptr, nullptr, nullptr};
-    lv_obj_t *intelligenceUpcomingBullets[3] = {nullptr, nullptr, nullptr};  // Timeline bullets
-    lv_obj_t *intelligenceUpcomingLines[3] = {nullptr, nullptr, nullptr};    // Timeline lines
+    static constexpr int VISIBLE_PLAN_ROWS = 10;
+    lv_obj_t *intelligenceUpcomingRows[VISIBLE_PLAN_ROWS] = {nullptr};
+    lv_obj_t *intelligenceUpcomingModes[VISIBLE_PLAN_ROWS] = {nullptr};
+    lv_obj_t *intelligenceUpcomingTimes[VISIBLE_PLAN_ROWS] = {nullptr};
+    lv_obj_t *intelligenceUpcomingReasons[VISIBLE_PLAN_ROWS] = {nullptr};
+    lv_obj_t *intelligenceUpcomingBullets[VISIBLE_PLAN_ROWS] = {nullptr};  // Timeline bullets
+    lv_obj_t *intelligenceUpcomingLines[VISIBLE_PLAN_ROWS] = {nullptr};    // Timeline lines
+    lv_obj_t *intelligenceMorePlansLabel = nullptr;  // "X more plans..." label
     // Stats container
     lv_obj_t *intelligenceStatsContainer = nullptr;
     lv_obj_t *intelligenceStatsProduction = nullptr;
@@ -477,44 +479,44 @@ public:
         lv_obj_set_flex_grow(intelligenceUpcomingContainer, 1);  // Take remaining space, push stats to bottom
         lv_obj_set_flex_flow(intelligenceUpcomingContainer, LV_FLEX_FLOW_COLUMN);
         lv_obj_set_flex_align(intelligenceUpcomingContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-        lv_obj_set_style_pad_row(intelligenceUpcomingContainer, 16, 0);
+        lv_obj_set_style_pad_row(intelligenceUpcomingContainer, 4, 0);  // Reduced spacing
         lv_obj_clear_flag(intelligenceUpcomingContainer, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
         lv_obj_add_flag(intelligenceUpcomingContainer, LV_OBJ_FLAG_EVENT_BUBBLE);  // Pass clicks to parent
         
-        // Create 3 upcoming plan rows - each has header (Time - Mode) and reason below
-        for (int i = 0; i < 3; i++) {
+        // Create 4 upcoming plan rows - compact single-line layout
+        for (int i = 0; i < VISIBLE_PLAN_ROWS; i++) {
             // Container for one plan entry - ROW layout with timeline on left
             intelligenceUpcomingRows[i] = lv_obj_create(intelligenceUpcomingContainer);
             lv_obj_remove_style_all(intelligenceUpcomingRows[i]);
             lv_obj_set_width(intelligenceUpcomingRows[i], lv_pct(100));
             lv_obj_set_height(intelligenceUpcomingRows[i], LV_SIZE_CONTENT);
             lv_obj_set_flex_flow(intelligenceUpcomingRows[i], LV_FLEX_FLOW_ROW);
-            lv_obj_set_flex_align(intelligenceUpcomingRows[i], LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-            lv_obj_set_style_pad_all(intelligenceUpcomingRows[i], 8, 0);
-            lv_obj_set_style_pad_gap(intelligenceUpcomingRows[i], 8, 0);
+            lv_obj_set_flex_align(intelligenceUpcomingRows[i], LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+            lv_obj_set_style_pad_all(intelligenceUpcomingRows[i], 4, 0);
+            lv_obj_set_style_pad_gap(intelligenceUpcomingRows[i], 6, 0);
             lv_obj_clear_flag(intelligenceUpcomingRows[i], LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
             lv_obj_add_flag(intelligenceUpcomingRows[i], LV_OBJ_FLAG_EVENT_BUBBLE);
             
             // Timeline container (bullet + line)
             lv_obj_t *timelineContainer = lv_obj_create(intelligenceUpcomingRows[i]);
             lv_obj_remove_style_all(timelineContainer);
-            lv_obj_set_width(timelineContainer, 16);
+            lv_obj_set_width(timelineContainer, 12);
             lv_obj_set_height(timelineContainer, lv_pct(100));
             lv_obj_set_flex_flow(timelineContainer, LV_FLEX_FLOW_COLUMN);
             lv_obj_set_flex_align(timelineContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
             lv_obj_clear_flag(timelineContainer, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
             lv_obj_add_flag(timelineContainer, LV_OBJ_FLAG_EVENT_BUBBLE);
             
-            // Bullet (circle) - black
+            // Bullet (circle) - smaller
             intelligenceUpcomingBullets[i] = lv_obj_create(timelineContainer);
             lv_obj_remove_style_all(intelligenceUpcomingBullets[i]);
-            lv_obj_set_size(intelligenceUpcomingBullets[i], 10, 10);
+            lv_obj_set_size(intelligenceUpcomingBullets[i], 8, 8);
             lv_obj_set_style_radius(intelligenceUpcomingBullets[i], LV_RADIUS_CIRCLE, 0);
             lv_obj_set_style_bg_opa(intelligenceUpcomingBullets[i], LV_OPA_COVER, 0);
             lv_obj_set_style_bg_color(intelligenceUpcomingBullets[i], lv_color_hex(0x333333), 0);
             lv_obj_clear_flag(intelligenceUpcomingBullets[i], LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
             
-            // Vertical line (below bullet) - black
+            // Vertical line (below bullet) - thinner
             intelligenceUpcomingLines[i] = lv_obj_create(timelineContainer);
             lv_obj_remove_style_all(intelligenceUpcomingLines[i]);
             lv_obj_set_width(intelligenceUpcomingLines[i], 2);
@@ -522,60 +524,47 @@ public:
             lv_obj_set_style_bg_opa(intelligenceUpcomingLines[i], LV_OPA_COVER, 0);
             lv_obj_set_style_bg_color(intelligenceUpcomingLines[i], lv_color_hex(0x333333), 0);
             lv_obj_clear_flag(intelligenceUpcomingLines[i], LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
-            // Hide line for last item
-            if (i == 2) {
+            // Hide line for last visible item
+            if (i == VISIBLE_PLAN_ROWS - 1) {
                 lv_obj_add_flag(intelligenceUpcomingLines[i], LV_OBJ_FLAG_HIDDEN);
             }
             
-            // Content container (time, badge, reason)
-            lv_obj_t *contentContainer = lv_obj_create(intelligenceUpcomingRows[i]);
-            lv_obj_remove_style_all(contentContainer);
-            lv_obj_set_flex_grow(contentContainer, 1);
-            lv_obj_set_height(contentContainer, LV_SIZE_CONTENT);
-            lv_obj_set_flex_flow(contentContainer, LV_FLEX_FLOW_COLUMN);
-            lv_obj_set_style_pad_row(contentContainer, 2, 0);
-            lv_obj_set_style_pad_bottom(contentContainer, 8, 0);
-            lv_obj_clear_flag(contentContainer, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
-            lv_obj_add_flag(contentContainer, LV_OBJ_FLAG_EVENT_BUBBLE);
-            
-            // Header row: Time + Badge
-            lv_obj_t *headerRow = lv_obj_create(contentContainer);
-            lv_obj_remove_style_all(headerRow);
-            lv_obj_set_width(headerRow, lv_pct(100));
-            lv_obj_set_height(headerRow, LV_SIZE_CONTENT);
-            lv_obj_set_flex_flow(headerRow, LV_FLEX_FLOW_ROW);
-            lv_obj_set_flex_align(headerRow, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-            lv_obj_set_style_pad_gap(headerRow, 8, 0);
-            lv_obj_clear_flag(headerRow, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
-            lv_obj_add_flag(headerRow, LV_OBJ_FLAG_EVENT_BUBBLE);
-            
-            // Time label (bold)
-            intelligenceUpcomingTimes[i] = lv_label_create(headerRow);
+            // Time label (compact)
+            intelligenceUpcomingTimes[i] = lv_label_create(intelligenceUpcomingRows[i]);
             lv_label_set_text(intelligenceUpcomingTimes[i], "--:--");
-            lv_obj_set_style_text_font(intelligenceUpcomingTimes[i], &ui_font_OpenSansMediumBold, 0);
+            lv_obj_set_style_text_font(intelligenceUpcomingTimes[i], &ui_font_OpenSansSmall, 0);
             lv_obj_set_style_text_color(intelligenceUpcomingTimes[i], lv_color_hex(0x333333), 0);
+            lv_obj_set_width(intelligenceUpcomingTimes[i], 40);  // Fixed width for alignment
             
-            // Mode badge (with background)
-            intelligenceUpcomingModes[i] = lv_label_create(headerRow);
+            // Mode badge (compact)
+            intelligenceUpcomingModes[i] = lv_label_create(intelligenceUpcomingRows[i]);
             lv_label_set_text(intelligenceUpcomingModes[i], "---");
             lv_obj_set_style_text_font(intelligenceUpcomingModes[i], &ui_font_OpenSansSmall, 0);
             lv_obj_set_style_text_color(intelligenceUpcomingModes[i], lv_color_hex(0xFFFFFF), 0);
             lv_obj_set_style_bg_opa(intelligenceUpcomingModes[i], LV_OPA_COVER, 0);
             lv_obj_set_style_bg_color(intelligenceUpcomingModes[i], lv_color_hex(0x666666), 0);
             lv_obj_set_style_radius(intelligenceUpcomingModes[i], 4, 0);
-            lv_obj_set_style_pad_left(intelligenceUpcomingModes[i], 6, 0);
-            lv_obj_set_style_pad_right(intelligenceUpcomingModes[i], 6, 0);
-            lv_obj_set_style_pad_top(intelligenceUpcomingModes[i], 2, 0);
-            lv_obj_set_style_pad_bottom(intelligenceUpcomingModes[i], 2, 0);
+            lv_obj_set_style_pad_left(intelligenceUpcomingModes[i], 4, 0);
+            lv_obj_set_style_pad_right(intelligenceUpcomingModes[i], 4, 0);
+            lv_obj_set_style_pad_top(intelligenceUpcomingModes[i], 1, 0);
+            lv_obj_set_style_pad_bottom(intelligenceUpcomingModes[i], 1, 0);
             
-            // Reason label (below header) - dark text like inverter SN
-            intelligenceUpcomingReasons[i] = lv_label_create(contentContainer);
+            // Reason label (on same line, takes remaining width)
+            intelligenceUpcomingReasons[i] = lv_label_create(intelligenceUpcomingRows[i]);
             lv_label_set_text(intelligenceUpcomingReasons[i], "");
-            lv_obj_set_width(intelligenceUpcomingReasons[i], lv_pct(100));
-            lv_label_set_long_mode(intelligenceUpcomingReasons[i], LV_LABEL_LONG_WRAP);
+            lv_obj_set_flex_grow(intelligenceUpcomingReasons[i], 1);
+            lv_label_set_long_mode(intelligenceUpcomingReasons[i], LV_LABEL_LONG_DOT);  // Truncate with ...
             lv_obj_set_style_text_font(intelligenceUpcomingReasons[i], &ui_font_OpenSansSmall, 0);
-            lv_obj_set_style_text_color(intelligenceUpcomingReasons[i], lv_color_hex(0x333333), 0);
+            lv_obj_set_style_text_color(intelligenceUpcomingReasons[i], lv_color_hex(0x666666), 0);
         }
+        
+        // "X more plans..." label at bottom of upcoming container
+        intelligenceMorePlansLabel = lv_label_create(intelligenceUpcomingContainer);
+        lv_label_set_text(intelligenceMorePlansLabel, "");
+        lv_obj_set_style_text_font(intelligenceMorePlansLabel, &ui_font_OpenSansSmall, 0);
+        lv_obj_set_style_text_color(intelligenceMorePlansLabel, lv_color_hex(0x999999), 0);
+        lv_obj_set_style_pad_left(intelligenceMorePlansLabel, 18, 0);  // Align with content after timeline
+        lv_obj_add_flag(intelligenceMorePlansLabel, LV_OBJ_FLAG_HIDDEN);  // Hidden by default
         
         // --- BOTTOM: Statistics container - like daily stats ---
         intelligenceStatsContainer = lv_obj_create(intelligencePlanDetail);
@@ -1376,11 +1365,21 @@ public:
             }
         };
         
-        // Find next 3 mode changes
+        // Count total mode changes first
+        int totalChanges = 0;
+        InverterMode_t countMode = (currentQuarter >= 0 && currentQuarter < totalQuarters) ? plan[currentQuarter] : INVERTER_MODE_UNKNOWN;
+        for (int q = currentQuarter + 1; q < totalQuarters; q++) {
+            if (plan[q] != countMode && plan[q] != INVERTER_MODE_UNKNOWN) {
+                totalChanges++;
+                countMode = plan[q];
+            }
+        }
+        
+        // Find next VISIBLE_PLAN_ROWS mode changes
         int foundChanges = 0;
         InverterMode_t lastMode = (currentQuarter >= 0 && currentQuarter < totalQuarters) ? plan[currentQuarter] : INVERTER_MODE_UNKNOWN;
         
-        for (int q = currentQuarter + 1; q < totalQuarters && foundChanges < 3; q++) {
+        for (int q = currentQuarter + 1; q < totalQuarters && foundChanges < VISIBLE_PLAN_ROWS; q++) {
             if (plan[q] != lastMode && plan[q] != INVERTER_MODE_UNKNOWN) {
                 // Calculate time
                 int hour = (q % QUARTERS_OF_DAY) / 4;
@@ -1394,8 +1393,8 @@ public:
                 // Set badge background color (text stays white)
                 lv_obj_set_style_bg_color(intelligenceUpcomingModes[foundChanges], getModeColor(plan[q]), 0);
                 
-                // Build detailed reason with price info if available
-                char reasonBuf[192];
+                // Build compact reason (single line)
+                char reasonBuf[64];
                 if (prices != nullptr && settings != nullptr && q < (prices->hasTomorrowData ? 192 : 96)) {
                     float spotPrice = prices->prices[q].electricityPrice;
                     float buyPrice = IntelligenceSettingsStorage::calculateBuyPrice(spotPrice, *settings);
@@ -1403,45 +1402,34 @@ public:
                     
                     switch (plan[q]) {
                         case INVERTER_MODE_SELF_USE:
-                            snprintf(reasonBuf, sizeof(reasonBuf), 
-                                "Normal operation mode.\nUsing stored battery power\nis more economical than buying\nfrom grid at %.1f %s/kWh.",
-                                buyPrice, prices->currency);
+                            snprintf(reasonBuf, sizeof(reasonBuf), "battery cheaper than %.1f %s", buyPrice, prices->currency);
                             break;
                         case INVERTER_MODE_CHARGE_FROM_GRID:
-                            snprintf(reasonBuf, sizeof(reasonBuf), 
-                                "Low electricity price detected.\nCharging battery from grid\nat %.1f %s/kWh to use later\nwhen prices rise.",
-                                buyPrice, prices->currency);
+                            snprintf(reasonBuf, sizeof(reasonBuf), "low price %.1f %s", buyPrice, prices->currency);
                             break;
                         case INVERTER_MODE_DISCHARGE_TO_GRID:
-                            snprintf(reasonBuf, sizeof(reasonBuf), 
-                                "High electricity price detected.\nSelling stored energy to grid\nat %.1f %s/kWh to maximize\nyour profit.",
-                                sellPrice, prices->currency);
+                            snprintf(reasonBuf, sizeof(reasonBuf), "high price %.1f %s", sellPrice, prices->currency);
                             break;
                         case INVERTER_MODE_HOLD_BATTERY:
-                            snprintf(reasonBuf, sizeof(reasonBuf), 
-                                "Battery conservation mode.\nHolding current charge level\nfor expected higher prices\nlater today or tomorrow.");
+                            snprintf(reasonBuf, sizeof(reasonBuf), "waiting for better price");
                             break;
                         default:
                             reasonBuf[0] = '\0';
                     }
                 } else {
-                    // Fallback to simple reasons without prices
+                    // Fallback without prices
                     switch (plan[q]) {
                         case INVERTER_MODE_SELF_USE: 
-                            snprintf(reasonBuf, sizeof(reasonBuf), 
-                                "Normal operation mode.\nUsing battery power for\nhome consumption as needed.");
+                            snprintf(reasonBuf, sizeof(reasonBuf), "using battery");
                             break;
                         case INVERTER_MODE_CHARGE_FROM_GRID: 
-                            snprintf(reasonBuf, sizeof(reasonBuf), 
-                                "Low electricity price detected.\nCharging battery from grid\nto use when prices are higher.");
+                            snprintf(reasonBuf, sizeof(reasonBuf), "low electricity price");
                             break;
                         case INVERTER_MODE_DISCHARGE_TO_GRID: 
-                            snprintf(reasonBuf, sizeof(reasonBuf), 
-                                "High electricity price detected.\nSelling stored energy to grid\nto maximize your profit.");
+                            snprintf(reasonBuf, sizeof(reasonBuf), "high electricity price");
                             break;
                         case INVERTER_MODE_HOLD_BATTERY: 
-                            snprintf(reasonBuf, sizeof(reasonBuf), 
-                                "Battery conservation mode.\nHolding current charge level\nfor later use when beneficial.");
+                            snprintf(reasonBuf, sizeof(reasonBuf), "holding for later");
                             break;
                         default:
                             reasonBuf[0] = '\0';
@@ -1467,8 +1455,19 @@ public:
         }
         
         // Hide unused rows
-        for (int i = foundChanges; i < 3; i++) {
+        for (int i = foundChanges; i < VISIBLE_PLAN_ROWS; i++) {
             lv_obj_add_flag(intelligenceUpcomingRows[i], LV_OBJ_FLAG_HIDDEN);
+        }
+        
+        // Show "X more plans..." if there are more
+        int remainingPlans = totalChanges - foundChanges;
+        if (remainingPlans > 0 && intelligenceMorePlansLabel != nullptr) {
+            char moreBuf[32];
+            snprintf(moreBuf, sizeof(moreBuf), "+%d more plan%s...", remainingPlans, remainingPlans > 1 ? "s" : "");
+            lv_label_set_text(intelligenceMorePlansLabel, moreBuf);
+            lv_obj_clear_flag(intelligenceMorePlansLabel, LV_OBJ_FLAG_HIDDEN);
+        } else if (intelligenceMorePlansLabel != nullptr) {
+            lv_obj_add_flag(intelligenceMorePlansLabel, LV_OBJ_FLAG_HIDDEN);
         }
     }
     
@@ -2029,13 +2028,17 @@ public:
             lv_obj_set_style_text_color(intelligenceSummaryTitle, isDarkMode ? lv_color_hex(0xFFFFFF) : lv_color_hex(0x333333), 0);
         }
         // Update detail view colors
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < VISIBLE_PLAN_ROWS; i++) {
             if (intelligenceUpcomingTimes[i] != nullptr) {
                 lv_obj_set_style_text_color(intelligenceUpcomingTimes[i], isDarkMode ? lv_color_hex(0xFFFFFF) : lv_color_hex(0x333333), 0);
             }
             if (intelligenceUpcomingReasons[i] != nullptr) {
                 lv_obj_set_style_text_color(intelligenceUpcomingReasons[i], isDarkMode ? lv_color_hex(0xAAAAAA) : lv_color_hex(0x666666), 0);
             }
+        }
+        // Update "more plans" label color
+        if (intelligenceMorePlansLabel != nullptr) {
+            lv_obj_set_style_text_color(intelligenceMorePlansLabel, isDarkMode ? lv_color_hex(0x888888) : lv_color_hex(0x999999), 0);
         }
         // Update stats colors
         if (intelligenceStatsProduction != nullptr) {

@@ -78,11 +78,12 @@ struct SimulationSummary {
 class IntelligenceSimulator {
 private:
     // === RELATIVNÍ PRAHY (fungují pro CZK, EUR i jiné měny) ===
-    static constexpr float CHEAP_TIME_THRESHOLD = 1.05f;       // 5% tolerance nad minimum pro "levný čas"
+    static constexpr float CHEAP_TIME_THRESHOLD = 1.10f;       // 10% tolerance nad minimum pro "levný čas"
     static constexpr float BEST_SELL_TIME_THRESHOLD = 0.95f;   // 95% maxima pro "nejlepší čas prodeje"
     static constexpr float ARBITRAGE_PROFIT_THRESHOLD = 0.05f; // 5% zisk z buy price pro arbitráž
-    static constexpr float LOW_BATTERY_SOC = 50.0f;            // SOC pod kterým je baterie "nízká"
+    static constexpr float LOW_BATTERY_SOC = 60.0f;            // SOC pod kterým je baterie "nízká"
     static constexpr float MIN_ENERGY_THRESHOLD = 0.01f;       // Minimální energie pro akci (kWh)
+    static constexpr float CONSUMPTION_SAFETY_MARGIN = 1.2f;   // 20% rezerva na spotřebu (pro jistotu)
     
     ConsumptionPredictor& consumptionPredictor;
     ProductionPredictor& productionPredictor;
@@ -461,7 +462,9 @@ public:
                 // Podmínky pro nabíjení
                 bool isCheapTime = buyPrice <= minFutureBuyPrice * CHEAP_TIME_THRESHOLD;
                 bool worthCharging = buyPrice + batteryCostPerKwh < avgFutureBuyPrice;
-                bool willNeedLater = remainingConsumption > remainingProduction;
+                // Spotřeba s bezpečnostní rezervou (pro jistotu nakoupíme víc)
+                float expectedConsumption = remainingConsumption * CONSUMPTION_SAFETY_MARGIN;
+                bool willNeedLater = expectedConsumption > remainingProduction;
                 bool batteryLow = batterySocStart < LOW_BATTERY_SOC;
                 
                 // Arbitráž: koupit levně, prodat draze (potřebujeme zisk po započtení nákladů baterie)
