@@ -913,9 +913,21 @@ public:
                 lv_obj_t *child = lv_obj_get_child(ui_RightContainer, i);
                 if (!child) continue;
                 
-                // Handle intelligence tile - already processed above
+                // Handle intelligence tile - already processed above if it's the one being collapsed
                 if (child == chart && isIntelligenceTile) {
                     lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
+                    continue;
+                }
+                
+                // Handle intelligence tile when collapsing OTHER charts (spot/solar)
+                if (child == intelligencePlanTile && !isIntelligenceTile) {
+                    // Show intelligence tile if intelligence is supported
+                    if (intelligenceSupported) {
+                        lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
+                        lv_obj_set_flex_grow(child, 0);
+                        lv_obj_set_height(child, LV_SIZE_CONTENT);
+                        log_d("Restoring intelligence tile visibility");
+                    }
                     continue;
                 }
                 
