@@ -872,6 +872,55 @@ public:
 
     // Toggle chart expand - hide siblings to let the clicked chart fill the container
     // For intelligence tile, also pass summary and detail pointers
+    // Animation duration in ms
+    static const uint32_t ANIM_DURATION = 200;
+    
+    // Animate opacity (fade in/out)
+    void animateFade(lv_obj_t *obj, bool fadeIn, uint32_t delay = 0) {
+        if (!obj) return;
+        lv_anim_t a;
+        lv_anim_init(&a);
+        lv_anim_set_var(&a, obj);
+        lv_anim_set_values(&a, fadeIn ? 0 : 255, fadeIn ? 255 : 0);
+        lv_anim_set_time(&a, ANIM_DURATION);
+        lv_anim_set_delay(&a, delay);
+        lv_anim_set_exec_cb(&a, [](void *obj, int32_t v) {
+            lv_obj_set_style_opa((lv_obj_t*)obj, v, 0);
+        });
+        if (fadeIn) {
+            // Show object before fade in
+            lv_obj_clear_flag(obj, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_set_style_opa(obj, 0, 0);
+        } else {
+            // Hide object after fade out
+            lv_anim_set_ready_cb(&a, [](lv_anim_t *a) {
+                lv_obj_add_flag((lv_obj_t*)a->var, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_set_style_opa((lv_obj_t*)a->var, 255, 0);  // Reset opacity
+            });
+        }
+        lv_anim_start(&a);
+    }
+    
+    // Animate height change
+    void animateHeight(lv_obj_t *obj, int32_t targetHeight, uint32_t delay = 0, lv_anim_ready_cb_t readyCb = nullptr) {
+        if (!obj) return;
+        int32_t currentHeight = lv_obj_get_height(obj);
+        lv_anim_t a;
+        lv_anim_init(&a);
+        lv_anim_set_var(&a, obj);
+        lv_anim_set_values(&a, currentHeight, targetHeight);
+        lv_anim_set_time(&a, ANIM_DURATION);
+        lv_anim_set_delay(&a, delay);
+        lv_anim_set_exec_cb(&a, [](void *obj, int32_t v) {
+            lv_obj_set_height((lv_obj_t*)obj, v);
+            lv_obj_set_style_height((lv_obj_t*)obj, v, 0);
+        });
+        if (readyCb) {
+            lv_anim_set_ready_cb(&a, readyCb);
+        }
+        lv_anim_start(&a);
+    }
+
     void toggleChartExpand(lv_obj_t *chart, lv_obj_t *summary = nullptr, lv_obj_t *detail = nullptr) {
         log_d("toggleChartExpand called with chart=%p, ui_spotPriceContainer=%p, ui_RightBottomContainer=%p", 
               chart, ui_spotPriceContainer, ui_RightBottomContainer);
@@ -889,25 +938,30 @@ public:
             // If collapsing intelligence tile
             if (isIntelligenceTile) {
                 log_d("Collapsing intelligence tile");
-                // 1. Hide detail content and reset its properties
-                lv_obj_add_flag(detail, LV_OBJ_FLAG_HIDDEN);
+                // 1. Fade out and hide detail content
+                animateFade(detail, false);
                 lv_obj_set_flex_grow(detail, 0);
-                lv_obj_set_height(detail, 0);
+                // After animation, set height to 0
+                lv_anim_t a;
+                lv_anim_init(&a);
+                lv_anim_set_var(&a, detail);
+                lv_anim_set_values(&a, lv_obj_get_height(detail), 0);
+                lv_anim_set_time(&a, ANIM_DURATION);
+                lv_anim_set_exec_cb(&a, [](void *obj, int32_t v) {
+                    lv_obj_set_height((lv_obj_t*)obj, v);
+                });
+                lv_anim_start(&a);
+                
                 // 2. Summary stays visible (always shown)
                 lv_obj_clear_flag(summary, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_set_height(summary, LV_SIZE_CONTENT);
-                // 3. Tile: no flex_grow, height based on content (summary only)
+                // 3. Tile: no flex_grow, animate to content height
                 lv_obj_set_flex_grow(chart, 0);
-                lv_obj_set_height(chart, LV_SIZE_CONTENT);
-                lv_obj_set_style_height(chart, LV_SIZE_CONTENT, 0);
                 lv_obj_set_style_min_height(chart, 0, 0);
                 lv_obj_set_style_max_height(chart, LV_SIZE_CONTENT, 0);
-                lv_obj_mark_layout_as_dirty(chart);
-                lv_obj_update_layout(chart);
-                log_d("Set intelligence tile to LV_SIZE_CONTENT");
             }
             
-            // 3. Show all siblings and restore flex grow
+            // Show all siblings with fade in and restore flex grow
             uint32_t childCount = lv_obj_get_child_cnt(ui_RightContainer);
             for (uint32_t i = 0; i < childCount; i++) {
                 lv_obj_t *child = lv_obj_get_child(ui_RightContainer, i);
@@ -923,7 +977,7 @@ public:
                 if (child == intelligencePlanTile && !isIntelligenceTile) {
                     // Show intelligence tile if intelligence is supported
                     if (intelligenceSupported) {
-                        lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
+                        animateFade(child, true, ANIM_DURATION / 2);
                         lv_obj_set_flex_grow(child, 0);
                         lv_obj_set_height(child, LV_SIZE_CONTENT);
                         log_d("Restoring intelligence tile visibility");
@@ -935,7 +989,7 @@ public:
                 if (child == ui_spotPriceContainer) {
                     log_d("Processing spotPriceContainer, hasValidPriceData=%d", hasValidPriceData());
                     if (hasValidPriceData()) {
-                        lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
+                        animateFade(child, true, ANIM_DURATION / 2);
                         lv_obj_set_flex_grow(child, 1);
                     }
                     continue;
@@ -944,14 +998,14 @@ public:
                 // Handle solar chart (RightBottomContainer)
                 if (child == ui_RightBottomContainer) {
                     log_d("Processing RightBottomContainer");
-                    lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
+                    animateFade(child, true, ANIM_DURATION / 2);
                     lv_obj_set_flex_grow(child, 2);
                     continue;
                 }
                 
-                // ui_TopRightContainer - just show
+                // ui_TopRightContainer - just show with fade
                 if (child == ui_TopRightContainer) {
-                    lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
+                    animateFade(child, true, ANIM_DURATION / 2);
                     continue;
                 }
                 
@@ -961,12 +1015,12 @@ public:
             
             expandedChart = nullptr;
         } else {
-            // Expand - hide all siblings except clicked chart
+            // Expand - fade out all siblings except clicked chart
             uint32_t childCount = lv_obj_get_child_cnt(ui_RightContainer);
             for (uint32_t i = 0; i < childCount; i++) {
                 lv_obj_t *child = lv_obj_get_child(ui_RightContainer, i);
                 if (child != chart) {
-                    lv_obj_add_flag(child, LV_OBJ_FLAG_HIDDEN);
+                    animateFade(child, false);
                 }
             }
             
@@ -979,10 +1033,10 @@ public:
                 // Summary stays visible (always shown)
                 lv_obj_clear_flag(summary, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_set_height(summary, LV_SIZE_CONTENT);
-                // Show detail with flex_grow to fill remaining space
-                lv_obj_clear_flag(detail, LV_OBJ_FLAG_HIDDEN);
+                // Fade in detail with flex_grow to fill remaining space
                 lv_obj_set_flex_grow(detail, 1);
                 lv_obj_set_height(detail, LV_SIZE_CONTENT);
+                animateFade(detail, true, ANIM_DURATION / 2);
                 // Tile: flex_grow=1 to fill space, no fixed height
                 lv_obj_set_height(chart, LV_SIZE_CONTENT);
                 lv_obj_set_style_height(chart, LV_SIZE_CONTENT, 0);
