@@ -19,6 +19,9 @@ lv_color_t green = lv_color_hex(0x4CAF50);
 // Callback typ pro změnu režimu střídače
 typedef void (*InverterModeChangeCallback)(InverterMode_t mode, bool intelligenceEnabled);
 
+// Forward declaration for touch callback
+static void onAnyTouchShowButtons(lv_event_t *e);
+
 static bool isDarkMode = false;
 
 /**
@@ -390,6 +393,7 @@ public:
         // Add click handlers for chart expand/collapse
         // For solar chart, add click on ui_Chart1 since it covers the whole container
         lv_obj_add_flag(ui_Chart1, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_event_cb(ui_Chart1, onAnyTouchShowButtons, LV_EVENT_PRESSED, this);
         lv_obj_add_event_cb(ui_Chart1, [](lv_event_t *e) {
             log_d("Solar chart clicked");
             DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
@@ -400,6 +404,7 @@ public:
         }, LV_EVENT_CLICKED, this);
         
         lv_obj_add_flag(ui_spotPriceContainer, LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_event_cb(ui_spotPriceContainer, onAnyTouchShowButtons, LV_EVENT_PRESSED, this);
         lv_obj_add_event_cb(ui_spotPriceContainer, [](lv_event_t *e) {
             log_d("Spot price clicked");
             DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
@@ -676,6 +681,11 @@ public:
         // Pass tile as event user_data, get DashboardUI from tile's user_data
         lv_obj_add_flag(intelligencePlanTile, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_add_event_cb(intelligencePlanTile, [](lv_event_t *e) {
+            // Show buttons on touch
+            DashboardUI* self = (DashboardUI*)lv_obj_get_user_data((lv_obj_t*)lv_event_get_user_data(e));
+            if (self) self->showButtonsOnTouch();
+        }, LV_EVENT_PRESSED, intelligencePlanTile);
+        lv_obj_add_event_cb(intelligencePlanTile, [](lv_event_t *e) {
             lv_obj_t* tile = (lv_obj_t*)lv_event_get_user_data(e);
             if (!tile) return;
             DashboardUI* self = (DashboardUI*)lv_obj_get_user_data(tile);
@@ -688,6 +698,11 @@ public:
         }, LV_EVENT_CLICKED, intelligencePlanTile);
         
         // Add click handler for detail container (same logic)
+        lv_obj_add_event_cb(intelligencePlanDetail, [](lv_event_t *e) {
+            // Show buttons on touch
+            DashboardUI* self = (DashboardUI*)lv_obj_get_user_data((lv_obj_t*)lv_event_get_user_data(e));
+            if (self) self->showButtonsOnTouch();
+        }, LV_EVENT_PRESSED, intelligencePlanTile);
         lv_obj_add_event_cb(intelligencePlanDetail, [](lv_event_t *e) {
             lv_obj_t* tile = (lv_obj_t*)lv_event_get_user_data(e);
             if (!tile) return;
@@ -820,6 +835,10 @@ public:
                                       }, 1000, this);
 
         // Make inverter container clickable and add menu (only if intelligence is supported)
+        lv_obj_add_event_cb(ui_inverterContainer, [](lv_event_t *e) {
+            DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
+            self->showButtonsOnTouch();  // Show buttons on touch
+        }, LV_EVENT_PRESSED, this);
         lv_obj_add_event_cb(ui_inverterContainer, [](lv_event_t *e) {
             DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
             if (self->intelligenceSupported) {
@@ -2336,3 +2355,11 @@ private:
         // Update wallbox data UI elements
     }
 };
+
+// Static callback for showing buttons on any touch
+static void onAnyTouchShowButtons(lv_event_t *e) {
+    DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
+    if (self) {
+        self->showButtonsOnTouch();
+    }
+}

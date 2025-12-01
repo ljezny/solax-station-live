@@ -654,6 +654,9 @@ bool loadElectricityPriceTask()
             if (loader.loadTodayPrices(provider, electricityPriceResult)) {
                 log_d("Today electricity prices loaded");
                 
+                // Invalidate intelligence to recalculate with new prices
+                lastIntelligenceAttempt = 0;
+                
                 // Zkusíme načíst zítřejší data (pokud je po 13h)
                 time_t now = time(nullptr);
                 struct tm timeinfoCopy;
@@ -682,8 +685,11 @@ bool runIntelligenceTask()
     int currentMinute = tm_check->tm_min;
     bool is5MinuteAligned = (currentMinute % 5 == 0);
     
-    // Run only on 5-minute boundaries and respect the interval
-    if (is5MinuteAligned && (lastIntelligenceAttempt == 0 || millis() - lastIntelligenceAttempt > INTELLIGENCE_REFRESH_INTERVAL))
+    // Run immediately if invalidated (lastIntelligenceAttempt == 0), otherwise only on 5-minute boundaries
+    bool shouldRun = (lastIntelligenceAttempt == 0) || 
+                     (is5MinuteAligned && millis() - lastIntelligenceAttempt > INTELLIGENCE_REFRESH_INTERVAL);
+    
+    if (shouldRun)
     {
         log_d("Running intelligence resolver");
         
