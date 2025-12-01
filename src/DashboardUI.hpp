@@ -915,11 +915,11 @@ public:
         };
         
         MenuItem items[] = {
-            {"Intelligence", INVERTER_MODE_UNKNOWN, true, lv_color_hex(0x00AAFF)},
-            {"Self-Use", INVERTER_MODE_SELF_USE, false, lv_color_hex(0x4CAF50)},
-            {"Charge Battery", INVERTER_MODE_CHARGE_FROM_GRID, false, lv_color_hex(0x2196F3)},
-            {"Discharge", INVERTER_MODE_DISCHARGE_TO_GRID, false, lv_color_hex(0xFF9800)},
-            {"Hold Battery", INVERTER_MODE_HOLD_BATTERY, false, lv_color_hex(0x9E9E9E)},
+            {"INTELLIGENCE", INVERTER_MODE_UNKNOWN, true, lv_color_hex(0x2196F3)},
+            {"NORMAL", INVERTER_MODE_SELF_USE, false, lv_color_hex(_ui_theme_color_loadColor[0])},
+            {"CHARGE", INVERTER_MODE_CHARGE_FROM_GRID, false, lv_color_hex(_ui_theme_color_gridColor[0])},
+            {"DISCHARGE", INVERTER_MODE_DISCHARGE_TO_GRID, false, lv_color_hex(_ui_theme_color_batteryColor[0])},
+            {"HOLD", INVERTER_MODE_HOLD_BATTERY, false, lv_color_hex(0x888888)},
         };
 
         for (int i = 0; i < 5; i++) {
@@ -1309,16 +1309,16 @@ public:
             // When intelligence is disabled, show actual inverter mode
             switch (mode) {
                 case INVERTER_MODE_SELF_USE:
-                    labelText = "SELF USE";
-                    bgColor = lv_color_hex(0x00AA00);  // Green
+                    labelText = "NORMAL";
+                    bgColor = lv_color_hex(_ui_theme_color_loadColor[0]);  // Green (load color)
                     break;
                 case INVERTER_MODE_CHARGE_FROM_GRID:
-                    labelText = "CHARGING";
-                    bgColor = lv_color_hex(0x0088FF);  // Blue
+                    labelText = "CHARGE";
+                    bgColor = lv_color_hex(_ui_theme_color_gridColor[0]);  // Red/Pink (grid color)
                     break;
                 case INVERTER_MODE_DISCHARGE_TO_GRID:
-                    labelText = "SELLING";
-                    bgColor = lv_color_hex(0xFF8800);  // Orange
+                    labelText = "DISCHARGE";
+                    bgColor = lv_color_hex(_ui_theme_color_batteryColor[0]);  // Blue (battery color)
                     break;
                 case INVERTER_MODE_HOLD_BATTERY:
                     labelText = "HOLD";
@@ -1352,23 +1352,23 @@ public:
         lv_color_t badgeColor = lv_color_hex(0x666666);
         switch (currentMode) {
             case INVERTER_MODE_SELF_USE: 
-                modeName = "Self Use"; 
-                badgeColor = lv_color_hex(0x00AA00);  // Green
+                modeName = "NORMAL"; 
+                badgeColor = lv_color_hex(_ui_theme_color_loadColor[0]);  // Green (load color)
                 break;
             case INVERTER_MODE_CHARGE_FROM_GRID: 
-                modeName = "Charging"; 
-                badgeColor = lv_color_hex(0x0088FF);  // Blue
+                modeName = "CHARGE"; 
+                badgeColor = lv_color_hex(_ui_theme_color_gridColor[0]);  // Red/Pink (grid color)
                 break;
             case INVERTER_MODE_DISCHARGE_TO_GRID: 
-                modeName = "Selling"; 
-                badgeColor = lv_color_hex(0xFF8800);  // Orange
+                modeName = "DISCHARGE"; 
+                badgeColor = lv_color_hex(_ui_theme_color_batteryColor[0]);  // Blue (battery color)
                 break;
             case INVERTER_MODE_HOLD_BATTERY: 
-                modeName = "Hold"; 
+                modeName = "HOLD"; 
                 badgeColor = lv_color_hex(0x888888);  // Gray
                 break;
             default: 
-                modeName = "Unknown"; 
+                modeName = "UNKNOWN"; 
                 badgeColor = lv_color_hex(0x666666);
                 break;
         }
@@ -1407,19 +1407,19 @@ public:
         // Helper to get mode name
         auto getModeName = [](InverterMode_t mode) -> const char* {
             switch (mode) {
-                case INVERTER_MODE_SELF_USE: return "Self Use";
-                case INVERTER_MODE_CHARGE_FROM_GRID: return "Charge";
-                case INVERTER_MODE_DISCHARGE_TO_GRID: return "Sell";
-                case INVERTER_MODE_HOLD_BATTERY: return "Hold";
+                case INVERTER_MODE_SELF_USE: return "NORMAL";
+                case INVERTER_MODE_CHARGE_FROM_GRID: return "CHARGE";
+                case INVERTER_MODE_DISCHARGE_TO_GRID: return "DISCHARGE";
+                case INVERTER_MODE_HOLD_BATTERY: return "HOLD";
                 default: return "---";
             }
         };
         
         auto getModeColor = [](InverterMode_t mode) -> lv_color_t {
             switch (mode) {
-                case INVERTER_MODE_SELF_USE: return lv_color_hex(0x7ED321);  // Green
-                case INVERTER_MODE_CHARGE_FROM_GRID: return lv_color_hex(0xF5A623);  // Orange
-                case INVERTER_MODE_DISCHARGE_TO_GRID: return lv_color_hex(0x4A90D9);  // Blue
+                case INVERTER_MODE_SELF_USE: return lv_color_hex(_ui_theme_color_loadColor[0]);  // Green (load color)
+                case INVERTER_MODE_CHARGE_FROM_GRID: return lv_color_hex(_ui_theme_color_gridColor[0]);  // Red/Pink (grid color)
+                case INVERTER_MODE_DISCHARGE_TO_GRID: return lv_color_hex(_ui_theme_color_batteryColor[0]);  // Blue (battery color)
                 case INVERTER_MODE_HOLD_BATTERY: return lv_color_hex(0x888888);  // Gray
                 default: return lv_color_hex(0x666666);
             }
