@@ -209,7 +209,7 @@ void lvglTimerTask(void *param)
         
         // Reset watchdog to prevent timeout during long renders
         esp_task_wdt_reset();
-        vTaskDelay(pdMS_TO_TICKS(5));  // Shorter delay, give more time to other tasks
+        vTaskDelay(pdMS_TO_TICKS(15));  // Match LV_DISP_DEF_REFR_PERIOD (15ms = ~66 FPS)
     }
 }
 
@@ -258,7 +258,7 @@ void setupLVGL()
     disp_drv.hor_res = screenWidth;
     disp_drv.ver_res = screenHeight;
     disp_drv.flush_cb = my_disp_flush;
-    disp_drv.full_refresh = 1;
+    disp_drv.full_refresh = 0;  // Only redraw dirty areas for better FPS
     disp_drv.draw_buf = &draw_buf;
     lv_disp_drv_register(&disp_drv);
 

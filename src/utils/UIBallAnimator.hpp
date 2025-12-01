@@ -35,9 +35,9 @@ public:
             lv_obj_clear_flag(items[i].ball, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
             lv_obj_set_style_radius(items[i].ball, radius / 2, LV_STYLE_SELECTOR_DEFAULT);
             ui_object_set_themeable_style_property(items[i].ball, LV_STYLE_SELECTOR_DEFAULT, LV_STYLE_BG_COLOR, color);
-            ui_object_set_themeable_style_property(items[i].ball, LV_STYLE_SELECTOR_DEFAULT, LV_STYLE_SHADOW_COLOR, color);
-            //lv_obj_set_style_shadow_opa(items[i].ball, 64, LV_STYLE_SELECTOR_DEFAULT);
-            lv_obj_set_style_shadow_width(items[i].ball, 16, LV_STYLE_SELECTOR_DEFAULT);
+            // Shadows disabled for performance - they are very CPU intensive
+            // ui_object_set_themeable_style_property(items[i].ball, LV_STYLE_SELECTOR_DEFAULT, LV_STYLE_SHADOW_COLOR, color);
+            // lv_obj_set_style_shadow_width(items[i].ball, 16, LV_STYLE_SELECTOR_DEFAULT);
 
             // ui_object_set_themeable_style_property(items[i].ball, LV_STYLE_SELECTOR_DEFAULT, LV_STYLE_BG_OPA, _ui_theme_alpha_pvColor);
             lv_obj_set_style_bg_opa(items[i].ball, opa, LV_STYLE_SELECTOR_DEFAULT);
