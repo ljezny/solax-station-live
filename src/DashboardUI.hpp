@@ -446,18 +446,13 @@ public:
         lv_obj_clear_flag(intelligencePlanDetail, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_add_flag(intelligencePlanDetail, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(intelligencePlanDetail, LV_OBJ_FLAG_CLICKABLE);
-        lv_obj_add_event_cb(intelligencePlanDetail, [](lv_event_t *e) {
-            DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
-            // Get parent (intelligencePlanTile) from the detail container
-            lv_obj_t* tile = lv_obj_get_parent(lv_event_get_current_target(e));
-            if (self && tile) self->toggleChartExpand(tile);
-        }, LV_EVENT_CLICKED, this);
+        // Event handler will be added after tile is fully created
         
         // --- TOP: Upcoming plans container ---
         intelligenceUpcomingContainer = lv_obj_create(intelligencePlanDetail);
         lv_obj_remove_style_all(intelligenceUpcomingContainer);
         lv_obj_set_width(intelligenceUpcomingContainer, lv_pct(100));
-        lv_obj_set_height(intelligenceUpcomingContainer, LV_SIZE_CONTENT);
+        lv_obj_set_flex_grow(intelligenceUpcomingContainer, 1);  // Take remaining space, push stats to bottom
         lv_obj_set_flex_flow(intelligenceUpcomingContainer, LV_FLEX_FLOW_COLUMN);
         lv_obj_set_flex_align(intelligenceUpcomingContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
         lv_obj_set_style_pad_row(intelligenceUpcomingContainer, 2, 0);
@@ -554,13 +549,35 @@ public:
         lv_obj_set_style_text_font(intelligenceStatsSavings, &ui_font_OpenSansSmall, 0);
         lv_obj_set_style_text_color(intelligenceStatsSavings, lv_color_hex(0x00AA00), 0);
         
-        // Add click handler for intelligence tile expand/collapse
+        // Store DashboardUI pointer in tile's user_data for event handlers
         lv_obj_set_user_data(intelligencePlanTile, this);
+        
+        // Add click handler for intelligence tile expand/collapse
+        // Pass tile as event user_data, get DashboardUI from tile's user_data
         lv_obj_add_flag(intelligencePlanTile, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_add_event_cb(intelligencePlanTile, [](lv_event_t *e) {
-            DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
-            self->toggleChartExpand(self->intelligencePlanTile);
-        }, LV_EVENT_CLICKED, this);
+            lv_obj_t* tile = (lv_obj_t*)lv_event_get_user_data(e);
+            if (!tile) return;
+            DashboardUI* self = (DashboardUI*)lv_obj_get_user_data(tile);
+            if (!self) return;
+            // Summary is the first child (index 0), detail is second (index 1)
+            lv_obj_t* summary = lv_obj_get_child(tile, 0);
+            lv_obj_t* detail = lv_obj_get_child(tile, 1);
+            log_d("Intelligence tile clicked, tile=%p, summary=%p, detail=%p", tile, summary, detail);
+            self->toggleChartExpand(tile, summary, detail);
+        }, LV_EVENT_CLICKED, intelligencePlanTile);
+        
+        // Add click handler for detail container (same logic)
+        lv_obj_add_event_cb(intelligencePlanDetail, [](lv_event_t *e) {
+            lv_obj_t* tile = (lv_obj_t*)lv_event_get_user_data(e);
+            if (!tile) return;
+            DashboardUI* self = (DashboardUI*)lv_obj_get_user_data(tile);
+            if (!self) return;
+            lv_obj_t* summary = lv_obj_get_child(tile, 0);
+            lv_obj_t* detail = lv_obj_get_child(tile, 1);
+            log_d("Intelligence detail clicked, tile=%p, summary=%p, detail=%p", tile, summary, detail);
+            self->toggleChartExpand(tile, summary, detail);
+        }, LV_EVENT_CLICKED, intelligencePlanTile);
         
         // Move to position 1 (after TopRightContainer, before RightBottomContainer/solar chart)
         lv_obj_move_to_index(intelligencePlanTile, 1);
@@ -854,7 +871,8 @@ public:
     }
 
     // Toggle chart expand - hide siblings to let the clicked chart fill the container
-    void toggleChartExpand(lv_obj_t *chart) {
+    // For intelligence tile, also pass summary and detail pointers
+    void toggleChartExpand(lv_obj_t *chart, lv_obj_t *summary = nullptr, lv_obj_t *detail = nullptr) {
         log_d("toggleChartExpand called with chart=%p, ui_spotPriceContainer=%p, ui_RightBottomContainer=%p", 
               chart, ui_spotPriceContainer, ui_RightBottomContainer);
         if (!chart) {
@@ -863,29 +881,47 @@ public:
         }
         
         bool isCollapsing = (expandedChart == chart);
-        bool isIntelligenceTile = (chart == intelligencePlanTile);
+        bool isIntelligenceTile = (summary != nullptr && detail != nullptr);
         log_d("Toggle chart: isCollapsing=%d, isIntelligenceTile=%d, expandedChart=%p, chart=%p", 
               isCollapsing, isIntelligenceTile, expandedChart, chart);
         
         if (isCollapsing) {
-            // Collapse - show all siblings and restore flex grow by iterating children
+            // If collapsing intelligence tile
+            if (isIntelligenceTile) {
+                log_d("Collapsing intelligence tile");
+                // 1. Hide detail content and reset its properties
+                lv_obj_add_flag(detail, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_set_flex_grow(detail, 0);
+                lv_obj_set_height(detail, 0);
+                // 2. Summary stays visible (always shown)
+                lv_obj_clear_flag(summary, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_set_height(summary, LV_SIZE_CONTENT);
+                // 3. Tile: no flex_grow, height based on content (summary only)
+                lv_obj_set_flex_grow(chart, 0);
+                lv_obj_set_height(chart, LV_SIZE_CONTENT);
+                lv_obj_set_style_height(chart, LV_SIZE_CONTENT, 0);
+                lv_obj_set_style_min_height(chart, 0, 0);
+                lv_obj_set_style_max_height(chart, LV_SIZE_CONTENT, 0);
+                lv_obj_mark_layout_as_dirty(chart);
+                lv_obj_update_layout(chart);
+                log_d("Set intelligence tile to LV_SIZE_CONTENT");
+            }
+            
+            // 3. Show all siblings and restore flex grow
             uint32_t childCount = lv_obj_get_child_cnt(ui_RightContainer);
             for (uint32_t i = 0; i < childCount; i++) {
                 lv_obj_t *child = lv_obj_get_child(ui_RightContainer, i);
                 if (!child) continue;
                 
-                // Handle intelligence tile
-                if (child == intelligencePlanTile) {
-                    if (spotChartData.hasIntelligencePlan) {
-                        lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
-                        lv_obj_set_flex_grow(child, 0);
-                        lv_obj_set_height(child, 40);
-                    }
+                // Handle intelligence tile - already processed above
+                if (child == chart && isIntelligenceTile) {
+                    lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
                     continue;
                 }
                 
-                // Handle spot price container (use global variable)
+                // Handle spot price container
                 if (child == ui_spotPriceContainer) {
+                    log_d("Processing spotPriceContainer, hasValidPriceData=%d", hasValidPriceData());
                     if (hasValidPriceData()) {
                         lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
                         lv_obj_set_flex_grow(child, 1);
@@ -893,23 +929,24 @@ public:
                     continue;
                 }
                 
-                // Handle solar chart (RightBottomContainer) (use global variable)
+                // Handle solar chart (RightBottomContainer)
                 if (child == ui_RightBottomContainer) {
+                    log_d("Processing RightBottomContainer");
                     lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
                     lv_obj_set_flex_grow(child, 2);
                     continue;
                 }
                 
-                // All other children - just show them
-                lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
+                // ui_TopRightContainer - just show
+                if (child == ui_TopRightContainer) {
+                    lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
+                    continue;
+                }
+                
+                // Other unknown children - hide them
+                lv_obj_add_flag(child, LV_OBJ_FLAG_HIDDEN);
             }
             
-            // If collapsing intelligence tile, show summary and hide detail
-            if (isIntelligenceTile) {
-                log_d("Collapsing intelligence tile: showing summary");
-                lv_obj_clear_flag(intelligencePlanSummary, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_add_flag(intelligencePlanDetail, LV_OBJ_FLAG_HIDDEN);
-            }
             expandedChart = nullptr;
         } else {
             // Expand - hide all siblings except clicked chart
@@ -924,17 +961,35 @@ public:
             // Set expanded chart to fill available space
             lv_obj_set_flex_grow(chart, 1);
             
-            // If expanding intelligence tile, hide summary and show detail
+            // If expanding intelligence tile
             if (isIntelligenceTile) {
-                log_d("Expanding intelligence tile: showing detail");
-                lv_obj_add_flag(intelligencePlanSummary, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_flag(intelligencePlanDetail, LV_OBJ_FLAG_HIDDEN);
-                lv_obj_set_height(intelligencePlanTile, lv_pct(100));
+                log_d("Expanding intelligence tile");
+                // Summary stays visible (always shown)
+                lv_obj_clear_flag(summary, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_set_height(summary, LV_SIZE_CONTENT);
+                // Show detail with flex_grow to fill remaining space
+                lv_obj_clear_flag(detail, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_set_flex_grow(detail, 1);
+                lv_obj_set_height(detail, LV_SIZE_CONTENT);
+                // Tile: flex_grow=1 to fill space, no fixed height
+                lv_obj_set_height(chart, LV_SIZE_CONTENT);
+                lv_obj_set_style_height(chart, LV_SIZE_CONTENT, 0);
+                lv_obj_set_style_max_height(chart, LV_PCT(100), 0);
+                lv_obj_set_style_min_height(chart, 0, 0);
             }
             expandedChart = chart;
         }
         // Force layout recalculation
+        lv_obj_invalidate(ui_RightContainer);
         lv_obj_update_layout(ui_RightContainer);
+        
+        // Debug: log all children heights
+        uint32_t childCount = lv_obj_get_child_cnt(ui_RightContainer);
+        for (uint32_t i = 0; i < childCount; i++) {
+            lv_obj_t *child = lv_obj_get_child(ui_RightContainer, i);
+            bool hidden = lv_obj_has_flag(child, LV_OBJ_FLAG_HIDDEN);
+            log_d("Child %d: height=%d, flex_grow=%d, hidden=%d", i, lv_obj_get_height(child), lv_obj_get_style_flex_grow(child, 0), hidden);
+        }
         log_d("Toggle chart: layout updated, chart height=%d", lv_obj_get_height(chart));
     }
 
