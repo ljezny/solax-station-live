@@ -46,8 +46,9 @@
 
 SemaphoreHandle_t lvgl_mutex = xSemaphoreCreateMutex();
 static lv_disp_draw_buf_t draw_buf;
-static lv_color_t disp_draw_buf1[screenWidth * screenHeight / 10];
-static lv_color_t disp_draw_buf2[screenWidth * screenHeight / 10];
+// Full-screen double buffers allocated in PSRAM for best FPS
+static lv_color_t* disp_draw_buf1 = nullptr;
+static lv_color_t* disp_draw_buf2 = nullptr;
 static lv_disp_drv_t disp_drv;
 
 static long lastElectricityPriceAttempt = 0;
@@ -251,7 +252,21 @@ void setupLVGL()
     // touch setup
     touch.init();
 
-    lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight / 10);
+    // Allocate full-screen double buffers in PSRAM (800x480x2 = 768KB each, 1.5MB total)
+    size_t bufferSize = screenWidth * screenHeight * sizeof(lv_color_t);
+    disp_draw_buf1 = (lv_color_t*)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
+    disp_draw_buf2 = (lv_color_t*)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
+    
+    if (!disp_draw_buf1 || !disp_draw_buf2) {
+        log_e("Failed to allocate display buffers in PSRAM!");
+        // Fallback to smaller buffers in regular RAM
+        disp_draw_buf1 = (lv_color_t*)malloc(bufferSize / 4);
+        disp_draw_buf2 = (lv_color_t*)malloc(bufferSize / 4);
+        lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight / 4);
+    } else {
+        log_d("Display buffers allocated in PSRAM: 2x %.1f KB", bufferSize / 1024.0f);
+        lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight);
+    }
     /* Initialize the display */
     lv_disp_drv_init(&disp_drv);
     /* Change the following line to your display resolution */
