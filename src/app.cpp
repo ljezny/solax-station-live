@@ -28,9 +28,9 @@
 #include "Spot/ElectricityPriceLoader.hpp"
 #include "utils/IntelligenceSettings.hpp"
 #include "utils/IntelligenceResolver.hpp"
+#include "utils/IntelligenceSimulator.hpp"
 #include "utils/ConsumptionPredictor.hpp"
 #include "utils/ProductionPredictor.hpp"
-#include "utils/SocPredictor.hpp"
 
 #define UI_REFRESH_INTERVAL 5000            // Define the UI refresh interval in milliseconds
 #define INVERTER_DATA_REFRESH_INTERVAL 5000 // Seems that 3s is problematic for some dongles (GoodWe), so we use 5s
@@ -89,6 +89,7 @@ SmartControlRuleResolver wallboxRuleResolver(wallboxMedianPowerSampler);
 // Intelligence components
 ConsumptionPredictor consumptionPredictor;
 ProductionPredictor productionPredictor;
+IntelligenceResolver intelligenceResolver(consumptionPredictor, productionPredictor);
 IntelligenceResult_t lastIntelligenceResult;
 static InverterMode_t lastSentMode = INVERTER_MODE_UNKNOWN;  // Last mode sent to inverter
 static long lastIntelligenceAttempt = 0;
@@ -591,34 +592,41 @@ bool runIntelligenceTask()
         log_d("Running intelligence resolver");
         
         IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
+        bool hasSpotPrices = electricityPriceResult && electricityPriceResult->updated > 0;
+        bool canSimulate = settings.enabled && inverterData.status == DONGLE_STATUS_OK && hasSpotPrices;
         
-        if (settings.enabled && inverterData.status == DONGLE_STATUS_OK && electricityPriceResult && electricityPriceResult->updated > 0)
+        // Run simulation only if intelligence is enabled and we have all data
+        if (canSimulate)
         {
-            IntelligenceResolver resolver(consumptionPredictor, productionPredictor);
-            
-            // Log input values for intelligence decision
+            // Log input values
             time_t now_log = time(nullptr);
             struct tm* timeinfo_log = localtime(&now_log);
             int currentQuarterLog = (timeinfo_log->tm_hour * 60 + timeinfo_log->tm_min) / 15;
             float currentSpotPrice = electricityPriceResult->prices[currentQuarterLog].electricityPrice;
             float buyPrice = IntelligenceSettingsStorage::calculateBuyPrice(currentSpotPrice, settings);
             float sellPrice = IntelligenceSettingsStorage::calculateSellPrice(currentSpotPrice, settings);
-            float remainingProd = productionPredictor.predictRemainingDayProduction(currentQuarterLog);
-            float remainingCons = consumptionPredictor.predictRemainingDayConsumption(currentQuarterLog);
             
-            log_i("=== INTELLIGENCE INPUT ===");
-            log_i("Time: %02d:%02d (Q%d), SOC: %d%%", timeinfo_log->tm_hour, timeinfo_log->tm_min, currentQuarterLog, inverterData.soc);
+            log_i("=== INTELLIGENCE SIMULATION ===");
+            log_i("Time: %02d:%02d (Q%d), SOC: %d%%, Enabled: %s", 
+                  timeinfo_log->tm_hour, timeinfo_log->tm_min, currentQuarterLog, inverterData.soc,
+                  settings.enabled ? "YES" : "NO");
             log_i("Spot: %.2f %s, Buy: %.2f, Sell: %.2f, Battery cost: %.2f", 
                   currentSpotPrice, electricityPriceResult->currency, buyPrice, sellPrice, settings.batteryCostPerKwh);
-            log_i("Remaining production: %.1f kWh, consumption: %.1f kWh, net: %.1f kWh",
-                  remainingProd, remainingCons, remainingProd - remainingCons);
             log_i("Battery: %.1f kWh capacity, min SOC: %d%%, max SOC: %d%%",
                   inverterData.batteryCapacityWh / 1000.0f, settings.minSocPercent, settings.maxSocPercent);
             
-            // Resolve current quarter for immediate action (with verbose logging)
-            lastIntelligenceResult = resolver.resolve(inverterData, *electricityPriceResult, settings, -1);
+            // Run simulation to get all quarter decisions at once
+            const auto& simResults = intelligenceResolver.runSimulation(inverterData, *electricityPriceResult, settings, true);
+            const auto& summary = intelligenceResolver.getLastSummary();
             
-            log_i("Intelligence decision: %s - %s", 
+            // Get current quarter result
+            if (!simResults.empty()) {
+                lastIntelligenceResult.command = simResults[0].decision;
+                lastIntelligenceResult.reason = simResults[0].reason;
+                lastIntelligenceResult.expectedSavings = summary.totalSavingsCzk;
+            }
+            
+            log_i("Recommended action: %s - %s", 
                   IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str(),
                   lastIntelligenceResult.reason.c_str());
             
@@ -630,47 +638,40 @@ bool runIntelligenceTask()
             // Determine how many quarters to plan (today only or today + tomorrow)
             int totalQuarters = electricityPriceResult->hasTomorrowData ? QUARTERS_TWO_DAYS : QUARTERS_OF_DAY;
             
-            for (int q = 0; q < totalQuarters; q++)
-            {
-                if (q < currentQuarter)
-                {
-                    // Past quarters - unknown
-                    intelligencePlan[q] = INVERTER_MODE_UNKNOWN;
-                }
-                else if (q == currentQuarter)
-                {
-                    // Current quarter - use already resolved result
-                    intelligencePlan[q] = lastIntelligenceResult.command;
-                }
-                else
-                {
-                    // Future quarters - resolve for each
-                    IntelligenceResult_t futureResult = resolver.resolve(inverterData, *electricityPriceResult, settings, q);
-                    intelligencePlan[q] = futureResult.command;
-                    
-                    // Log each quarter on one line with all key values
-                    int hour = (q % QUARTERS_OF_DAY) / 4;
-                    int minute = ((q % QUARTERS_OF_DAY) % 4) * 15;
-                    float spotPrice = electricityPriceResult->prices[q].electricityPrice;
-                    float buyPrice = IntelligenceSettingsStorage::calculateBuyPrice(spotPrice, settings);
-                    float sellPrice = IntelligenceSettingsStorage::calculateSellPrice(spotPrice, settings);
-                    int dayQ = q % QUARTERS_OF_DAY;
-                    float predProd = productionPredictor.predictRemainingDayProduction(dayQ);
-                    float predCons = consumptionPredictor.predictRemainingDayConsumption(dayQ);
-                    
-                    log_i("Q%03d %02d:%02d | spot:%.1f buy:%.1f sell:%.1f | prod:%.1f cons:%.1f | -> %s",
-                          q, hour, minute, spotPrice, buyPrice, sellPrice, predProd, predCons,
-                          IntelligenceResolver::commandToString(futureResult.command).c_str());
+            // Fill intelligencePlan from simulation results
+            for (int q = 0; q < currentQuarter; q++) {
+                intelligencePlan[q] = INVERTER_MODE_UNKNOWN;
+            }
+            
+            for (size_t i = 0; i < simResults.size(); i++) {
+                int q = simResults[i].quarter;
+                if (q < QUARTERS_TWO_DAYS) {
+                    intelligencePlan[q] = simResults[i].decision;
                 }
                 
+                // Log each quarter with simulation data
+                log_i("Q%03d %02d:%02d | SOC:%d%% spot:%.1f buy:%.1f sell:%.1f | prod:%.2f cons:%.2f bat:%.2f | grid:+%.2f/-%.2f | -> %s",
+                      q, simResults[i].hour, simResults[i].minute, 
+                      (int)simResults[i].batterySoc, 
+                      simResults[i].spotPrice, simResults[i].buyPrice, simResults[i].sellPrice,
+                      simResults[i].productionKwh, simResults[i].consumptionKwh, simResults[i].batteryKwh,
+                      simResults[i].fromGridKwh, simResults[i].toGridKwh,
+                      IntelligenceSimulator::decisionToString(simResults[i].decision).c_str());
+                
                 // Yield every 8 quarters to prevent watchdog timeout
-                if (q % 8 == 7) {
+                if (i % 8 == 7) {
                     vTaskDelay(1);
                 }
             }
             
-            // Log plan summary for current day
-            log_i("Intelligence plan generated for %d quarters (from Q%d)", totalQuarters, currentQuarter);
+            // Log simulation summary
+            log_i("=== SIMULATION SUMMARY ===");
+            log_i("Total production: %.1f kWh, consumption: %.1f kWh", 
+                  summary.totalProductionKwh, summary.totalConsumptionKwh);
+            log_i("Grid: bought %.1f kWh, sold %.1f kWh", 
+                  summary.totalFromGridKwh, summary.totalToGridKwh);
+            log_i("Final SOC: %.0f%%, Total cost: %.1f CZK, Savings: %.1f CZK", 
+                  summary.finalBatterySoc, summary.totalCostCzk, summary.totalSavingsCzk);
             
             // Log summary of mode changes only
             log_i("=== MODE CHANGES ===");
@@ -694,78 +695,119 @@ bool runIntelligenceTask()
                 intelligencePlan[q] = INVERTER_MODE_UNKNOWN;
             }
             
-            // Calculate stats for intelligence tile
-            float remainingProduction = productionPredictor.predictRemainingDayProduction(currentQuarter);
-            float remainingConsumption = consumptionPredictor.predictRemainingDayConsumption(currentQuarter);
-            
-            // Calculate total expected savings for today's plan
-            float totalSavings = lastIntelligenceResult.expectedSavings;
+            // Use simulation summary for stats
+            float remainingProduction = summary.totalProductionKwh;
+            float remainingConsumption = summary.totalConsumptionKwh;
+            float totalSavings = summary.totalSavingsCzk;
             
             // Update UI with intelligence state
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
             if (dashboardUI != nullptr)
             {
-                dashboardUI->setIntelligenceState(true, true, true);
+                dashboardUI->setIntelligenceState(settings.enabled, settings.enabled, hasSpotPrices);
                 dashboardUI->updateIntelligencePlanSummary(lastIntelligenceResult.command, intelligencePlan, currentQuarter, totalQuarters, totalSavings);
                 dashboardUI->updateIntelligenceUpcomingPlans(intelligencePlan, currentQuarter, totalQuarters, electricityPriceResult, &settings);
                 dashboardUI->updateIntelligenceStats(remainingProduction, remainingConsumption);
             }
             xSemaphoreGive(lvgl_mutex);
             
-            log_d("Intelligence result: %s - %s (current inverter mode: %d)", 
-                  IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str(),
-                  lastIntelligenceResult.reason.c_str(),
-                  inverterData.inverterMode);
-            
-            // Send command to inverter only when quarter changes (spot prices work in 15min intervals)
-            // This prevents unnecessary writes while still recalculating predictions every minute
-            // Note: currentQuarter is already calculated above
-            
-            bool quarterChanged = (currentQuarter != lastProcessedQuarter);
-            bool modeNeedsUpdate = (lastIntelligenceResult.command != INVERTER_MODE_UNKNOWN && 
-                                   lastIntelligenceResult.command != lastSentMode);
-            
-            if (quarterChanged || (modeNeedsUpdate && lastProcessedQuarter == -1))
+            // Send command to inverter ONLY if intelligence is enabled
+            if (settings.enabled)
             {
-                log_d("Quarter changed (%d -> %d) or first run, checking if mode update needed", 
-                      lastProcessedQuarter, currentQuarter);
-                lastProcessedQuarter = currentQuarter;
+                bool quarterChanged = (currentQuarter != lastProcessedQuarter);
+                bool modeNeedsUpdate = (lastIntelligenceResult.command != INVERTER_MODE_UNKNOWN && 
+                                       lastIntelligenceResult.command != lastSentMode);
                 
-                if (modeNeedsUpdate)
+                if (quarterChanged || (modeNeedsUpdate && lastProcessedQuarter == -1))
                 {
-                    if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX)
+                    log_d("Quarter changed (%d -> %d) or first run, checking if mode update needed", 
+                          lastProcessedQuarter, currentQuarter);
+                    lastProcessedQuarter = currentQuarter;
+                    
+                    if (modeNeedsUpdate)
                     {
-                        static SolaxModbusDongleAPI solaxAPI;
-                        bool success = solaxAPI.setWorkMode(wifiDiscoveryResult.inverterIP, lastIntelligenceResult.command);
-                        if (success)
+                        if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX)
                         {
-                            log_d("Successfully sent work mode to Solax inverter");
-                            lastSentMode = lastIntelligenceResult.command;
+                            static SolaxModbusDongleAPI solaxAPI;
+                            bool success = solaxAPI.setWorkMode(wifiDiscoveryResult.inverterIP, lastIntelligenceResult.command);
+                            if (success)
+                            {
+                                log_i("Successfully sent work mode %s to Solax inverter", 
+                                      IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str());
+                                lastSentMode = lastIntelligenceResult.command;
+                            }
+                            else
+                            {
+                                log_w("Failed to send work mode to Solax inverter");
+                            }
                         }
                         else
                         {
-                            log_d("Failed to send work mode to Solax inverter");
+                            log_d("Work mode control not implemented for inverter type %d", wifiDiscoveryResult.type);
                         }
                     }
                     else
                     {
-                        // Other inverter types not yet implemented
-                        log_d("Work mode control not implemented for inverter type %d", wifiDiscoveryResult.type);
+                        log_d("Mode unchanged (%s), no update sent", 
+                              IntelligenceResolver::commandToString(lastSentMode).c_str());
                     }
                 }
-                else
-                {
-                    log_d("Mode unchanged (%s), no update sent", 
-                          IntelligenceResolver::commandToString(lastSentMode).c_str());
+            }
+            else
+            {
+                // Intelligence disabled - reset tracking
+                lastSentMode = INVERTER_MODE_UNKNOWN;
+                lastProcessedQuarter = -1;
+            }
+            
+            // Update chart predictions from simulation results (with SOC)
+            solarChartDataProvider.clearPredictions(true);
+            for (const auto& sim : simResults) {
+                int q = sim.quarter;
+                if (q < QUARTERS_TWO_DAYS) {
+                    float predProductionWh = sim.productionKwh * 1000.0f;
+                    float predConsumptionWh = sim.consumptionKwh * 1000.0f;
+                    int predSoc = (int)sim.batterySoc;
+                    solarChartDataProvider.setPrediction(q, predProductionWh, predConsumptionWh, predSoc);
                 }
             }
         }
-        else
+        else if (inverterData.status == DONGLE_STATUS_OK)
         {
-            // Intelligence disabled or missing data - update UI state
-            IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
-            bool hasSpotPrices = electricityPriceResult && electricityPriceResult->updated > 0;
+            // Intelligence disabled or no spot prices - show only production/consumption predictions (no SOC)
+            time_t now = time(nullptr);
+            struct tm timeinfoCopy;
+            localtime_r(&now, &timeinfoCopy);
+            int currentQuarter = (timeinfoCopy.tm_hour * 60 + timeinfoCopy.tm_min) / 15;
+            int currentMonth = timeinfoCopy.tm_mon;
+            int currentDay = timeinfoCopy.tm_wday;
+            int tomorrowDay = (currentDay + 1) % 7;
             
+            // Calculate tomorrow's month
+            time_t tomorrowTime = now + 24 * 60 * 60;
+            struct tm tomorrowInfoCopy;
+            localtime_r(&tomorrowTime, &tomorrowInfoCopy);
+            int tomorrowMonth = tomorrowInfoCopy.tm_mon;
+            
+            solarChartDataProvider.clearPredictions(true);
+            
+            // Predictions for rest of today (SOC = -1 means don't show)
+            for (int q = currentQuarter + 1; q < QUARTERS_OF_DAY; q++)
+            {
+                float predProductionWh = productionPredictor.predictQuarterlyProduction(currentMonth, q);
+                float predConsumptionWh = consumptionPredictor.predictQuarterlyConsumption(currentDay, q);
+                solarChartDataProvider.setPrediction(q, predProductionWh, predConsumptionWh, -1);  // -1 = no SOC
+            }
+            
+            // Predictions for tomorrow
+            for (int q = 0; q < QUARTERS_OF_DAY; q++)
+            {
+                float predProductionWh = productionPredictor.predictQuarterlyProduction(tomorrowMonth, q);
+                float predConsumptionWh = consumptionPredictor.predictQuarterlyConsumption(tomorrowDay, q);
+                solarChartDataProvider.setPrediction(QUARTERS_OF_DAY + q, predProductionWh, predConsumptionWh, -1);
+            }
+            
+            // Update UI state
             lastSentMode = INVERTER_MODE_UNKNOWN;
             lastProcessedQuarter = -1;
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
@@ -775,63 +817,17 @@ bool runIntelligenceTask()
             }
             xSemaphoreGive(lvgl_mutex);
         }
-        
-        // Generate predictions for solar chart (always, regardless of intelligence enabled)
-        if (inverterData.status == DONGLE_STATUS_OK)
+        else
         {
-            time_t now = time(nullptr);
-            struct tm timeinfoCopy;
-            localtime_r(&now, &timeinfoCopy);  // Thread-safe version
-            int currentQuarter = (timeinfoCopy.tm_hour * 60 + timeinfoCopy.tm_min) / 15;
-            int currentMonth = timeinfoCopy.tm_mon;
-            int currentDay = timeinfoCopy.tm_wday;
-            int tomorrowDay = (currentDay + 1) % 7;
-            
-            // Calculate tomorrow's month (handle month boundaries)
-            time_t tomorrowTime = now + 24 * 60 * 60;
-            struct tm tomorrowInfoCopy;
-            localtime_r(&tomorrowTime, &tomorrowInfoCopy);  // Thread-safe version
-            int tomorrowMonth = tomorrowInfoCopy.tm_mon;
-            
-            IntelligenceSettings_t predSettings = IntelligenceSettingsStorage::load();
-            SocPredictor socPredictor(consumptionPredictor, productionPredictor);
-            
-            // Predict SOC for today
-            int predictedSoc[QUARTERS_OF_DAY];
-            float batteryCapacityWh = inverterData.batteryCapacityWh > 0 ? inverterData.batteryCapacityWh : 10000;
-            socPredictor.predictDailySoc(inverterData.soc, batteryCapacityWh, 
-                                         predSettings.minSocPercent, predSettings.maxSocPercent, predictedSoc);
-            
-            // Clear old predictions and set new ones
-            solarChartDataProvider.clearPredictions(true);  // Include tomorrow
-            
-            // Predictions for rest of today
-            for (int q = currentQuarter + 1; q < QUARTERS_OF_DAY; q++)
+            // No inverter data - just update UI state
+            lastSentMode = INVERTER_MODE_UNKNOWN;
+            lastProcessedQuarter = -1;
+            xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+            if (dashboardUI != nullptr)
             {
-                float predProductionWh = productionPredictor.predictQuarterlyProduction(currentMonth, q);
-                float predConsumptionWh = consumptionPredictor.predictQuarterlyConsumption(currentDay, q);
-                solarChartDataProvider.setPrediction(q, predProductionWh, predConsumptionWh, predictedSoc[q]);
+                dashboardUI->setIntelligenceState(false, settings.enabled, hasSpotPrices);
             }
-            
-            // Predictions for tomorrow (if we have tomorrow's spot prices)
-            if (electricityPriceResult && electricityPriceResult->hasTomorrowData)
-            {
-                // Estimate end-of-day SOC for tomorrow's prediction start
-                int endOfDaySoc = predictedSoc[QUARTERS_OF_DAY - 1];
-                int predictedSocTomorrow[QUARTERS_OF_DAY];
-                // Use isTomorrow=true so all quarters are treated as "future"
-                socPredictor.predictDailySoc(endOfDaySoc, batteryCapacityWh,
-                                             predSettings.minSocPercent, predSettings.maxSocPercent, 
-                                             predictedSocTomorrow, true, tomorrowDay, tomorrowMonth);
-                
-                for (int q = 0; q < QUARTERS_OF_DAY; q++)
-                {
-                    float predProductionWh = productionPredictor.predictQuarterlyProduction(tomorrowMonth, q);
-                    float predConsumptionWh = consumptionPredictor.predictQuarterlyConsumption(tomorrowDay, q);
-                    // Index for tomorrow: QUARTERS_OF_DAY + q
-                    solarChartDataProvider.setPrediction(QUARTERS_OF_DAY + q, predProductionWh, predConsumptionWh, predictedSocTomorrow[q]);
-                }
-            }
+            xSemaphoreGive(lvgl_mutex);
         }
         
         lastIntelligenceAttempt = millis();

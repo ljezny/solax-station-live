@@ -2172,7 +2172,12 @@ private:
                 lv_chart_set_value_by_id(ui_Chart1, pvPowerSeries, i, (lv_coord_t)pvPowerW);
                 lv_chart_set_value_by_id(ui_Chart1, acPowerSeries, i, (lv_coord_t)loadPowerW);
                 if (inverterData.hasBattery) {
-                    lv_chart_set_value_by_id(ui_Chart1, socSeries, i, item.soc);
+                    // SOC < 0 znamená "nezobrazovat" (intelligence vypnutá)
+                    if (item.soc >= 0) {
+                        lv_chart_set_value_by_id(ui_Chart1, socSeries, i, item.soc);
+                    } else {
+                        lv_chart_set_value_by_id(ui_Chart1, socSeries, i, LV_CHART_POINT_NONE);
+                    }
                 }
                 maxPower = max(maxPower, max(pvPowerW, loadPowerW));
             } else {
