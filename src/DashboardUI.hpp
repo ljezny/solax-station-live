@@ -341,6 +341,7 @@ private:
     bool intelligenceEnabled = false;    // Whether intelligence is enabled in settings
     lv_obj_t *intelligenceModeLabel = nullptr;  // Label pro zobrazení režimu inteligence
     lv_obj_t *ipBadge = nullptr;  // Floating badge showing station IP address
+    lv_obj_t *ipBadgeLabel = nullptr;  // Label inside IP badge
     lv_obj_t *inverterModeMenu = nullptr;   // Popup menu pro výběr režimu střídače
     lv_obj_t *inverterModeOverlay = nullptr; // Overlay za popup menu
     lv_obj_t *modeChangeSpinner = nullptr;  // Spinner overlay při změně režimu
@@ -766,11 +767,11 @@ public:
         lv_obj_set_align(ipBadge, LV_ALIGN_BOTTOM_LEFT);
         lv_obj_add_flag(ipBadge, LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_HIDDEN);
         lv_obj_clear_flag(ipBadge, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
-        lv_obj_set_style_bg_color(ipBadge, lv_color_hex(0xFFFFFF), 0);
+        lv_obj_set_style_bg_color(ipBadge, lv_color_hex(0x2196F3), 0);  // Material Blue
         lv_obj_set_style_bg_opa(ipBadge, 255, 0);
         lv_obj_set_style_radius(ipBadge, 20, 0);
-        lv_obj_set_style_shadow_color(ipBadge, lv_color_hex(0x000000), 0);
-        lv_obj_set_style_shadow_opa(ipBadge, 64, 0);
+        lv_obj_set_style_shadow_color(ipBadge, lv_color_hex(0x1976D2), 0);  // Darker blue shadow
+        lv_obj_set_style_shadow_opa(ipBadge, 128, 0);
         lv_obj_set_style_shadow_width(ipBadge, 16, 0);
         lv_obj_set_style_pad_left(ipBadge, 16, 0);
         lv_obj_set_style_pad_right(ipBadge, 16, 0);
@@ -778,11 +779,11 @@ public:
         lv_obj_set_style_pad_bottom(ipBadge, 8, 0);
         
         // IP address label inside badge
-        lv_obj_t* ipLabel = lv_label_create(ipBadge);
-        lv_obj_set_style_text_font(ipLabel, &ui_font_OpenSansSmall, 0);
-        lv_obj_set_style_text_color(ipLabel, lv_color_hex(0x333333), 0);
-        lv_label_set_text(ipLabel, WiFi.softAPIP().toString().c_str());
-        lv_obj_center(ipLabel);
+        ipBadgeLabel = lv_label_create(ipBadge);
+        lv_obj_set_style_text_font(ipBadgeLabel, &ui_font_OpenSansSmall, 0);
+        lv_obj_set_style_text_color(ipBadgeLabel, lv_color_hex(0xFFFFFF), 0);  // White text on blue
+        lv_label_set_text(ipBadgeLabel, "---.---.---.---");  // Placeholder, will be updated
+        lv_obj_center(ipBadgeLabel);
 
         // Create intelligence mode label (same style as temperature badge, aligned left)
         intelligenceModeLabel = lv_label_create(ui_inverterContainer);
@@ -898,9 +899,26 @@ public:
             lv_obj_clear_flag(intelligenceButton, LV_OBJ_FLAG_HIDDEN);
         }
         
-        // Show IP badge
+        // Show IP badge and update IP address
         if (ipBadge != nullptr) {
+            updateIpBadge();
             lv_obj_clear_flag(ipBadge, LV_OBJ_FLAG_HIDDEN);
+        }
+    }
+    
+    /**
+     * Update IP badge with current WiFi client IP address
+     */
+    void updateIpBadge() {
+        if (ipBadgeLabel == nullptr) return;
+        
+        IPAddress ip = WiFi.localIP();
+        if (ip[0] != 0) {
+            // Valid IP address
+            lv_label_set_text(ipBadgeLabel, ip.toString().c_str());
+        } else {
+            // Not connected yet
+            lv_label_set_text(ipBadgeLabel, "No WiFi");
         }
     }
 

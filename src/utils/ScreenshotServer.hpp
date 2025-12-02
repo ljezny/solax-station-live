@@ -307,12 +307,12 @@ private:
         // Screen dimensions
         const int width = 800;
         const int height = 480;
-        const int bytesPerPixel = 2; // RGB565
+        const int bytesPerPixel = 3; // RGB888 (24-bit) for better compatibility
         const int rowSize = ((width * bytesPerPixel + 3) / 4) * 4; // Rows must be 4-byte aligned for BMP
         const int imageSize = rowSize * height;
         const int fileSize = 54 + imageSize; // BMP header + image data
         
-        // BMP header (54 bytes for BITMAPINFOHEADER with RGB565)
+        // BMP header (54 bytes for BITMAPINFOHEADER with 24-bit RGB)
         uint8_t bmpHeader[54] = {
             // BMP file header (14 bytes)
             'B', 'M',                       // Signature
@@ -325,8 +325,8 @@ private:
             (uint8_t)(width), (uint8_t)(width >> 8), 0, 0,  // Width
             (uint8_t)(height), (uint8_t)(height >> 8), 0, 0, // Height (positive = bottom-up)
             1, 0,                           // Color planes
-            16, 0,                          // Bits per pixel (16 = RGB565)
-            0, 0, 0, 0,                     // Compression (0 = BI_RGB, no compression for 16-bit)
+            24, 0,                          // Bits per pixel (24 = RGB888)
+            0, 0, 0, 0,                     // Compression (0 = BI_RGB, uncompressed)
             (uint8_t)(imageSize), (uint8_t)(imageSize >> 8), (uint8_t)(imageSize >> 16), (uint8_t)(imageSize >> 24), // Image size
             0x13, 0x0B, 0, 0,               // Horizontal resolution (72 DPI)
             0x13, 0x0B, 0, 0,               // Vertical resolution (72 DPI)
@@ -344,7 +344,7 @@ private:
             return ESP_FAIL;
         }
         
-        // Allocate row buffer with padding
+        // Allocate row buffer with padding (24-bit = 3 bytes per pixel)
         uint8_t *rowBuffer = (uint8_t *)heap_caps_malloc(rowSize, MALLOC_CAP_DEFAULT);
         if (!rowBuffer)
         {
@@ -353,8 +353,8 @@ private:
             return ESP_FAIL;
         }
         
-        // Allocate pixel read buffer
-        uint16_t *pixelBuffer = (uint16_t *)heap_caps_malloc(width * sizeof(uint16_t), MALLOC_CAP_DEFAULT);
+        // Allocate RGB888 pixel buffer for reading
+        lgfx::rgb888_t *pixelBuffer = (lgfx::rgb888_t *)heap_caps_malloc(width * sizeof(lgfx::rgb888_t), MALLOC_CAP_DEFAULT);
         if (!pixelBuffer)
         {
             log_e("Failed to allocate pixel buffer");
@@ -375,18 +375,19 @@ private:
             // Send rows bottom-up (BMP format)
             for (int y = height - 1; y >= 0; y--)
             {
-                // Clear row buffer (for padding)
+                // Clear row buffer (for padding bytes at end of row)
                 memset(rowBuffer, 0, rowSize);
                 
-                // Read row of pixels from display using LovyanGFX
+                // Read row of pixels from display using LovyanGFX as RGB888
                 tft.readRect(0, y, width, 1, pixelBuffer);
                 
-                // Convert to BMP format (little-endian RGB565)
+                // Convert RGB888 to BGR888 (BMP uses BGR order)
                 for (int x = 0; x < width; x++)
                 {
-                    uint16_t pixel = pixelBuffer[x];
-                    rowBuffer[x * 2] = pixel & 0xFF;
-                    rowBuffer[x * 2 + 1] = (pixel >> 8) & 0xFF;
+                    // BMP stores as BGR
+                    rowBuffer[x * 3 + 0] = pixelBuffer[x].b;
+                    rowBuffer[x * 3 + 1] = pixelBuffer[x].g;
+                    rowBuffer[x * 3 + 2] = pixelBuffer[x].r;
                 }
                 
                 if (httpd_resp_send_chunk(req, (const char *)rowBuffer, rowSize) != ESP_OK)
