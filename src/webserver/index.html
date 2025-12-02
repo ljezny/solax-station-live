@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Station Live</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Left Section - Energy Flow -->
+        <div class="left-section">
+            <!-- PV Panel - top left -->
+            <div class="tile pv-tile">
+                <div class="tile-value"><span id="pvPower">--</span><span class="unit">W</span></div>
+                <div class="tile-details">
+                    <div><span id="pv1Power">--</span>W</div>
+                    <div><span id="pv2Power">--</span>W</div>
+                </div>
+                <div class="tile-badge pv-badge" id="pvPercent">--%</div>
+            </div>
+
+            <!-- Battery - top right, spans 2 rows -->
+            <div class="tile battery-tile" id="batteryTile">
+                <div class="tile-header">
+                    <div>
+                        <div class="tile-value"><span id="soc">--</span><span class="unit">%</span></div>
+                        <div class="tile-secondary"><span id="batteryPowerAbs">--</span>W</div>
+                    </div>
+                    <div class="battery-time" id="batteryTime">--</div>
+                </div>
+                <div class="battery-icons">🔋⚡</div>
+                <div class="battery-bar-container">
+                    <div class="battery-bar" id="batteryBar"></div>
+                </div>
+                <div class="tile-badge temp-badge" id="batteryTemp">--°C</div>
+            </div>
+
+            <!-- Load/Home - below PV -->
+            <div class="tile load-tile" id="loadTile">
+                <div class="tile-icon">🏠</div>
+                <div class="tile-value"><span id="loadPower">--</span><span class="unit">W</span></div>
+                <div class="tile-badge mode-badge" id="inverterMode">NORMAL</div>
+            </div>
+
+            <!-- Inverter - spans both columns -->
+            <div class="tile inverter-tile">
+                <div class="inverter-left">
+                    <div class="tile-value"><span id="inverterPower">--</span><span class="unit">W</span></div>
+                    <div class="phase-bars">
+                        <div class="phase-row">
+                            <span class="phase-dot"></span>
+                            <div class="phase-bar"><div class="phase-fill" id="L1Bar"></div></div>
+                            <span class="phase-value"><span id="L1Power">--</span> W</span>
+                        </div>
+                        <div class="phase-row">
+                            <span class="phase-dot"></span>
+                            <div class="phase-bar"><div class="phase-fill" id="L2Bar"></div></div>
+                            <span class="phase-value"><span id="L2Power">--</span> W</span>
+                        </div>
+                        <div class="phase-row">
+                            <span class="phase-dot"></span>
+                            <div class="phase-bar"><div class="phase-fill" id="L3Bar"></div></div>
+                            <span class="phase-value"><span id="L3Power">--</span> W</span>
+                        </div>
+                    </div>
+                    <div class="inverter-info"><span id="inverterSN">--</span></div>
+                </div>
+                <div class="inverter-right">
+                    <div class="tile-value" id="gridPowerInverter"><span id="gridPowerDisplay">--</span><span class="unit">W</span></div>
+                    <div class="phase-bars grid-bars" id="gridBars">
+                        <div class="phase-row">
+                            <span class="phase-dot" style="background:#ef5350"></span>
+                            <div class="phase-bar"><div class="phase-fill" id="gridL1Bar"></div></div>
+                            <span class="phase-value"><span id="gridL1Power">--</span> W</span>
+                        </div>
+                        <div class="phase-row">
+                            <span class="phase-dot" style="background:#ef5350"></span>
+                            <div class="phase-bar"><div class="phase-fill" id="gridL2Bar"></div></div>
+                            <span class="phase-value"><span id="gridL2Power">--</span> W</span>
+                        </div>
+                        <div class="phase-row">
+                            <span class="phase-dot" style="background:#ef5350"></span>
+                            <div class="phase-bar"><div class="phase-fill" id="gridL3Bar"></div></div>
+                            <span class="phase-value"><span id="gridL3Power">--</span> W</span>
+                        </div>
+                    </div>
+                    <div class="tile-badge temp-badge inverter-temp" id="inverterTemp">--°C</div>
+                </div>
+            </div>
+
+            <!-- Grid Total - bottom row -->
+            <div class="tile grid-tile" id="gridTile">
+                <div class="grid-left">
+                    <div class="tile-icon">🏠</div>
+                    <div class="tile-value"><span id="homeLoadPower">--</span><span class="unit">W</span></div>
+                </div>
+                <div class="grid-right">
+                    <div class="tile-icon">🏭</div>
+                    <div class="tile-value"><span id="gridPower">--</span><span class="unit">W</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Section - Stats & Info -->
+        <div class="right-section">
+            <!-- Stats Row - PV & Load Today -->
+            <div class="stats-row">
+                <div class="stat-tile">
+                    <div class="stat-icon">🏠☀️</div>
+                    <div class="stat-values">
+                        <div class="stat-value"><span id="pvToday">--</span> <span class="stat-unit">kWh</span></div>
+                        <div class="stat-value secondary"><span id="pvTotal">--</span> <span class="stat-unit">kWh</span></div>
+                    </div>
+                </div>
+                <div class="stat-tile">
+                    <div class="stat-icon">🏠</div>
+                    <div class="stat-values">
+                        <div class="stat-value"><span id="loadToday">--</span> <span class="stat-unit">kWh</span></div>
+                        <div class="stat-value secondary"><span id="selfUsePercent">--</span><span class="stat-unit">%</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clock -->
+            <div class="clock-tile">
+                <span id="clock">--:--</span>
+            </div>
+
+            <!-- Grid Stats -->
+            <div class="grid-stats-row">
+                <div class="grid-stat">
+                    <div class="stat-icon">⚡</div>
+                    <div class="stat-values">
+                        <div class="stat-value positive">+<span id="gridBuyToday">--</span> kWh</div>
+                        <div class="stat-value negative">-<span id="gridSellToday">--</span> kWh</div>
+                    </div>
+                </div>
+                <div class="grid-stat">
+                    <div class="stat-icon">🔋</div>
+                    <div class="stat-values">
+                        <div class="stat-value positive">+<span id="batteryChargedToday">--</span> kWh</div>
+                        <div class="stat-value negative">-<span id="batteryDischargedToday">--</span> kWh</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Intelligence Tile -->
+            <div class="intelligence-tile">
+                <span class="intelligence-title">Intelligence</span>
+                <div class="intelligence-badges">
+                    <span class="intelligence-badge savings" id="intelligenceSavings">+0 CZK</span>
+                    <span class="intelligence-badge mode" id="intelligenceMode">NORMAL</span>
+                </div>
+            </div>
+
+            <!-- Spot Price Tile -->
+            <div class="spot-tile">
+                <div class="spot-price-badge" id="spotPrice">-- CZK / kWh</div>
+            </div>
+
+            <!-- Status Bar -->
+            <div class="status-bar">
+                <span class="status-indicator loading" id="statusIndicator">●</span>
+                <span id="statusText">Connecting...</span>
+                <span class="version" id="version"></span>
+            </div>
+
+            <!-- Debug Tools -->
+            <div class="debug-tools">
+                <a href="/screenshot.bmp" class="btn btn-secondary" download="screenshot.bmp">📷 Screenshot</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>

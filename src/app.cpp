@@ -32,7 +32,7 @@
 #include "utils/IntelligenceSimulator.hpp"
 #include "utils/ConsumptionPredictor.hpp"
 #include "utils/ProductionPredictor.hpp"
-#include "utils/ScreenshotServer.hpp"
+#include "utils/WebServer.hpp"
 
 #define UI_REFRESH_INTERVAL 5000            // Define the UI refresh interval in milliseconds
 #define INVERTER_DATA_REFRESH_INTERVAL 5000 // Seems that 3s is problematic for some dongles (GoodWe), so we use 5s
@@ -71,7 +71,7 @@ SolaxWallboxLocalAPI solaxWallboxAPI;
 BacklightResolver backlightResolver;
 SoftAP softAP;
 Touch touch;
-ScreenshotServer screenshotServer;
+WebServer webServer;
 
 InverterData_t inverterData;
 InverterData_t previousInverterData;
@@ -420,8 +420,9 @@ void setup()
     setupLVGL();
     setupWiFi();
     
-    // Start screenshot server on SoftAP
-    screenshotServer.begin(lvgl_mutex);
+    // Start web server on SoftAP
+    webServer.begin(lvgl_mutex);
+    webServer.setInverterData(&inverterData);
 
     esp_log_level_set("wifi", ESP_LOG_VERBOSE);
 }

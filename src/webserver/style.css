@@ -1,0 +1,633 @@
+/* Solar Station Live - Dashboard Style */
+/* Colors matched to the device display */
+:root {
+    /* Main gradient background - light green to light blue */
+    --color-bg-start: #b8e6c1;
+    --color-bg-end: #a8d8ea;
+    
+    /* PV/Solar - bright yellow-green */
+    --color-pv: #7cb342;
+    --color-pv-bright: #9ccc65;
+    --color-pv-bg: #8bc34a;
+    
+    /* Battery - pink/magenta */
+    --color-battery-charging: #ec407a;
+    --color-battery-discharging: #c62828;
+    --color-battery-bg: #f06292;
+    
+    /* Grid - blue when buying, green when selling */
+    --color-grid-buy: #e53935;
+    --color-grid-sell: #43a047;
+    
+    /* Load - orange */
+    --color-load: #fb8c00;
+    --color-load-light: #ffa726;
+    
+    /* Cards */
+    --color-card: #ffffff;
+    --color-card-shadow: rgba(0, 0, 0, 0.15);
+    
+    /* Text */
+    --color-text: #333333;
+    --color-text-light: #666666;
+    --color-text-muted: #999999;
+    
+    /* Accent colors */
+    --color-accent-green: #4caf50;
+    --color-accent-orange: #ff9800;
+    --color-accent-red: #f44336;
+    --color-accent-blue: #2196f3;
+    
+    /* Border radius */
+    --radius-large: 24px;
+    --radius-medium: 16px;
+    --radius-small: 12px;
+    --radius-xs: 8px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Open Sans', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    /* Gradient matching the device - light green top-left to light blue bottom-right */
+    background: linear-gradient(135deg, #b8e6c1 0%, #a8d4b8 30%, #9ecfcc 60%, #a8d8ea 100%);
+    min-height: 100vh;
+    padding: 12px;
+    color: var(--color-text);
+}
+
+/* Main Dashboard Layout - 800x480 aspect ratio approximation */
+.dashboard {
+    display: grid;
+    grid-template-columns: minmax(300px, 400px) minmax(300px, 1fr);
+    gap: 12px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* ========== LEFT SECTION - Energy Flow ========== */
+.left-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto auto auto;
+    gap: 10px;
+}
+
+/* ========== TILE BASE ========== */
+.tile {
+    background: var(--color-card);
+    border-radius: var(--radius-large);
+    padding: 12px 16px;
+    box-shadow: 0 4px 16px var(--color-card-shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.tile-value {
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.tile-value .unit {
+    font-size: 18px;
+    font-weight: 400;
+    vertical-align: super;
+}
+
+.tile-secondary {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.tile-details {
+    font-size: 13px;
+    color: rgba(255,255,255,0.9);
+    margin-top: 4px;
+}
+
+.tile-info {
+    font-size: 10px;
+    color: var(--color-text-muted);
+    font-family: 'Courier New', monospace;
+}
+
+/* ========== BADGES ========== */
+.tile-badge {
+    position: absolute;
+    padding: 4px 10px;
+    border-radius: var(--radius-small);
+    font-size: 13px;
+    font-weight: 700;
+    color: white;
+}
+
+.pv-badge {
+    top: 10px;
+    right: 10px;
+    background: #ffeb3b;
+    color: #333;
+}
+
+.temp-badge {
+    background: linear-gradient(135deg, #ff7043, #f44336);
+    padding: 3px 8px;
+    font-size: 12px;
+}
+
+.mode-badge {
+    bottom: 10px;
+    left: 10px;
+    background: var(--color-accent-green);
+    font-size: 11px;
+    padding: 3px 8px;
+}
+
+/* ========== PV TILE - Yellow-Green ========== */
+.pv-tile {
+    grid-column: 1;
+    grid-row: 1;
+    background: linear-gradient(180deg, #8bc34a 0%, #7cb342 100%);
+    color: white;
+    min-height: 100px;
+}
+
+.pv-tile .tile-icon {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    font-size: 40px;
+    opacity: 0.3;
+}
+
+.pv-tile .tile-value {
+    font-size: 48px;
+}
+
+.pv-tile .tile-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+/* ========== BATTERY TILE - Pink/Magenta ========== */
+.battery-tile {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    background: linear-gradient(180deg, #ec407a 0%, #e91e63 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+.battery-tile.discharging {
+    background: linear-gradient(180deg, #ef5350 0%, #c62828 100%);
+}
+
+.battery-tile .tile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.battery-tile .tile-value {
+    font-size: 40px;
+}
+
+.battery-time {
+    font-size: 11px;
+    opacity: 0.9;
+    text-align: right;
+    line-height: 1.3;
+}
+
+.battery-bar-container {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-xs);
+    height: 16px;
+    margin-top: auto;
+    overflow: hidden;
+}
+
+.battery-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #ffeb3b, #ffc107);
+    border-radius: var(--radius-xs);
+    transition: width 0.5s ease;
+}
+
+.battery-tile .temp-badge {
+    top: 8px;
+    right: 8px;
+}
+
+.battery-icons {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 8px 0;
+    font-size: 28px;
+}
+
+/* ========== INVERTER TILE - White ========== */
+.inverter-tile {
+    grid-column: 1 / span 2;
+    grid-row: 3;
+    background: var(--color-card);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 16px;
+}
+
+.inverter-left, .inverter-right {
+    display: flex;
+    flex-direction: column;
+}
+
+.inverter-tile .tile-value {
+    font-size: 42px;
+    color: var(--color-text);
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.phase-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.phase-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--color-text);
+}
+
+.phase-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-load);
+}
+
+.phase-bar {
+    flex: 1;
+    height: 10px;
+    background: #e8e8e8;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.phase-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-load), var(--color-load-light));
+    border-radius: 5px;
+    transition: width 0.5s ease;
+}
+
+.phase-value {
+    min-width: 55px;
+    text-align: right;
+    font-weight: 500;
+}
+
+/* Grid bars - in inverter tile */
+.grid-bars .phase-fill {
+    background: linear-gradient(90deg, #ef5350, #e57373);
+}
+
+.grid-bars.selling .phase-fill {
+    background: linear-gradient(90deg, #66bb6a, #81c784);
+}
+
+.inverter-info {
+    font-size: 9px;
+    color: var(--color-text-muted);
+    font-family: monospace;
+    margin-top: 4px;
+}
+
+/* ========== LOAD/HOME TILE - Orange-Yellow ========== */
+.load-tile {
+    grid-column: 1;
+    grid-row: 2;
+    background: linear-gradient(180deg, #ffb300 0%, #ffa000 100%);
+    color: white;
+}
+
+.load-tile.has-intelligence {
+    background: linear-gradient(180deg, #43a047 0%, #388e3c 100%);
+}
+
+.load-tile .tile-icon {
+    font-size: 32px;
+    margin-bottom: 4px;
+}
+
+.load-tile .tile-value {
+    font-size: 40px;
+}
+
+/* ========== GRID TILE - Red (buying) / Green (selling) ========== */
+.grid-tile {
+    grid-column: 1 / span 2;
+    grid-row: 4;
+    background: linear-gradient(180deg, #ef5350 0%, #e53935 100%);
+    color: white;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.grid-tile.selling {
+    background: linear-gradient(180deg, #66bb6a 0%, #43a047 100%);
+}
+
+.grid-tile .tile-value {
+    font-size: 40px;
+}
+
+/* ========== RIGHT SECTION ========== */
+.right-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* ========== STATS ROW - PV & Load Today ========== */
+.stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.stat-tile {
+    background: var(--color-card);
+    border-radius: var(--radius-large);
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 16px var(--color-card-shadow);
+}
+
+.stat-icon {
+    font-size: 36px;
+}
+
+.stat-icon img {
+    width: 40px;
+    height: 40px;
+}
+
+.stat-values {
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.stat-value.secondary {
+    font-size: 16px;
+    color: var(--color-accent-green);
+}
+
+.stat-unit {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--color-text-muted);
+}
+
+/* ========== CLOCK ========== */
+.clock-tile {
+    background: var(--color-card);
+    border-radius: var(--radius-large);
+    padding: 8px 16px;
+    text-align: center;
+    box-shadow: 0 4px 16px var(--color-card-shadow);
+}
+
+.clock-tile #clock {
+    font-size: 36px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 2px;
+}
+
+/* ========== GRID STATS ROW ========== */
+.grid-stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.grid-stat {
+    background: var(--color-card);
+    border-radius: var(--radius-large);
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 16px var(--color-card-shadow);
+}
+
+.grid-stat .stat-value {
+    font-size: 14px;
+}
+
+.stat-value.positive {
+    color: #43a047;
+}
+
+.stat-value.negative {
+    color: #e53935;
+}
+
+/* ========== INTELLIGENCE TILE ========== */
+.intelligence-tile {
+    background: var(--color-card);
+    border-radius: var(--radius-large);
+    padding: 12px 16px;
+    box-shadow: 0 4px 16px var(--color-card-shadow);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.intelligence-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--color-text-light);
+}
+
+.intelligence-badges {
+    display: flex;
+    gap: 8px;
+}
+
+.intelligence-badge {
+    padding: 4px 12px;
+    border-radius: var(--radius-small);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.intelligence-badge.savings {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.intelligence-badge.mode {
+    background: #43a047;
+    color: white;
+}
+
+.intelligence-badge.mode.self-use {
+    background: #ff9800;
+}
+
+/* ========== SPOT PRICE ========== */
+.spot-tile {
+    background: var(--color-card);
+    border-radius: var(--radius-large);
+    padding: 12px 16px;
+    box-shadow: 0 4px 16px var(--color-card-shadow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+}
+
+.spot-price-badge {
+    background: linear-gradient(135deg, #ffeb3b, #ffc107);
+    color: #333;
+    padding: 8px 20px;
+    border-radius: var(--radius-medium);
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* ========== STATUS BAR ========== */
+.status-bar {
+    background: var(--color-card);
+    border-radius: var(--radius-small);
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    box-shadow: 0 4px 16px var(--color-card-shadow);
+}
+
+.status-indicator {
+    font-size: 10px;
+}
+
+.status-indicator.ok { color: #43a047; }
+.status-indicator.error { color: #e53935; }
+.status-indicator.loading { 
+    color: #ff9800; 
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.version {
+    margin-left: auto;
+    opacity: 0.5;
+}
+
+/* ========== DEBUG TOOLS ========== */
+.debug-tools {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+.btn {
+    padding: 8px 16px;
+    border-radius: var(--radius-small);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 13px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--color-card-shadow);
+}
+
+.btn-secondary {
+    background: #f0f0f0;
+    color: var(--color-text);
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 800px) {
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+    
+    .left-section {
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .tile-value {
+        font-size: 32px;
+    }
+    
+    .clock-tile #clock {
+        font-size: 28px;
+    }
+}
+
+@media (max-width: 500px) {
+    .left-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .pv-tile, .inverter-tile, .grid-tile {
+        grid-column: 1;
+    }
+    
+    .battery-tile {
+        grid-row: auto;
+    }
+    
+    .inverter-tile {
+        grid-template-columns: 1fr;
+    }
+    
+    .grid-tile {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========== DATA UPDATE ANIMATION ========== */
+.updated {
+    animation: flash 0.3s ease;
+}
+
+@keyframes flash {
+    0% { opacity: 1; }
+    50% { opacity: 0.6; }
+    100% { opacity: 1; }
+}
