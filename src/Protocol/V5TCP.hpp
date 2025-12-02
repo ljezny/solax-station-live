@@ -315,4 +315,336 @@ public:
             }
         }
     }
+
+    /**
+     * Write a single holding register (Modbus function code 0x06)
+     * 
+     * @param addr Register address
+     * @param value Value to write
+     * @param sn Dongle serial number
+     * @return true if write was successful
+     */
+    bool writeSingleRegister(uint16_t addr, uint16_t value, uint32_t sn)
+    {
+        if (sn == 0)
+        {
+            log_d("SN is zero, cannot send write request");
+            return false;
+        }
+
+        // Build Modbus RTU frame for function code 0x06 (Write Single Register)
+        // Format: [slave_id, function_code, addr_hi, addr_lo, value_hi, value_lo, crc_lo, crc_hi]
+        uint8_t modbusRTURequest[] = {0x01, 0x06, 0, 0, 0, 0, 0, 0};
+        modbusRTURequest[2] = addr >> 8;
+        modbusRTURequest[3] = addr & 0xff;
+        modbusRTURequest[4] = value >> 8;
+        modbusRTURequest[5] = value & 0xff;
+        unsigned c = calcCRC16(modbusRTURequest, 6, 0x8005, 0xFFFF, 0, true, true);
+        modbusRTURequest[6] = c;
+        modbusRTURequest[7] = c >> 8;
+
+        return sendV5WriteRequest(modbusRTURequest, sizeof(modbusRTURequest), sn);
+    }
+
+    /**
+     * Write multiple holding registers (Modbus function code 0x10)
+     * 
+     * @param startAddr Starting register address
+     * @param values Array of 16-bit values to write
+     * @param count Number of registers to write
+     * @param sn Dongle serial number
+     * @return true if write was successful
+     */
+    bool writeMultipleRegisters(uint16_t startAddr, const uint16_t* values, uint16_t count, uint32_t sn)
+    {
+        if (sn == 0)
+        {
+            log_d("SN is zero, cannot send write request");
+            return false;
+        }
+        if (count == 0 || count > 123)
+        {
+            log_d("Invalid register count: %d", count);
+            return false;
+        }
+
+        // Build Modbus RTU frame for function code 0x10 (Write Multiple Registers)
+        // Format: [slave_id, function_code, addr_hi, addr_lo, count_hi, count_lo, byte_count, data..., crc_lo, crc_hi]
+        uint8_t byteCount = count * 2;
+        size_t frameLen = 7 + byteCount + 2;  // header (7) + data + CRC (2)
+        uint8_t* modbusRTURequest = new uint8_t[frameLen];
+        
+        modbusRTURequest[0] = 0x01;  // Slave ID
+        modbusRTURequest[1] = 0x10;  // Function code: Write Multiple Registers
+        modbusRTURequest[2] = startAddr >> 8;
+        modbusRTURequest[3] = startAddr & 0xff;
+        modbusRTURequest[4] = count >> 8;
+        modbusRTURequest[5] = count & 0xff;
+        modbusRTURequest[6] = byteCount;
+        
+        // Copy register values (big endian)
+        for (uint16_t i = 0; i < count; i++)
+        {
+            modbusRTURequest[7 + i * 2] = values[i] >> 8;
+            modbusRTURequest[7 + i * 2 + 1] = values[i] & 0xff;
+        }
+        
+        // Calculate and append CRC
+        unsigned c = calcCRC16(modbusRTURequest, 7 + byteCount, 0x8005, 0xFFFF, 0, true, true);
+        modbusRTURequest[7 + byteCount] = c;
+        modbusRTURequest[8 + byteCount] = c >> 8;
+
+        bool result = sendV5WriteRequest(modbusRTURequest, frameLen, sn);
+        delete[] modbusRTURequest;
+        return result;
+    }
+
+    /**
+     * Write multiple registers from raw bytes (Modbus function code 0x10)
+     * Useful when data is already in network byte order
+     * 
+     * @param startAddr Starting register address
+     * @param data Raw data bytes (already in big endian)
+     * @param byteCount Number of bytes to write (must be even)
+     * @param sn Dongle serial number
+     * @return true if write was successful
+     */
+    bool writeMultipleRegistersRaw(uint16_t startAddr, const uint8_t* data, uint8_t byteCount, uint32_t sn)
+    {
+        if (sn == 0)
+        {
+            log_d("SN is zero, cannot send write request");
+            return false;
+        }
+        if (byteCount == 0 || byteCount > 246 || (byteCount % 2) != 0)
+        {
+            log_d("Invalid byte count: %d", byteCount);
+            return false;
+        }
+
+        uint16_t regCount = byteCount / 2;
+        size_t frameLen = 7 + byteCount + 2;  // header (7) + data + CRC (2)
+        uint8_t* modbusRTURequest = new uint8_t[frameLen];
+        
+        modbusRTURequest[0] = 0x01;  // Slave ID
+        modbusRTURequest[1] = 0x10;  // Function code: Write Multiple Registers
+        modbusRTURequest[2] = startAddr >> 8;
+        modbusRTURequest[3] = startAddr & 0xff;
+        modbusRTURequest[4] = regCount >> 8;
+        modbusRTURequest[5] = regCount & 0xff;
+        modbusRTURequest[6] = byteCount;
+        
+        // Copy raw data
+        memcpy(modbusRTURequest + 7, data, byteCount);
+        
+        // Calculate and append CRC
+        unsigned c = calcCRC16(modbusRTURequest, 7 + byteCount, 0x8005, 0xFFFF, 0, true, true);
+        modbusRTURequest[7 + byteCount] = c;
+        modbusRTURequest[8 + byteCount] = c >> 8;
+
+        bool result = sendV5WriteRequest(modbusRTURequest, frameLen, sn);
+        delete[] modbusRTURequest;
+        return result;
+    }
+
+private:
+    /**
+     * Send a Solarman V5 frame containing a Modbus RTU write request and wait for response
+     * 
+     * V5 Frame structure:
+     * - Start: 0xA5 (1 byte)
+     * - Length: payload length (2 bytes, little endian)
+     * - Control Code: 0x4510 for request (2 bytes, little endian)
+     * - Sequence Number: (2 bytes)
+     * - Logger Serial Number: (4 bytes, little endian)
+     * - Frame Type: 0x02 for inverter (1 byte)
+     * - Sensor Type: 0x0000 (2 bytes)
+     * - Total Working Time: 0x00000000 (4 bytes)
+     * - Power On Time: 0x00000000 (4 bytes)
+     * - Offset Time: 0x00000000 (4 bytes)
+     * - Modbus RTU Frame: (variable)
+     * - Checksum: sum of all bytes from Length to end of Modbus frame (1 byte)
+     * - End: 0x15 (1 byte)
+     */
+    bool sendV5WriteRequest(const uint8_t* modbusFrame, size_t modbusFrameLen, uint32_t sn)
+    {
+        sequenceNumber++;
+
+        // V5 payload length = 15 (fixed header) + modbus frame length
+        uint16_t payloadLength = 15 + modbusFrameLen;
+        
+        // Total frame size = 1 (start) + 2 (length) + payload + 1 (checksum) + 1 (end) = payload + 5
+        // But length field contains payload length only
+        size_t frameSize = 11 + payloadLength + 2;  // header(11) + payload(15+modbus) + checksum(1) + end(1)
+        
+        uint8_t* v5Frame = new uint8_t[frameSize];
+        int idx = 0;
+        
+        // Start
+        v5Frame[idx++] = 0xA5;
+        
+        // Length (little endian)
+        v5Frame[idx++] = payloadLength & 0xFF;
+        v5Frame[idx++] = (payloadLength >> 8) & 0xFF;
+        
+        // Control Code: REQUEST = 0x4510 (little endian)
+        v5Frame[idx++] = 0x10;
+        v5Frame[idx++] = 0x45;
+        
+        // Sequence Number (little endian)
+        v5Frame[idx++] = sequenceNumber & 0xFF;
+        v5Frame[idx++] = (sequenceNumber >> 8) & 0xFF;
+        
+        // Logger Serial Number (little endian)
+        v5Frame[idx++] = sn & 0xFF;
+        v5Frame[idx++] = (sn >> 8) & 0xFF;
+        v5Frame[idx++] = (sn >> 16) & 0xFF;
+        v5Frame[idx++] = (sn >> 24) & 0xFF;
+        
+        // Frame Type: 0x02 (Solar Inverter)
+        v5Frame[idx++] = 0x02;
+        
+        // Sensor Type: 0x0000
+        v5Frame[idx++] = 0x00;
+        v5Frame[idx++] = 0x00;
+        
+        // Total Working Time: 0x00000000
+        v5Frame[idx++] = 0x00;
+        v5Frame[idx++] = 0x00;
+        v5Frame[idx++] = 0x00;
+        v5Frame[idx++] = 0x00;
+        
+        // Power On Time: 0x00000000
+        v5Frame[idx++] = 0x00;
+        v5Frame[idx++] = 0x00;
+        v5Frame[idx++] = 0x00;
+        v5Frame[idx++] = 0x00;
+        
+        // Offset Time: 0x00000000
+        v5Frame[idx++] = 0x00;
+        v5Frame[idx++] = 0x00;
+        v5Frame[idx++] = 0x00;
+        v5Frame[idx++] = 0x00;
+        
+        // Modbus RTU Frame
+        memcpy(v5Frame + idx, modbusFrame, modbusFrameLen);
+        idx += modbusFrameLen;
+        
+        // Calculate checksum: sum of all bytes from index 1 to idx-1
+        uint8_t checksum = 0;
+        for (int i = 1; i < idx; i++)
+        {
+            checksum += v5Frame[i];
+        }
+        v5Frame[idx++] = checksum;
+        
+        // End
+        v5Frame[idx++] = 0x15;
+
+        // Log the frame
+        String dump = "";
+        for (int i = 0; i < idx; i++)
+        {
+            dump += String(v5Frame[i], HEX) + " ";
+        }
+        log_d("Sending V5 write frame: %s", dump.c_str());
+
+        // Send the frame
+        size_t written = client.write(v5Frame, idx);
+        delete[] v5Frame;
+        
+        if (written != idx)
+        {
+            log_d("Failed to send V5 write frame");
+            return false;
+        }
+
+        // Read response
+        byte responseBuffer[256];
+        int respLen = readV5Response(responseBuffer, sizeof(responseBuffer));
+        if (respLen < 0)
+        {
+            log_d("Failed to read V5 write response");
+            return false;
+        }
+
+        // Validate response - check if it's a valid V5 response with matching sequence
+        // Response control code should be 0x1510 (response to 0x4510 request)
+        if (respLen < 11)
+        {
+            log_d("V5 write response too short: %d bytes", respLen);
+            return false;
+        }
+
+        // Log response
+        dump = "";
+        for (int i = 0; i < respLen; i++)
+        {
+            dump += String(responseBuffer[i], HEX) + " ";
+        }
+        log_d("V5 write response: %s", dump.c_str());
+
+        // Check for Modbus exception in response
+        // The Modbus RTU frame starts at byte 25 (after V5 header)
+        // If function code has high bit set (0x80+), it's an exception
+        if (respLen >= 28)
+        {
+            uint8_t functionCode = responseBuffer[26];  // After V5 header (25 bytes) + slave ID (1 byte)
+            if (functionCode & 0x80)
+            {
+                uint8_t exceptionCode = responseBuffer[27];
+                log_d("Modbus exception in write response: function=0x%02X, exception=%d", functionCode, exceptionCode);
+                return false;
+            }
+        }
+
+        log_d("V5 write request successful");
+        return true;
+    }
+
+    /**
+     * Read a complete V5 response frame
+     * @return Number of bytes read, or -1 on error
+     */
+    int readV5Response(byte* buffer, size_t bufferSize)
+    {
+        // Read start byte
+        if (client.read(buffer, 1) != 1 || buffer[0] != 0xA5)
+        {
+            log_d("Invalid V5 response start byte");
+            return -1;
+        }
+
+        // Read length (2 bytes, little endian)
+        if (client.read(buffer + 1, 2) != 2)
+        {
+            log_d("Failed to read V5 response length");
+            return -1;
+        }
+        uint16_t length = buffer[1] | (buffer[2] << 8);
+
+        if (length + 5 > bufferSize)
+        {
+            log_d("V5 response too large: %d bytes", length + 5);
+            return -1;
+        }
+
+        // Read rest of frame: header remainder (8) + payload (length) + checksum (1) + end (1)
+        int remaining = 8 + length + 2;
+        if (client.read(buffer + 3, remaining) != remaining)
+        {
+            log_d("Failed to read V5 response body");
+            return -1;
+        }
+
+        // Verify end byte
+        int totalLen = 3 + remaining;
+        if (buffer[totalLen - 1] != 0x15)
+        {
+            log_d("Invalid V5 response end byte: 0x%02X", buffer[totalLen - 1]);
+            return -1;
+        }
+
+        return totalLen;
+    }
 };

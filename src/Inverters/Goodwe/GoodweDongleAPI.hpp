@@ -259,9 +259,243 @@ private:
         return dongleIP;
     }
 
+    /**
+     * Sets the work mode of the GoodWe inverter for intelligent battery control
+     * 
+     * GoodWe Work Modes (register 47000):
+     * 0 = General Mode (Self-Use)
+     * 1 = Off-Grid Mode
+     * 2 = Backup Mode (Hold Battery)
+     * 3 = Eco Mode (for charge/discharge control via eco_mode_1)
+     * 4 = Peak Shaving Mode
+     * 5 = Self-Use Mode (745 platform)
+     * 
+     * For charge/discharge we use Eco Mode with eco_mode_1 register (47515):
+     * - eco_mode_1 is 8 bytes: start_h, start_m, end_h, end_m, power_hi, power_lo, on_off_days, soc
+     * - For 24/7 operation: 00:00 - 23:59, all days (0x7F)
+     * - Power: negative for charge, positive for discharge
+     * 
+     * @param ipAddress IP address of the dongle
+     * @param mode Desired inverter mode
+     * @return true if mode was set successfully
+     */
     bool setWorkMode(const String& ipAddress, InverterMode_t mode)
     {
-        // TODO: Not implemented yet
+        IPAddress targetIp;
+        if (!ipAddress.isEmpty())
+        {
+            targetIp.fromString(ipAddress);
+        }
+        else if (ip != IPAddress(0, 0, 0, 0))
+        {
+            targetIp = ip;
+        }
+        else
+        {
+            log_d("No IP address available for setWorkMode");
+            return false;
+        }
+
+        log_d("Setting GoodWe work mode to %d at %s", mode, targetIp.toString().c_str());
+
+        if (!rtuChannel.connect())
+        {
+            log_d("Failed to connect for setWorkMode");
+            return false;
+        }
+
+        bool success = false;
+
+        switch (mode)
+        {
+        case INVERTER_MODE_SELF_USE:
+            // General Mode - work_mode = 0
+            success = writeWorkModeRegister(targetIp, GOODWE_WORK_MODE_GENERAL);
+            break;
+
+        case INVERTER_MODE_HOLD_BATTERY:
+            // Backup Mode - work_mode = 2
+            success = writeWorkModeRegister(targetIp, GOODWE_WORK_MODE_BACKUP);
+            break;
+
+        case INVERTER_MODE_CHARGE_FROM_GRID:
+            // Eco Mode with 24/7 charging
+            success = setEcoModeCharge(targetIp, 100);  // 100% power
+            break;
+
+        case INVERTER_MODE_DISCHARGE_TO_GRID:
+            // Eco Mode with 24/7 discharging
+            success = setEcoModeDischarge(targetIp, 100);  // 100% power
+            break;
+
+        default:
+            log_d("Unknown mode: %d", mode);
+            break;
+        }
+
+        rtuChannel.disconnect();
+        return success;
+    }
+
+private:
+    // GoodWe Modbus constants
+    static constexpr uint8_t GOODWE_UNIT_ID = 0xF7;           // GoodWe uses unit ID 247
+    static constexpr int GOODWE_UDP_PORT = 8899;              // UDP port for Modbus RTU
+    
+    // GoodWe Work Mode register and values
+    static constexpr uint16_t REG_WORK_MODE = 47000;          // Work Mode register
+    static constexpr uint16_t GOODWE_WORK_MODE_GENERAL = 0;   // General/Self-Use mode
+    static constexpr uint16_t GOODWE_WORK_MODE_OFFGRID = 1;   // Off-Grid mode
+    static constexpr uint16_t GOODWE_WORK_MODE_BACKUP = 2;    // Backup mode
+    static constexpr uint16_t GOODWE_WORK_MODE_ECO = 3;       // Eco mode
+    static constexpr uint16_t GOODWE_WORK_MODE_PEAKSHAVING = 4; // Peak Shaving mode
+    static constexpr uint16_t GOODWE_WORK_MODE_SELFUSE = 5;   // Self-Use mode (745 platform)
+    
+    // Eco Mode registers
+    static constexpr uint16_t REG_ECO_MODE_1 = 47515;         // Eco Mode Group 1 (8 bytes = 4 registers)
+    static constexpr uint16_t REG_ECO_MODE_1_SWITCH = 47518;  // Eco Mode Group 1 Switch (high byte)
+    static constexpr uint16_t REG_ECO_MODE_2_SWITCH = 47522;  // Eco Mode Group 2 Switch
+    static constexpr uint16_t REG_ECO_MODE_3_SWITCH = 47526;  // Eco Mode Group 3 Switch
+    static constexpr uint16_t REG_ECO_MODE_4_SWITCH = 47530;  // Eco Mode Group 4 Switch
+
+    /**
+     * Write to the work_mode register (47000)
+     */
+    bool writeWorkModeRegister(IPAddress targetIp, uint16_t workMode)
+    {
+        log_d("Writing work_mode register: %d", workMode);
+        for (int retry = 0; retry < RETRY_COUNT; retry++)
+        {
+            if (rtuChannel.writeSingleRegister(targetIp, GOODWE_UDP_PORT, GOODWE_UNIT_ID, REG_WORK_MODE, workMode))
+            {
+                return true;
+            }
+            delay(retry * 200);
+        }
+        log_d("Failed to write work_mode register after %d retries", RETRY_COUNT);
         return false;
+    }
+
+    /**
+     * Set Eco Mode for charging from grid
+     * Encodes eco_mode_1 as: 00:00-23:59, all days, negative power (charge)
+     * Format: "0000173b{power_neg:04x}ff7f" where power_neg is 2's complement negative
+     */
+    bool setEcoModeCharge(IPAddress targetIp, int powerPercent)
+    {
+        log_d("Setting Eco Mode CHARGE at %d%%", powerPercent);
+        
+        // Encode charge: power is negative in 2's complement
+        // Format from Python: bytes.fromhex("0000173b{:04x}ff7f".format((-1 * abs(eco_mode_power)) & (2 ** 16 - 1)))
+        int16_t powerValue = -abs(powerPercent);  // Negative for charge
+        uint16_t powerEncoded = (uint16_t)powerValue;  // 2's complement
+        
+        // eco_mode_1: 8 bytes = 4 registers
+        // Byte format: start_h(0), start_m(0), end_h(23), end_m(59), power_hi, power_lo, on_off_days(0x7F=all days, on=0xFF), soc(0x7F)
+        // From Python encode_charge: "0000173b{power_neg:04x}ff7f"
+        // 00 00 = start 00:00
+        // 17 3b = end 23:59 (0x17=23, 0x3b=59)
+        // power_neg = negative power in 2's complement
+        // ff = on_off (0xFF = on, all days = 0x7F in next nibble... actually combined)
+        // 7f = day_bits (all 7 days)
+        uint8_t ecoModeData[8] = {
+            0x00, 0x00,  // Start time: 00:00
+            0x17, 0x3b,  // End time: 23:59
+            (uint8_t)(powerEncoded >> 8),   // Power high byte
+            (uint8_t)(powerEncoded & 0xFF), // Power low byte
+            0xFF,        // On/Off + SoC high nibble (enabled)
+            0x7F         // Day bits: all 7 days (Mon-Sun)
+        };
+        
+        return writeEcoModeAndActivate(targetIp, ecoModeData);
+    }
+
+    /**
+     * Set Eco Mode for discharging to grid
+     * Encodes eco_mode_1 as: 00:00-23:59, all days, positive power (discharge)
+     */
+    bool setEcoModeDischarge(IPAddress targetIp, int powerPercent)
+    {
+        log_d("Setting Eco Mode DISCHARGE at %d%%", powerPercent);
+        
+        // Encode discharge: power is positive
+        uint16_t powerEncoded = abs(powerPercent);
+        
+        uint8_t ecoModeData[8] = {
+            0x00, 0x00,  // Start time: 00:00
+            0x17, 0x3b,  // End time: 23:59
+            (uint8_t)(powerEncoded >> 8),   // Power high byte
+            (uint8_t)(powerEncoded & 0xFF), // Power low byte
+            0xFF,        // On/Off + SoC high nibble (enabled)
+            0x7F         // Day bits: all 7 days
+        };
+        
+        return writeEcoModeAndActivate(targetIp, ecoModeData);
+    }
+
+    /**
+     * Write eco_mode_1 data and switch to Eco Mode
+     */
+    bool writeEcoModeAndActivate(IPAddress targetIp, const uint8_t* ecoModeData)
+    {
+        // Log the eco mode data we're writing
+        String dataHex = "";
+        for (int i = 0; i < 8; i++) {
+            char buf[4];
+            snprintf(buf, sizeof(buf), "%02X ", ecoModeData[i]);
+            dataHex += buf;
+        }
+        log_d("Writing eco_mode_1 data: %s", dataHex.c_str());
+        
+        // Step 1: Write eco_mode_1 (4 registers = 8 bytes) at register 47515
+        bool success = false;
+        for (int retry = 0; retry < RETRY_COUNT; retry++)
+        {
+            if (rtuChannel.writeMultipleRegisters(targetIp, GOODWE_UDP_PORT, GOODWE_UNIT_ID, 
+                                                   REG_ECO_MODE_1, ecoModeData, 8))
+            {
+                success = true;
+                break;
+            }
+            delay(retry * 200);
+        }
+        
+        if (!success)
+        {
+            log_d("Failed to write eco_mode_1");
+            return false;
+        }
+        
+        // Step 2: Disable other eco mode groups (2, 3, 4)
+        // eco_mode_X_switch is the high byte of the register, so we write 0 to disable
+        for (int retry = 0; retry < RETRY_COUNT; retry++)
+        {
+            if (rtuChannel.writeSingleRegister(targetIp, GOODWE_UDP_PORT, GOODWE_UNIT_ID, REG_ECO_MODE_2_SWITCH, 0))
+                break;
+            delay(retry * 100);
+        }
+        for (int retry = 0; retry < RETRY_COUNT; retry++)
+        {
+            if (rtuChannel.writeSingleRegister(targetIp, GOODWE_UDP_PORT, GOODWE_UNIT_ID, REG_ECO_MODE_3_SWITCH, 0))
+                break;
+            delay(retry * 100);
+        }
+        for (int retry = 0; retry < RETRY_COUNT; retry++)
+        {
+            if (rtuChannel.writeSingleRegister(targetIp, GOODWE_UDP_PORT, GOODWE_UNIT_ID, REG_ECO_MODE_4_SWITCH, 0))
+                break;
+            delay(retry * 100);
+        }
+        
+        // Step 3: Set work_mode to Eco (3)
+        success = writeWorkModeRegister(targetIp, GOODWE_WORK_MODE_ECO);
+        if (!success)
+        {
+            log_d("Failed to set work_mode to Eco");
+            return false;
+        }
+        
+        log_d("Eco mode activated successfully");
+        return true;
     }
 };

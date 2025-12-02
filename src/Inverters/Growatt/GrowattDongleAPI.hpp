@@ -301,9 +301,89 @@ private:
         return ip;
     }
 
+    /**
+     * Sets the work mode of the Growatt inverter for intelligent battery control
+     * 
+     * Growatt SPH Work Modes (register 1044/1110):
+     * 0 = Load First (Self-Use)
+     * 1 = Battery First
+     * 2 = Grid First
+     * 
+     * For force charge/discharge, Growatt uses:
+     * - Register 1100: Priority Mode (0=LoadFirst, 1=BatFirst, 2=GridFirst)
+     * - Register 1044: System Mode (0=SelfUse, 1=ForceCharge, 2=ForceDischarge)
+     * - Register 1070-1091: Time of Use settings
+     * 
+     * @param ipAddress IP address of the dongle
+     * @param mode Desired inverter mode
+     * @return true if mode was set successfully
+     */
     bool setWorkMode(const String& ipAddress, InverterMode_t mode)
     {
-        // TODO: Not implemented yet
-        return false;
+        if (!connectToDongle(ipAddress))
+        {
+            log_d("Failed to connect for setWorkMode");
+            return false;
+        }
+
+        log_d("Setting Growatt work mode to %d", mode);
+        bool success = false;
+
+        switch (mode)
+        {
+        case INVERTER_MODE_SELF_USE:
+            // Load First mode - register 1100 = 0
+            success = channel.writeSingleRegister(UNIT_ID, GROWATT_REG_PRIORITY_MODE, GROWATT_PRIORITY_LOAD_FIRST);
+            if (success)
+            {
+                // Also set system mode to Self-Use
+                channel.writeSingleRegister(UNIT_ID, GROWATT_REG_SYSTEM_MODE, GROWATT_SYSTEM_SELF_USE);
+            }
+            break;
+
+        case INVERTER_MODE_HOLD_BATTERY:
+            // Battery First mode - keeps battery from discharging
+            success = channel.writeSingleRegister(UNIT_ID, GROWATT_REG_PRIORITY_MODE, GROWATT_PRIORITY_BAT_FIRST);
+            break;
+
+        case INVERTER_MODE_CHARGE_FROM_GRID:
+            // Force Charge mode
+            success = channel.writeSingleRegister(UNIT_ID, GROWATT_REG_SYSTEM_MODE, GROWATT_SYSTEM_FORCE_CHARGE);
+            break;
+
+        case INVERTER_MODE_DISCHARGE_TO_GRID:
+            // Grid First + allow export
+            success = channel.writeSingleRegister(UNIT_ID, GROWATT_REG_PRIORITY_MODE, GROWATT_PRIORITY_GRID_FIRST);
+            if (success)
+            {
+                // Enable battery discharge (set low SOC limit)
+                channel.writeSingleRegister(UNIT_ID, GROWATT_REG_DISCHARGE_SOC_LIMIT, 10);  // 10%
+            }
+            break;
+
+        default:
+            log_d("Unknown mode: %d", mode);
+            break;
+        }
+
+        channel.disconnect();
+        return success;
     }
+
+private:
+    // Growatt SPH Modbus register addresses
+    static constexpr uint16_t GROWATT_REG_PRIORITY_MODE = 1100;      // Priority Mode (holding)
+    static constexpr uint16_t GROWATT_REG_SYSTEM_MODE = 1044;        // System Mode
+    static constexpr uint16_t GROWATT_REG_DISCHARGE_SOC_LIMIT = 1071; // Min SOC for discharge
+    static constexpr uint16_t GROWATT_REG_CHARGE_SOC_LIMIT = 1072;   // Max SOC for charge
+    
+    // Growatt Priority Mode values
+    static constexpr uint16_t GROWATT_PRIORITY_LOAD_FIRST = 0;       // Load First (Self-Use)
+    static constexpr uint16_t GROWATT_PRIORITY_BAT_FIRST = 1;        // Battery First
+    static constexpr uint16_t GROWATT_PRIORITY_GRID_FIRST = 2;       // Grid First
+    
+    // Growatt System Mode values
+    static constexpr uint16_t GROWATT_SYSTEM_SELF_USE = 0;           // Self-Use
+    static constexpr uint16_t GROWATT_SYSTEM_FORCE_CHARGE = 1;       // Force Charge
+    static constexpr uint16_t GROWATT_SYSTEM_FORCE_DISCHARGE = 2;    // Force Discharge
 };

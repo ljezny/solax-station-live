@@ -121,4 +121,179 @@ public:
         log_d("Received response: %d bytes", response.length);
         return response;
     }
+
+    /**
+     * Modbus Function Code 0x06 - Write Single Register
+     * Writes a single 16-bit value to a holding register via RTU over UDP
+     * 
+     * @param ipAddress Target IP address
+     * @param port Target UDP port (usually 8899 for GoodWe)
+     * @param unit Unit/Slave ID (0xF7 for GoodWe)
+     * @param addr Register address
+     * @param value 16-bit value to write
+     * @return true if write was successful
+     */
+    bool writeSingleRegister(IPAddress ipAddress, int port, uint8_t unit, uint16_t addr, uint16_t value)
+    {
+        udp.clear();
+        if (!udp.beginPacket(ipAddress, port))
+        {
+            log_d("Failed to begin packet for write");
+            return false;
+        }
+
+        // RTU frame: Unit ID, Function Code (0x06), Address (2 bytes), Value (2 bytes), CRC (2 bytes)
+        byte d[] = {unit, 0x06, 0, 0, 0, 0, 0, 0};
+        d[2] = addr >> 8;
+        d[3] = addr & 0xff;
+        d[4] = value >> 8;
+        d[5] = value & 0xff;
+        unsigned c = calcCRC16(d, 6, 0x8005, 0xFFFF, 0, true, true);
+        d[6] = c;
+        d[7] = c >> 8;
+        udp.write(d, sizeof(d));
+
+        if (!udp.endPacket())
+        {
+            log_d("Failed to send write packet");
+            return false;
+        }
+
+        if (!awaitPacket(5000))
+        {
+            log_d("Write response timeout");
+            return false;
+        }
+
+        uint8_t response[16];
+        int respLen = udp.read(response, sizeof(response));
+        if (respLen < 8)
+        {
+            log_d("Invalid write response length: %d", respLen);
+            return false;
+        }
+
+        // Log response
+        String dataHex = "";
+        for (int i = 0; i < respLen; i++) {
+            dataHex += String(response[i], HEX);
+            dataHex += " ";
+        }
+        log_d("Write response: %s", dataHex.c_str());
+
+        // Check for exception response (function code with high bit set)
+        // Response format for RTU: [header bytes][unit][function][addr_hi][addr_lo][value_hi][value_lo][crc_lo][crc_hi]
+        // GoodWe uses AA55 header, so skip first 2 bytes
+        int offset = (response[0] == 0xAA && response[1] == 0x55) ? 2 : 0;
+        
+        if (response[offset + 1] == (0x06 | 0x80))
+        {
+            log_d("Modbus write exception: code %d", response[offset + 2]);
+            return false;
+        }
+
+        if (response[offset + 1] != 0x06)
+        {
+            log_d("Invalid function code in write response: expected 0x06, got 0x%02X", response[offset + 1]);
+            return false;
+        }
+
+        log_d("Successfully wrote value %d to register 0x%04X", value, addr);
+        return true;
+    }
+
+    /**
+     * Modbus Function Code 0x10 - Write Multiple Registers
+     * Writes multiple 16-bit values to consecutive holding registers via RTU over UDP
+     * 
+     * @param ipAddress Target IP address
+     * @param port Target UDP port
+     * @param unit Unit/Slave ID
+     * @param startAddr Starting register address
+     * @param values Pointer to array of bytes (raw data, already in network byte order)
+     * @param byteCount Number of bytes to write
+     * @return true if write was successful
+     */
+    bool writeMultipleRegisters(IPAddress ipAddress, int port, uint8_t unit, uint16_t startAddr, const uint8_t* values, uint8_t byteCount)
+    {
+        if (byteCount == 0 || byteCount > 246 || (byteCount % 2) != 0)
+        {
+            log_d("Invalid byte count: %d", byteCount);
+            return false;
+        }
+
+        uint16_t regCount = byteCount / 2;
+
+        udp.clear();
+        if (!udp.beginPacket(ipAddress, port))
+        {
+            log_d("Failed to begin packet for write multiple");
+            return false;
+        }
+
+        // RTU frame: Unit ID, Function Code (0x10), Start Addr (2), Reg Count (2), Byte Count (1), Data (N), CRC (2)
+        int frameLen = 7 + byteCount + 2;  // header + data + CRC
+        uint8_t* frame = new uint8_t[frameLen];
+        frame[0] = unit;
+        frame[1] = 0x10;  // Write Multiple Registers
+        frame[2] = startAddr >> 8;
+        frame[3] = startAddr & 0xff;
+        frame[4] = regCount >> 8;
+        frame[5] = regCount & 0xff;
+        frame[6] = byteCount;
+        memcpy(frame + 7, values, byteCount);
+        
+        unsigned c = calcCRC16(frame, 7 + byteCount, 0x8005, 0xFFFF, 0, true, true);
+        frame[7 + byteCount] = c;
+        frame[8 + byteCount] = c >> 8;
+
+        udp.write(frame, frameLen);
+        delete[] frame;
+
+        if (!udp.endPacket())
+        {
+            log_d("Failed to send write multiple packet");
+            return false;
+        }
+
+        if (!awaitPacket(5000))
+        {
+            log_d("Write multiple response timeout");
+            return false;
+        }
+
+        uint8_t response[16];
+        int respLen = udp.read(response, sizeof(response));
+        if (respLen < 8)
+        {
+            log_d("Invalid write multiple response length: %d", respLen);
+            return false;
+        }
+
+        // Log response
+        String dataHex = "";
+        for (int i = 0; i < respLen; i++) {
+            dataHex += String(response[i], HEX);
+            dataHex += " ";
+        }
+        log_d("Write multiple response: %s", dataHex.c_str());
+
+        // Check response - GoodWe may use AA55 header
+        int offset = (response[0] == 0xAA && response[1] == 0x55) ? 2 : 0;
+
+        if (response[offset + 1] == (0x10 | 0x80))
+        {
+            log_d("Modbus write multiple exception: code %d", response[offset + 2]);
+            return false;
+        }
+
+        if (response[offset + 1] != 0x10)
+        {
+            log_d("Invalid function code in write multiple response: expected 0x10, got 0x%02X", response[offset + 1]);
+            return false;
+        }
+
+        log_d("Successfully wrote %d registers starting at 0x%04X", regCount, startAddr);
+        return true;
+    }
 };

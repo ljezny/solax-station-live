@@ -182,9 +182,138 @@ private:
             return;
     }
 
+    /**
+     * Sets the work mode of the Deye inverter for intelligent battery control
+     * 
+     * Deye Work Modes (register 142):
+     * 0 = Selling First (Self-Use)
+     * 1 = Zero Export to Load (Hold Battery)
+     * 2 = Zero Export to CT
+     * 3 = Time of Use
+     * 
+     * For charge/discharge control, Deye uses Time of Use mode with:
+     * - Register 148-149: Grid Charge enabled and power
+     * - Register 166-167: Gen Charge settings
+     * - SOC limits in registers 143-147
+     * 
+     * @param ipAddress IP address of the dongle
+     * @param dongleSN Serial number of the dongle
+     * @param mode Desired inverter mode
+     * @return true if mode was set successfully
+     */
+    bool setWorkMode(const String& ipAddress, const String& dongleSN, InverterMode_t mode)
+    {
+        uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
+        if (sn == 0)
+        {
+            log_d("Invalid dongle SN for setWorkMode");
+            return false;
+        }
+
+        channel.ensureIPAddress(ipAddress);
+        log_d("Setting Deye work mode to %d", mode);
+
+        bool success = false;
+
+        switch (mode)
+        {
+        case INVERTER_MODE_SELF_USE:
+            // Selling First mode - work_mode = 0
+            success = writeRegister(sn, DEYE_REG_WORK_MODE, DEYE_MODE_SELLING_FIRST);
+            break;
+
+        case INVERTER_MODE_HOLD_BATTERY:
+            // Zero Export to Load - work_mode = 1 (battery won't discharge to grid)
+            success = writeRegister(sn, DEYE_REG_WORK_MODE, DEYE_MODE_ZERO_EXPORT_LOAD);
+            break;
+
+        case INVERTER_MODE_CHARGE_FROM_GRID:
+            // Enable grid charging via Time of Use mode
+            success = setGridCharging(sn, true, 100);  // 100% SOC target
+            break;
+
+        case INVERTER_MODE_DISCHARGE_TO_GRID:
+            // Selling First with max export
+            success = writeRegister(sn, DEYE_REG_WORK_MODE, DEYE_MODE_SELLING_FIRST);
+            // Also disable battery SOC protection to allow full discharge
+            if (success)
+            {
+                writeRegister(sn, DEYE_REG_SOC_DISCHARGE_LIMIT, 10);  // Allow discharge to 10%
+            }
+            break;
+
+        default:
+            log_d("Unknown mode: %d", mode);
+            break;
+        }
+
+        return success;
+    }
+
+    // Overload for compatibility - without dongleSN parameter
     bool setWorkMode(const String& ipAddress, InverterMode_t mode)
     {
-        // TODO: Not implemented yet
+        log_d("setWorkMode called without dongleSN - not supported for Deye");
         return false;
+    }
+
+private:
+    // Deye Modbus register addresses
+    static constexpr uint16_t DEYE_REG_WORK_MODE = 142;           // Work Mode register
+    static constexpr uint16_t DEYE_REG_SOC_DISCHARGE_LIMIT = 143; // Min SOC for discharge
+    static constexpr uint16_t DEYE_REG_SOC_CHARGE_LIMIT = 144;    // Max SOC for charge
+    static constexpr uint16_t DEYE_REG_GRID_CHARGE_ENABLE = 148;  // Grid charge enable
+    static constexpr uint16_t DEYE_REG_GRID_CHARGE_CURRENT = 149; // Grid charge current (A)
+    
+    // Deye Work Mode values
+    static constexpr uint16_t DEYE_MODE_SELLING_FIRST = 0;        // Self-Use / Selling First
+    static constexpr uint16_t DEYE_MODE_ZERO_EXPORT_LOAD = 1;     // Zero Export to Load
+    static constexpr uint16_t DEYE_MODE_ZERO_EXPORT_CT = 2;       // Zero Export to CT
+    static constexpr uint16_t DEYE_MODE_TIME_OF_USE = 3;          // Time of Use
+
+    /**
+     * Write a single register using Solarman V5 protocol
+     */
+    bool writeRegister(uint32_t sn, uint16_t addr, uint16_t value)
+    {
+        log_d("Writing Deye register %d = %d", addr, value);
+        
+        if (!channel.connect(channel.ip))
+        {
+            log_d("Failed to connect for write");
+            return false;
+        }
+        
+        bool success = channel.writeSingleRegister(addr, value, sn);
+        channel.disconnect();
+        return success;
+    }
+
+    /**
+     * Enable or disable grid charging
+     */
+    bool setGridCharging(uint32_t sn, bool enable, uint8_t targetSoc)
+    {
+        log_d("Setting grid charge: enable=%d, targetSoc=%d", enable, targetSoc);
+        
+        // First set Time of Use mode
+        if (!writeRegister(sn, DEYE_REG_WORK_MODE, DEYE_MODE_TIME_OF_USE))
+        {
+            return false;
+        }
+        
+        // Enable/disable grid charging
+        if (!writeRegister(sn, DEYE_REG_GRID_CHARGE_ENABLE, enable ? 1 : 0))
+        {
+            return false;
+        }
+        
+        // Set SOC limit
+        if (enable)
+        {
+            writeRegister(sn, DEYE_REG_SOC_CHARGE_LIMIT, targetSoc);
+        }
+        
+        return true;
     }
 };

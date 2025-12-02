@@ -113,9 +113,120 @@ private:
                                    });
     }
 
+    /**
+     * Sets the work mode of the SofarSolar inverter for intelligent battery control
+     * 
+     * SofarSolar Work Modes (register 0x1200 / 4608):
+     * 0 = Self-Use
+     * 1 = Time of Use
+     * 2 = Timing Mode
+     * 3 = Passive Mode
+     * 4 = Peak Cut Mode
+     * 
+     * For charge/discharge control:
+     * - Register 0x1201 (4609): Passive Mode target power (signed, negative=charge)
+     * - Register 0x1202 (4610): Min SOC
+     * - Register 0x1203 (4611): Max SOC
+     * 
+     * @param ipAddress IP address of the dongle
+     * @param dongleSN Serial number of the dongle
+     * @param mode Desired inverter mode
+     * @return true if mode was set successfully
+     */
+    bool setWorkMode(const String& ipAddress, const String& dongleSN, InverterMode_t mode)
+    {
+        uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
+        if (sn == 0)
+        {
+            log_d("Invalid dongle SN for setWorkMode");
+            return false;
+        }
+
+        channel.ensureIPAddress(ipAddress);
+        log_d("Setting SofarSolar work mode to %d", mode);
+
+        bool success = false;
+
+        switch (mode)
+        {
+        case INVERTER_MODE_SELF_USE:
+            // Self-Use mode
+            success = writeRegister(sn, SOFAR_REG_WORK_MODE, SOFAR_MODE_SELF_USE);
+            break;
+
+        case INVERTER_MODE_HOLD_BATTERY:
+            // Passive Mode with 0 power target = hold battery
+            success = writeRegister(sn, SOFAR_REG_WORK_MODE, SOFAR_MODE_PASSIVE);
+            if (success)
+            {
+                writeRegister(sn, SOFAR_REG_PASSIVE_POWER, 0);  // 0W = hold
+            }
+            break;
+
+        case INVERTER_MODE_CHARGE_FROM_GRID:
+            // Passive Mode with negative power target = charge
+            success = writeRegister(sn, SOFAR_REG_WORK_MODE, SOFAR_MODE_PASSIVE);
+            if (success)
+            {
+                // Set negative power to charge (e.g., -3000W)
+                // Sofar uses signed 16-bit value, negative = charge from grid
+                writeRegister(sn, SOFAR_REG_PASSIVE_POWER, (uint16_t)(-3000 & 0xFFFF));
+            }
+            break;
+
+        case INVERTER_MODE_DISCHARGE_TO_GRID:
+            // Passive Mode with positive power target = discharge
+            success = writeRegister(sn, SOFAR_REG_WORK_MODE, SOFAR_MODE_PASSIVE);
+            if (success)
+            {
+                writeRegister(sn, SOFAR_REG_PASSIVE_POWER, 5000);  // +5000W discharge
+            }
+            break;
+
+        default:
+            log_d("Unknown mode: %d", mode);
+            break;
+        }
+
+        return success;
+    }
+
+    // Overload for compatibility - without dongleSN parameter
     bool setWorkMode(const String& ipAddress, InverterMode_t mode)
     {
-        // TODO: Not implemented yet
+        log_d("setWorkMode called without dongleSN - not supported for SofarSolar");
         return false;
+    }
+
+private:
+    // SofarSolar Modbus register addresses
+    static constexpr uint16_t SOFAR_REG_WORK_MODE = 0x1200;      // Work Mode (4608)
+    static constexpr uint16_t SOFAR_REG_PASSIVE_POWER = 0x1201;  // Passive Mode Power Target (4609)
+    static constexpr uint16_t SOFAR_REG_MIN_SOC = 0x1202;        // Min SOC (4610)
+    static constexpr uint16_t SOFAR_REG_MAX_SOC = 0x1203;        // Max SOC (4611)
+    
+    // SofarSolar Work Mode values
+    static constexpr uint16_t SOFAR_MODE_SELF_USE = 0;           // Self-Use
+    static constexpr uint16_t SOFAR_MODE_TIME_OF_USE = 1;        // Time of Use
+    static constexpr uint16_t SOFAR_MODE_TIMING = 2;             // Timing Mode
+    static constexpr uint16_t SOFAR_MODE_PASSIVE = 3;            // Passive Mode
+    static constexpr uint16_t SOFAR_MODE_PEAK_CUT = 4;           // Peak Cut Mode
+
+    /**
+     * Write a single register using Solarman V5 protocol
+     */
+    bool writeRegister(uint32_t sn, uint16_t addr, uint16_t value)
+    {
+        log_d("Writing SofarSolar register 0x%04X = %d", addr, value);
+        
+        if (!channel.connect(channel.ip))
+        {
+            log_d("Failed to connect for write");
+            return false;
+        }
+        
+        bool success = channel.writeSingleRegister(addr, value, sn);
+        channel.disconnect();
+        return success;
     }
 };

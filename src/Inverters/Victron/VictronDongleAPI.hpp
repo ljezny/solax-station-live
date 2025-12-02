@@ -282,9 +282,113 @@ public:
         return inverterData;
     }
 
+    /**
+     * Sets the work mode of the Victron system for intelligent battery control
+     * 
+     * Victron ESS Modes (via VE.Bus registers):
+     * The Victron system uses ESS (Energy Storage System) mode control:
+     * - Register 2700 (unit 100): ESS Mode (1=Optimized with BatteryLife, 2=Optimized without BatteryLife, 3=Keep charged)
+     * - Register 2701 (unit 100): Minimum SOC (0-100%)
+     * - Register 2702 (unit 100): Active SOC Limit (0-100%)
+     * 
+     * For force charge/discharge, Victron uses:
+     * - Unit 246 (VE.Bus): Control registers
+     * - Register 37 (246): Switch position (1=Charger only, 2=Inverter only, 3=On, 4=Off)
+     * - Register 38 (246): Charge current limit
+     * 
+     * @param ipAddress IP address of the Venus GX / Cerbo GX
+     * @param mode Desired inverter mode
+     * @return true if mode was set successfully
+     */
     bool setWorkMode(const String& ipAddress, InverterMode_t mode)
     {
-        // TODO: Not implemented yet
-        return false;
+        IPAddress ip;
+        if (!ipAddress.isEmpty())
+        {
+            ip.fromString(ipAddress);
+            if (!channel.connect(ip, 502))
+            {
+                log_d("Failed to connect to Victron for setWorkMode");
+                channel.disconnect();
+                return false;
+            }
+        }
+        else
+        {
+            if (!channel.connect(String("venus.local"), 502))
+            {
+                log_d("Failed to connect to Victron for setWorkMode");
+                channel.disconnect();
+                return false;
+            }
+        }
+
+        log_d("Setting Victron work mode to %d", mode);
+        bool success = false;
+
+        switch (mode)
+        {
+        case INVERTER_MODE_SELF_USE:
+            // ESS Mode: Optimized with BatteryLife (mode 1)
+            success = channel.writeSingleRegister(VICTRON_UNIT_SYSTEM, VICTRON_REG_ESS_MODE, VICTRON_ESS_OPTIMIZED_BATTERYLIFE);
+            if (success)
+            {
+                // Set reasonable min SOC (e.g., 20%)
+                channel.writeSingleRegister(VICTRON_UNIT_SYSTEM, VICTRON_REG_ESS_MIN_SOC, 20);
+            }
+            break;
+
+        case INVERTER_MODE_HOLD_BATTERY:
+            // ESS Mode: Keep charged (mode 3) - battery stays full
+            success = channel.writeSingleRegister(VICTRON_UNIT_SYSTEM, VICTRON_REG_ESS_MODE, VICTRON_ESS_KEEP_CHARGED);
+            break;
+
+        case INVERTER_MODE_CHARGE_FROM_GRID:
+            // Set VE.Bus to Charger Only mode
+            success = channel.writeSingleRegister(VICTRON_UNIT_VEBUS, VICTRON_REG_VEBUS_SWITCH, VICTRON_VEBUS_CHARGER_ONLY);
+            break;
+
+        case INVERTER_MODE_DISCHARGE_TO_GRID:
+            // ESS Mode: Optimized without BatteryLife (mode 2) + low min SOC
+            success = channel.writeSingleRegister(VICTRON_UNIT_SYSTEM, VICTRON_REG_ESS_MODE, VICTRON_ESS_OPTIMIZED_NO_BATTERYLIFE);
+            if (success)
+            {
+                // Set very low min SOC to allow deep discharge
+                channel.writeSingleRegister(VICTRON_UNIT_SYSTEM, VICTRON_REG_ESS_MIN_SOC, 10);
+            }
+            break;
+
+        default:
+            log_d("Unknown mode: %d", mode);
+            break;
+        }
+
+        channel.disconnect();
+        return success;
     }
+
+private:
+    // Victron Modbus Unit IDs
+    static constexpr uint8_t VICTRON_UNIT_SYSTEM = 100;   // System / Venus
+    static constexpr uint8_t VICTRON_UNIT_VEBUS = 246;    // VE.Bus System
+    
+    // Victron ESS registers (Unit 100)
+    static constexpr uint16_t VICTRON_REG_ESS_MODE = 2700;     // ESS Mode
+    static constexpr uint16_t VICTRON_REG_ESS_MIN_SOC = 2701;  // Min SOC %
+    static constexpr uint16_t VICTRON_REG_ESS_ACTIVE_SOC = 2702; // Active SOC Limit
+    
+    // Victron VE.Bus registers (Unit 246)
+    static constexpr uint16_t VICTRON_REG_VEBUS_SWITCH = 37;   // Switch Position
+    static constexpr uint16_t VICTRON_REG_VEBUS_CHARGE_CURRENT = 38; // Charge Current Limit
+    
+    // Victron ESS Mode values
+    static constexpr uint16_t VICTRON_ESS_OPTIMIZED_BATTERYLIFE = 1;     // Optimized with BatteryLife
+    static constexpr uint16_t VICTRON_ESS_OPTIMIZED_NO_BATTERYLIFE = 2;  // Optimized without BatteryLife
+    static constexpr uint16_t VICTRON_ESS_KEEP_CHARGED = 3;              // Keep batteries charged
+    
+    // Victron VE.Bus Switch Position values
+    static constexpr uint16_t VICTRON_VEBUS_CHARGER_ONLY = 1;   // Charger Only
+    static constexpr uint16_t VICTRON_VEBUS_INVERTER_ONLY = 2;  // Inverter Only
+    static constexpr uint16_t VICTRON_VEBUS_ON = 3;             // On (Normal)
+    static constexpr uint16_t VICTRON_VEBUS_OFF = 4;            // Off
 };
