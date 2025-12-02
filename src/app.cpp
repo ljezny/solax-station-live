@@ -846,7 +846,7 @@ bool runIntelligenceTask()
                 // Check if mode needs update: compare with lastSentMode AND actual inverter mode
                 // This handles cases where someone changed mode manually in inverter app
                 bool modeNeedsUpdate = (lastIntelligenceResult.command != INVERTER_MODE_UNKNOWN &&
-                                        (lastIntelligenceResult.command != lastSentMode ||
+                                        (lastIntelligenceResult.command != lastSentMode && lastSentMode != INVERTER_MODE_UNKNOWN ||
                                          lastIntelligenceResult.command != inverterData.inverterMode));
 
                 if (quarterChanged || (modeNeedsUpdate && lastProcessedQuarter == -1))
