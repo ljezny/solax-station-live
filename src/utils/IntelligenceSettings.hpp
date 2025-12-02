@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <Preferences.h>
+#include "NVSMutex.hpp"
 
 /**
  * Nastavení inteligentního řízení střídače
@@ -100,6 +101,12 @@ public:
      * Uloží nastavení do NVS
      */
     static void save(const IntelligenceSettings_t& settings) {
+        NVSGuard guard;
+        if (!guard.isLocked()) {
+            log_e("Failed to lock NVS mutex for saving intelligence settings");
+            return;
+        }
+        
         Preferences preferences;
         if (preferences.begin(NAMESPACE, false)) {  // read-write
             // Clear old entries first to prevent fragmentation

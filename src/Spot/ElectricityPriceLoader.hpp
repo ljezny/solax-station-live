@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <esp_heap_caps.h>
 #include "ElectricityPriceResult.hpp"
+#include "utils/NVSMutex.hpp"
 
 #include "Spot/Providers/OTE_CZ_API.hpp"
 #include "Spot/Providers/OTK_SK_API.hpp"
@@ -279,6 +280,12 @@ public:
 
     void storeElectricityPriceProvider(ElectricityPriceProvider_t provider)
     {
+        NVSGuard guard;
+        if (!guard.isLocked()) {
+            log_e("Failed to lock NVS mutex for storing provider");
+            return;
+        }
+        
         Preferences preferences;
         preferences.begin("spot", false);
         preferences.putInt("provider", (int)provider);
@@ -296,6 +303,12 @@ public:
 
     void storeTimeZone(String timeZone)
     {
+        NVSGuard guard;
+        if (!guard.isLocked()) {
+            log_e("Failed to lock NVS mutex for storing timezone");
+            return;
+        }
+        
         Preferences preferences;
         preferences.begin("spot", false);
         preferences.putString("tz", timeZone);

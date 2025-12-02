@@ -33,6 +33,7 @@
 #include "utils/ConsumptionPredictor.hpp"
 #include "utils/ProductionPredictor.hpp"
 #include "utils/WebServer.hpp"
+#include "utils/NVSMutex.hpp"
 
 #define UI_REFRESH_INTERVAL 5000            // Define the UI refresh interval in milliseconds
 #define INVERTER_DATA_REFRESH_INTERVAL 5000 // Seems that 3s is problematic for some dongles (GoodWe), so we use 5s
@@ -365,6 +366,11 @@ void setupLVGL()
     indev_drv.read_cb = my_touchpad_read;
     lv_indev_drv_register(&indev_drv);
 
+    // Set up NVS mutex to wait for display DMA before flash writes
+    NVSMutex::setWaitDMACallback([]() {
+        tft.waitDMA();
+    });
+
     ui_init();
     splashUI = new SplashUI();
     dashboardUI = new DashboardUI(onSettingsShow, onIntelligenceShow);
@@ -556,8 +562,11 @@ bool loadInverterDataTask()
                 if (consumptionQuarterChanged || productionQuarterChanged)
                 {
                     log_d("Quarter changed, saving predictors to flash");
-                    consumptionPredictor.saveToPreferences();
-                    productionPredictor.saveToPreferences();
+                    NVSGuard guard;
+                    if (guard.isLocked()) {
+                        consumptionPredictor.saveToPreferences();
+                        productionPredictor.saveToPreferences();
+                    }
                 }
 
                 // Sync system time from inverter RTC if NTP failed

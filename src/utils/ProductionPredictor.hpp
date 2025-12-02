@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <Preferences.h>
 #include <esp_heap_caps.h>
+#include "NVSMutex.hpp"
 
 /**
  * Predikce výroby na základě historie
@@ -409,6 +410,9 @@ public:
      * Uloží historii do NVS
      */
     void saveToPreferences() {
+        // NVSGuard is expected to be held by caller (app.cpp)
+        // This allows batching multiple saves under one lock
+        
         Preferences preferences;
         if (preferences.begin(NAMESPACE, false)) {
             preferences.putInt("instPwr", installedPowerWp);

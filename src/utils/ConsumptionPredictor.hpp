@@ -5,6 +5,7 @@
 #include <esp_heap_caps.h>
 #include <cmath>  // Pro exp()
 #include "../Spot/ElectricityPriceResult.hpp"  // Pro QUARTERS_OF_DAY
+#include "NVSMutex.hpp"
 
 /**
  * Predikce spotřeby na základě historie
@@ -451,6 +452,9 @@ public:
      * Uloží historii do NVS
      */
     void saveToPreferences() {
+        // NVSGuard is expected to be held by caller (app.cpp)
+        // This allows batching multiple saves under one lock
+        
         Preferences preferences;
         if (preferences.begin(NAMESPACE, false)) {
             // Komprimovaná data: uint16_t místo float (úspora 50%)
