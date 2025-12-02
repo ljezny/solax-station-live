@@ -386,33 +386,28 @@ const char INDEX_HTML[] = R"rawliteral(<!DOCTYPE html>
 <body>
     <div class="dashboard">
         <div class="left-section">
-            <div class="tile pv-tile">
+            <div class="tile pv-tile" id="pvTile">
                 <img src="/icons/solar-panel.png" class="tile-icon-img" alt="PV">
                 <div class="tile-content">
                     <div class="tile-value"><span id="pvPower">--</span><span class="unit">W</span></div>
-                    <div class="tile-details"><div><span id="pv1Power">--</span>W</div><div><span id="pv2Power">--</span>W</div></div>
                 </div>
-                <div class="tile-badge pv-badge" id="pvPercent">--%</div>
             </div>
             <div class="tile battery-tile" id="batteryTile">
-                <div class="tile-header">
+                <div class="icon-with-badge">
                     <img src="/icons/battery.png" class="tile-icon-img battery-icon" id="batteryIcon" alt="Battery">
-                    <div class="battery-info">
-                        <div class="tile-value"><span id="soc">--</span><span class="unit">%</span></div>
-                        <div class="tile-secondary"><span id="batteryTime">--</span></div>
-                        <div class="tile-secondary power"><span id="batteryPowerAbs">--</span>W</div>
-                    </div>
+                    <span class="icon-badge temp-badge" id="batteryTemp">--°C</span>
                 </div>
-                <div class="tile-badge temp-badge" id="batteryTemp">--°C</div>
-            </div>
-            <div class="tile load-tile" id="loadTile">
-                <img src="/icons/house.png" class="tile-icon-img" alt="Home">
-                <div class="tile-value"><span id="loadPower">--</span><span class="unit">W</span></div>
-                <div class="tile-badge mode-badge" id="inverterMode">NORMAL</div>
+                <div class="tile-content">
+                    <div class="tile-value"><span id="soc">--</span><span class="unit">%</span></div>
+                    <div class="tile-secondary power"><span id="batteryPowerAbs">--</span>W</div>
+                </div>
             </div>
             <div class="tile inverter-tile">
-                <div class="inverter-left">
+                <div class="icon-with-badge">
                     <img src="/icons/inverter.png" class="tile-icon-img inverter-icon" alt="Inverter">
+                    <span class="icon-badge temp-badge" id="inverterTemp">--°C</span>
+                </div>
+                <div class="tile-content">
                     <div class="tile-value"><span id="inverterPower">--</span><span class="unit">W</span></div>
                     <div class="phase-bars">
                         <div class="phase-row"><span class="phase-dot"></span><div class="phase-bar"><div class="phase-fill" id="L1Bar"></div></div><span class="phase-value"><span id="L1Power">--</span> W</span></div>
@@ -421,24 +416,17 @@ const char INDEX_HTML[] = R"rawliteral(<!DOCTYPE html>
                     </div>
                     <div class="inverter-info"><span id="inverterSN">--</span></div>
                 </div>
-                <div class="inverter-right" id="gridSection">
-                    <img src="/icons/grid.png" class="tile-icon-img grid-icon" alt="Grid">
-                    <div class="tile-value"><span id="gridPowerDisplay">--</span><span class="unit">W</span></div>
-                    <div class="phase-bars grid-bars" id="gridBars">
-                        <div class="phase-row"><span class="phase-dot grid-dot"></span><div class="phase-bar"><div class="phase-fill grid-fill" id="gridL1Bar"></div></div><span class="phase-value"><span id="gridL1Power">--</span> W</span></div>
-                        <div class="phase-row"><span class="phase-dot grid-dot"></span><div class="phase-bar"><div class="phase-fill grid-fill" id="gridL2Bar"></div></div><span class="phase-value"><span id="gridL2Power">--</span> W</span></div>
-                        <div class="phase-row"><span class="phase-dot grid-dot"></span><div class="phase-bar"><div class="phase-fill grid-fill" id="gridL3Bar"></div></div><span class="phase-value"><span id="gridL3Power">--</span> W</span></div>
-                    </div>
-                    <div class="tile-badge temp-badge inverter-temp" id="inverterTemp">--°C</div>
+                <div class="tile-badge mode-badge" id="inverterMode">NORMAL</div>
+            </div>
+            <div class="tile load-tile" id="loadTile">
+                <img src="/icons/house.png" class="tile-icon-img" alt="Home">
+                <div class="tile-content">
+                    <div class="tile-value"><span id="loadPower">--</span><span class="unit">W</span></div>
                 </div>
             </div>
-            <div class="tile bottom-tile" id="bottomTile">
-                <div class="bottom-left">
-                    <img src="/icons/house.png" class="tile-icon-img small" alt="Home">
-                    <div class="tile-value"><span id="homeLoadPower">--</span><span class="unit">W</span></div>
-                </div>
-                <div class="bottom-right">
-                    <img src="/icons/grid.png" class="tile-icon-img small" alt="Grid">
+            <div class="tile grid-tile" id="gridTile">
+                <img src="/icons/grid.png" class="tile-icon-img" alt="Grid">
+                <div class="tile-content">
                     <div class="tile-value"><span id="gridPower">--</span><span class="unit">W</span></div>
                 </div>
             </div>
@@ -460,7 +448,6 @@ const char INDEX_HTML[] = R"rawliteral(<!DOCTYPE html>
                     </div>
                 </div>
             </div>
-            <div class="clock-tile"><span id="clock">--:--</span></div>
             <div class="stats-row">
                 <div class="stat-tile">
                     <img src="/icons/battery.png" class="stat-icon-img" alt="Battery">
@@ -475,13 +462,6 @@ const char INDEX_HTML[] = R"rawliteral(<!DOCTYPE html>
                         <div class="stat-value positive">+<span id="gridSellToday">--</span> <span class="stat-unit">kWh</span></div>
                         <div class="stat-value negative">-<span id="gridBuyToday">--</span> <span class="stat-unit">kWh</span></div>
                     </div>
-                </div>
-            </div>
-            <div class="intelligence-tile">
-                <span class="intelligence-title">Intelligence</span>
-                <div class="intelligence-badges">
-                    <span class="intelligence-badge savings" id="intelligenceSavings">+12 CZK</span>
-                    <span class="intelligence-badge mode" id="intelligenceMode">NORMAL</span>
                 </div>
             </div>
             <div class="chart-tile">
@@ -507,68 +487,53 @@ const char INDEX_HTML[] = R"rawliteral(<!DOCTYPE html>
 
 const char STYLE_CSS[] = R"rawliteral(:root{--color-pv:#FFD400;--color-battery:#779ECB;--color-load:#03AD36;--color-grid:#C25964;--color-inverter:#D3D3D3;--color-card:#fff;--color-card-shadow:rgba(0,0,0,0.2);--color-text:#333;--color-text-light:#666;--color-text-muted:#999;--radius-large:24px;--radius-medium:16px;--radius-small:12px;--radius-xs:8px}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Open Sans','Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,sans-serif;background:linear-gradient(180deg,#FFD400 0%,#779ECB 100%);min-height:100vh;padding:8px;color:var(--color-text)}
+body{font-family:'Open Sans','Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,sans-serif;background:linear-gradient(180deg,#ffffff 0%,#779ECB 100%);min-height:100vh;padding:8px;color:var(--color-text);display:flex;align-items:center;justify-content:center}
 .dashboard{display:grid;grid-template-columns:minmax(300px,420px) minmax(300px,1fr);gap:8px;max-width:900px;margin:0 auto}
-.left-section{background:var(--color-card);border-radius:var(--radius-large);padding:8px;display:grid;grid-template-columns:38% 1fr;grid-template-rows:auto auto auto auto;gap:8px;box-shadow:0 8px 32px var(--color-card-shadow)}
-.tile{border-radius:var(--radius-medium);padding:12px 14px;position:relative;overflow:hidden}
-.tile-icon-img{width:48px;height:48px;object-fit:contain}
-.tile-icon-img.small{width:36px;height:36px}
+.left-section{background:var(--color-card);border-radius:var(--radius-large);padding:8px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto;gap:8px;box-shadow:0 8px 32px var(--color-card-shadow)}
+.tile{border-radius:var(--radius-medium);padding:12px 14px;position:relative;overflow:hidden;display:flex;justify-content:space-between;align-items:center}
+.tile-icon-img{width:48px;height:48px;object-fit:contain;flex-shrink:0}
 .tile-icon-img.battery-icon{width:48px;height:48px}
-.tile-icon-img.inverter-icon,.tile-icon-img.grid-icon{width:40px;height:40px;margin-bottom:4px}
-.tile-value{font-size:38px;font-weight:700;line-height:1}
-.tile-value .unit{font-size:16px;font-weight:400;vertical-align:super}
+.tile-icon-img.inverter-icon{width:48px;height:48px}
+.icon-with-badge{position:relative;display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+.icon-badge{position:absolute;bottom:-4px;left:50%;transform:translateX(-50%);white-space:nowrap}
+.icon-badge.temp-badge{background:#FFAA00;color:#fff;padding:2px 6px;font-size:9px;font-weight:700;border-radius:var(--radius-xs);box-shadow:0 2px 8px rgba(255,170,0,0.5)}
+.tile-content{display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+.tile-value{font-size:32px;font-weight:700;line-height:1}
+.tile-value .unit{font-size:14px;font-weight:400;vertical-align:super}
 .tile-secondary{font-size:11px;font-weight:500;opacity:0.9}
 .tile-secondary.power{font-size:16px;font-weight:600}
-.tile-content{display:flex;flex-direction:column}
-.tile-details{font-size:11px;color:rgba(255,255,255,0.9);margin-top:2px}
 .tile-badge{position:absolute;padding:4px 10px;border-radius:var(--radius-small);font-size:11px;font-weight:700;color:#fff}
-.pv-badge{top:6px;right:6px;background:var(--color-load);color:#fff;font-size:14px;font-weight:700}
-.temp-badge{background:#FFAA00;color:#fff;padding:3px 8px;font-size:10px;top:6px;right:6px;box-shadow:0 4px 16px rgba(255,170,0,0.5)}
-.mode-badge{bottom:6px;left:6px;background:var(--color-load);font-size:9px;padding:3px 8px}
-.pv-tile{grid-column:1;grid-row:1;background:var(--color-pv);color:#333;display:flex;gap:8px;align-items:flex-start;box-shadow:0 12px 48px rgba(255,212,0,0.5)}
-.pv-tile .tile-icon-img{opacity:0.9}
-.pv-tile .tile-value{font-size:36px}
-.pv-tile .tile-details{color:rgba(0,0,0,0.7)}
-.battery-tile{grid-column:2;grid-row:1/span 2;background:var(--color-battery);color:#fff;display:flex;flex-direction:column;box-shadow:0 12px 48px rgba(119,158,203,0.5)}
-.battery-tile.discharging{background:var(--color-grid)}
-.battery-tile.charging{background:var(--color-battery)}
-.battery-tile .tile-header{display:flex;gap:8px;align-items:flex-start}
-.battery-tile .battery-info{flex:1}
-.battery-tile .tile-value{font-size:32px}
-.load-tile{grid-column:1;grid-row:2;background:var(--color-load);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;box-shadow:0 12px 48px rgba(3,173,54,0.5)}
-.load-tile .tile-icon-img{display:none}
-.load-tile .tile-value{font-size:32px}
-.inverter-tile{grid-column:1/span 2;grid-row:3;background:var(--color-card);display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px;border:4px solid var(--color-inverter);box-shadow:inset 0 0 32px rgba(211,211,211,0.3)}
-.inverter-left,.inverter-right{display:flex;flex-direction:column;align-items:center}
-.inverter-right{border-left:3px solid var(--color-grid);padding-left:10px}
-.inverter-right.selling{border-left-color:var(--color-load)}
-.inverter-tile .tile-value{font-size:32px;color:var(--color-text);text-align:center;margin-bottom:4px}
-.phase-bars{display:flex;flex-direction:column;gap:2px;width:100%}
+.mode-badge{bottom:6px;right:6px;background:var(--color-load);font-size:9px;padding:3px 8px}
+.pv-tile{grid-column:1;grid-row:1;background:var(--color-card);color:var(--color-text)}
+.pv-tile.active{background:var(--color-pv);color:#333;box-shadow:0 12px 48px rgba(255,212,0,0.5)}
+.battery-tile{grid-column:2;grid-row:1;background:var(--color-card);color:var(--color-text)}
+.battery-tile.discharging{background:var(--color-battery);color:#fff;box-shadow:0 12px 48px rgba(119,158,203,0.5)}
+.battery-tile .tile-value{font-size:28px}
+.inverter-tile{grid-column:1/span 2;grid-row:2;background:var(--color-card);border:3px solid var(--color-inverter);box-shadow:inset 0 0 32px rgba(211,211,211,0.3);flex-direction:row;align-items:center}
+.inverter-tile .icon-with-badge{align-self:center}
+.inverter-tile .tile-content{flex:1;align-items:flex-end}
+.inverter-tile .tile-value{font-size:28px}
+.phase-bars{display:flex;flex-direction:column;gap:2px;width:100%;margin-top:4px}
 .phase-row{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--color-text)}
 .phase-dot{width:8px;height:8px;border-radius:50%;background:var(--color-load);flex-shrink:0}
-.grid-dot{background:var(--color-grid)}
 .phase-bar{flex:1;height:6px;background:#e8e8e8;border-radius:3px;overflow:hidden}
 .phase-fill{height:100%;background:var(--color-load);border-radius:3px;transition:width .5s ease}
-.grid-fill{background:var(--color-grid)}
 .phase-value{min-width:48px;text-align:right;font-weight:500;font-size:10px}
-.grid-bars.selling .grid-fill{background:var(--color-load)}
-.grid-bars.selling .grid-dot{background:var(--color-load)}
-.inverter-right.selling .tile-value{color:var(--color-load)}
 .inverter-info{font-size:7px;color:var(--color-text-muted);font-family:monospace;margin-top:3px}
-.inverter-temp{top:auto;bottom:6px;right:6px}
-.bottom-tile{grid-column:1/span 2;grid-row:4;background:var(--color-grid);color:#fff;display:grid;grid-template-columns:1fr 1fr;box-shadow:0 12px 48px rgba(194,89,100,0.5)}
-.bottom-tile.selling{background:var(--color-load);box-shadow:0 12px 48px rgba(3,173,54,0.5)}
-.bottom-tile .tile-value{font-size:28px}
-.bottom-left,.bottom-right{padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.load-tile{grid-column:1;grid-row:3;background:var(--color-load);color:#fff;box-shadow:0 12px 48px rgba(3,173,54,0.5)}
+.load-tile .tile-value{font-size:28px}
+.grid-tile{grid-column:2;grid-row:3;background:var(--color-card);color:var(--color-text)}
+.grid-tile.buying{background:var(--color-grid);color:#fff;box-shadow:0 12px 48px rgba(194,89,100,0.5)}
+.grid-tile .tile-value{font-size:28px}
 .right-section{display:flex;flex-direction:column;gap:8px}
 .stats-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.stat-tile{background:var(--color-card);border-radius:var(--radius-large);padding:10px 12px;display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px var(--color-card-shadow)}
-.stat-icon-img{width:44px;height:44px;object-fit:contain}
-.stat-values{flex:1}
-.stat-value{font-size:14px;font-weight:600;display:flex;align-items:baseline;gap:3px}
-.stat-value.secondary{font-size:13px;color:var(--color-text-muted)}
+.stat-tile{background:var(--color-card);border-radius:var(--radius-large);padding:12px 14px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 8px 32px var(--color-card-shadow)}
+.stat-icon-img{width:48px;height:48px;object-fit:contain;flex-shrink:0}
+.stat-values{display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+.stat-value{font-size:20px;font-weight:700;display:flex;align-items:baseline;gap:4px}
+.stat-value.secondary{font-size:16px;color:var(--color-text-muted)}
 .stat-value.secondary.green{color:var(--color-load)}
-.stat-unit{font-size:10px;font-weight:400;color:var(--color-text-muted)}
+.stat-unit{font-size:12px;font-weight:400;color:var(--color-text-muted)}
 .stat-value.positive{color:var(--color-load)}
 .stat-value.negative{color:var(--color-grid)}
 .clock-tile{background:var(--color-card);border-radius:var(--radius-large);padding:6px 16px;text-align:center;box-shadow:0 8px 32px var(--color-card-shadow)}
@@ -598,4 +563,48 @@ body{font-family:'Open Sans','Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,
 @media(max-width:700px){.dashboard{grid-template-columns:1fr}.left-section{grid-template-columns:1fr 1fr}.tile-value{font-size:24px}.clock-tile #clock{font-size:22px}}
 .updated{animation:flash .3s ease}@keyframes flash{0%{opacity:1}50%{opacity:.6}100%{opacity:1}})rawliteral";
 
-const char APP_JS[] = R"rawliteral((function(){'use strict';const REFRESH_INTERVAL=5000;const el={pvPower:document.getElementById('pvPower'),pv1Power:document.getElementById('pv1Power'),pv2Power:document.getElementById('pv2Power'),pvPercent:document.getElementById('pvPercent'),pvToday:document.getElementById('pvToday'),pvTotal:document.getElementById('pvTotal'),soc:document.getElementById('soc'),batteryPowerAbs:document.getElementById('batteryPowerAbs'),batteryTime:document.getElementById('batteryTime'),batteryTemp:document.getElementById('batteryTemp'),batteryTile:document.getElementById('batteryTile'),batteryChargedToday:document.getElementById('batteryChargedToday'),batteryDischargedToday:document.getElementById('batteryDischargedToday'),inverterPower:document.getElementById('inverterPower'),L1Power:document.getElementById('L1Power'),L2Power:document.getElementById('L2Power'),L3Power:document.getElementById('L3Power'),L1Bar:document.getElementById('L1Bar'),L2Bar:document.getElementById('L2Bar'),L3Bar:document.getElementById('L3Bar'),inverterSN:document.getElementById('inverterSN'),inverterMode:document.getElementById('inverterMode'),inverterTemp:document.getElementById('inverterTemp'),gridPower:document.getElementById('gridPower'),gridPowerDisplay:document.getElementById('gridPowerDisplay'),gridL1Power:document.getElementById('gridL1Power'),gridL2Power:document.getElementById('gridL2Power'),gridL3Power:document.getElementById('gridL3Power'),gridL1Bar:document.getElementById('gridL1Bar'),gridL2Bar:document.getElementById('gridL2Bar'),gridL3Bar:document.getElementById('gridL3Bar'),bottomTile:document.getElementById('bottomTile'),gridBars:document.getElementById('gridBars'),gridSection:document.getElementById('gridSection'),gridBuyToday:document.getElementById('gridBuyToday'),gridSellToday:document.getElementById('gridSellToday'),loadPower:document.getElementById('loadPower'),loadTile:document.getElementById('loadTile'),homeLoadPower:document.getElementById('homeLoadPower'),loadToday:document.getElementById('loadToday'),selfUsePercent:document.getElementById('selfUsePercent'),intelligenceSavings:document.getElementById('intelligenceSavings'),intelligenceMode:document.getElementById('intelligenceMode'),spotPrice:document.getElementById('spotPrice'),clock:document.getElementById('clock'),statusIndicator:document.getElementById('statusIndicator'),statusText:document.getElementById('statusText')};async function fetchData(){try{setStatus('loading','Updating...');const r=await fetch('/api/data');if(!r.ok)throw new Error('HTTP '+r.status);const d=await r.json();updateUI(d);setStatus('ok','Connected');}catch(e){console.error(e);setStatus('error','Connection error');}}function updateUI(d){const pvP=(d.pv1Power||0)+(d.pv2Power||0)+(d.pv3Power||0)+(d.pv4Power||0);upd(el.pvPower,pvP);upd(el.pv1Power,d.pv1Power||0);upd(el.pv2Power,d.pv2Power||0);el.pvPercent.textContent=Math.min(100,Math.round(pvP/100))+'%';upd(el.soc,d.soc||0);const bp=d.batteryPower||0;upd(el.batteryPowerAbs,Math.abs(bp));if(d.batteryCapacityWh&&bp!==0){const rWh=(d.soc/100)*d.batteryCapacityWh;if(bp>0){el.batteryTime.textContent=fmtT(rWh/bp);el.batteryTile.classList.add('discharging');el.batteryTile.classList.remove('charging');}else{const toFill=((100-d.soc)/100)*d.batteryCapacityWh;el.batteryTime.textContent=fmtT(toFill/Math.abs(bp));el.batteryTile.classList.remove('discharging');el.batteryTile.classList.add('charging');}}else{el.batteryTime.textContent='';el.batteryTile.classList.remove('discharging','charging');}if(el.batteryTemp)el.batteryTemp.textContent=(d.batteryTemperature||'--')+'°C';upd(el.batteryChargedToday,(d.batteryChargedToday||0).toFixed(1));upd(el.batteryDischargedToday,(d.batteryDischargedToday||0).toFixed(1));const invP=(d.L1Power||0)+(d.L2Power||0)+(d.L3Power||0);upd(el.inverterPower,invP);upd(el.L1Power,d.L1Power||0);upd(el.L2Power,d.L2Power||0);upd(el.L3Power,d.L3Power||0);const mxP=5000;el.L1Bar.style.width=Math.min(100,Math.abs(d.L1Power||0)/mxP*100)+'%';el.L2Bar.style.width=Math.min(100,Math.abs(d.L2Power||0)/mxP*100)+'%';el.L3Bar.style.width=Math.min(100,Math.abs(d.L3Power||0)/mxP*100)+'%';el.inverterSN.textContent=d.sn||'--';if(el.inverterTemp)el.inverterTemp.textContent=(d.inverterTemperature||'--')+'°C';const modes={0:'UNKNOWN',1:'SELF USE',2:'CHARGE',3:'DISCHARGE',4:'HOLD',5:'NORMAL'};const modeCss={0:'',1:'self-use',2:'charge',3:'discharge',4:'hold',5:'normal'};const mode=modes[d.inverterMode]||'NORMAL';const modeCl=modeCss[d.inverterMode]||'';el.inverterMode.textContent=mode;if(el.intelligenceMode){el.intelligenceMode.textContent=mode;el.intelligenceMode.className='intelligence-badge mode';if(modeCl)el.intelligenceMode.classList.add(modeCl);}const gP=(d.gridPowerL1||0)+(d.gridPowerL2||0)+(d.gridPowerL3||0);upd(el.gridPower,Math.abs(gP));if(el.gridPowerDisplay)upd(el.gridPowerDisplay,gP);upd(el.gridL1Power,d.gridPowerL1||0);upd(el.gridL2Power,d.gridPowerL2||0);upd(el.gridL3Power,d.gridPowerL3||0);el.gridL1Bar.style.width=Math.min(100,Math.abs(d.gridPowerL1||0)/mxP*100)+'%';el.gridL2Bar.style.width=Math.min(100,Math.abs(d.gridPowerL2||0)/mxP*100)+'%';el.gridL3Bar.style.width=Math.min(100,Math.abs(d.gridPowerL3||0)/mxP*100)+'%';const sell=gP<0;if(el.bottomTile)el.bottomTile.classList.toggle('selling',sell);if(el.gridBars)el.gridBars.classList.toggle('selling',sell);if(el.gridSection)el.gridSection.classList.toggle('selling',sell);upd(el.gridBuyToday,(d.gridBuyToday||0).toFixed(1));upd(el.gridSellToday,(d.gridSellToday||0).toFixed(1));const lP=d.loadPower||0;upd(el.loadPower,lP);if(el.homeLoadPower)upd(el.homeLoadPower,lP);upd(el.pvToday,(d.pvToday||0).toFixed(1));upd(el.pvTotal,(d.pvTotal||0).toFixed(0));upd(el.loadToday,(d.loadToday||0).toFixed(1));const lT=d.loadToday||0,gB=d.gridBuyToday||0;const su=lT>0?Math.round(((lT-gB)/lT)*100):0;upd(el.selfUsePercent,Math.max(0,Math.min(100,su)));if(el.intelligenceSavings)el.intelligenceSavings.textContent='+12 CZK';if(el.spotPrice)el.spotPrice.textContent='3,11 CZK / kWh';}function upd(e,v){if(!e)return;const t=String(v);if(e.textContent!==t){e.textContent=t;e.classList.add('updated');setTimeout(()=>e.classList.remove('updated'),300);}}function fmtT(h){if(!isFinite(h)||h<0||h>99)return'--';const d=Math.floor(h/24),hr=Math.floor(h%24),mn=Math.floor((h-Math.floor(h))*60);if(d>0)return d+'d '+hr+'h '+mn+'m';if(hr>0)return hr+'h '+mn+'m';return mn+'m';}function setStatus(s,t){el.statusIndicator.className='status-indicator '+s;el.statusText.textContent=t;}function updClock(){const n=new Date();el.clock.textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}updClock();setInterval(updClock,1000);fetchData();setInterval(fetchData,REFRESH_INTERVAL);})();)rawliteral";
+const char APP_JS[] = R"rawliteral((function(){'use strict';const REFRESH_INTERVAL=5000;
+const el={pvPower:document.getElementById('pvPower'),pvTile:document.getElementById('pvTile'),pvToday:document.getElementById('pvToday'),pvTotal:document.getElementById('pvTotal'),soc:document.getElementById('soc'),batteryPowerAbs:document.getElementById('batteryPowerAbs'),batteryTemp:document.getElementById('batteryTemp'),batteryTile:document.getElementById('batteryTile'),batteryChargedToday:document.getElementById('batteryChargedToday'),batteryDischargedToday:document.getElementById('batteryDischargedToday'),inverterPower:document.getElementById('inverterPower'),L1Power:document.getElementById('L1Power'),L2Power:document.getElementById('L2Power'),L3Power:document.getElementById('L3Power'),L1Bar:document.getElementById('L1Bar'),L2Bar:document.getElementById('L2Bar'),L3Bar:document.getElementById('L3Bar'),inverterSN:document.getElementById('inverterSN'),inverterMode:document.getElementById('inverterMode'),inverterTemp:document.getElementById('inverterTemp'),gridPower:document.getElementById('gridPower'),gridTile:document.getElementById('gridTile'),gridBuyToday:document.getElementById('gridBuyToday'),gridSellToday:document.getElementById('gridSellToday'),loadPower:document.getElementById('loadPower'),loadTile:document.getElementById('loadTile'),loadToday:document.getElementById('loadToday'),selfUsePercent:document.getElementById('selfUsePercent'),spotPrice:document.getElementById('spotPrice'),spotChart:document.getElementById('spotChart'),statusIndicator:document.getElementById('statusIndicator'),statusText:document.getElementById('statusText')};
+let chartCtx=el.spotChart?el.spotChart.getContext('2d'):null;
+let lastPrices=null;
+
+async function fetchData(){try{setStatus('loading','Updating...');const r=await fetch('/api/data');if(!r.ok)throw new Error('HTTP '+r.status);const d=await r.json();updateUI(d);setStatus('ok','Connected');}catch(e){console.error(e);setStatus('error','Connection error');}}
+
+function drawSpotChart(prices,currentQuarter,currency){
+if(!chartCtx||!prices||!prices.length)return;
+const canvas=el.spotChart;
+const dpr=window.devicePixelRatio||1;
+const rect=canvas.getBoundingClientRect();
+canvas.width=rect.width*dpr;
+canvas.height=rect.height*dpr;
+chartCtx.scale(dpr,dpr);
+const w=rect.width,h=rect.height;
+const pad={t:15,r:10,b:20,l:35};
+const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+let minP=Infinity,maxP=-Infinity;
+for(let i=0;i<prices.length;i++){const p=prices[i].price;if(p<minP)minP=p;if(p>maxP)maxP=p;}
+const range=maxP-minP||1;
+const barW=cw/96;
+chartCtx.clearRect(0,0,w,h);
+chartCtx.fillStyle='#f8f8f8';
+chartCtx.fillRect(pad.l,pad.t,cw,ch);
+chartCtx.strokeStyle='#e0e0e0';
+chartCtx.lineWidth=1;
+for(let i=0;i<=4;i++){const y=pad.t+ch*i/4;chartCtx.beginPath();chartCtx.moveTo(pad.l,y);chartCtx.lineTo(pad.l+cw,y);chartCtx.stroke();}
+chartCtx.fillStyle='#999';
+chartCtx.font='9px sans-serif';
+chartCtx.textAlign='right';
+for(let i=0;i<=4;i++){const v=maxP-(range*i/4);const y=pad.t+ch*i/4;chartCtx.fillText(v.toFixed(1),pad.l-4,y+3);}
+chartCtx.textAlign='center';
+for(let hr=0;hr<=24;hr+=6){const x=pad.l+(hr*4)*barW;chartCtx.fillText(String(hr).padStart(2,'0')+':00',x,h-4);}
+const colors={'-1':'#4CAF50','0':'#8BC34A','1':'#FFEB3B','2':'#FF9800'};
+for(let i=0;i<prices.length;i++){const p=prices[i];const x=pad.l+i*barW;const barH=((p.price-minP)/range)*ch;const y=pad.t+ch-barH;chartCtx.fillStyle=colors[p.level]||'#FFEB3B';chartCtx.fillRect(x,y,barW-1,barH);}
+if(currentQuarter>=0&&currentQuarter<96){const x=pad.l+currentQuarter*barW;chartCtx.strokeStyle='#333';chartCtx.lineWidth=2;chartCtx.beginPath();chartCtx.moveTo(x+barW/2,pad.t);chartCtx.lineTo(x+barW/2,pad.t+ch);chartCtx.stroke();}}
+
+function updateUI(d){const pvP=(d.pv1Power||0)+(d.pv2Power||0)+(d.pv3Power||0)+(d.pv4Power||0);upd(el.pvPower,pvP);if(el.pvTile)el.pvTile.classList.toggle('active',pvP>0);upd(el.soc,d.soc||0);const bp=d.batteryPower||0;upd(el.batteryPowerAbs,Math.abs(bp));el.batteryTile.classList.toggle('discharging',bp>0);if(el.batteryTemp)el.batteryTemp.textContent=(d.batteryTemperature||'--')+'°C';upd(el.batteryChargedToday,(d.batteryChargedToday||0).toFixed(1));upd(el.batteryDischargedToday,(d.batteryDischargedToday||0).toFixed(1));const invP=(d.L1Power||0)+(d.L2Power||0)+(d.L3Power||0);upd(el.inverterPower,invP);upd(el.L1Power,d.L1Power||0);upd(el.L2Power,d.L2Power||0);upd(el.L3Power,d.L3Power||0);const mxP=5000;el.L1Bar.style.width=Math.min(100,Math.abs(d.L1Power||0)/mxP*100)+'%';el.L2Bar.style.width=Math.min(100,Math.abs(d.L2Power||0)/mxP*100)+'%';el.L3Bar.style.width=Math.min(100,Math.abs(d.L3Power||0)/mxP*100)+'%';el.inverterSN.textContent=d.sn||'--';if(el.inverterTemp)el.inverterTemp.textContent=(d.inverterTemperature||'--')+'°C';const modes={0:'UNKNOWN',1:'SELF USE',2:'CHARGE',3:'DISCHARGE',4:'HOLD',5:'NORMAL'};const mode=modes[d.inverterMode]||'NORMAL';el.inverterMode.textContent=mode;const gP=(d.gridPowerL1||0)+(d.gridPowerL2||0)+(d.gridPowerL3||0);upd(el.gridPower,Math.abs(gP));if(el.gridTile)el.gridTile.classList.toggle('buying',gP>0);upd(el.gridBuyToday,(d.gridBuyToday||0).toFixed(1));upd(el.gridSellToday,(d.gridSellToday||0).toFixed(1));const lP=d.loadPower||0;upd(el.loadPower,lP);upd(el.pvToday,(d.pvToday||0).toFixed(1));upd(el.pvTotal,(d.pvTotal||0).toFixed(0));upd(el.loadToday,(d.loadToday||0).toFixed(1));const lT=d.loadToday||0,gB=d.gridBuyToday||0;const su=lT>0?Math.round(((lT-gB)/lT)*100):0;upd(el.selfUsePercent,Math.max(0,Math.min(100,su)));
+if(d.spotPrices&&d.spotPrices.length){lastPrices=d.spotPrices;drawSpotChart(d.spotPrices,d.currentQuarter,d.spotCurrency);if(el.spotPrice&&d.currentPrice!==undefined){el.spotPrice.textContent=d.currentPrice.toFixed(2)+' '+(d.spotCurrency||'CZK')+' / '+(d.spotEnergyUnit||'kWh');}}else if(el.spotPrice){el.spotPrice.textContent='-- / kWh';}}
+
+function upd(e,v){if(!e)return;const t=String(v);if(e.textContent!==t){e.textContent=t;e.classList.add('updated');setTimeout(()=>e.classList.remove('updated'),300);}}
+function setStatus(s,t){el.statusIndicator.className='status-indicator '+s;el.statusText.textContent=t;}
+window.addEventListener('resize',function(){if(lastPrices)drawSpotChart(lastPrices,-1,'');});
+fetchData();setInterval(fetchData,REFRESH_INTERVAL);})();)rawliteral";

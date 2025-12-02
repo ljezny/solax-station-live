@@ -1,8 +1,8 @@
 /* Solar Station Live - Dashboard Style */
 /* Colors matched to the device display */
 :root {
-    /* Main gradient background - light green to light blue */
-    --color-bg-start: #b8e6c1;
+    /* Main gradient background - white to light blue */
+    --color-bg-start: #ffffff;
     --color-bg-end: #a8d8ea;
     
     /* PV/Solar - bright yellow-green */
@@ -53,8 +53,8 @@
 
 body {
     font-family: 'Open Sans', 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-    /* Gradient matching the device - light green top-left to light blue bottom-right */
-    background: linear-gradient(135deg, #b8e6c1 0%, #a8d4b8 30%, #9ecfcc 60%, #a8d8ea 100%);
+    /* Gradient matching the device - white top-left to light blue bottom-right */
+    background: linear-gradient(135deg, #ffffff 0%, #f0f8ff 30%, #d6eaf8 60%, #a8d8ea 100%);
     min-height: 100vh;
     padding: 12px;
     color: var(--color-text);

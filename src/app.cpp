@@ -423,6 +423,7 @@ void setup()
     // Start web server on SoftAP
     webServer.begin(lvgl_mutex);
     webServer.setInverterData(&inverterData);
+    webServer.setPriceData(electricityPriceResult);
 
     esp_log_level_set("wifi", ESP_LOG_VERBOSE);
 }
