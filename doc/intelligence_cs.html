@@ -1,286 +1,339 @@
 <!DOCTYPE html>
 <html lang="cs">
+
 <head>
     <meta charset="UTF-8">
     <title>Inteligentní řízení fotovoltaiky - Solax Station Live</title>
 </head>
+
 <body>
 
-<h1>Inteligentní řízení fotovoltaiky</h1>
-<p><em>Představujeme novou funkci Solax Station Live, která automaticky optimalizuje vaši fotovoltaickou elektrárnu podle aktuálních spotových cen elektřiny.</em></p>
+    <h1>Inteligentní řízení fotovoltaiky</h1>
+    <p><em>Představujeme novou funkci Solax Station Live, která automaticky optimalizuje vaši fotovoltaickou elektrárnu
+            podle aktuálních spotových cen elektřiny.</em></p>
+
+    <h2>1. Co umí Inteligence?</h2>
+
+    <p>Inteligentní řízení automaticky přepíná režimy vašeho střídače tak, aby maximalizovalo ekonomický přínos vaší
+        fotovoltaické elektrárny. Systém každých 15 minut vyhodnocuje aktuální situaci a rozhoduje o optimálním režimu.
+    </p>
+
+    <p><strong>Hlavní schopnosti:</strong></p>
+    <ul>
+        <li><strong>Nabíjení baterie ze sítě</strong> – Když je elektřina levná (typicky v noci nebo během záporných
+            spotových cen), systém automaticky nabije baterii ze sítě. Tuto energii pak využijete během dne, kdy by vás
+            nákup ze sítě stál více.</li>
+        <li><strong>Prodej energie do sítě</strong> – Když je cena elektřiny vysoká a máte v baterii přebytek energie,
+            systém může prodat energii do sítě za výhodnou cenu.</li>
+        <li><strong>Odložení nabíjení baterie</strong> – Pokud systém očekává, že během dne vyrobíte dostatek solární
+            energie, nenabíjí baterii ze sítě zbytečně – počká na slunce.</li>
+        <li><strong>Podržení baterie (HOLD)</strong> – Když je aktuální cena elektřiny ze sítě nižší než náklady na
+            použití baterie, systém dočasně „podrží" baterii a spotřebu pokryje ze sítě. Baterii šetří na dobu, kdy bude
+            síťová elektřina dražší.</li>
+        <li><strong>Arbitráž</strong> – Pokud je cenový rozdíl mezi levnou a drahou elektřinou dostatečně velký, systém
+            nakoupí levně a prodá draze, čímž generuje zisk.</li>
+    </ul>
+
+    <p>Všechna rozhodnutí zohledňují nejen aktuální ceny, ale i predikci vaší spotřeby a výroby na následující hodiny,
+        stav baterie a náklady na její opotřebení.</p>
+
+    <h2>2. Beta verze – Hledáme testery!</h2>
+
+    <p><strong>⚠️ Upozornění: Funkce Inteligence je v beta verzi.</strong></p>
+
+    <p>Inteligentní řízení je nová funkce, kterou aktivně vyvíjíme a testujeme. Prosíme vás o zpětnou vazbu – funguje
+        vše správně? Jsou rozhodnutí systému logická? Máte návrhy na vylepšení?</p>
+
+    <p>Firmware s funkcí Inteligence je k dispozici jako samostatná verze.</p>
+
+    <p>
+        Nejprve se podívejte, jakou máte verzi <strong>SOLAR STATION <span style="color:#ef4444;">Live</span></strong>.
+    </p>
+    <p>
+        Pokud máte vzadu RESET tlačítko, jedná se o 2. generaci. Firmware pro 1. a 2. generaci jsou jiné (jiný ovladač
+        displeje). Nicméně pokud omylem přehrajete špatný firmware, nahrátím správného se to opraví – nic nepokazíte.
+    </p>
+
+    <ul>
+        <li>1. generace: <a
+                href="https://solar-station.cz/user/documents/solar-station-live-intelligence/solar-station-live.html"><strong>Návod
+                    zde</strong></a></li>
+        <li>2. generace: <a
+                href="https://www.solar-station.cz/user/documents/solar-station-live-intelligence/solar-station-live-advance.html"><strong>Návod
+                    zde</strong></a></li>
+    </ul>
+
+    <h2>3. Jak to funguje?</h2>
+
+    <p>Systém Inteligence pracuje ve třech krocích:</p>
+
+    <h3>3.1 Sběr dat</h3>
+    <p>Zařízení průběžně sbírá data o vaší spotřebě a výrobě. Tyto údaje ukládá a používá pro predikce.</p>
+
+    <h3>3.2 Predikce</h3>
+    <p>Na základě historických dat systém předpovídá:</p>
+    <ul>
+        <li><strong>Výrobu</strong> – kolik energie vyrobí vaše panely v následujících hodinách (na základě měsíce,
+            denní doby a aktuálního počasí)</li>
+        <li><strong>Spotřebu</strong> – kolik energie spotřebujete (na základě dne v týdnu a denní doby)</li>
+    </ul>
+
+    <h3>3.3 Simulace a rozhodování</h3>
+    <p>Každých 15 minut systém spustí simulaci, která „prohraje" všechny budoucí čtvrthodiny až do konce následujícího
+        dne. Pro každou čtvrthodinu vypočítá optimální režim střídače s ohledem na:</p>
+    <ul>
+        <li>Aktuální a budoucí spotové ceny elektřiny</li>
+        <li>Predikovanou výrobu a spotřebu</li>
+        <li>Aktuální stav baterie</li>
+        <li>Náklady na použití baterie (opotřebení)</li>
+        <li>Vaše nastavení (minimální/maximální nabití baterie)</li>
+    </ul>
+
+    <p>Na základě simulace systém zvolí optimální režim pro aktuální čtvrthodinu a odešle příkaz do střídače.</p>
+
+    <h2>4. Podporované střídače</h2>
+
+    <p><strong>Aktuálně podporované:</strong></p>
+    <ul>
+        <li><strong>SOLAX</strong> – hybridní střídače generace 4 a novější (X1-Hybrid, X3-Hybrid) s WiFi donglem</li>
+    </ul>
+
+    <p><strong>V plánu:</strong></p>
+    <ul>
+        <li><strong>GoodWe</strong> – připravujeme podporu</li>
+    </ul>
+
+    <p>Pokud máte jiný střídač a máte zájem o podporu, dejte nám vědět.</p>
+
+    <h2>5. Jak zapnout Inteligenci?</h2>
+
+    <p>Inteligenci zapnete kliknutím na <strong>ikonu oka</strong> v pravém horním rohu obrazovky. Otevře se obrazovka
+        nastavení Inteligence.</p>
+
+    <p>Alternativně můžete kliknout na dlaždici střídače a v menu vybrat položku <strong>„INTELLIGENCE"</strong>.</p>
+
+    <h2>6. Nastavení parametrů</h2>
+
+    <p>Pro správné fungování Inteligence je nutné zadat několik parametrů. Přesnost těchto hodnot přímo ovlivňuje
+        kvalitu rozhodování systému.</p>
+
+    <h3>6.1 Cena za použití baterie (Battery Cost)</h3>
+    <p>Toto je klíčový parametr. Představuje náklady na jeden cyklus nabití/vybití 1 kWh energie v baterii.</p>
+
+    <p><strong>Jak ji vypočítat:</strong></p>
+    <p>Vydělte pořizovací cenu baterie její celkovou životností v kWh.</p>
+    <p><em>Příklad: Baterie za 100 000 Kč s kapacitou 10 kWh a životností 6000 cyklů = 100 000 / (10 × 6000) = 1,67
+            Kč/kWh</em></p>
+
+    <p>Doporučená hodnota je typicky mezi 1,50–2,50 Kč/kWh v závislosti na typu a ceně vaší baterie.</p>
+
+    <h3>6.2 Koeficienty nákupní ceny (Buy K, Buy Q)</h3>
+    <p>Skutečná cena za nákup 1 kWh ze sítě se počítá podle vzorce:</p>
+    <p><strong>Nákupní cena = Buy K × spotová cena + Buy Q</strong></p>
+
+    <ul>
+        <li><strong>Buy K</strong> – násobitel zahrnující DPH a případné další procentuální poplatky. Typicky 1,21 (21%
+            DPH).</li>
+        <li><strong>Buy Q</strong> – fixní přirážka za kWh v Kč. Zahrnuje distribuční poplatky, poplatek za obnovitelné
+            zdroje apod. Typicky 2–4 Kč/kWh dle vašeho tarifu.</li>
+    </ul>
+
+    <p><em>Příklad: Při spotové ceně 2 Kč/kWh, Buy K = 1,21 a Buy Q = 2,5 Kč bude skutečná nákupní cena = 1,21 × 2 + 2,5
+            = 4,92 Kč/kWh</em></p>
+
+    <h3>6.3 Koeficienty prodejní ceny (Sell K, Sell Q)</h3>
+    <p>Skutečná cena za prodej 1 kWh do sítě se počítá podle vzorce:</p>
+    <p><strong>Prodejní cena = Sell K × spotová cena + Sell Q</strong></p>
+
+    <ul>
+        <li><strong>Sell K</strong> – násobitel, typicky menší než 1 (výkupní cena bývá nižší než spot). Např. 0,9.</li>
+        <li><strong>Sell Q</strong> – fixní přirážka nebo srážka v Kč. Může být záporná. Typicky 0 nebo malá záporná
+            hodnota.</li>
+    </ul>
+
+    <h3>6.4 Limity baterie</h3>
+    <ul>
+        <li><strong>Min SOC</strong> – minimální stav nabití baterie v %. Baterie nebude vybíjena pod tuto hranici.
+            Typicky 10–20%.</li>
+        <li><strong>Max SOC</strong> – maximální stav nabití při nabíjení ze sítě v %. Typicky 90–95% (některé baterie
+            nedoporučují dlouhodobě držet na 100%).</li>
+    </ul>
+
+    <h3>6.5 Parametry baterie</h3>
+    <p>Tyto hodnoty se obvykle načítají automaticky ze střídače:</p>
+    <ul>
+        <li><strong>Kapacita baterie</strong> – celková kapacita v kWh</li>
+        <li><strong>Max. nabíjecí výkon</strong> – maximální výkon nabíjení v kW</li>
+        <li><strong>Max. vybíjecí výkon</strong> – maximální výkon vybíjení v kW</li>
+    </ul>
+
+    <h2>7. Co se děje ve střídači?</h2>
 
-<h2>1. Co umí Inteligence?</h2>
+    <p><strong>Důležité upozornění pro klid vaší duše:</strong></p>
+
+    <p>Inteligence mění ve střídači <strong>pouze pracovní režim</strong> (Work Mode). Konkrétně přepíná mezi těmito
+        režimy:</p>
+    <ul>
+        <li><strong>Self-Use</strong> (vlastní spotřeba) – standardní režim</li>
+        <li><strong>Manual + Force Charge</strong> – nucené nabíjení ze sítě</li>
+        <li><strong>Manual + Force Discharge</strong> – nucené vybíjení do sítě</li>
+        <li><strong>Manual + Stop</strong> – podržení baterie (HOLD)</li>
+    </ul>
+
+    <p>Systém <strong>nemění žádné jiné parametry</strong> střídače – nemění výkonové limity, ochranná nastavení,
+        konfiguraci baterie ani nic jiného. Pouze přepíná pracovní režimy stejně, jako byste to udělali ručně v aplikaci
+        střídače.</p>
 
-<p>Inteligentní řízení automaticky přepíná režimy vašeho střídače tak, aby maximalizovalo ekonomický přínos vaší fotovoltaické elektrárny. Systém každých 15 minut vyhodnocuje aktuální situaci a rozhoduje o optimálním režimu.</p>
-
-<p><strong>Hlavní schopnosti:</strong></p>
-<ul>
-    <li><strong>Nabíjení baterie ze sítě</strong> – Když je elektřina levná (typicky v noci nebo během záporných spotových cen), systém automaticky nabije baterii ze sítě. Tuto energii pak využijete během dne, kdy by vás nákup ze sítě stál více.</li>
-    <li><strong>Prodej energie do sítě</strong> – Když je cena elektřiny vysoká a máte v baterii přebytek energie, systém může prodat energii do sítě za výhodnou cenu.</li>
-    <li><strong>Odložení nabíjení baterie</strong> – Pokud systém očekává, že během dne vyrobíte dostatek solární energie, nenabíjí baterii ze sítě zbytečně – počká na slunce.</li>
-    <li><strong>Podržení baterie (HOLD)</strong> – Když je aktuální cena elektřiny ze sítě nižší než náklady na použití baterie, systém dočasně „podrží" baterii a spotřebu pokryje ze sítě. Baterii šetří na dobu, kdy bude síťová elektřina dražší.</li>
-    <li><strong>Arbitráž</strong> – Pokud je cenový rozdíl mezi levnou a drahou elektřinou dostatečně velký, systém nakoupí levně a prodá draze, čímž generuje zisk.</li>
-</ul>
-
-<p>Všechna rozhodnutí zohledňují nejen aktuální ceny, ale i predikci vaší spotřeby a výroby na následující hodiny, stav baterie a náklady na její opotřebení.</p>
-
-<h2>2. Beta verze – Hledáme testery!</h2>
-
-<p><strong>⚠️ Upozornění: Funkce Inteligence je v beta verzi.</strong></p>
-
-<p>Inteligentní řízení je nová funkce, kterou aktivně vyvíjíme a testujeme. Prosíme vás o zpětnou vazbu – funguje vše správně? Jsou rozhodnutí systému logická? Máte návrhy na vylepšení?</p>
-
-<p>Firmware s funkcí Inteligence je k dispozici jako samostatná verze.</p>
-
-<p><em>[Zde bude návod na aktualizaci firmware – doplní autor]</em></p>
-
-<h2>3. Jak to funguje?</h2>
-
-<p>Systém Inteligence pracuje ve třech krocích:</p>
-
-<h3>3.1 Sběr dat</h3>
-<p>Zařízení průběžně sbírá data o vaší spotřebě a výrobě. Tyto údaje ukládá a používá pro predikce.</p>
-
-<h3>3.2 Predikce</h3>
-<p>Na základě historických dat systém předpovídá:</p>
-<ul>
-    <li><strong>Výrobu</strong> – kolik energie vyrobí vaše panely v následujících hodinách (na základě měsíce, denní doby a aktuálního počasí)</li>
-    <li><strong>Spotřebu</strong> – kolik energie spotřebujete (na základě dne v týdnu a denní doby)</li>
-</ul>
-
-<h3>3.3 Simulace a rozhodování</h3>
-<p>Každých 15 minut systém spustí simulaci, která „prohraje" všechny budoucí čtvrthodiny až do konce následujícího dne. Pro každou čtvrthodinu vypočítá optimální režim střídače s ohledem na:</p>
-<ul>
-    <li>Aktuální a budoucí spotové ceny elektřiny</li>
-    <li>Predikovanou výrobu a spotřebu</li>
-    <li>Aktuální stav baterie</li>
-    <li>Náklady na použití baterie (opotřebení)</li>
-    <li>Vaše nastavení (minimální/maximální nabití baterie)</li>
-</ul>
-
-<p>Na základě simulace systém zvolí optimální režim pro aktuální čtvrthodinu a odešle příkaz do střídače.</p>
-
-<h2>4. Podporované střídače</h2>
-
-<p><strong>Aktuálně podporované:</strong></p>
-<ul>
-    <li><strong>SOLAX</strong> – hybridní střídače generace 4 a novější (X1-Hybrid, X3-Hybrid) s WiFi donglem</li>
-</ul>
-
-<p><strong>V plánu:</strong></p>
-<ul>
-    <li><strong>GoodWe</strong> – připravujeme podporu</li>
-</ul>
-
-<p>Pokud máte jiný střídač a máte zájem o podporu, dejte nám vědět.</p>
-
-<h2>5. Jak zapnout Inteligenci?</h2>
-
-<p>Inteligenci zapnete kliknutím na <strong>ikonu oka</strong> v pravém horním rohu obrazovky. Otevře se obrazovka nastavení Inteligence.</p>
-
-<p>Alternativně můžete kliknout na dlaždici střídače a v menu vybrat položku <strong>„INTELLIGENCE"</strong>.</p>
-
-<h2>6. Nastavení parametrů</h2>
-
-<p>Pro správné fungování Inteligence je nutné zadat několik parametrů. Přesnost těchto hodnot přímo ovlivňuje kvalitu rozhodování systému.</p>
-
-<h3>6.1 Cena za použití baterie (Battery Cost)</h3>
-<p>Toto je klíčový parametr. Představuje náklady na jeden cyklus nabití/vybití 1 kWh energie v baterii.</p>
-
-<p><strong>Jak ji vypočítat:</strong></p>
-<p>Vydělte pořizovací cenu baterie její celkovou životností v kWh.</p>
-<p><em>Příklad: Baterie za 100 000 Kč s kapacitou 10 kWh a životností 6000 cyklů = 100 000 / (10 × 6000) = 1,67 Kč/kWh</em></p>
-
-<p>Doporučená hodnota je typicky mezi 1,50–2,50 Kč/kWh v závislosti na typu a ceně vaší baterie.</p>
-
-<h3>6.2 Koeficienty nákupní ceny (Buy K, Buy Q)</h3>
-<p>Skutečná cena za nákup 1 kWh ze sítě se počítá podle vzorce:</p>
-<p><strong>Nákupní cena = Buy K × spotová cena + Buy Q</strong></p>
-
-<ul>
-    <li><strong>Buy K</strong> – násobitel zahrnující DPH a případné další procentuální poplatky. Typicky 1,21 (21% DPH).</li>
-    <li><strong>Buy Q</strong> – fixní přirážka za kWh v Kč. Zahrnuje distribuční poplatky, poplatek za obnovitelné zdroje apod. Typicky 2–4 Kč/kWh dle vašeho tarifu.</li>
-</ul>
-
-<p><em>Příklad: Při spotové ceně 2 Kč/kWh, Buy K = 1,21 a Buy Q = 2,5 Kč bude skutečná nákupní cena = 1,21 × 2 + 2,5 = 4,92 Kč/kWh</em></p>
-
-<h3>6.3 Koeficienty prodejní ceny (Sell K, Sell Q)</h3>
-<p>Skutečná cena za prodej 1 kWh do sítě se počítá podle vzorce:</p>
-<p><strong>Prodejní cena = Sell K × spotová cena + Sell Q</strong></p>
-
-<ul>
-    <li><strong>Sell K</strong> – násobitel, typicky menší než 1 (výkupní cena bývá nižší než spot). Např. 0,9.</li>
-    <li><strong>Sell Q</strong> – fixní přirážka nebo srážka v Kč. Může být záporná. Typicky 0 nebo malá záporná hodnota.</li>
-</ul>
-
-<h3>6.4 Limity baterie</h3>
-<ul>
-    <li><strong>Min SOC</strong> – minimální stav nabití baterie v %. Baterie nebude vybíjena pod tuto hranici. Typicky 10–20%.</li>
-    <li><strong>Max SOC</strong> – maximální stav nabití při nabíjení ze sítě v %. Typicky 90–95% (některé baterie nedoporučují dlouhodobě držet na 100%).</li>
-</ul>
-
-<h3>6.5 Parametry baterie</h3>
-<p>Tyto hodnoty se obvykle načítají automaticky ze střídače:</p>
-<ul>
-    <li><strong>Kapacita baterie</strong> – celková kapacita v kWh</li>
-    <li><strong>Max. nabíjecí výkon</strong> – maximální výkon nabíjení v kW</li>
-    <li><strong>Max. vybíjecí výkon</strong> – maximální výkon vybíjení v kW</li>
-</ul>
-
-<h2>7. Co se děje ve střídači?</h2>
-
-<p><strong>Důležité upozornění pro klid vaší duše:</strong></p>
-
-<p>Inteligence mění ve střídači <strong>pouze pracovní režim</strong> (Work Mode). Konkrétně přepíná mezi těmito režimy:</p>
-<ul>
-    <li><strong>Self-Use</strong> (vlastní spotřeba) – standardní režim</li>
-    <li><strong>Manual + Force Charge</strong> – nucené nabíjení ze sítě</li>
-    <li><strong>Manual + Force Discharge</strong> – nucené vybíjení do sítě</li>
-    <li><strong>Manual + Stop</strong> – podržení baterie (HOLD)</li>
-</ul>
-
-<p>Systém <strong>nemění žádné jiné parametry</strong> střídače – nemění výkonové limity, ochranná nastavení, konfiguraci baterie ani nic jiného. Pouze přepíná pracovní režimy stejně, jako byste to udělali ručně v aplikaci střídače.</p>
-
-<h2>8. Ruční ovládání a indikace stavu</h2>
-
-<p>I při zapnuté Inteligenci můžete kdykoli ručně změnit režim střídače.</p>
-
-<p><strong>Jak na to:</strong> Klikněte na dlaždici střídače. Zobrazí se menu s dostupnými režimy:</p>
-<ul>
-    <li><strong>INTELLIGENCE</strong> – zapne automatické řízení</li>
-    <li><strong>NORMAL</strong> – standardní Self-Use režim</li>
-    <li><strong>CHARGE</strong> – nucené nabíjení ze sítě</li>
-    <li><strong>DISCHARGE</strong> – nucené vybíjení do sítě</li>
-    <li><strong>HOLD</strong> – podržení baterie</li>
-</ul>
-
-<p><strong>Jak poznáte, že je Inteligence zapnutá?</strong></p>
-<p>Na dlaždici střídače se zobrazuje barevný štítek s aktuálním režimem:</p>
-<ul>
-    <li><strong>INTELLIGENCE</strong> (modrý) – Inteligence je aktivní a automaticky řídí střídač</li>
-    <li><strong>NORMAL</strong> (zelený) – běžný Self-Use režim, Inteligence vypnutá</li>
-    <li><strong>CHARGE</strong> (červený/růžový) – probíhá nabíjení ze sítě</li>
-    <li><strong>DISCHARGE</strong> (modrý) – probíhá vybíjení do sítě</li>
-    <li><strong>HOLD</strong> (šedý) – baterie je podržena</li>
-</ul>
-
-<h2>9. Dlaždice plánů</h2>
-
-<p>Když je Inteligence aktivní, zobrazuje se na obrazovce dlaždice s plánem řízení.</p>
-
-<p><strong>Co na dlaždici vidíte:</strong></p>
-<ul>
-    <li><strong>Aktuální režim</strong> – barevný štítek ukazující, v jakém režimu střídač právě pracuje</li>
-    <li><strong>Odhadovaná úspora</strong> – kolik Kč systém odhaduje, že ušetříte oproti běžnému provozu</li>
-</ul>
-
-<p><strong>Detail plánu:</strong> Kliknutím na dlaždici plánů zobrazíte detailní přehled:</p>
-<ul>
-    <li>Seznam nadcházejících změn režimu s časy</li>
-    <li>Důvod každé změny (např. „levná elektřina", „čekání na solární nabíjení")</li>
-    <li>Aktuální spotovou cenu a vaši skutečnou nákupní/prodejní cenu</li>
-</ul>
-
-<h2>10. Prediktory – jak systém předpovídá budoucnost</h2>
-
-<p><em>Tato sekce je techničtější a vysvětluje, jak fungují predikce.</em></p>
-
-<h3>10.1 Prediktor výroby</h3>
-
-<p>Prediktor výroby odhaduje, kolik energie vyrobí vaše panely v následujících hodinách.</p>
-
-<p><strong>Jak funguje:</strong></p>
-<ul>
-    <li>Ukládá historii výroby po 15minutových intervalech pro každý měsíc v roce</li>
-    <li>Používá exponenciální klouzavý průměr (EMA) s koeficientem α=0,2 – to znamená, že nové hodnoty postupně nahrazují staré, ale změna není skoková</li>
-    <li>Zohledňuje sezónní faktory (léto/zima) a denní průběh slunce</li>
-</ul>
-
-<p><strong>Adaptivní korekce:</strong></p>
-<p>Prediktor průběžně porovnává skutečnou výrobu s predikcí. Pokud je dnes jasněji než obvykle, automaticky zvýší predikci pro zbytek dne. Tato korekce se propaguje dopředu až do půlnoci.</p>
-
-<p><em>Příklad: Je 10:00 a skutečná výroba je o 50% vyšší než předpověď. Systém upraví predikci pro odpolední hodiny směrem nahoru.</em></p>
-
-<p>O půlnoci se korekce resetuje – zítřejší počasí může být jiné.</p>
-
-<h3>10.2 Prediktor spotřeby</h3>
-
-<p>Prediktor spotřeby odhaduje, kolik energie spotřebujete.</p>
-
-<p><strong>Jak funguje:</strong></p>
-<ul>
-    <li>Ukládá historii spotřeby po 15minutových intervalech pro každý den v týdnu</li>
-    <li>Pamatuje si poslední 2 týdny – predikce pro sobotu vychází z předchozích dvou sobot</li>
-    <li>Zohledňuje typický denní průběh spotřeby (ráno, večer – vyšší spotřeba)</li>
-</ul>
-
-<p><strong>Adaptivní korekce:</strong></p>
-<p>Stejně jako u výroby, prediktor průběžně porovnává skutečnou spotřebu s predikcí a upravuje odhad pro zbytek dne.</p>
-
-<h2>11. Simulátor – srdce Inteligence</h2>
-
-<p><em>Tato sekce popisuje, jak simulátor rozhoduje o režimech.</em></p>
-
-<p>Simulátor je jádrem Inteligence. Každých 15 minut „prohraje" všechny budoucí čtvrthodiny a pro každou vypočítá optimální rozhodnutí.</p>
-
-<h3>11.1 Vstupy simulace</h3>
-<ul>
-    <li>Aktuální stav baterie (SOC)</li>
-    <li>Spotové ceny elektřiny (dnes a zítra, pokud jsou k dispozici)</li>
-    <li>Predikce výroby a spotřeby</li>
-    <li>Vaše nastavení (cena baterie, koeficienty cen, limity)</li>
-</ul>
-
-<h3>11.2 Rozhodovací logika</h3>
-
-<p>Pro každou čtvrthodinu simulátor vyhodnocuje:</p>
-
-<ol>
-    <li><strong>Pokrytí spotřeby</strong> – Priorita: 1) solární výroba (zdarma), 2) baterie (pokud je levnější než síť), 3) síť</li>
-    <li><strong>Zpracování přebytku výroby</strong> – Buď nabít baterii (pokud se vyplatí), nebo prodat do sítě</li>
-    <li><strong>Speciální akce:</strong>
-        <ul>
-            <li><em>Nabíjení ze sítě</em> – pokud je cena velmi nízká a vyplatí se energie uložit na později</li>
-            <li><em>Prodej do sítě</em> – pokud je cena velmi vysoká a máme přebytek v baterii</li>
-            <li><em>Podržení baterie</em> – pokud je síť momentálně levnější než baterie, ale později bude dražší</li>
-        </ul>
-    </li>
-</ol>
-
-<h3>11.3 Prahy pro rozhodování</h3>
-<ul>
-    <li><strong>Levný čas pro nabíjení</strong> – cena je maximálně 10% nad minimem budoucích cen</li>
-    <li><strong>Nejlepší čas pro prodej</strong> – cena je alespoň 95% maxima budoucích cen</li>
-    <li><strong>Arbitráž</strong> – zisk z nákupu a prodeje musí být alespoň 5% nákupní ceny (po započtení opotřebení baterie)</li>
-</ul>
-
-<h2>12. Výpočet úspory</h2>
-
-<p>Systém zobrazuje odhadovanou úsporu oproti „hloupému" provozu fotovoltaiky.</p>
-
-<h3>12.1 Co je „hloupý" provoz?</h3>
-<p>Hloupý provoz je fotovoltaika v režimu Self-Use bez jakékoli optimalizace:</p>
-<ul>
-    <li>Solární výroba jde do spotřeby, přebytek do baterie, zbytek se prodá</li>
-    <li>Spotřeba se bere z baterie (dokud není prázdná), pak ze sítě</li>
-    <li>Nikdy se nenabíjí ze sítě</li>
-    <li>Nikdy se aktivně neprodává z baterie</li>
-</ul>
-
-<h3>12.2 Jak se počítá úspora?</h3>
-<p>Simulátor spočítá náklady pro oba scénáře:</p>
-<ul>
-    <li><strong>Inteligentní provoz</strong> – s optimalizací podle spotových cen</li>
-    <li><strong>Hloupý provoz</strong> – bez optimalizace</li>
-</ul>
-
-<p>Úspora = náklady hloupého provozu − náklady inteligentního provozu</p>
-
-<p>Pokud inteligentní provoz nabije baterii více než hloupý (investice do levné energie), zohledňuje se i hodnota této energie – tu můžete využít později.</p>
-
-<hr>
-
-<p><em>Máte dotazy nebo návrhy na vylepšení? Kontaktujte nás!</em></p>
+    <h2>8. Ruční ovládání a indikace stavu</h2>
+
+    <p>I při zapnuté Inteligenci můžete kdykoli ručně změnit režim střídače.</p>
+
+    <p><strong>Jak na to:</strong> Klikněte na dlaždici střídače. Zobrazí se menu s dostupnými režimy:</p>
+    <ul>
+        <li><strong>INTELLIGENCE</strong> – zapne automatické řízení</li>
+        <li><strong>NORMAL</strong> – standardní Self-Use režim</li>
+        <li><strong>CHARGE</strong> – nucené nabíjení ze sítě</li>
+        <li><strong>DISCHARGE</strong> – nucené vybíjení do sítě</li>
+        <li><strong>HOLD</strong> – podržení baterie</li>
+    </ul>
+
+    <p><strong>Jak poznáte, že je Inteligence zapnutá?</strong></p>
+    <p>Na dlaždici střídače se zobrazuje barevný štítek s aktuálním režimem:</p>
+    <ul>
+        <li><strong>INTELLIGENCE</strong> (modrý) – Inteligence je aktivní a automaticky řídí střídač</li>
+        <li><strong>NORMAL</strong> (zelený) – běžný Self-Use režim, Inteligence vypnutá</li>
+        <li><strong>CHARGE</strong> (červený/růžový) – probíhá nabíjení ze sítě</li>
+        <li><strong>DISCHARGE</strong> (modrý) – probíhá vybíjení do sítě</li>
+        <li><strong>HOLD</strong> (šedý) – baterie je podržena</li>
+    </ul>
+
+    <h2>9. Dlaždice plánů</h2>
+
+    <p>Když je Inteligence aktivní, zobrazuje se na obrazovce dlaždice s plánem řízení.</p>
+
+    <p><strong>Co na dlaždici vidíte:</strong></p>
+    <ul>
+        <li><strong>Aktuální režim</strong> – barevný štítek ukazující, v jakém režimu střídač právě pracuje</li>
+        <li><strong>Odhadovaná úspora</strong> – kolik Kč systém odhaduje, že ušetříte oproti běžnému provozu</li>
+    </ul>
+
+    <p><strong>Detail plánu:</strong> Kliknutím na dlaždici plánů zobrazíte detailní přehled:</p>
+    <ul>
+        <li>Seznam nadcházejících změn režimu s časy</li>
+        <li>Důvod každé změny (např. „levná elektřina", „čekání na solární nabíjení")</li>
+        <li>Aktuální spotovou cenu a vaši skutečnou nákupní/prodejní cenu</li>
+    </ul>
+
+    <h2>10. Prediktory – jak systém předpovídá budoucnost</h2>
+
+    <p><em>Tato sekce je techničtější a vysvětluje, jak fungují predikce.</em></p>
+
+    <h3>10.1 Prediktor výroby</h3>
+
+    <p>Prediktor výroby odhaduje, kolik energie vyrobí vaše panely v následujících hodinách.</p>
+
+    <p><strong>Jak funguje:</strong></p>
+    <ul>
+        <li>Ukládá historii výroby po 15minutových intervalech pro každý měsíc v roce</li>
+        <li>Používá exponenciální klouzavý průměr (EMA) s koeficientem α=0,2 – to znamená, že nové hodnoty postupně
+            nahrazují staré, ale změna není skoková</li>
+        <li>Zohledňuje sezónní faktory (léto/zima) a denní průběh slunce</li>
+    </ul>
+
+    <p><strong>Adaptivní korekce:</strong></p>
+    <p>Prediktor průběžně porovnává skutečnou výrobu s predikcí. Pokud je dnes jasněji než obvykle, automaticky zvýší
+        predikci pro zbytek dne. Tato korekce se propaguje dopředu až do půlnoci.</p>
+
+    <p><em>Příklad: Je 10:00 a skutečná výroba je o 50% vyšší než předpověď. Systém upraví predikci pro odpolední hodiny
+            směrem nahoru.</em></p>
+
+    <p>O půlnoci se korekce resetuje – zítřejší počasí může být jiné.</p>
+
+    <h3>10.2 Prediktor spotřeby</h3>
+
+    <p>Prediktor spotřeby odhaduje, kolik energie spotřebujete.</p>
+
+    <p><strong>Jak funguje:</strong></p>
+    <ul>
+        <li>Ukládá historii spotřeby po 15minutových intervalech pro každý den v týdnu</li>
+        <li>Pamatuje si poslední 2 týdny – predikce pro sobotu vychází z předchozích dvou sobot</li>
+        <li>Zohledňuje typický denní průběh spotřeby (ráno, večer – vyšší spotřeba)</li>
+    </ul>
+
+    <p><strong>Adaptivní korekce:</strong></p>
+    <p>Stejně jako u výroby, prediktor průběžně porovnává skutečnou spotřebu s predikcí a upravuje odhad pro zbytek dne.
+    </p>
+
+    <h2>11. Simulátor – srdce Inteligence</h2>
+
+    <p><em>Tato sekce popisuje, jak simulátor rozhoduje o režimech.</em></p>
+
+    <p>Simulátor je jádrem Inteligence. Každých 15 minut „prohraje" všechny budoucí čtvrthodiny a pro každou vypočítá
+        optimální rozhodnutí.</p>
+
+    <h3>11.1 Vstupy simulace</h3>
+    <ul>
+        <li>Aktuální stav baterie (SOC)</li>
+        <li>Spotové ceny elektřiny (dnes a zítra, pokud jsou k dispozici)</li>
+        <li>Predikce výroby a spotřeby</li>
+        <li>Vaše nastavení (cena baterie, koeficienty cen, limity)</li>
+    </ul>
+
+    <h3>11.2 Rozhodovací logika</h3>
+
+    <p>Pro každou čtvrthodinu simulátor vyhodnocuje:</p>
+
+    <ol>
+        <li><strong>Pokrytí spotřeby</strong> – Priorita: 1) solární výroba (zdarma), 2) baterie (pokud je levnější než
+            síť), 3) síť</li>
+        <li><strong>Zpracování přebytku výroby</strong> – Buď nabít baterii (pokud se vyplatí), nebo prodat do sítě</li>
+        <li><strong>Speciální akce:</strong>
+            <ul>
+                <li><em>Nabíjení ze sítě</em> – pokud je cena velmi nízká a vyplatí se energie uložit na později</li>
+                <li><em>Prodej do sítě</em> – pokud je cena velmi vysoká a máme přebytek v baterii</li>
+                <li><em>Podržení baterie</em> – pokud je síť momentálně levnější než baterie, ale později bude dražší
+                </li>
+            </ul>
+        </li>
+    </ol>
+
+    <h3>11.3 Prahy pro rozhodování</h3>
+    <ul>
+        <li><strong>Levný čas pro nabíjení</strong> – cena je maximálně 10% nad minimem budoucích cen</li>
+        <li><strong>Nejlepší čas pro prodej</strong> – cena je alespoň 95% maxima budoucích cen</li>
+        <li><strong>Arbitráž</strong> – zisk z nákupu a prodeje musí být alespoň 5% nákupní ceny (po započtení
+            opotřebení baterie)</li>
+    </ul>
+
+    <h2>12. Výpočet úspory</h2>
+
+    <p>Systém zobrazuje odhadovanou úsporu oproti „hloupému" provozu fotovoltaiky.</p>
+
+    <h3>12.1 Co je „hloupý" provoz?</h3>
+    <p>Hloupý provoz je fotovoltaika v režimu Self-Use bez jakékoli optimalizace:</p>
+    <ul>
+        <li>Solární výroba jde do spotřeby, přebytek do baterie, zbytek se prodá</li>
+        <li>Spotřeba se bere z baterie (dokud není prázdná), pak ze sítě</li>
+        <li>Nikdy se nenabíjí ze sítě</li>
+        <li>Nikdy se aktivně neprodává z baterie</li>
+    </ul>
+
+    <h3>12.2 Jak se počítá úspora?</h3>
+    <p>Simulátor spočítá náklady pro oba scénáře:</p>
+    <ul>
+        <li><strong>Inteligentní provoz</strong> – s optimalizací podle spotových cen</li>
+        <li><strong>Hloupý provoz</strong> – bez optimalizace</li>
+    </ul>
+
+    <p>Úspora = náklady hloupého provozu − náklady inteligentního provozu</p>
+
+    <p>Pokud inteligentní provoz nabije baterii více než hloupý (investice do levné energie), zohledňuje se i hodnota
+        této energie – tu můžete využít později.</p>
+
+    <hr>
+
+    <p><em>Máte dotazy nebo návrhy na vylepšení? Kontaktujte nás!</em></p>
 
 </body>
+
 </html>

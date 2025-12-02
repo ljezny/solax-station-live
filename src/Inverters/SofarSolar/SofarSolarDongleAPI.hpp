@@ -82,9 +82,35 @@ private:
             inverterData.status = DONGLE_STATUS_OK; }))
             return inverterData;
 
+        // Read RTC time from SofarSolar inverter
+        readInverterRTC(sn, inverterData);
+
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
         logInverterData(inverterData);
         return inverterData;
+    }
+
+    void readInverterRTC(uint32_t sn, InverterData_t &inverterData)
+    {
+        // SofarSolar RTC registers: 0x410-0x415 (holding registers)
+        // 0x410: Year, 0x411: Month, 0x412: Day, 0x413: Hour, 0x414: Minute, 0x415: Second
+        byte packetBuffer[16];
+        channel.tryReadWithRetries(0x410, 6, sn, packetBuffer, [&]()
+                                   {
+                                       struct tm timeinfo = {};
+                                       timeinfo.tm_year = channel.readUInt16(packetBuffer, 0) - 1900;  // Year - 1900
+                                       timeinfo.tm_mon = channel.readUInt16(packetBuffer, 1) - 1;     // Month 1-12 to 0-11
+                                       timeinfo.tm_mday = channel.readUInt16(packetBuffer, 2);
+                                       timeinfo.tm_hour = channel.readUInt16(packetBuffer, 3);
+                                       timeinfo.tm_min = channel.readUInt16(packetBuffer, 4);
+                                       timeinfo.tm_sec = channel.readUInt16(packetBuffer, 5);
+                                       timeinfo.tm_isdst = -1;
+
+                                       inverterData.inverterTime = mktime(&timeinfo);
+                                       log_d("SofarSolar RTC: %04d-%02d-%02d %02d:%02d:%02d",
+                                             timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
+                                             timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+                                   });
     }
 
     bool setWorkMode(const String& ipAddress, InverterMode_t mode)

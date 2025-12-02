@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <lvgl.h>
 #include <esp_task_wdt.h>
+#include <sys/time.h>
 
 #include <SPI.h>
 #include "consts.h"
@@ -498,6 +499,9 @@ bool supportsIntelligenceForCurrentInverter(WiFiDiscoveryResult_t &discoveryResu
     }
 }
 
+// Forward declaration - defined after syncTime()
+void syncTimeFromInverter(const InverterData_t &data);
+
 bool loadInverterDataTask()
 {
     bool run = false;
@@ -548,6 +552,9 @@ bool loadInverterDataTask()
                     consumptionPredictor.saveToPreferences();
                     productionPredictor.saveToPreferences();
                 }
+
+                // Sync system time from inverter RTC if NTP failed
+                syncTimeFromInverter(inverterData);
 
                 dongleDiscovery.storeLastConnectedSSID(wifiDiscoveryResult.ssid);
             }
@@ -1160,6 +1167,9 @@ void setTimeZone()
     }
 }
 
+// Global flag to track if time was synced via NTP
+static bool ntpTimeSynced = false;
+
 void syncTime()
 {
     // use ntp arduino
@@ -1168,10 +1178,45 @@ void syncTime()
     struct tm timeinfo;
     if (!getLocalTime(&timeinfo, 5000))
     {
-        log_e("Failed to obtain time");
+        log_e("Failed to obtain time from NTP");
+        ntpTimeSynced = false;
         return;
     }
-    log_d("Current time: %s", asctime(&timeinfo));
+    ntpTimeSynced = true;
+    log_d("NTP sync successful, current time: %s", asctime(&timeinfo));
+}
+
+/**
+ * Set system time from inverter RTC if NTP sync failed
+ * This is useful when connected directly to inverter WiFi dongle without internet access
+ */
+void syncTimeFromInverter(const InverterData_t &data)
+{
+    // Only sync from inverter if NTP sync failed and inverter has valid time
+    if (ntpTimeSynced || data.inverterTime == 0)
+    {
+        return;
+    }
+
+    // Validate inverter time (should be after 2020)
+    struct tm timeinfo;
+    localtime_r(&data.inverterTime, &timeinfo);
+    if (timeinfo.tm_year < 120)  // Year 2020 = 120 (years since 1900)
+    {
+        log_w("Inverter time is invalid (year %d), not syncing", timeinfo.tm_year + 1900);
+        return;
+    }
+
+    // Set system time from inverter
+    struct timeval tv = { .tv_sec = data.inverterTime, .tv_usec = 0 };
+    settimeofday(&tv, nullptr);
+    
+    // Apply timezone
+    setTimeZone();
+    
+    log_i("System time set from inverter RTC: %04d-%02d-%02d %02d:%02d:%02d",
+          timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
+          timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 }
 
 void logMemory()

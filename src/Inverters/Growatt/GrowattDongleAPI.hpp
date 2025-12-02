@@ -35,6 +35,9 @@ public:
         
         // Try to read battery power limits (optional, won't fail if not available)
         readBatteryLimits(inverterData);
+        
+        // Try to read RTC time (optional, won't fail if not available)
+        readInverterRTC(inverterData);
 
         logInverterData(inverterData);
         channel.disconnect();
@@ -204,6 +207,35 @@ private:
         data.maxDischargePowerW = (uint16_t)(dischargePowerVal / 10);
         
         log_d("Growatt max charge power: %d W, max discharge power: %d W", data.maxChargePowerW, data.maxDischargePowerW);
+        return true;
+    }
+
+    bool readInverterRTC(InverterData_t &data)
+    {
+        // Growatt RTC registers: 45-50 (holding registers)
+        // 45: Year (2000-based), 46: Month, 47: Day, 48: Hour, 49: Minute, 50: Second
+        const int baseAddress = 45;
+        log_d("Reading Growatt RTC from address %d", baseAddress);
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, baseAddress, 6);
+        if (!response.isValid)
+        {
+            log_d("Failed to read Growatt RTC (optional)");
+            return false;
+        }
+
+        struct tm timeinfo = {};
+        timeinfo.tm_year = response.readUInt16(45) + 100;  // Year-2000 + 100 = years since 1900
+        timeinfo.tm_mon = response.readUInt16(46) - 1;     // Month 1-12 to 0-11
+        timeinfo.tm_mday = response.readUInt16(47);
+        timeinfo.tm_hour = response.readUInt16(48);
+        timeinfo.tm_min = response.readUInt16(49);
+        timeinfo.tm_sec = response.readUInt16(50);
+        timeinfo.tm_isdst = -1;
+
+        data.inverterTime = mktime(&timeinfo);
+        log_d("Growatt RTC: %04d-%02d-%02d %02d:%02d:%02d",
+              timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
+              timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
         return true;
     }
 

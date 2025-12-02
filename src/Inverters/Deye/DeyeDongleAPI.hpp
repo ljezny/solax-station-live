@@ -50,6 +50,9 @@ private:
             load3PhaseInverter(deviceType, sn, inverterData);
         }
 
+        // Read RTC time from Deye inverter (registers 22-27)
+        readInverterRTC(sn, inverterData);
+
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
         logInverterData(inverterData);
 
@@ -87,6 +90,29 @@ private:
                 inverterData.gridSellToday = channel.readUInt16(packetBuffer, 77 - 60) / 10.0f;
                                         }))
             return;
+    }
+
+    void readInverterRTC(uint32_t sn, InverterData_t &inverterData)
+    {
+        // Deye RTC registers: 22-27 (holding registers)
+        // 22: Year, 23: Month, 24: Day, 25: Hour, 26: Minute, 27: Second
+        byte packetBuffer[16];
+        channel.tryReadWithRetries(22, 6, sn, packetBuffer, [&]()
+                                   {
+                                       struct tm timeinfo = {};
+                                       timeinfo.tm_year = channel.readUInt16(packetBuffer, 0) - 1900;  // Year - 1900
+                                       timeinfo.tm_mon = channel.readUInt16(packetBuffer, 1) - 1;     // Month 1-12 to 0-11
+                                       timeinfo.tm_mday = channel.readUInt16(packetBuffer, 2);
+                                       timeinfo.tm_hour = channel.readUInt16(packetBuffer, 3);
+                                       timeinfo.tm_min = channel.readUInt16(packetBuffer, 4);
+                                       timeinfo.tm_sec = channel.readUInt16(packetBuffer, 5);
+                                       timeinfo.tm_isdst = -1;
+
+                                       inverterData.inverterTime = mktime(&timeinfo);
+                                       log_d("Deye RTC: %04d-%02d-%02d %02d:%02d:%02d",
+                                             timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
+                                             timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+                                   });
     }
 
     void load3PhaseInverter(int deviceType, uint32_t sn, InverterData_t &inverterData)

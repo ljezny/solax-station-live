@@ -43,6 +43,9 @@ public:
             return inverterData;
         }
 
+        // Read RTC time (optional, don't fail if not available)
+        readInverterRTC(inverterData);
+
         finalizePowerCalculations(inverterData);
         logInverterData(inverterData);
         channel.disconnect();
@@ -358,6 +361,33 @@ private:
         String moduleName = response.readString(0x0E, 14);
         log_d("SN: %s, Factory: %s, Module: %s",
               sn.c_str(), factoryName.c_str(), moduleName.c_str());
+        return true;
+    }
+
+    bool readInverterRTC(InverterData_t &data)
+    {
+        // Solax RTC registers: 0x03-0x08 (holding registers)
+        // 0x03: Year-2000, 0x04: Month, 0x05: Day, 0x06: Hour, 0x07: Minute, 0x08: Second
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, 0x03, 6);
+        if (!response.isValid)
+        {
+            log_d("Failed to read RTC from Solax inverter");
+            return false;
+        }
+
+        struct tm timeinfo = {};
+        timeinfo.tm_year = response.readUInt16(0x03) + 100; // Year-2000 + 100 = years since 1900
+        timeinfo.tm_mon = response.readUInt16(0x04) - 1;    // Month 1-12 to 0-11
+        timeinfo.tm_mday = response.readUInt16(0x05);
+        timeinfo.tm_hour = response.readUInt16(0x06);
+        timeinfo.tm_min = response.readUInt16(0x07);
+        timeinfo.tm_sec = response.readUInt16(0x08);
+        timeinfo.tm_isdst = -1;  // Let mktime determine DST
+
+        data.inverterTime = mktime(&timeinfo);
+        log_d("Solax RTC: %04d-%02d-%02d %02d:%02d:%02d",
+              timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
+              timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
         return true;
     }
 

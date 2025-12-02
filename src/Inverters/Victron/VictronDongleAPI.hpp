@@ -230,6 +230,9 @@ public:
         if (response.isValid)
         {
             time_t time = response.readUInt64(830);
+            
+            // Store inverter RTC time
+            inverterData.inverterTime = time;
 
             log_d("Time: %s", ctime(&time));
             log_d("Day: %d", day);

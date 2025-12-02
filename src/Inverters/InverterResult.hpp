@@ -63,6 +63,7 @@ typedef struct
     double pvTotal = 0;
     bool hasBattery = true;
     InverterMode_t inverterMode = INVERTER_MODE_UNKNOWN;  // Aktuální režim střídače (inteligence)
+    time_t inverterTime = 0;  // RTC čas ze střídače (0 = neplatný)
 } InverterData_t;
 
 void logInverterData(InverterData_t& inverterData) {
@@ -99,5 +100,11 @@ void logInverterData(InverterData_t& inverterData) {
     log_d("Has Battery: %d", inverterData.hasBattery);
     log_d("Max Charge Power: %d W", inverterData.maxChargePowerW);
     log_d("Max Discharge Power: %d W", inverterData.maxDischargePowerW);
-
+    if (inverterData.inverterTime > 0) {
+        struct tm timeinfo;
+        localtime_r(&inverterData.inverterTime, &timeinfo);
+        log_d("Inverter Time: %04d-%02d-%02d %02d:%02d:%02d", 
+              timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
+              timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+    }
 } 

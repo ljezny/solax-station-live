@@ -125,6 +125,26 @@ private:
                         gridBuyTotal = 0;
                         gridSellTotal = 0;
                     }
+
+                    // Read RTC time from registers 35100+0 and 35100+1
+                    // Format: Register 0: (Year-2000) << 8 | Month, Register 1: Day << 8 | Hour
+                    // Register 2: Minute << 8 | Second (but we don't have it in this response)
+                    uint16_t reg0 = response.readUInt16(35100 + 0);
+                    uint16_t reg1 = response.readUInt16(35100 + 1);
+                    struct tm timeinfo = {};
+                    timeinfo.tm_year = ((reg0 >> 8) & 0xFF) + 100; // Year-2000 + 100 = years since 1900
+                    timeinfo.tm_mon = (reg0 & 0xFF) - 1;           // Month 1-12 to 0-11
+                    timeinfo.tm_mday = (reg1 >> 8) & 0xFF;
+                    timeinfo.tm_hour = reg1 & 0xFF;
+                    // Note: GoodWe provides minute/second in register 35100+2, but we approximate
+                    timeinfo.tm_min = 0;
+                    timeinfo.tm_sec = 0;
+                    timeinfo.tm_isdst = -1;
+                    inverterData.inverterTime = mktime(&timeinfo);
+                    log_d("GoodWe RTC: %04d-%02d-%02d %02d:%02d:%02d",
+                          timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
+                          timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+
                     break;
                 }
                 delay(i * 300); // wait before retrying
