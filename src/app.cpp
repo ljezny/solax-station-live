@@ -402,6 +402,9 @@ void setupLVGL()
     // Load predictors from storage
     consumptionPredictor.loadFromPreferences();
     productionPredictor.loadFromPreferences();
+    
+    // Load intraday chart data (only if same day)
+    solarChartDataProvider.loadFromPreferences();
 
     xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 12 * 1024, NULL, 24, NULL, 1);
 }
@@ -566,6 +569,7 @@ bool loadInverterDataTask()
                     if (guard.isLocked()) {
                         consumptionPredictor.saveToPreferences();
                         productionPredictor.saveToPreferences();
+                        solarChartDataProvider.saveToPreferences();
                     }
                 }
 
