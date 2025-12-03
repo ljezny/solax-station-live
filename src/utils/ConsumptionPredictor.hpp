@@ -49,6 +49,10 @@ private:
     static constexpr float CORRECTION_ALPHA = 0.3f;  // Rychlejší adaptace pro spotřebu
     int lastCorrectionQuarter;
     
+    // === CROSS-DAY PROPAGACE ===
+    // Váha pro propagaci hodnot na ostatní dny (pro opakující se vzorce jako noční topení)
+    static constexpr float CROSS_DAY_ALPHA = 0.15f;  // Menší váha pro ostatní dny
+    
     // === REALTIME KOREKCE ===
     // Aktuální výkon (W) pro průběžnou korekci predikcí
     float currentPowerW;
@@ -226,6 +230,7 @@ public:
     
     /**
      * Aktualizuje spotřebu pro danou čtvrthodinu aktuálního týdne
+     * a propaguje hodnotu i na ostatní dny (pro opakující se vzorce)
      */
     void updateQuarterlyConsumption(int day, int quarter, float consumptionWh) {
         if (day < 0 || day >= DAYS_PER_WEEK || quarter < 0 || quarter >= QUARTERS_OF_DAY) {
@@ -235,11 +240,44 @@ public:
         // === AKTUALIZACE ADAPTIVNÍ KOREKCE ===
         updateCorrectionFactor(day, quarter, consumptionWh);
         
+        // === PRIMÁRNÍ AKTUALIZACE (aktuální den) ===
         consumptionAt(0, day, quarter) = consumptionWh;
         hasDataAt(0, day, quarter) = true;
         
+        // === CROSS-DAY PROPAGACE ===
+        // Propagujeme hodnotu na ostatní dny s menší vahou
+        // To zrychlí učení opakujících se vzorců (např. noční topení každý den)
+        propagateToOtherDays(day, quarter, consumptionWh);
+        
         log_d("Updated consumption for day %d, quarter %d: %.1f Wh (correction: %.1f)", 
               day, quarter, consumptionWh, cumulativeError);
+    }
+    
+    /**
+     * Propaguje hodnotu na ostatní dny v týdnu s menší vahou.
+     * Používá EMA (exponenciální klouzavý průměr) pro plynulou aktualizaci.
+     * 
+     * Pravidla:
+     * - Hodnota se propaguje jen na dny, které už mají data pro danou čtvrthodinu
+     * - Použije se menší váha (CROSS_DAY_ALPHA) pro zachování specifik jednotlivých dnů
+     * - Pomáhá rychle zachytit opakující se vzorce (noční topení, ranní spotřeba, atd.)
+     */
+    void propagateToOtherDays(int sourceDay, int quarter, float consumptionWh) {
+        for (int otherDay = 0; otherDay < DAYS_PER_WEEK; otherDay++) {
+            if (otherDay == sourceDay) continue;  // Přeskočíme zdrojový den
+            
+            // Propagujeme jen pokud už máme nějaká data pro tento den a čtvrthodinu
+            // (nechceme vytvářet "falešná" data pro dny, které jsme ještě neviděli)
+            if (hasDataAt(0, otherDay, quarter)) {
+                float oldValue = consumptionAt(0, otherDay, quarter);
+                // EMA: nová = α * aktuální + (1-α) * stará
+                float newValue = CROSS_DAY_ALPHA * consumptionWh + (1 - CROSS_DAY_ALPHA) * oldValue;
+                consumptionAt(0, otherDay, quarter) = newValue;
+                
+                log_d("Cross-day propagation: day %d -> day %d, quarter %d: %.1f -> %.1f Wh",
+                      sourceDay, otherDay, quarter, oldValue, newValue);
+            }
+        }
     }
     
     /**

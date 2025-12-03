@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include <Preferences.h>
 #include <esp_heap_caps.h>
 #include "../Spot/ElectricityPriceResult.hpp"  // Pro QUARTERS_OF_DAY, QUARTERS_TWO_DAYS
 
@@ -33,6 +34,8 @@ typedef struct SolarChartDataItem
 class SolarChartDataProvider
 {
 private:
+    static const char* NAMESPACE;
+    
     // Data pro 2 dny - alokováno v PSRAM
     SolarChartDataItem_t* chartData;
     
@@ -43,6 +46,7 @@ private:
     int currentSampleCount = 0;
     int lastRecordedQuarter = -1;
     int lastRecordedDay = -1;
+    int lastSavedQuarter = -1;  // Pro ukládání jen po změně čtvrthodiny
     
     // Příznak dostupnosti zítřejších predikcí
     bool hasTomorrowPredictions = false;
@@ -268,4 +272,114 @@ public:
         }
         return maxPower;
     }
+    
+    /**
+     * Uloží intraday data do NVS (volat jen po změně čtvrthodiny)
+     * Ukládá pouze reálná data pro dnešek (ne predikce)
+     */
+    void saveToPreferences() {
+        int currentQuarter = getCurrentQuarter();
+        
+        // Ukládáme jen když se změnila čtvrthodina
+        if (currentQuarter == lastSavedQuarter) {
+            return;
+        }
+        lastSavedQuarter = currentQuarter;
+        
+        Preferences preferences;
+        if (!preferences.begin(NAMESPACE, false)) {
+            log_e("Failed to open NVS for SolarChartData");
+            return;
+        }
+        
+        // Uložíme den v roce pro kontrolu při načítání
+        preferences.putInt("day", getCurrentDayOfYear());
+        
+        // Komprimovaná data: uint16_t pro Wh hodnoty, uint8_t pro SOC
+        // Ukládáme jen reálná data (ne predikce) pro dnešek
+        uint16_t pvData[CHART_QUARTERS_PER_DAY];
+        uint16_t loadData[CHART_QUARTERS_PER_DAY];
+        uint8_t socData[CHART_QUARTERS_PER_DAY];
+        uint8_t hasData[CHART_QUARTERS_PER_DAY];  // Bitová mapa - má slot data?
+        
+        for (int i = 0; i < CHART_QUARTERS_PER_DAY; i++) {
+            if (chartData[i].samples > 0 && !chartData[i].isPrediction) {
+                pvData[i] = (uint16_t)constrain(chartData[i].pvPowerWh, 0.0f, 65535.0f);
+                loadData[i] = (uint16_t)constrain(chartData[i].loadPowerWh, 0.0f, 65535.0f);
+                socData[i] = (uint8_t)constrain(chartData[i].soc, 0, 100);
+                hasData[i] = 1;
+            } else {
+                pvData[i] = 0;
+                loadData[i] = 0;
+                socData[i] = 0;
+                hasData[i] = 0;
+            }
+        }
+        
+        preferences.putBytes("pv", pvData, sizeof(pvData));
+        preferences.putBytes("load", loadData, sizeof(loadData));
+        preferences.putBytes("soc", socData, sizeof(socData));
+        preferences.putBytes("has", hasData, sizeof(hasData));
+        
+        preferences.end();
+        log_d("SolarChartData saved for quarter %d", currentQuarter);
+    }
+    
+    /**
+     * Načte intraday data z NVS (volat při startu)
+     * Načte pouze pokud je to stejný den
+     */
+    void loadFromPreferences() {
+        Preferences preferences;
+        if (!preferences.begin(NAMESPACE, true)) {
+            log_d("No SolarChartData in NVS");
+            return;
+        }
+        
+        // Kontrola zda je to stejný den
+        int savedDay = preferences.getInt("day", -1);
+        int currentDay = getCurrentDayOfYear();
+        
+        if (savedDay != currentDay) {
+            log_d("SolarChartData from different day (saved: %d, current: %d), ignoring", savedDay, currentDay);
+            preferences.end();
+            return;
+        }
+        
+        // Načtení dat
+        uint16_t pvData[CHART_QUARTERS_PER_DAY];
+        uint16_t loadData[CHART_QUARTERS_PER_DAY];
+        uint8_t socData[CHART_QUARTERS_PER_DAY];
+        uint8_t hasData[CHART_QUARTERS_PER_DAY];
+        
+        size_t pvLen = preferences.getBytes("pv", pvData, sizeof(pvData));
+        size_t loadLen = preferences.getBytes("load", loadData, sizeof(loadData));
+        size_t socLen = preferences.getBytes("soc", socData, sizeof(socData));
+        size_t hasLen = preferences.getBytes("has", hasData, sizeof(hasData));
+        
+        preferences.end();
+        
+        if (pvLen == 0 || loadLen == 0 || socLen == 0 || hasLen == 0) {
+            log_d("SolarChartData incomplete in NVS");
+            return;
+        }
+        
+        // Obnovení dat
+        int restoredCount = 0;
+        for (int i = 0; i < CHART_QUARTERS_PER_DAY; i++) {
+            if (hasData[i]) {
+                chartData[i].pvPowerWh = (float)pvData[i];
+                chartData[i].loadPowerWh = (float)loadData[i];
+                chartData[i].soc = socData[i];
+                chartData[i].samples = 1;  // Označíme jako platná data
+                chartData[i].isPrediction = false;
+                restoredCount++;
+            }
+        }
+        
+        lastRecordedDay = currentDay;
+        log_i("SolarChartData restored: %d quarters for day %d", restoredCount, currentDay);
+    }
 };
+
+const char* SolarChartDataProvider::NAMESPACE = "chartdata";
