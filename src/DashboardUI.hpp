@@ -1640,8 +1640,9 @@ public:
         }
         int previousGridPower = previousInverterData.gridPowerL1 + previousInverterData.gridPowerL2 + previousInverterData.gridPowerL3;
         int gridPower = inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3;
-        int previousInverterPower = previousInverterData.inverterOutpuPowerL1 + previousInverterData.inverterOutpuPowerL2 + previousInverterData.inverterOutpuPowerL3;
-        int inverterPower = inverterData.inverterOutpuPowerL1 + inverterData.inverterOutpuPowerL2 + inverterData.inverterOutpuPowerL3;
+        // Záporný výkon střídače zobrazujeme jako 0
+        int previousInverterPower = max(0, previousInverterData.inverterOutpuPowerL1 + previousInverterData.inverterOutpuPowerL2 + previousInverterData.inverterOutpuPowerL3);
+        int inverterPower = max(0, inverterData.inverterOutpuPowerL1 + inverterData.inverterOutpuPowerL2 + inverterData.inverterOutpuPowerL3);
 
         if (uiMedianPowerSampler.hasValidSamples())
         {
@@ -1671,11 +1672,11 @@ public:
         {
             outPower += gridPower;
         }
-        int totalPhasePower = inverterData.inverterOutpuPowerL1 + inverterData.inverterOutpuPowerL2 + inverterData.inverterOutpuPowerL3;
-        int l1PercentUsage = totalPhasePower > 0 ? (100 * inverterData.inverterOutpuPowerL1) / totalPhasePower : 0;
-        int l2PercentUsage = totalPhasePower > 0 ? (100 * inverterData.inverterOutpuPowerL2) / totalPhasePower : 0;
-        int l3PercentUsage = totalPhasePower > 0 ? (100 * inverterData.inverterOutpuPowerL3) / totalPhasePower : 0;
-        bool hasPhases = inverterData.inverterOutpuPowerL2 > 0 || inverterData.inverterOutpuPowerL3 > 0;
+        int totalPhasePower = max(0, inverterData.inverterOutpuPowerL1) + max(0, inverterData.inverterOutpuPowerL2) + max(0, inverterData.inverterOutpuPowerL3);
+        int l1PercentUsage = totalPhasePower > 0 ? (100 * max(0, inverterData.inverterOutpuPowerL1)) / totalPhasePower : 0;
+        int l2PercentUsage = totalPhasePower > 0 ? (100 * max(0, inverterData.inverterOutpuPowerL2)) / totalPhasePower : 0;
+        int l3PercentUsage = totalPhasePower > 0 ? (100 * max(0, inverterData.inverterOutpuPowerL3)) / totalPhasePower : 0;
+        bool hasPhases = max(0, inverterData.inverterOutpuPowerL2) > 0 || max(0, inverterData.inverterOutpuPowerL3) > 0;
 
         if (hasPhases)
         {
@@ -1773,19 +1774,23 @@ public:
         pvBackgroundAnimator.animate(ui_pvContainer, ((inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power) > 0) ? lv_color_hex(_ui_theme_color_pvColor[0]) : containerBackground);
         lv_label_set_text(ui_inverterPowerUnitLabel, format(POWER, inverterPower).unit.c_str());
 
-        // phases
-        lv_label_set_text(ui_inverterPowerL1Label, format(POWER, inverterData.inverterOutpuPowerL1, 1.0f, false).formatted.c_str());
-        lv_bar_set_value(ui_inverterPowerBar1, min(2400, inverterData.inverterOutpuPowerL1), LV_ANIM_ON);
-        lv_obj_set_style_bg_color(ui_inverterPowerBar1, l1PercentUsage > 50 && inverterData.inverterOutpuPowerL1 > 1200 ? red : textColor, LV_PART_INDICATOR);
-        lv_obj_set_style_text_color(ui_inverterPowerL1Label, l1PercentUsage > 50 && inverterData.inverterOutpuPowerL1 > 1200 ? red : textColor, 0);
-        lv_label_set_text(ui_inverterPowerL2Label, format(POWER, inverterData.inverterOutpuPowerL2, 1.0f, false).formatted.c_str());
-        lv_bar_set_value(ui_inverterPowerBar2, min(2400, inverterData.inverterOutpuPowerL2), LV_ANIM_ON);
-        lv_obj_set_style_bg_color(ui_inverterPowerBar2, l2PercentUsage > 50 && inverterData.inverterOutpuPowerL2 > 1200 ? red : textColor, LV_PART_INDICATOR);
-        lv_obj_set_style_text_color(ui_inverterPowerL2Label, l2PercentUsage > 50 && inverterData.inverterOutpuPowerL2 > 1200 ? red : textColor, 0);
-        lv_label_set_text(ui_inverterPowerL3Label, format(POWER, inverterData.inverterOutpuPowerL3, 1.0f, false).formatted.c_str());
-        lv_bar_set_value(ui_inverterPowerBar3, min(2400, inverterData.inverterOutpuPowerL3), LV_ANIM_ON);
-        lv_obj_set_style_bg_color(ui_inverterPowerBar3, l3PercentUsage > 50 && inverterData.inverterOutpuPowerL3 > 1200 ? red : textColor, LV_PART_INDICATOR);
-        lv_obj_set_style_text_color(ui_inverterPowerL3Label, l3PercentUsage > 50 && inverterData.inverterOutpuPowerL3 > 1200 ? red : textColor, 0);
+        // phases - záporný výkon střídače zobrazujeme jako 0
+        int displayL1Power = max(0, inverterData.inverterOutpuPowerL1);
+        int displayL2Power = max(0, inverterData.inverterOutpuPowerL2);
+        int displayL3Power = max(0, inverterData.inverterOutpuPowerL3);
+        
+        lv_label_set_text(ui_inverterPowerL1Label, format(POWER, displayL1Power, 1.0f, false).formatted.c_str());
+        lv_bar_set_value(ui_inverterPowerBar1, min(2400, displayL1Power), LV_ANIM_ON);
+        lv_obj_set_style_bg_color(ui_inverterPowerBar1, l1PercentUsage > 50 && displayL1Power > 1200 ? red : textColor, LV_PART_INDICATOR);
+        lv_obj_set_style_text_color(ui_inverterPowerL1Label, l1PercentUsage > 50 && displayL1Power > 1200 ? red : textColor, 0);
+        lv_label_set_text(ui_inverterPowerL2Label, format(POWER, displayL2Power, 1.0f, false).formatted.c_str());
+        lv_bar_set_value(ui_inverterPowerBar2, min(2400, displayL2Power), LV_ANIM_ON);
+        lv_obj_set_style_bg_color(ui_inverterPowerBar2, l2PercentUsage > 50 && displayL2Power > 1200 ? red : textColor, LV_PART_INDICATOR);
+        lv_obj_set_style_text_color(ui_inverterPowerL2Label, l2PercentUsage > 50 && displayL2Power > 1200 ? red : textColor, 0);
+        lv_label_set_text(ui_inverterPowerL3Label, format(POWER, displayL3Power, 1.0f, false).formatted.c_str());
+        lv_bar_set_value(ui_inverterPowerBar3, min(2400, displayL3Power), LV_ANIM_ON);
+        lv_obj_set_style_bg_color(ui_inverterPowerBar3, l3PercentUsage > 50 && displayL3Power > 1200 ? red : textColor, LV_PART_INDICATOR);
+        lv_obj_set_style_text_color(ui_inverterPowerL3Label, l3PercentUsage > 50 && displayL3Power > 1200 ? red : textColor, 0);
 
         // grid phases
         lv_label_set_text(ui_meterPowerLabelL1, format(POWER, inverterData.gridPowerL1, 1.0f, false).formatted.c_str());

@@ -487,11 +487,13 @@ public:
                 // - Nemáme místo pro nabíjení NEBO se nevyplatí nabíjet
                 //
                 // Klíčová změna: HOLD jen pokud by se NEVYPLATILO nabíjet
-                // Nabíjení se vyplatí když: storageCost < localMaxBuyPrice (využijeme energii ve špičce)
+                // Nabíjení se vyplatí když: jsme blízko minima A storageCost < localMaxBuyPrice
                 bool canCharge = spaceInBattery > 0;
                 float storageCostForHold = buyPrice + batteryCostPerKwh;
-                bool chargingWouldBeWorth = storageCostForHold < localMaxBuyPrice;
-                bool shouldChargeInsteadOfHold = canCharge && chargingWouldBeWorth;
+                bool isNearMinimumForHold = buyPrice <= localMinBuyPrice * CHEAP_TIME_THRESHOLD;
+                bool chargingWouldBeWorthEconomically = storageCostForHold < localMaxBuyPrice;
+                // Nabíjení má přednost jen pokud jsme blízko minima - jinak čekáme na levnější cenu
+                bool shouldChargeInsteadOfHold = canCharge && isNearMinimumForHold && chargingWouldBeWorthEconomically;
                 
                 bool shouldHoldForLater = batteryBetterThanGrid && 
                                           isCheapNow &&
@@ -593,13 +595,18 @@ public:
             // Nabíjíme pokud: je to výhodné pro pozdější spotřebu NEBO pro arbitráž
             if (spaceInBattery > 0) {
                 // Podmínky pro nabíjení - používáme LOKÁLNÍ min/max (12h okno)
-                // Lokální minimum je relevantní, protože nás zajímá "je teď dobrý čas v rámci blízké budoucnosti"
-                bool isCheapTime = buyPrice <= localMinBuyPrice * CHEAP_TIME_THRESHOLD;
+                
+                // Je aktuální cena blízko lokálního minima? (do 10% nad minimum)
+                // Toto zajistí, že nabíjíme jen v nejlevnějších hodinách
+                bool isNearMinimum = buyPrice <= localMinBuyPrice * CHEAP_TIME_THRESHOLD;
+                
                 // Cena uložení energie = nákup + opotřebení baterie (full cycle cost se počítá jen jednou)
                 float storageCost = buyPrice + batteryCostPerKwh;
-                // Nabíjení se vyplatí když uložená energie bude levnější než LOKÁLNÍ MAXIMUM
+                
+                // Nabíjení se vyplatí ekonomicky když uložená energie bude levnější než LOKÁLNÍ MAXIMUM
                 // (v následujících 12 hodinách nastane špička kde energii využijeme)
-                bool worthCharging = storageCost < localMaxBuyPrice;
+                bool worthChargingEconomically = storageCost < localMaxBuyPrice;
+                
                 // Spotřeba s bezpečnostní rezervou (pro jistotu nakoupíme víc)
                 float expectedConsumption = remainingConsumption * CONSUMPTION_SAFETY_MARGIN;
                 bool willNeedLater = expectedConsumption > remainingProduction;
@@ -613,18 +620,18 @@ public:
                 
                 // Debug: log charging decision factors
                 if (i < 3 || (q >= 96 && q <= 100)) {
-                    log_d("Q%d CHARGE? isCheap=%d (%.2f<=%.2f*1.1=%.2f), worth=%d (%.2f<%.2f), need=%d (%.1f>%.1f), arb=%d",
-                          q, isCheapTime, buyPrice, localMinBuyPrice, localMinBuyPrice * CHEAP_TIME_THRESHOLD,
-                          worthCharging, storageCost, localMaxBuyPrice,
+                    log_d("Q%d CHARGE? nearMin=%d (%.2f<=%.2f*1.1=%.2f), worthEcon=%d (%.2f<%.2f), need=%d (%.1f>%.1f), arb=%d",
+                          q, isNearMinimum, buyPrice, localMinBuyPrice, localMinBuyPrice * CHEAP_TIME_THRESHOLD,
+                          worthChargingEconomically, storageCost, localMaxBuyPrice,
                           willNeedLater, expectedConsumption, remainingProduction,
                           worthArbitrage);
                 }
                 
                 // Nabíjíme pokud:
-                // 1) Vyplatí se nabíjet (uložená energie bude levnější než lokální max) A budeme potřebovat energii
-                // 2) Nebo se vyplatí arbitráž
-                // Poznámka: isCheapTime už není vyžadováno - stačí že se nabíjení vyplatí ekonomicky
-                bool shouldCharge = (worthCharging && willNeedLater) || worthArbitrage;
+                // 1) Jsme blízko lokálního minima A vyplatí se nabíjet ekonomicky A budeme potřebovat energii
+                // 2) Nebo se vyplatí arbitráž (ta má vlastní pravidla o ceně)
+                // Klíčová změna: Musíme být u MINIMA, ne jen pod maximem!
+                bool shouldCharge = (isNearMinimum && worthChargingEconomically && willNeedLater) || worthArbitrage;
                 
                 if (shouldCharge) {
                     decision = INVERTER_MODE_CHARGE_FROM_GRID;
