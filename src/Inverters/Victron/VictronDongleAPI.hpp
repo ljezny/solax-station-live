@@ -102,9 +102,9 @@ public:
         response = channel.sendModbusRequest(100, 0x03, 808, 15);
         if (response.isValid)
         {
-            inverterData.L1Power = max(0, ((int)response.readUInt16(817)) - response.readInt16(820));
-            inverterData.L2Power = max(0, ((int)response.readUInt16(818)) - response.readInt16(821));
-            inverterData.L3Power = max(0, ((int)response.readUInt16(819)) - response.readInt16(822));
+            inverterData.inverterOutpuPowerL1 = max(0, ((int)response.readUInt16(817)) - response.readInt16(820));
+            inverterData.inverterOutpuPowerL2 = max(0, ((int)response.readUInt16(818)) - response.readInt16(821));
+            inverterData.inverterOutpuPowerL3 = max(0, ((int)response.readUInt16(819)) - response.readInt16(822));
             inverterData.loadPower = response.readUInt16(817) + response.readUInt16(818) + response.readUInt16(819);
             //inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
             inverterData.gridPowerL1 = -1 * response.readInt16(820);

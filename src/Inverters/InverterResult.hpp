@@ -35,9 +35,9 @@ typedef struct
     double gridSellToday = 0;
     double gridBuyTotal = 0;
     double gridSellTotal = 0;
-    int L1Power = 0;
-    int L2Power = 0;
-    int L3Power = 0;
+    int inverterOutpuPowerL1 = 0;
+    int inverterOutpuPowerL2 = 0;
+    int inverterOutpuPowerL3 = 0;
     int16_t loadPower = 0;
     float loadToday = 0;
     float loadTotal = 0;
@@ -69,9 +69,9 @@ void logInverterData(InverterData_t& inverterData) {
     log_d("Grid Sell Today: %f", inverterData.gridSellToday);
     log_d("Grid Buy Total: %f", inverterData.gridBuyTotal);
     log_d("Grid Sell Total: %f", inverterData.gridSellTotal);
-    log_d("L1 Power: %d", inverterData.L1Power);
-    log_d("L2 Power: %d", inverterData.L2Power);
-    log_d("L3 Power: %d", inverterData.L3Power);
+    log_d("L1 Power: %d", inverterData.inverterOutpuPowerL1);
+    log_d("L2 Power: %d", inverterData.inverterOutpuPowerL2);
+    log_d("L3 Power: %d", inverterData.inverterOutpuPowerL3);
     log_d("Load Power: %d", inverterData.loadPower);
     log_d("Load Today: %f", inverterData.loadToday);
     log_d("Load Total: %f", inverterData.loadTotal);

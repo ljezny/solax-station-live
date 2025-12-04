@@ -50,15 +50,15 @@ private:
         // Grid Input
         if (!channel.tryReadWithRetries(0x484, 0x4BC - 0x484 + 1, sn, packetBuffer, [&]()
                                 {
-            inverterData.L1Power = channel.readInt16(packetBuffer, 0x485 - 0x484) * 10;
+            inverterData.inverterOutpuPowerL1 = channel.readInt16(packetBuffer, 0x485 - 0x484) * 10;
             inverterData.loadPower = channel.readInt16(packetBuffer, 0x04AF - 0x484) * 10;
             //inverterData.gridPower = channel.readInt16(packetBuffer, 0x0488 - 0x484) * 10;
             inverterData.gridPowerL1 = channel.readInt16(packetBuffer, 0x493 - 0x484) * 10;
             inverterData.gridPowerL2 = channel.readInt16(packetBuffer, 0x49E - 0x484) * 10;
             inverterData.gridPowerL3 = channel.readInt16(packetBuffer, 0x4A9 - 0x484) * 10;
-            inverterData.L1Power = channel.readInt16(packetBuffer, 0x48F - 0x484) * 10;
-            inverterData.L2Power = channel.readInt16(packetBuffer, 0x49A - 0x484) * 10;
-            inverterData.L3Power = channel.readInt16(packetBuffer, 0x4A9 - 0x484) * 10; }))
+            inverterData.inverterOutpuPowerL1 = channel.readInt16(packetBuffer, 0x48F - 0x484) * 10;
+            inverterData.inverterOutpuPowerL2 = channel.readInt16(packetBuffer, 0x49A - 0x484) * 10;
+            inverterData.inverterOutpuPowerL3 = channel.readInt16(packetBuffer, 0x4A9 - 0x484) * 10; }))
             return inverterData;
 
         // Stats
