@@ -176,10 +176,10 @@ InverterData_t createRandomMockData()
     inverterData.batteryPower = random(-50, 50);
     inverterData.batteryTemperature = random(20, 26);
     inverterData.inverterTemperature = random(40, 52);
-    inverterData.L1Power = random(500, 600);
-    inverterData.L2Power = random(300, 400);
-    inverterData.L3Power = random(1000, 1200);
-    // inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
+    inverterData.inverterOutpuPowerL1 = random(500, 600);
+    inverterData.inverterOutpuPowerL2 = random(300, 400);
+    inverterData.inverterOutpuPowerL3 = random(1000, 1200);
+    //inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
     inverterData.loadPower = random(800, 1200);
     inverterData.loadToday = random(20, 60);
     inverterData.gridPowerL1 = random(-1000, 1000);

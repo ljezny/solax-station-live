@@ -415,11 +415,21 @@ private:
                     inverterData.pv3Power = response.readUInt32(35100 + 13);
                     inverterData.pv4Power = response.readUInt32(35100 + 17);
 
-                    inverterData.batteryPower -= response.readInt16(35100 + 83);
-                    inverterData.L1Power = response.readInt16(35100 + 25) + response.readInt16(35100 + 50);
-                    inverterData.L2Power = response.readInt16(35100 + 30) + response.readInt16(35100 + 56);
-                    inverterData.L3Power = response.readInt16(35100 + 35) + response.readInt16(35100 + 62);
-                    inverterData.loadPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
+                    inverterData.batteryPower -= response.readInt16(35100 + 83); // TODO: maybe sign readuw(84);
+                    
+                    // Inverter output power per phase (pgrid L1-L3: registers 35125, 35130, 35135)
+                    inverterData.inverterOutpuPowerL1 = response.readInt16(35100 + 25); // pgrid - On-grid L1 Power
+                    inverterData.inverterOutpuPowerL2 = response.readInt16(35100 + 30); // pgrid2 - On-grid L2 Power
+                    inverterData.inverterOutpuPowerL3 = response.readInt16(35100 + 35); // pgrid3 - On-grid L3 Power
+                    
+                    // Load power = on-grid load (35172) + backup load (35170)
+                    // Register 35172 (offset 72) = load_ptotal (on-grid load, backup NOT included)
+                    // Register 35170 (offset 70) = backup_ptotal (backup/EPS load)
+                    int loadOnGrid = response.readInt16(35100 + 72);   // load_ptotal - on-grid load without backup
+                    int loadBackup = response.readInt16(35100 + 70);   // backup_ptotal - backup/EPS load
+                    inverterData.loadPower = loadOnGrid /*+ loadBackup*/;  // total house consumption
+                    // Note: backup load is excluded because it is already included in on-grid load for Goodwe ET10! Maybe ET15 is different?
+
 
                     inverterData.inverterTemperature = response.readInt16(35100 + 74) / 10;
                     inverterData.pvTotal = response.readUInt32(35100 + 91) / 10.0;

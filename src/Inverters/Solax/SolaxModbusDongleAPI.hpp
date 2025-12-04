@@ -400,7 +400,7 @@ private:
             return false;
         }
         data.status = DONGLE_STATUS_OK;
-        data.L1Power = response.readInt16(0x02);
+        data.inverterOutpuPowerL1 = response.readInt16(0x02);
         data.pv1Power = response.readUInt16(0x0A);
         data.pv2Power = response.readUInt16(0x0B);
         data.inverterTemperature = response.readInt16(0x08);
@@ -478,17 +478,17 @@ private:
             log_d("Failed to read phase data");
             return false;
         }
-        data.L1Power = response.readInt16(0x6C);
-        data.L2Power = response.readInt16(0x70);
-        data.L3Power = response.readInt16(0x74);
+        data.inverterOutpuPowerL1 = response.readInt16(0x6C);
+        data.inverterOutpuPowerL2 = response.readInt16(0x70);
+        data.inverterOutpuPowerL3 = response.readInt16(0x74);
 
         //backup
         uint16_t backupL1Power = response.readInt16(0x78);
         uint16_t backupL2Power = response.readInt16(0x7C);
         uint16_t backupL3Power = response.readInt16(0x80);
-        data.L1Power += backupL1Power;
-        data.L2Power += backupL2Power;
-        data.L3Power += backupL3Power;
+        data.inverterOutpuPowerL1 += backupL1Power;
+        data.inverterOutpuPowerL2 += backupL2Power;
+        data.inverterOutpuPowerL3 += backupL3Power;
 
         data.gridPowerL1 = response.readInt16(0x82);
         data.gridPowerL2 = response.readInt16(0x84);
@@ -513,7 +513,7 @@ private:
     void finalizePowerCalculations(InverterData_t &data)
     {
         //data.inverterPower = data.L1Power + data.L2Power + data.L3Power;
-        data.loadPower = data.L1Power + data.L2Power + data.L3Power - (data.gridPowerL1 + data.gridPowerL2 + data.gridPowerL3);
+        data.loadPower = data.inverterOutpuPowerL1 + data.inverterOutpuPowerL2 + data.inverterOutpuPowerL3 - (data.gridPowerL1 + data.gridPowerL2 + data.gridPowerL3);
         data.loadToday += data.gridBuyToday - data.gridSellToday;
     }
 
