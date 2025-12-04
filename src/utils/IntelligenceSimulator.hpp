@@ -87,6 +87,7 @@ private:
     static constexpr float LOW_BATTERY_SOC = 60.0f;            // SOC pod kterým je baterie "nízká"
     static constexpr float MIN_ENERGY_THRESHOLD = 0.01f;       // Minimální energie pro akci (kWh)
     static constexpr float CONSUMPTION_SAFETY_MARGIN = 1.2f;   // 20% rezerva na spotřebu (pro jistotu)
+    static constexpr int LOCAL_WINDOW_QUARTERS = 48;           // Okno pro lokální min/max (12 hodin = 48 čtvrthodin)
     
     ConsumptionPredictor& consumptionPredictor;
     ProductionPredictor& productionPredictor;
@@ -153,6 +154,28 @@ private:
     }
     
     /**
+     * Najde lokální minimum nákupní ceny v okně LOCAL_WINDOW_QUARTERS čtvrthodin
+     * Lokální minimum je relevantní pro rozhodování "je teď levný čas?"
+     */
+    float findLocalMinBuyPrice(const ElectricityPriceTwoDays_t& prices, 
+                                int fromQuarter, int toQuarter,
+                                const IntelligenceSettings_t& settings) {
+        int windowEnd = min(fromQuarter + LOCAL_WINDOW_QUARTERS, toQuarter);
+        return findMinFutureBuyPrice(prices, fromQuarter, windowEnd, settings);
+    }
+    
+    /**
+     * Najde lokální maximum nákupní ceny v okně LOCAL_WINDOW_QUARTERS čtvrthodin
+     * Lokální maximum je relevantní pro rozhodování "vyplatí se nabíjet?"
+     */
+    float findLocalMaxBuyPrice(const ElectricityPriceTwoDays_t& prices, 
+                                int fromQuarter, int toQuarter,
+                                const IntelligenceSettings_t& settings) {
+        int windowEnd = min(fromQuarter + LOCAL_WINDOW_QUARTERS, toQuarter);
+        return findMaxFutureBuyPrice(prices, fromQuarter, windowEnd, settings);
+    }
+    
+    /**
      * Najde nejvyšší nákupní cenu v budoucnosti
      */
     float findMaxFutureBuyPrice(const ElectricityPriceTwoDays_t& prices, 
@@ -183,6 +206,16 @@ private:
     }
     
     /**
+     * Najde lokální maximum prodejní ceny v okně LOCAL_WINDOW_QUARTERS čtvrthodin
+     */
+    float findLocalMaxSellPrice(const ElectricityPriceTwoDays_t& prices,
+                                 int fromQuarter, int toQuarter,
+                                 const IntelligenceSettings_t& settings) {
+        int windowEnd = min(fromQuarter + LOCAL_WINDOW_QUARTERS, toQuarter);
+        return findMaxFutureSellPrice(prices, fromQuarter, windowEnd, settings);
+    }
+    
+    /**
      * Spočítá průměrnou budoucí nákupní cenu
      */
     float calculateAvgFutureBuyPrice(const ElectricityPriceTwoDays_t& prices,
@@ -196,6 +229,16 @@ private:
             count++;
         }
         return count > 0 ? sum / count : 0;
+    }
+    
+    /**
+     * Spočítá lokální průměrnou budoucí nákupní cenu v okně LOCAL_WINDOW_QUARTERS
+     */
+    float calculateLocalAvgBuyPrice(const ElectricityPriceTwoDays_t& prices,
+                                     int fromQuarter, int toQuarter,
+                                     const IntelligenceSettings_t& settings) {
+        int windowEnd = min(fromQuarter + LOCAL_WINDOW_QUARTERS, toQuarter);
+        return calculateAvgFutureBuyPrice(prices, fromQuarter, windowEnd, settings);
     }
     
     /**
@@ -308,6 +351,7 @@ public:
             float sellPrice = IntelligenceSettingsStorage::calculateSellPrice(spotPrice, settings);
             
             // Budoucí ceny (pro rozhodování)
+            // Globální min/max pro celý horizont
             float minFutureBuyPrice = (q + 1 < maxQuarters) 
                 ? findMinFutureBuyPrice(prices, q + 1, maxQuarters, settings) 
                 : buyPrice;
@@ -319,6 +363,21 @@ public:
                 : sellPrice;
             float avgFutureBuyPrice = (q + 1 < maxQuarters)
                 ? calculateAvgFutureBuyPrice(prices, q + 1, maxQuarters, settings)
+                : buyPrice;
+            
+            // Lokální min/max v okně 12 hodin - pro rozhodování o nabíjení/vybíjení
+            // Používáme lokální hodnoty, protože nás zajímá blízká budoucnost
+            float localMinBuyPrice = (q + 1 < maxQuarters)
+                ? findLocalMinBuyPrice(prices, q + 1, maxQuarters, settings)
+                : buyPrice;
+            float localMaxBuyPrice = (q + 1 < maxQuarters)
+                ? findLocalMaxBuyPrice(prices, q + 1, maxQuarters, settings)
+                : buyPrice;
+            float localMaxSellPrice = (q + 1 < maxQuarters)
+                ? findLocalMaxSellPrice(prices, q + 1, maxQuarters, settings)
+                : sellPrice;
+            float localAvgBuyPrice = (q + 1 < maxQuarters)
+                ? calculateLocalAvgBuyPrice(prices, q + 1, maxQuarters, settings)
                 : buyPrice;
             
             // Budoucí energie
@@ -393,17 +452,21 @@ public:
                 // HOLD baterii se vyplatí POUZE když splníme VŠECHNY podmínky:
                 //
                 // 1) Baterie je teď levnější než síť (jinak kupujeme ze sítě beztak)
-                // 2) Aktuální cena je NÍZKÁ - pod průměrem budoucích cen
+                // 2) Aktuální cena je NÍZKÁ - pod lokálním průměrem budoucích cen (12h okno)
                 //    (v drahé hodině nemá smysl kupovat ze sítě)
                 // 3) HOLD se skutečně VYPLATÍ ekonomicky:
                 //    - Teď zaplatíme: buyPrice (nákup ze sítě)
-                //    - Později ušetříme: maxFutureBuyPrice - batteryCost (baterie místo sítě)
-                //    - HOLD se vyplatí když: maxFutureBuyPrice - batteryCost > buyPrice
-                //    - Čili: maxFutureBuyPrice > buyPrice + batteryCost
+                //    - Později ušetříme: localMaxBuyPrice - batteryCost (baterie místo sítě)
+                //    - HOLD se vyplatí když: localMaxBuyPrice - batteryCost > buyPrice
+                //    - Čili: localMaxBuyPrice > buyPrice + batteryCost
                 // 4) Budeme mít reálnou spotřebu v době vysoké ceny (ne jen teoreticky)
                 //
-                bool isCheapNow = buyPrice < avgFutureBuyPrice;  // Teď je levněji než průměr
-                float holdProfit = maxFutureBuyPrice - buyPrice - batteryCostPerKwh;  // Čistý zisk z HOLD
+                // Používáme LOKÁLNÍ hodnoty (12h okno), protože:
+                // - Nás zajímá nejbližší špička, ne špička za 24 hodin
+                // - HOLD na příliš dlouhou dobu není efektivní
+                //
+                bool isCheapNow = buyPrice < localAvgBuyPrice;  // Teď je levněji než lokální průměr
+                float holdProfit = localMaxBuyPrice - buyPrice - batteryCostPerKwh;  // Čistý zisk z HOLD
                 bool holdIsProfitable = holdProfit > 0;
                 
                 // Kolik energie potřebujeme do budoucna (bez solární výroby)?
@@ -426,7 +489,7 @@ public:
                     // HOLD baterii a koupit ze sítě - ušetříme baterii na dražší čas
                     decision = INVERTER_MODE_HOLD_BATTERY;
                     reason = String("Hold: buy@") + String(buyPrice, 1) + 
-                             " now, use batt@" + String(maxFutureBuyPrice, 1) + 
+                             " now, use batt@" + String(localMaxBuyPrice, 1) + 
                              " profit:" + String(holdProfit, 1);
                     
                     // Kupujeme ze sítě
@@ -509,13 +572,14 @@ public:
             // 3a) NABÍJENÍ ZE SÍTĚ - levná elektřina
             // Nabíjíme pokud: je to výhodné pro pozdější spotřebu NEBO pro arbitráž
             if (spaceInBattery > 0) {
-                // Podmínky pro nabíjení
-                bool isCheapTime = buyPrice <= minFutureBuyPrice * CHEAP_TIME_THRESHOLD;
+                // Podmínky pro nabíjení - používáme LOKÁLNÍ min/max (12h okno)
+                // Lokální minimum je relevantní, protože nás zajímá "je teď dobrý čas v rámci blízké budoucnosti"
+                bool isCheapTime = buyPrice <= localMinBuyPrice * CHEAP_TIME_THRESHOLD;
                 // Cena uložení energie = nákup + 2× opotřebení baterie (nabití + vybití)
                 float storageCost = buyPrice + (2 * batteryCostPerKwh);
-                // Nabíjení se vyplatí když uložená energie bude levnější než MAXIMÁLNÍ budoucí nákup
-                // (protože energii z baterie použijeme právě v nejdražší čtvrthodině)
-                bool worthCharging = storageCost < maxFutureBuyPrice;
+                // Nabíjení se vyplatí když uložená energie bude levnější než LOKÁLNÍ MAXIMUM
+                // (v následujících 12 hodinách nastane špička kde energii využijeme)
+                bool worthCharging = storageCost < localMaxBuyPrice;
                 // Spotřeba s bezpečnostní rezervou (pro jistotu nakoupíme víc)
                 float expectedConsumption = remainingConsumption * CONSUMPTION_SAFETY_MARGIN;
                 bool willNeedLater = expectedConsumption > remainingProduction;
@@ -526,8 +590,17 @@ public:
                 float minRequiredProfit = buyPrice * ARBITRAGE_PROFIT_THRESHOLD;
                 bool worthArbitrage = arbitrageProfit > minRequiredProfit && arbitrageProfit > 0;
                 
+                // Debug: log charging decision factors
+                if (i < 3 || (q >= 96 && q <= 100)) {
+                    log_d("Q%d CHARGE? isCheap=%d (%.2f<=%.2f*1.1=%.2f), worth=%d (%.2f<%.2f), need=%d (%.1f>%.1f), arb=%d",
+                          q, isCheapTime, buyPrice, localMinBuyPrice, localMinBuyPrice * CHEAP_TIME_THRESHOLD,
+                          worthCharging, storageCost, localMaxBuyPrice,
+                          willNeedLater, expectedConsumption, remainingProduction,
+                          worthArbitrage);
+                }
+                
                 // Nabíjíme pokud:
-                // 1) Je levný čas A vyplatí se nabíjet (úspora vs max future) A budeme potřebovat energii
+                // 1) Je levný čas A vyplatí se nabíjet (úspora vs lokální max) A budeme potřebovat energii
                 // 2) Nebo se vyplatí arbitráž
                 bool shouldCharge = (isCheapTime && worthCharging && willNeedLater) || 
                                     worthArbitrage;
@@ -556,13 +629,13 @@ public:
             // Prodej má smysl pouze když:
             // 1) Prodejní cena je vyšší než náklad na vybití baterie
             // 2) Máme skutečný přebytek energie nad budoucí spotřebu
-            // 3) Je to nejlepší čas k prodeji
+            // 3) Je to nejlepší čas k prodeji (v lokálním okně 12h)
             if (availableFromBattery > 0 && solarSurplus <= 0 && decision == INVERTER_MODE_SELF_USE) {
-                // Zpřísněné podmínky pro prodej:
-                bool isBestSellTime = sellPrice >= maxFutureSellPrice * BEST_SELL_TIME_THRESHOLD;
-                // Prodej se vyplatí když sellPrice > avgFutureBuyPrice (jinak bychom později koupili dráž)
+                // Používáme LOKÁLNÍ maximum - je to nejlepší čas v následujících 12 hodinách?
+                bool isBestSellTime = sellPrice >= localMaxSellPrice * BEST_SELL_TIME_THRESHOLD;
+                // Prodej se vyplatí když sellPrice > lokální avgBuyPrice (jinak bychom později koupili dráž)
                 // a zároveň sellPrice > batteryCost (jinak proděláváme na opotřebení)
-                bool worthSelling = sellPrice > avgFutureBuyPrice && sellPrice > batteryCostPerKwh;
+                bool worthSelling = sellPrice > localAvgBuyPrice && sellPrice > batteryCostPerKwh;
                 // Máme přebytek energie - baterie je plná a nepotřebujeme ji pro budoucí spotřebu
                 float energyNeededForFuture = max(0.0f, remainingConsumption - remainingProduction);
                 float minReserve = getMinBatteryKwh() + energyNeededForFuture;
@@ -580,7 +653,7 @@ public:
                         result.costCzk -= toSell * sellPrice;  // Příjem z prodeje
                         result.costCzk += toSell * batteryCostPerKwh;  // Náklad na opotřebení
                         reason = String("Selling@") + String(sellPrice, 1) + 
-                                 " > avgBuy@" + String(avgFutureBuyPrice, 1);
+                                 " > locAvgBuy@" + String(localAvgBuyPrice, 1);
                     }
                 }
             }
@@ -611,12 +684,12 @@ public:
             result.reason = reason;
             
             // === DIAGNOSTICKÉ LOGOVÁNÍ PRO KAŽDÉ Q ===
-            log_d("Q%d %02d:%02d | SOC:%.0f%% | prod:%.2f cons:%.2f | spot:%.2f buy:%.2f sell:%.2f | minFBuy:%.2f maxFBuy:%.2f maxFSell:%.2f | dec:%s | %s",
+            log_d("Q%d %02d:%02d | SOC:%.0f%% | prod:%.2f cons:%.2f | spot:%.2f buy:%.2f sell:%.2f | locMin:%.2f locMax:%.2f | dec:%s | %s",
                   q, result.hour, result.minute,
                   batterySocStart,
                   productionKwh, consumptionKwh,
                   spotPrice, buyPrice, sellPrice,
-                  minFutureBuyPrice, maxFutureBuyPrice, maxFutureSellPrice,
+                  localMinBuyPrice, localMaxBuyPrice,
                   decisionToString(decision).c_str(),
                   reason.c_str());
             
