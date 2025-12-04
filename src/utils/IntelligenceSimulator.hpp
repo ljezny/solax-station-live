@@ -276,7 +276,7 @@ private:
 public:
     IntelligenceSimulator(ConsumptionPredictor& consumption, ProductionPredictor& production)
         : consumptionPredictor(consumption), productionPredictor(production),
-          batteryCapacityKwh(10.0f), minSocPercent(10), maxSocPercent(100),
+          batteryCapacityKwh(10.0f), minSocPercent(30), maxSocPercent(85),
           batteryCostPerKwh(1.0f), maxChargePowerKw(5.0f), maxDischargePowerKw(5.0f),
           currentBatteryKwh(5.0f) {}
     

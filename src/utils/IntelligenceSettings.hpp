@@ -49,8 +49,8 @@ typedef struct IntelligenceSettings {
         settings.buyQ = 2.5f;               // +2.5 Kč distribuční poplatky
         settings.sellK = 0.9f;              // 90% spotu
         settings.sellQ = 0.0f;              // žádná fixní srážka
-        settings.minSocPercent = 10;
-        settings.maxSocPercent = 95;
+        settings.minSocPercent = 30;
+        settings.maxSocPercent = 85;
         settings.batteryCapacityKwh = 10.0f;   // 10 kWh
         settings.maxChargePowerKw = 8.0f;      // 8 kW default
         settings.maxDischargePowerKw = 8.0f;   // 8 kW default
