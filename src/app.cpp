@@ -559,11 +559,10 @@ bool loadInverterDataTask()
                 uiMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
                 wallboxMedianPowerSampler.addPowerSample(inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power, inverterData.soc, inverterData.batteryPower, inverterData.loadPower, inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
 
-                // Update intelligence settings with battery parameters from inverter
+                // Update intelligence settings with battery capacity from inverter
+                // Note: Charge/discharge power is NOT loaded from inverter (user sets it manually)
                 IntelligenceSettingsStorage::updateFromInverter(
-                    inverterData.batteryCapacityWh,
-                    inverterData.maxChargePowerW,
-                    inverterData.maxDischargePowerW);
+                    inverterData.batteryCapacityWh);
 
                 // Add samples for intelligence predictors
                 int pvPower = inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power;
@@ -801,9 +800,19 @@ bool runIntelligenceTask()
                   summary.totalCostCzk, summary.finalBatterySoc);
             log_i("Baseline (dumb): cost %.1f CZK, final SOC %.0f%%",
                   summary.baselineCostCzk, summary.baselineFinalSoc);
-            log_i("Battery value adjustment: %.1f CZK (diff %.1f kWh)",
+            
+            // Detailní info o arbitráži
+            if (summary.chargedFromGridKwh > 0) {
+                float avgChargeCost = summary.chargedFromGridCost / summary.chargedFromGridKwh;
+                float potentialSavings = summary.chargedFromGridKwh * (summary.maxBuyPrice - avgChargeCost);
+                log_i("Arbitrage: charged %.1f kWh @ avg %.1f CZK, max buy %.1f CZK, potential savings %.1f CZK",
+                      summary.chargedFromGridKwh, avgChargeCost, summary.maxBuyPrice, potentialSavings);
+            }
+            
+            log_i("Battery value adjustment: %.1f CZK (diff %.1f kWh @ %.1f CZK)",
                   summary.batteryValueAdjustment,
-                  (summary.finalBatterySoc - summary.baselineFinalSoc) / 100.0f * settings.batteryCapacityKwh);
+                  (summary.finalBatterySoc - summary.baselineFinalSoc) / 100.0f * settings.batteryCapacityKwh,
+                  summary.maxBuyPrice - settings.batteryCostPerKwh);
             log_i("Savings vs dumb Self-Use: %.1f CZK", summary.totalSavingsCzk);
 
             // Log summary of mode changes only

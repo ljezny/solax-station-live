@@ -59,6 +59,9 @@ struct SimulationSummary {
     float batteryValueAdjustment; // Hodnota energie navíc v baterii oproti baseline
     float finalBatterySoc;        // Finální SOC inteligentní simulace
     float baselineFinalSoc;       // Finální SOC baseline simulace
+    float chargedFromGridKwh;     // Kolik energie bylo nabito ze sítě (pro arbitráž)
+    float chargedFromGridCost;    // Kolik to stálo
+    float maxBuyPrice;            // Maximální nákupní cena (pro ocenění baterie)
     int quartersSimulated;
 };
 
@@ -440,8 +443,9 @@ public:
             InverterMode_t decision = INVERTER_MODE_SELF_USE;
             String reason = "Self-use";
             
-            // Náklad na vybití baterie = opotřebení
-            float dischargeCost = batteryCostPerKwh;
+            // Náklad na vybití baterie = 0 (opotřebení se počítá při nabíjení jako full cycle)
+            // Tím se zajistí, že batteryCost se počítá jen jednou za cyklus
+            float dischargeCost = 0;
             
             // 1b) Zbývá spotřeba - rozhodnutí baterie vs síť
             if (remainingConsumptionNow > 0) {
@@ -466,7 +470,8 @@ public:
                 // - HOLD na příliš dlouhou dobu není efektivní
                 //
                 bool isCheapNow = buyPrice < localAvgBuyPrice;  // Teď je levněji než lokální průměr
-                float holdProfit = localMaxBuyPrice - buyPrice - batteryCostPerKwh;  // Čistý zisk z HOLD
+                // Čistý zisk z HOLD = rozdíl cen (batteryCost se počítá jen při nabíjení, ne při vybíjení)
+                float holdProfit = localMaxBuyPrice - buyPrice;
                 bool holdIsProfitable = holdProfit > 0;
                 
                 // Kolik energie potřebujeme do budoucna (bez solární výroby)?
@@ -474,16 +479,26 @@ public:
                 bool willNeedBatteryLater = energyDeficit > 0;
                 
                 // HOLD pouze pokud:
-                // - Baterie je teď výhodnější než síť
-                // - Teď je levná hodina (pod průměrem)
+                // - Baterie je teď výhodnější než síť (dischargeCost < buyPrice)
+                // - Teď NENÍ vhodná hodina pro nabíjení (jinak bychom měli nabíjet, ne držet)
                 // - HOLD je ziskový (ušetříme víc než zaplatíme)
                 // - Budeme potřebovat baterii později
                 // - Máme co držet
+                // - Nemáme místo pro nabíjení NEBO se nevyplatí nabíjet
+                //
+                // Klíčová změna: HOLD jen pokud by se NEVYPLATILO nabíjet
+                // Nabíjení se vyplatí když: storageCost < localMaxBuyPrice (využijeme energii ve špičce)
+                bool canCharge = spaceInBattery > 0;
+                float storageCostForHold = buyPrice + batteryCostPerKwh;
+                bool chargingWouldBeWorth = storageCostForHold < localMaxBuyPrice;
+                bool shouldChargeInsteadOfHold = canCharge && chargingWouldBeWorth;
+                
                 bool shouldHoldForLater = batteryBetterThanGrid && 
                                           isCheapNow &&
                                           holdIsProfitable && 
                                           willNeedBatteryLater &&
-                                          availableFromBattery > 0;
+                                          availableFromBattery > 0 &&
+                                          !shouldChargeInsteadOfHold;  // Nepřeskakuj nabíjení!
                 
                 if (shouldHoldForLater) {
                     // HOLD baterii a koupit ze sítě - ušetříme baterii na dražší čas
@@ -495,12 +510,18 @@ public:
                     // Kupujeme ze sítě
                     result.fromGridKwh = remainingConsumptionNow;
                     result.costCzk = remainingConsumptionNow * buyPrice;
+                } else if (shouldChargeInsteadOfHold) {
+                    // Teď je dobrá doba na nabíjení - nekryjeme spotřebu z baterie, ale ze sítě
+                    // a baterii nabijeme v KROK 3
+                    result.fromGridKwh = remainingConsumptionNow;
+                    result.costCzk = remainingConsumptionNow * buyPrice;
+                    reason = String("Grid (charging time): buy@") + String(buyPrice, 1);
                 } else if (availableFromBattery >= remainingConsumptionNow && batteryBetterThanGrid) {
                     // Baterie je levnější → použij baterii
                     result.fromBatteryKwh = remainingConsumptionNow;
                     currentBatteryKwh -= remainingConsumptionNow;
-                    // Náklad = jen opotřebení baterie
-                    result.costCzk = remainingConsumptionNow * batteryCostPerKwh;
+                    // Náklad = 0 (opotřebení už bylo započítáno při nabíjení)
+                    result.costCzk = 0;
                     reason = String("Battery@") + String(dischargeCost, 1) + 
                              " < grid@" + String(buyPrice, 1);
                 } else if (availableFromBattery > 0 && batteryBetterThanGrid) {
@@ -508,9 +529,8 @@ public:
                     result.fromBatteryKwh = min(availableFromBattery, remainingConsumptionNow);
                     currentBatteryKwh -= result.fromBatteryKwh;
                     result.fromGridKwh = remainingConsumptionNow - result.fromBatteryKwh;
-                    // Náklad baterie = jen opotřebení
-                    result.costCzk = result.fromBatteryKwh * batteryCostPerKwh + 
-                                     result.fromGridKwh * buyPrice;
+                    // Náklad baterie = 0 (opotřebení už bylo započítáno při nabíjení)
+                    result.costCzk = result.fromGridKwh * buyPrice;
                     reason = "Partial battery + grid";
                 } else {
                     // Vše ze sítě (baterie je dražší nebo prázdná)
@@ -575,8 +595,8 @@ public:
                 // Podmínky pro nabíjení - používáme LOKÁLNÍ min/max (12h okno)
                 // Lokální minimum je relevantní, protože nás zajímá "je teď dobrý čas v rámci blízké budoucnosti"
                 bool isCheapTime = buyPrice <= localMinBuyPrice * CHEAP_TIME_THRESHOLD;
-                // Cena uložení energie = nákup + 2× opotřebení baterie (nabití + vybití)
-                float storageCost = buyPrice + (2 * batteryCostPerKwh);
+                // Cena uložení energie = nákup + opotřebení baterie (full cycle cost se počítá jen jednou)
+                float storageCost = buyPrice + batteryCostPerKwh;
                 // Nabíjení se vyplatí když uložená energie bude levnější než LOKÁLNÍ MAXIMUM
                 // (v následujících 12 hodinách nastane špička kde energii využijeme)
                 bool worthCharging = storageCost < localMaxBuyPrice;
@@ -586,7 +606,8 @@ public:
                 
                 // Arbitráž: koupit levně, prodat draze (potřebujeme zisk po započtení nákladů baterie)
                 // Profit musí být alespoň X% z nákupní ceny
-                float arbitrageProfit = maxFutureSellPrice - buyPrice - (2 * batteryCostPerKwh);
+                // BatteryCost se počítá jen jednou za celý cyklus
+                float arbitrageProfit = maxFutureSellPrice - buyPrice - batteryCostPerKwh;
                 float minRequiredProfit = buyPrice * ARBITRAGE_PROFIT_THRESHOLD;
                 bool worthArbitrage = arbitrageProfit > minRequiredProfit && arbitrageProfit > 0;
                 
@@ -600,10 +621,10 @@ public:
                 }
                 
                 // Nabíjíme pokud:
-                // 1) Je levný čas A vyplatí se nabíjet (úspora vs lokální max) A budeme potřebovat energii
+                // 1) Vyplatí se nabíjet (uložená energie bude levnější než lokální max) A budeme potřebovat energii
                 // 2) Nebo se vyplatí arbitráž
-                bool shouldCharge = (isCheapTime && worthCharging && willNeedLater) || 
-                                    worthArbitrage;
+                // Poznámka: isCheapTime už není vyžadováno - stačí že se nabíjení vyplatí ekonomicky
+                bool shouldCharge = (worthCharging && willNeedLater) || worthArbitrage;
                 
                 if (shouldCharge) {
                     decision = INVERTER_MODE_CHARGE_FROM_GRID;
@@ -651,7 +672,7 @@ public:
                         result.fromBatteryKwh += toSell;
                         currentBatteryKwh -= toSell;
                         result.costCzk -= toSell * sellPrice;  // Příjem z prodeje
-                        result.costCzk += toSell * batteryCostPerKwh;  // Náklad na opotřebení
+                        // Opotřebení baterie se počítá jen při nabíjení (full cycle cost)
                         reason = String("Selling@") + String(sellPrice, 1) + 
                                  " > locAvgBuy@" + String(localAvgBuyPrice, 1);
                     }
@@ -674,7 +695,8 @@ public:
             // - Prodej do sítě: přičítáme zisk z prodeje
             
             float savingsFromSolar = result.fromSolarKwh * buyPrice;  // Zdarma místo nákupu
-            float savingsFromBattery = result.fromBatteryKwh * (buyPrice - batteryCostPerKwh);  // Levnější než síť
+            // Úspora z baterie = celá nákupní cena (batteryCost už byl započítán při nabíjení)
+            float savingsFromBattery = result.fromBatteryKwh * buyPrice;
             float savingsFromGrid = 0;  // Žádná úspora
             float earningsFromSale = result.toGridKwh * sellPrice;  // Zisk z prodeje
             
@@ -741,13 +763,13 @@ public:
             remainingConsumption -= solarForConsumption;
             float solarSurplus = productionKwh - solarForConsumption;
             
-            // 1b) Z baterie (náklad = opotřebení baterie)
+            // 1b) Z baterie (náklad = 0, opotřebení se počítá při nabíjení)
             float fromBattery = 0;
             if (remainingConsumption > 0 && availableFromBattery > 0) {
                 fromBattery = min(availableFromBattery, remainingConsumption);
                 batteryKwh -= fromBattery;
                 remainingConsumption -= fromBattery;
-                totalCost += fromBattery * batteryCostPerKwh;  // Opotřebení baterie
+                // Náklad = 0 (opotřebení už bylo započítáno při nabíjení)
             }
             
             // 1c) Ze sítě (platíme plnou cenu)
@@ -782,7 +804,8 @@ public:
      * 
      * Úspora se počítá jako rozdíl nákladů PLUS hodnota energie navíc v baterii.
      * Pokud inteligence nabije baterii více než baseline, tato energie
-     * nahradí budoucí nákup ze sítě - oceňujeme ji průměrnou nákupní cenou.
+     * nahradí budoucí nákup ze sítě - oceňujeme ji MAXIMÁLNÍ nákupní cenou,
+     * protože inteligence drží energii právě pro drahé hodiny.
      */
     SimulationSummary getSummary(const std::vector<QuarterSimulationResult>& results, float startingBatterySoc) {
         SimulationSummary summary;
@@ -795,10 +818,14 @@ public:
         summary.baselineCostCzk = 0;
         summary.batteryValueAdjustment = 0;
         summary.baselineFinalSoc = startingBatterySoc;
+        summary.chargedFromGridKwh = 0;
+        summary.chargedFromGridCost = 0;
+        summary.maxBuyPrice = 0;
         summary.quartersSimulated = results.size();
         
-        // Spočítej průměrnou nákupní cenu (pro ocenění energie v baterii)
+        // Spočítej průměrnou a maximální nákupní cenu (pro ocenění energie v baterii)
         float avgBuyPrice = 0;
+        float maxBuyPrice = 0;
         for (const auto& r : results) {
             summary.totalProductionKwh += r.productionKwh;
             summary.totalConsumptionKwh += r.consumptionKwh;
@@ -806,10 +833,19 @@ public:
             summary.totalToGridKwh += r.toGridKwh;
             summary.totalCostCzk += r.costCzk;
             avgBuyPrice += r.buyPrice;
+            if (r.buyPrice > maxBuyPrice) maxBuyPrice = r.buyPrice;
+            
+            // Počítej nabíjení ze sítě (pro arbitráž)
+            if (r.decision == INVERTER_MODE_CHARGE_FROM_GRID && r.toBatteryKwh > 0) {
+                summary.chargedFromGridKwh += r.toBatteryKwh;
+                // Náklady na nabíjení = cena elektřiny + opotřebení baterie
+                summary.chargedFromGridCost += r.toBatteryKwh * (r.buyPrice + batteryCostPerKwh);
+            }
         }
         if (!results.empty()) {
             avgBuyPrice /= results.size();
         }
+        summary.maxBuyPrice = maxBuyPrice;
         
         // Spočítej baseline (hloupé Self-Use) a získej finální stav baterie
         float baselineFinalBatteryKwh = 0;
@@ -837,9 +873,12 @@ public:
         float batteryDifferenceKwh = intelligentFinalBatteryKwh - baselineFinalBatteryKwh;
         
         // Hodnota této energie = kolik ušetříme tím, že nemusíme kupovat ze sítě
-        // Oceňujeme průměrnou nákupní cenou (energie v baterii nahradí budoucí nákup)
-        // Opotřebení baterie při budoucím vybíjení uz je implicitně započítáno
-        summary.batteryValueAdjustment = batteryDifferenceKwh * avgBuyPrice;
+        // Oceňujeme MAXIMÁLNÍ nákupní cenou, protože:
+        // - Inteligence drží energii v baterii právě pro drahé hodiny
+        // - Tuto energii použijeme místo nákupu ze sítě ve špičce
+        // - BatteryCost už byl započítán při nabíjení (full cycle cost)
+        // - Při vybíjení už žádné další náklady nejsou
+        summary.batteryValueAdjustment = batteryDifferenceKwh * maxBuyPrice;
         
         // Úspora = (baseline náklady - inteligentní náklady) + hodnota energie navíc v baterii
         summary.totalSavingsCzk = (summary.baselineCostCzk - summary.totalCostCzk) + summary.batteryValueAdjustment;

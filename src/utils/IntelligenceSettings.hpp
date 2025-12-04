@@ -52,8 +52,8 @@ typedef struct IntelligenceSettings {
         settings.minSocPercent = 10;
         settings.maxSocPercent = 95;
         settings.batteryCapacityKwh = 10.0f;   // 10 kWh
-        settings.maxChargePowerKw = 5.0f;      // 5 kW
-        settings.maxDischargePowerKw = 5.0f;   // 5 kW
+        settings.maxChargePowerKw = 8.0f;      // 8 kW default
+        settings.maxDischargePowerKw = 8.0f;   // 8 kW default
         return settings;
     }
 } IntelligenceSettings_t;
@@ -148,51 +148,31 @@ public:
      * Aktualizuje nastavení hodnotami ze střídače (pokud jsou k dispozici)
      * Volat po úspěšném načtení dat ze střídače.
      * 
+     * Poznámka: Charge/discharge power se z inverteru NEnačítá, protože:
+     * - Hodnoty se mění v čase podle stavu baterie
+     * - Když je střídač v idle režimu, vrací nesmysly
+     * - Uživatel si zadá hodnoty ručně v nastavení
+     * 
      * @param batteryCapacityWh kapacita baterie ve Wh (0 = neaktualizovat)
-     * @param maxChargePowerW max nabíjecí výkon ve W (0 = neaktualizovat)
-     * @param maxDischargePowerW max vybíjecí výkon ve W (0 = neaktualizovat)
      * @return true pokud byly hodnoty aktualizovány
      */
-    static bool updateFromInverter(uint16_t batteryCapacityWh, uint16_t maxChargePowerW, uint16_t maxDischargePowerW) {
-        log_d("updateFromInverter called: capacity=%d Wh, charge=%d W, discharge=%d W", 
-              batteryCapacityWh, maxChargePowerW, maxDischargePowerW);
+    static bool updateFromInverter(uint16_t batteryCapacityWh) {
+        log_d("updateFromInverter called: capacity=%d Wh", batteryCapacityWh);
         
-        // Pouze pokud máme nějaké hodnoty ze střídače
-        if (batteryCapacityWh == 0 && maxChargePowerW == 0 && maxDischargePowerW == 0) {
-            log_d("No inverter values available, skipping update");
+        // Pouze pokud máme nějakou hodnotu kapacity ze střídače
+        if (batteryCapacityWh == 0) {
+            log_d("No inverter capacity available, skipping update");
             return false;
         }
         
         IntelligenceSettings_t settings = load();
         bool changed = false;
         
-        if (batteryCapacityWh > 0) {
-            float newCapacity = batteryCapacityWh / 1000.0f;
-            if (abs(settings.batteryCapacityKwh - newCapacity) > 0.1f) {
-                settings.batteryCapacityKwh = newCapacity;
-                changed = true;
-                log_d("Updated battery capacity from inverter: %.1f kWh", newCapacity);
-            }
-        }
-        
-        if (maxChargePowerW > 0) {
-            float newPower = maxChargePowerW / 1000.0f;
-            // Ignore values below 1 kW as likely invalid (typical batteries are 3-10 kW)
-            if (newPower >= 1.0f && abs(settings.maxChargePowerKw - newPower) > 0.1f) {
-                settings.maxChargePowerKw = newPower;
-                changed = true;
-                log_d("Updated max charge power from inverter: %.1f kW", newPower);
-            }
-        }
-        
-        if (maxDischargePowerW > 0) {
-            float newPower = maxDischargePowerW / 1000.0f;
-            // Ignore values below 1 kW as likely invalid (typical batteries are 3-10 kW)
-            if (newPower >= 1.0f && abs(settings.maxDischargePowerKw - newPower) > 0.1f) {
-                settings.maxDischargePowerKw = newPower;
-                changed = true;
-                log_d("Updated max discharge power from inverter: %.1f kW", newPower);
-            }
+        float newCapacity = batteryCapacityWh / 1000.0f;
+        if (abs(settings.batteryCapacityKwh - newCapacity) > 0.1f) {
+            settings.batteryCapacityKwh = newCapacity;
+            changed = true;
+            log_d("Updated battery capacity from inverter: %.1f kWh", newCapacity);
         }
         
         if (changed) {

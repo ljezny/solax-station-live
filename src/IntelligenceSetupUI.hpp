@@ -214,8 +214,8 @@ private:
         
         // Validate battery parameters
         if (settings.batteryCapacityKwh <= 0) settings.batteryCapacityKwh = 10.0f;
-        if (settings.maxChargePowerKw <= 0) settings.maxChargePowerKw = 5.0f;
-        if (settings.maxDischargePowerKw <= 0) settings.maxDischargePowerKw = 5.0f;
+        if (settings.maxChargePowerKw <= 0) settings.maxChargePowerKw = 8.0f;
+        if (settings.maxDischargePowerKw <= 0) settings.maxDischargePowerKw = 8.0f;
         
         return settings;
     }
