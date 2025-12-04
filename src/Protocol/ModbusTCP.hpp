@@ -374,6 +374,8 @@ private:
             if (bytesRead >= len) {
                 break;
             }
+            // Yield to RTOS to prevent watchdog timeout
+            vTaskDelay(pdMS_TO_TICKS(5));
         }
         return bytesRead;
     }
