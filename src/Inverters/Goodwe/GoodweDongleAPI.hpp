@@ -106,7 +106,9 @@ private:
                     // Register 35170 (offset 70) = backup_ptotal (backup/EPS load)
                     int loadOnGrid = response.readInt16(35100 + 72);   // load_ptotal - on-grid load without backup
                     int loadBackup = response.readInt16(35100 + 70);   // backup_ptotal - backup/EPS load
-                    inverterData.loadPower = loadOnGrid + loadBackup;  // total house consumption
+                    inverterData.loadPower = loadOnGrid /*+ loadBackup*/;  // total house consumption
+                    // Note: backup load is excluded because it is already included in on-grid load for Goodwe ET10! Maybe ET15 is different?
+
 
                     inverterData.inverterTemperature = response.readInt16(35100 + 74) / 10;
                     inverterData.pvTotal = response.readUInt32(35100 + 91) / 10.0;
