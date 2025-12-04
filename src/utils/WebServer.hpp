@@ -175,9 +175,9 @@ private:
         doc["batteryTemperature"] = data.batteryTemperature;
         doc["gridBuyToday"] = data.gridBuyToday;
         doc["gridSellToday"] = data.gridSellToday;
-        doc["L1Power"] = data.L1Power;
-        doc["L2Power"] = data.L2Power;
-        doc["L3Power"] = data.L3Power;
+        doc["L1Power"] = data.inverterOutpuPowerL1;
+        doc["L2Power"] = data.inverterOutpuPowerL2;
+        doc["L3Power"] = data.inverterOutpuPowerL3;
         doc["loadPower"] = data.loadPower;
         doc["loadToday"] = data.loadToday;
         doc["gridPowerL1"] = data.gridPowerL1;
