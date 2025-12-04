@@ -249,14 +249,31 @@ public:
     
     /**
      * Predikuje výrobu pro danou čtvrthodinu S KOREKCÍ
+     * Korekce klesá exponenciálně se vzdáleností od aktuální čtvrthodiny.
+     * Příklad: je zataženo teď → predikce za 1h je nízká, za 4h už částečná korekce,
+     * za 8h už skoro bez korekce (počasí se může změnit).
+     * 
      * @param quarter čtvrthodina (0-95)
      * @return predikovaná výroba v Wh (korigovaná podle aktuálního počasí)
      */
     float predictQuarterlyProduction(int quarter) const {
         float basePrediction = getBasePrediction(quarter);
         
-        // Aplikujeme korekci
-        float corrected = basePrediction + cumulativeError;
+        // === VZDÁLENOSTNÍ KOREKCE ===
+        // Chyba se propaguje s klesající vahou podle vzdálenosti od aktuální čtvrthodiny
+        // Poločas rozpadu ~4 hodiny (16 quarters) - počasí se mění rychleji než spotřeba
+        // distance=0: 100%, distance=4 (1h): 78%, distance=16 (4h): 37%, distance=32 (8h): 14%
+        time_t now = time(nullptr);
+        struct tm* timeinfo = localtime(&now);
+        int currentQ = getQuarter(timeinfo);
+        int distance = quarter - currentQ;
+        if (distance < 0) distance += QUARTERS_PER_DAY;  // Wrap around pro příští den
+        
+        // Exponenciální pokles: e^(-distance/16)
+        float decayFactor = exp(-distance / 16.0f);
+        
+        // Aplikujeme korekci s klesající vahou
+        float corrected = basePrediction + (cumulativeError * decayFactor);
         
         // Omezení: min 0, max 3× základní predikce (pro případ velmi jasného dne)
         float maxCorrection = max(basePrediction * 3.0f, 100.0f);

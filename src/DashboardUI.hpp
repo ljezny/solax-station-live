@@ -221,8 +221,8 @@ static void solar_chart_draw_event_cb(lv_event_t *e)
         // Vykreslení čáry aktuálního času
         lv_draw_rect_dsc_t line_dsc;
         lv_draw_rect_dsc_init(&line_dsc);
-        line_dsc.bg_opa = LV_OPA_50;
-        line_dsc.bg_color = isDarkMode ? lv_color_hex(0x555555) : lv_color_hex(0xAAAAAA);
+        line_dsc.bg_opa = LV_OPA_70;
+        line_dsc.bg_color = lv_color_hex(0xFF4444);  // Červená barva pro lepší viditelnost
         
         lv_area_t line_a;
         line_a.x1 = lineX - 1;

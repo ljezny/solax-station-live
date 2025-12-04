@@ -84,6 +84,8 @@ ShellyResult_t previousShellyResult;
 ElectricityPriceTwoDays_t *electricityPriceResult = nullptr;
 ElectricityPriceTwoDays_t *previousElectricityPriceResult = nullptr;
 SolarChartDataProvider solarChartDataProvider;
+static bool chartDataLoaded = false; // Track if chart data was loaded after time sync
+static bool ntpTimeSynced = false;   // Track if time was synced via NTP
 MedianPowerSampler shellyMedianPowerSampler;
 MedianPowerSampler wallboxMedianPowerSampler;
 MedianPowerSampler uiMedianPowerSampler;
@@ -367,9 +369,8 @@ void setupLVGL()
     lv_indev_drv_register(&indev_drv);
 
     // Set up NVS mutex to wait for display DMA before flash writes
-    NVSMutex::setWaitDMACallback([]() {
-        tft.waitDMA();
-    });
+    NVSMutex::setWaitDMACallback([]()
+                                 { tft.waitDMA(); });
 
     ui_init();
     splashUI = new SplashUI();
@@ -400,11 +401,12 @@ void setupLVGL()
         lastIntelligenceAttempt = 0; });
 
     // Load predictors from storage
+    // NOTE: Predictors use day-of-week (0-6), so they work even without correct time
     consumptionPredictor.loadFromPreferences();
     productionPredictor.loadFromPreferences();
-    
-    // Load intraday chart data (only if same day)
-    solarChartDataProvider.loadFromPreferences();
+
+    // NOTE: solarChartDataProvider.loadFromPreferences() is called after syncTime()
+    // because it needs correct day-of-year to match saved data
 
     xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 12 * 1024, NULL, 24, NULL, 1);
 }
@@ -412,6 +414,9 @@ void setupLVGL()
 void setup()
 {
     Serial.begin(921600);
+
+    // Subscribe loop task to watchdog
+    esp_task_wdt_add(NULL);
 
     // Allocate electricity price structures in PSRAM
     electricityPriceResult = (ElectricityPriceTwoDays_t *)heap_caps_calloc(1, sizeof(ElectricityPriceTwoDays_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
@@ -428,7 +433,7 @@ void setup()
 
     setupLVGL();
     setupWiFi();
-    
+
     // Start web server on SoftAP
     webServer.begin(lvgl_mutex);
     webServer.setInverterData(&inverterData);
@@ -510,6 +515,8 @@ bool supportsIntelligenceForCurrentInverter(WiFiDiscoveryResult_t &discoveryResu
     {
     case CONNECTION_TYPE_SOLAX:
         return true; // Solax supports intelligence
+    case CONNECTION_TYPE_GOODWE:
+        return true; // Goodwe supports intelligence
     default:
         return false; // Other inverters don't support intelligence yet
     }
@@ -566,7 +573,8 @@ bool loadInverterDataTask()
                 {
                     log_d("Quarter changed, saving predictors to flash");
                     NVSGuard guard;
-                    if (guard.isLocked()) {
+                    if (guard.isLocked())
+                    {
                         consumptionPredictor.saveToPreferences();
                         productionPredictor.saveToPreferences();
                         solarChartDataProvider.saveToPreferences();
@@ -791,7 +799,10 @@ bool runIntelligenceTask()
                   summary.totalCostCzk, summary.finalBatterySoc);
             log_i("Baseline (dumb): cost %.1f CZK, final SOC %.0f%%",
                   summary.baselineCostCzk, summary.baselineFinalSoc);
-            log_i("Savings vs dumb Self-Use: %.1f CZK (incl. battery value adjustment)", summary.totalSavingsCzk);
+            log_i("Battery value adjustment: %.1f CZK (diff %.1f kWh)",
+                  summary.batteryValueAdjustment,
+                  (summary.finalBatterySoc - summary.baselineFinalSoc) / 100.0f * settings.batteryCapacityKwh);
+            log_i("Savings vs dumb Self-Use: %.1f CZK", summary.totalSavingsCzk);
 
             // Log summary of mode changes only
             log_i("=== MODE CHANGES ===");
@@ -865,25 +876,33 @@ bool runIntelligenceTask()
                               IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str(),
                               IntelligenceResolver::commandToString(lastSentMode).c_str(),
                               IntelligenceResolver::commandToString(inverterData.inverterMode).c_str());
-                        
+
+                        bool success = false;
                         if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX)
                         {
                             static SolaxModbusDongleAPI solaxAPI;
-                            bool success = solaxAPI.setWorkMode(wifiDiscoveryResult.inverterIP, lastIntelligenceResult.command);
-                            if (success)
-                            {
-                                log_i("Successfully sent work mode %s to Solax inverter",
-                                      IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str());
-                                lastSentMode = lastIntelligenceResult.command;
-                            }
-                            else
-                            {
-                                log_w("Failed to send work mode to Solax inverter");
-                            }
+                            success = solaxAPI.setWorkMode(wifiDiscoveryResult.inverterIP, lastIntelligenceResult.command);
+                        }
+                        else if (wifiDiscoveryResult.type == CONNECTION_TYPE_GOODWE)
+                        {
+                            static GoodweDongleAPI goodweAPI;
+                            success = goodweAPI.setWorkMode(wifiDiscoveryResult.inverterIP, lastIntelligenceResult.command,
+                                                            settings.minSocPercent, settings.maxSocPercent);
                         }
                         else
                         {
                             log_d("Work mode control not implemented for inverter type %d", wifiDiscoveryResult.type);
+                        }
+                        
+                        if (success)
+                        {
+                            log_i("Successfully sent work mode %s to inverter",
+                                  IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str());
+                            lastSentMode = lastIntelligenceResult.command;
+                        }
+                        else if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX || wifiDiscoveryResult.type == CONNECTION_TYPE_GOODWE)
+                        {
+                            log_w("Failed to send work mode to inverter");
                         }
                     }
                     else
@@ -1195,9 +1214,6 @@ void setTimeZone()
     }
 }
 
-// Global flag to track if time was synced via NTP
-static bool ntpTimeSynced = false;
-
 void syncTime()
 {
     // use ntp arduino
@@ -1229,22 +1245,29 @@ void syncTimeFromInverter(const InverterData_t &data)
     // Validate inverter time (should be after 2020)
     struct tm timeinfo;
     localtime_r(&data.inverterTime, &timeinfo);
-    if (timeinfo.tm_year < 120)  // Year 2020 = 120 (years since 1900)
+    if (timeinfo.tm_year < 120) // Year 2020 = 120 (years since 1900)
     {
         log_w("Inverter time is invalid (year %d), not syncing", timeinfo.tm_year + 1900);
         return;
     }
 
     // Set system time from inverter
-    struct timeval tv = { .tv_sec = data.inverterTime, .tv_usec = 0 };
+    struct timeval tv = {.tv_sec = data.inverterTime, .tv_usec = 0};
     settimeofday(&tv, nullptr);
-    
+
     // Apply timezone
     setTimeZone();
-    
+
     log_i("System time set from inverter RTC: %04d-%02d-%02d %02d:%02d:%02d",
           timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
           timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+
+    // Load chart data now that we have valid time (if not already loaded)
+    if (!chartDataLoaded)
+    {
+        solarChartDataProvider.loadFromPreferences();
+        chartDataLoaded = true;
+    }
 }
 
 void logMemory()
@@ -1374,6 +1397,14 @@ void updateState()
 
                 syncTime();
 
+                // Load chart data AFTER time sync (needs correct day-of-year)
+                // Only load if NTP succeeded (valid time available)
+                if (ntpTimeSynced && !chartDataLoaded)
+                {
+                    solarChartDataProvider.loadFromPreferences();
+                    chartDataLoaded = true;
+                }
+
                 for (int retry = 0; retry < 3; retry++)
                 {
                     inverterData = loadInverterData(wifiDiscoveryResult);
@@ -1476,19 +1507,27 @@ void updateState()
                 InverterMode_t mode = pendingModeChange;
                 log_d("Processing pending mode change: %d", mode);
 
+                bool success = false;
                 if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX)
                 {
                     static SolaxModbusDongleAPI solaxAPI;
-                    bool success = solaxAPI.setWorkMode(wifiDiscoveryResult.inverterIP, mode);
-                    if (success)
-                    {
-                        log_d("Successfully sent work mode %d to Solax inverter", mode);
-                        lastSentMode = mode;
-                    }
-                    else
-                    {
-                        log_w("Failed to send work mode %d to Solax inverter", mode);
-                    }
+                    success = solaxAPI.setWorkMode(wifiDiscoveryResult.inverterIP, mode);
+                }
+                else if (wifiDiscoveryResult.type == CONNECTION_TYPE_GOODWE)
+                {
+                    static GoodweDongleAPI goodweAPI;
+                    // Use default SOC values for manual mode changes (10% min, 100% max)
+                    success = goodweAPI.setWorkMode(wifiDiscoveryResult.inverterIP, mode, 10, 100);
+                }
+                
+                if (success)
+                {
+                    log_d("Successfully sent work mode %d to inverter", mode);
+                    lastSentMode = mode;
+                }
+                else if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX || wifiDiscoveryResult.type == CONNECTION_TYPE_GOODWE)
+                {
+                    log_w("Failed to send work mode %d to inverter", mode);
                 }
                 break;
             }
@@ -1541,4 +1580,7 @@ void updateState()
 void loop()
 {
     updateState();
+
+    esp_task_wdt_reset();
+    vTaskDelay(pdMS_TO_TICKS(1));
 }

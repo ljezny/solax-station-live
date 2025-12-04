@@ -51,7 +51,15 @@ private:
     
     // === CROSS-DAY PROPAGACE ===
     // Váha pro propagaci hodnot na ostatní dny (pro opakující se vzorce jako noční topení)
-    static constexpr float CROSS_DAY_ALPHA = 0.15f;  // Menší váha pro ostatní dny
+    static constexpr float CROSS_DAY_ALPHA = 0.12f;  // Základní váha pro ostatní dny
+    
+    // === PROPAGACE NA SOUSEDNÍ ČTVRTHODINY ===
+    // Váha klesá s vzdáleností: alpha / (1 + distance)
+    static constexpr float NEIGHBOR_QUARTER_ALPHA = 0.20f;  // Základní váha pro sousední čtvrthodiny
+    static constexpr int NEIGHBOR_QUARTER_RANGE = 4;        // ±4 čtvrthodiny = ±1 hodina
+    
+    // === PROPAGACE NA MINULÝ TÝDEN ===
+    static constexpr float LAST_WEEK_ALPHA = 0.25f;  // Váha pro stejnou čtvrthodinu minulý týden
     
     // === REALTIME KOREKCE ===
     // Aktuální výkon (W) pro průběžnou korekci predikcí
@@ -249,6 +257,14 @@ public:
         // To zrychlí učení opakujících se vzorců (např. noční topení každý den)
         propagateToOtherDays(day, quarter, consumptionWh);
         
+        // === PROPAGACE NA SOUSEDNÍ ČTVRTHODINY ===
+        // Spotřeba často koreluje se sousedními čtvrthodinami
+        propagateToNeighboringQuarters(day, quarter, consumptionWh);
+        
+        // === PROPAGACE NA MINULÝ TÝDEN ===
+        // Pomáhá rychleji vytvořit historii pro predikce
+        propagateToLastWeek(day, quarter, consumptionWh);
+        
         log_d("Updated consumption for day %d, quarter %d: %.1f Wh (correction: %.1f)", 
               day, quarter, consumptionWh, cumulativeError);
     }
@@ -277,6 +293,61 @@ public:
                 log_d("Cross-day propagation: day %d -> day %d, quarter %d: %.1f -> %.1f Wh",
                       sourceDay, otherDay, quarter, oldValue, newValue);
             }
+        }
+    }
+    
+    /**
+     * Propaguje hodnotu na sousední čtvrthodiny s klesající vahou.
+     * Spotřeba v jedné čtvrthodině často koreluje se sousedními čtvrthodinami.
+     * Váha klesá exponenciálně s vzdáleností.
+     * 
+     * @param day Den v týdnu
+     * @param centerQuarter Centrální čtvrthodina (kde máme měření)
+     * @param consumptionWh Naměřená spotřeba
+     */
+    void propagateToNeighboringQuarters(int day, int centerQuarter, float consumptionWh) {
+        for (int offset = -NEIGHBOR_QUARTER_RANGE; offset <= NEIGHBOR_QUARTER_RANGE; offset++) {
+            if (offset == 0) continue;  // Přeskočíme centrum
+            
+            int targetQuarter = centerQuarter + offset;
+            if (targetQuarter < 0 || targetQuarter >= QUARTERS_OF_DAY) continue;
+            
+            // Váha klesá s vzdáleností: alpha / (1 + |offset|)
+            float distance = abs(offset);
+            float alpha = NEIGHBOR_QUARTER_ALPHA / (1.0f + distance);
+            
+            // Propagujeme na aktuální den
+            if (hasDataAt(0, day, targetQuarter)) {
+                float oldValue = consumptionAt(0, day, targetQuarter);
+                float newValue = alpha * consumptionWh + (1.0f - alpha) * oldValue;
+                consumptionAt(0, day, targetQuarter) = newValue;
+                
+                log_d("Neighbor propagation: q%d -> q%d (±%d), alpha=%.2f: %.1f -> %.1f Wh",
+                      centerQuarter, targetQuarter, offset, alpha, oldValue, newValue);
+            }
+        }
+    }
+    
+    /**
+     * Propaguje hodnotu na stejnou čtvrthodinu minulý týden.
+     * Pomáhá rychleji vytvořit "historii" pro predikce.
+     * Pokud data pro minulý týden neexistují, vytvoří je.
+     */
+    void propagateToLastWeek(int day, int quarter, float consumptionWh) {
+        // Týden 1 = minulý týden
+        if (hasDataAt(1, day, quarter)) {
+            float oldValue = consumptionAt(1, day, quarter);
+            float newValue = LAST_WEEK_ALPHA * consumptionWh + (1.0f - LAST_WEEK_ALPHA) * oldValue;
+            consumptionAt(1, day, quarter) = newValue;
+            
+            log_d("Last week propagation: week 0 -> week 1, day %d, q%d: %.1f -> %.1f Wh",
+                  day, quarter, oldValue, newValue);
+        } else {
+            // Pokud data pro minulý týden neexistují, vytvoříme je
+            consumptionAt(1, day, quarter) = consumptionWh;
+            hasDataAt(1, day, quarter) = true;
+            
+            log_d("Last week created: day %d, q%d: %.1f Wh", day, quarter, consumptionWh);
         }
     }
     

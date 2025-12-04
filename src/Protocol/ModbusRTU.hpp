@@ -264,22 +264,35 @@ public:
 
         uint8_t response[16];
         int respLen = udp.read(response, sizeof(response));
-        if (respLen < 8)
+        
+        // Log response first for debugging
+        String dataHex = "";
+        for (int i = 0; i < respLen; i++) {
+            char buf[4];
+            snprintf(buf, sizeof(buf), "%02X ", response[i]);
+            dataHex += buf;
+        }
+        log_d("Write multiple response (%d bytes): %s", respLen, dataHex.c_str());
+        
+        // GoodWe may return shorter response (7 bytes without leading unit ID in some cases)
+        // Minimum valid response: FC(1) + Addr(2) + RegCount(2) + CRC(2) = 7 bytes
+        // Or with Unit ID: Unit(1) + FC(1) + Addr(2) + RegCount(2) + CRC(2) = 8 bytes
+        if (respLen < 7)
         {
-            log_d("Invalid write multiple response length: %d", respLen);
+            log_d("Invalid write multiple response length: %d (expected >= 7)", respLen);
             return false;
         }
 
-        // Log response
-        String dataHex = "";
-        for (int i = 0; i < respLen; i++) {
-            dataHex += String(response[i], HEX);
-            dataHex += " ";
-        }
-        log_d("Write multiple response: %s", dataHex.c_str());
-
         // Check response - GoodWe may use AA55 header
         int offset = (response[0] == 0xAA && response[1] == 0x55) ? 2 : 0;
+        
+        // If response doesn't start with unit ID, adjust offset
+        // Check if first byte is function code 0x10 or exception 0x90
+        if (offset == 0 && (response[0] == 0x10 || response[0] == 0x90))
+        {
+            // Response starts directly with function code (no unit ID)
+            offset = -1;  // Will check response[offset+1] = response[0]
+        }
 
         if (response[offset + 1] == (0x10 | 0x80))
         {
