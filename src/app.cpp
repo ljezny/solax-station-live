@@ -415,8 +415,10 @@ void setup()
 {
     Serial.begin(921600);
 
-    // Subscribe loop task to watchdog
-    esp_task_wdt_add(NULL);
+    // NOTE: loopTask is NOT subscribed to watchdog because it performs
+    // long-running network operations (HTTPS, DNS, SSL handshake, etc.)
+    // that can legitimately take several seconds. The LVGL task monitors
+    // system responsiveness instead.
 
     // Allocate electricity price structures in PSRAM
     electricityPriceResult = (ElectricityPriceTwoDays_t *)heap_caps_calloc(1, sizeof(ElectricityPriceTwoDays_t), MALLOC_CAP_SPIRAM | MALLOC_CAP_8BIT);
@@ -1581,6 +1583,5 @@ void loop()
 {
     updateState();
 
-    esp_task_wdt_reset();
     vTaskDelay(pdMS_TO_TICKS(1));
 }
