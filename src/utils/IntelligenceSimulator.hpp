@@ -610,6 +610,16 @@ public:
             result.decision = decision;
             result.reason = reason;
             
+            // === DIAGNOSTICKÉ LOGOVÁNÍ PRO KAŽDÉ Q ===
+            log_d("Q%d %02d:%02d | SOC:%.0f%% | prod:%.2f cons:%.2f | spot:%.2f buy:%.2f sell:%.2f | minFBuy:%.2f maxFBuy:%.2f maxFSell:%.2f | dec:%s | %s",
+                  q, result.hour, result.minute,
+                  batterySocStart,
+                  productionKwh, consumptionKwh,
+                  spotPrice, buyPrice, sellPrice,
+                  minFutureBuyPrice, maxFutureBuyPrice, maxFutureSellPrice,
+                  decisionToString(decision).c_str(),
+                  reason.c_str());
+            
             // Omezení baterie
             currentBatteryKwh = constrain(currentBatteryKwh, getMinBatteryKwh(), getMaxBatteryKwh());
             
