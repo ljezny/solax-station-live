@@ -2,12 +2,13 @@
 
 #include "../../Protocol/ModbusTCP.hpp"
 #include <WiFi.h>
+#include <HTTPClient.h>
 #include "../InverterResult.hpp"
 
 class SolaxModbusDongleAPI
 {
 public:
-    SolaxModbusDongleAPI() : isSupportedDongle(true), ip(0, 0, 0, 0) {}
+    SolaxModbusDongleAPI() : isSupportedDongle(true), ip(0, 0, 0, 0), consecutiveTimeoutErrors(0) {}
 
     /**
      * Returns true if this inverter supports intelligence mode control
@@ -31,11 +32,16 @@ public:
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             return inverterData;
         }
-        if (!readInverterInfo(inverterData) ||
-            !readMainInverterData(inverterData) ||
-            !readPowerData(inverterData) ||
-            !readPhaseData(inverterData) ||
-            !readPV3Power(inverterData))
+        
+        // Read data and track modbus timeouts
+        // Connection succeeded, but if reads fail it might be a stuck dongle
+        bool readSuccess = readInverterInfo(inverterData) &&
+                          readMainInverterData(inverterData) &&
+                          readPowerData(inverterData) &&
+                          readPhaseData(inverterData) &&
+                          readPV3Power(inverterData);
+        
+        if (!handleModbusResult(ipAddress, readSuccess))
         {
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             channel.disconnect();
@@ -222,6 +228,8 @@ protected:
     IPAddress ip;
     String sn = "";
     ModbusTCP channel;
+    int consecutiveTimeoutErrors;              // Counter for consecutive modbus timeout errors
+    static constexpr int MAX_TIMEOUT_ERRORS_BEFORE_RESET = 3;  // Reset dongle after this many consecutive timeouts
 
 private:
     static constexpr uint16_t MODBUS_PORT = 502;
@@ -355,6 +363,88 @@ private:
             return false;
         }
         return true;
+    }
+
+    /**
+     * Reset the dongle via HTTP POST to update endpoint with empty firmware file.
+     * This causes the dongle to restart and recover from stuck state.
+     * @param ipAddress IP address of the dongle
+     * @return true if reset request was sent successfully
+     */
+    bool resetDongle(const String &ipAddress)
+    {
+        IPAddress targetIp = getIp(ipAddress);
+        String url = "http://" + targetIp.toString() + "/update.htm";
+        
+        log_w("Attempting to reset stuck dongle at %s", url.c_str());
+        
+        HTTPClient http;
+        http.begin(url);
+        
+        // Set headers matching the browser request
+        http.addHeader("Content-Type", "multipart/form-data; boundary=----WebKitFormBoundaryDongleReset");
+        http.addHeader("Authorization", "Basic YWRtaW46U1JEQURTSlc0TA==");  // admin:SRDADSJW4L
+        http.addHeader("Origin", "http://" + targetIp.toString());
+        http.addHeader("Referer", "http://" + targetIp.toString() + "/upload.html");
+        
+        // Send empty multipart form data (no actual file)
+        String payload = "------WebKitFormBoundaryDongleReset\r\n"
+                        "Content-Disposition: form-data; name=\"inputFile\"; filename=\"\"\r\n"
+                        "Content-Type: application/octet-stream\r\n"
+                        "\r\n"
+                        "\r\n"
+                        "------WebKitFormBoundaryDongleReset--\r\n";
+        
+        int httpCode = http.POST(payload);
+        http.end();
+        
+        if (httpCode > 0)
+        {
+            log_w("Dongle reset request sent, HTTP code: %d. Dongle should restart within 20 seconds.", httpCode);
+            consecutiveTimeoutErrors = 0;  // Reset the counter
+            return true;
+        }
+        else
+        {
+            log_e("Failed to send dongle reset request, error: %s", http.errorToString(httpCode).c_str());
+            return false;
+        }
+    }
+
+    /**
+     * Handle modbus read result - track timeout errors and reset dongle if stuck
+     * @param ipAddress IP address of the dongle (for potential reset)
+     * @param success Whether the modbus operation succeeded
+     * @return The same success value passed in
+     */
+    bool handleModbusResult(const String &ipAddress, bool success)
+    {
+        if (success)
+        {
+            // Reset counter on successful communication
+            if (consecutiveTimeoutErrors > 0)
+            {
+                log_d("Modbus communication restored after %d timeout(s)", consecutiveTimeoutErrors);
+            }
+            consecutiveTimeoutErrors = 0;
+        }
+        else
+        {
+            consecutiveTimeoutErrors++;
+            log_w("Modbus timeout error #%d", consecutiveTimeoutErrors);
+            
+            // If we've had too many consecutive timeouts, try to reset the dongle
+            if (consecutiveTimeoutErrors >= MAX_TIMEOUT_ERRORS_BEFORE_RESET)
+            {
+                log_w("Detected stuck dongle (connected but %d consecutive timeouts), attempting reset...", 
+                      consecutiveTimeoutErrors);
+                channel.disconnect();
+                resetDongle(ipAddress);
+                // After reset, wait for dongle to restart
+                delay(25000);  // Wait 25 seconds for dongle to restart
+            }
+        }
+        return success;
     }
 
     bool readInverterInfo(InverterData_t &data)
