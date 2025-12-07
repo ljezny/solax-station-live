@@ -35,12 +35,29 @@ public:
             !readMainInverterData(inverterData) ||
             !readPowerData(inverterData) ||
             !readPhaseData(inverterData) ||
-            !readPV3Power(inverterData) ||
-            !readWorkMode(inverterData))
+            !readPV3Power(inverterData))
         {
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             channel.disconnect();
             return inverterData;
+        }
+        
+        // Read run mode first - if inverter is idle/standby, assume Self-Use mode
+        // (reading work mode registers fails when inverter is sleeping)
+        uint16_t runMode = readRunMode();
+        if (runMode == RUN_MODE_IDLE || runMode == RUN_MODE_STANDBY)
+        {
+            log_d("Inverter is in idle/standby mode (%d), assuming Self-Use mode", runMode);
+            inverterData.inverterMode = INVERTER_MODE_SELF_USE;
+        }
+        else
+        {
+            if (!readWorkMode(inverterData))
+            {
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                channel.disconnect();
+                return inverterData;
+            }
         }
 
         // Read RTC time (optional, don't fail if not available)
