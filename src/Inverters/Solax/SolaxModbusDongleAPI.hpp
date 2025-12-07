@@ -59,7 +59,7 @@ public:
         else
         {
             if (!readWorkMode(inverterData))
-            {
+            { 
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 channel.disconnect();
                 return inverterData;
@@ -199,6 +199,155 @@ public:
     }
     
     /**
+     * Nastaví režim střídače pomocí Remote Power Control registrů
+     * Tato metoda je bezpečnější než setWorkMode - automatický návrat do Self-Use po timeoutu
+     * DŮLEŽITÉ: Používá writeMultipleRegisters (FC 0x10) - střídač vyžaduje atomický zápis všech registrů najednou!
+     * @param ipAddress IP adresa donglu
+     * @param mode Požadovaný režim (InverterMode_t)
+     * @param maxChargePowerW Maximální nabíjecí výkon v W (default 10000)
+     * @param maxDischargePowerW Maximální vybíjecí výkon v W (default 10000)
+     * @param timeoutSec Timeout v sekundách, po kterém se vrátí do Self-Use (default 300 = 5 min)
+     * @return true pokud se nastavení podařilo
+     */
+    bool setWorkModeViaPowerControl(const String &ipAddress, InverterMode_t mode, 
+                                     uint16_t maxChargePowerW = 10000, 
+                                     uint16_t maxDischargePowerW = 10000,
+                                     uint16_t timeoutSec = 300)
+    {
+        if (!connectToDongle(ipAddress))
+        {
+            log_d("Failed to connect for setWorkModeViaPowerControl");
+            return false;
+        }
+
+        // Převod InverterMode na Power Control parametry
+        // Podle dokumentace: positive = charge, negative = discharge
+        int32_t activePowerTarget = 0;
+        uint16_t powerCtrlMode = POWER_CTRL_POWER;  // 1 = enable power control
+        
+        switch (mode)
+        {
+        case INVERTER_MODE_SELF_USE:
+            // Vypnout remote control → střídač řídí sám
+            powerCtrlMode = POWER_CTRL_DISABLED;  // 0 = disable
+            timeoutSec = 0;
+            activePowerTarget = 0;
+            log_d("Power Control: Self-Use (disabled remote control)");
+            break;
+            
+        case INVERTER_MODE_CHARGE_FROM_GRID:
+            // Nabíjení = KLADNÝ výkon (podle dokumentace: positive = charge)
+            activePowerTarget = (int32_t)maxChargePowerW;
+            log_d("Power Control: Charge from grid at %d W", maxChargePowerW);
+            break;
+            
+        case INVERTER_MODE_DISCHARGE_TO_GRID:
+            // Vybíjení = ZÁPORNÝ výkon (podle dokumentace: negative = discharge)
+            activePowerTarget = -(int32_t)maxDischargePowerW;
+            log_d("Power Control: Discharge to grid at %d W", maxDischargePowerW);
+            break;
+            
+        case INVERTER_MODE_HOLD_BATTERY:
+            // Držet baterii = 0 W výkon
+            activePowerTarget = 0;
+            log_d("Power Control: Hold battery (0 W)");
+            break;
+            
+        default:
+            log_d("Power Control: Unknown mode, defaulting to Self-Use");
+            powerCtrlMode = POWER_CTRL_DISABLED;
+            timeoutSec = 0;
+            break;
+        }
+
+        // Unlock střídače
+        bool success = channel.writeSingleRegister(UNIT_ID, REG_LOCK_STATE, LOCK_STATE_UNLOCKED_ADVANCED);
+        if (!success)
+        {
+            log_d("Failed to unlock inverter for Power Control");
+            channel.disconnect();
+            return false;
+        }
+        log_d("Inverter unlocked for Power Control");
+
+        // Sestavit payload pro writeMultipleRegisters
+        // Registry 0x7C-0x88 (13 registrů) podle HA implementace:
+        // 0x7C: ModbusPowerControl mode (U16)
+        // 0x7D: TargetSetType (U16) = 1 (Set)
+        // 0x7E-0x7F: ActivePower (S32, LSB first)
+        // 0x80-0x81: ReactivePower (S32, LSB first) = 0
+        // 0x82: Duration (U16)
+        // 0x83: Target SOC (U16) = 0 (dummy)
+        // 0x84-0x85: Target Energy Wh (U32) = 0 (dummy)
+        // 0x86-0x87: Charge/Discharge Power (S32) = 0 (dummy)
+        // 0x88: Timeout (U16)
+        
+        uint16_t registers[13];
+        registers[0] = powerCtrlMode;                                    // 0x7C: power control mode
+        registers[1] = 1;                                                // 0x7D: set type = Set
+        registers[2] = (uint16_t)(activePowerTarget & 0xFFFF);           // 0x7E: active power LSB
+        registers[3] = (uint16_t)((activePowerTarget >> 16) & 0xFFFF);   // 0x7F: active power MSB
+        registers[4] = 0;                                                // 0x80: reactive power LSB
+        registers[5] = 0;                                                // 0x81: reactive power MSB
+        registers[6] = timeoutSec;                                       // 0x82: duration
+        registers[7] = 0;                                                // 0x83: target SOC (dummy)
+        registers[8] = 0;                                                // 0x84: target energy LSB (dummy)
+        registers[9] = 0;                                                // 0x85: target energy MSB (dummy)
+        registers[10] = 0;                                               // 0x86: charge/discharge power LSB (dummy)
+        registers[11] = 0;                                               // 0x87: charge/discharge power MSB (dummy)
+        registers[12] = timeoutSec > 0 ? 2 : 0;                          // 0x88: timeout (0 or 2 minutes default)
+        
+        log_d("Writing Power Control registers: mode=%d, activePower=%d, duration=%d", 
+              powerCtrlMode, activePowerTarget, timeoutSec);
+        
+        // Použít writeMultipleRegisters pro atomický zápis všech registrů najednou
+        success = channel.writeMultipleRegisters(UNIT_ID, REG_POWER_CTRL_MODE, registers, 13);
+        
+        channel.disconnect();
+        
+        if (success)
+        {
+            log_d("Power Control set successfully: mode=%d, activePower=%d W, duration=%d s", 
+                  mode, activePowerTarget, timeoutSec);
+        }
+        else
+        {
+            log_w("Failed to write Power Control registers");
+        }
+        
+        return success;
+    }
+    
+    /**
+     * Přečte aktuální stav Remote Power Control z INPUT registrů
+     * @param outMode Výstup: aktuální režim (0=disabled, 1=power, 2=quantity, 3=SOC)
+     * @param outActivePower Výstup: aktuální cílový aktivní výkon (W)
+     * @return true pokud se čtení podařilo
+     */
+    bool readPowerControlStatus(uint16_t &outMode, int32_t &outActivePower)
+    {
+        // Čtení z INPUT registrů 0x100-0x103
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 
+                                                            REG_POWER_CTRL_STATUS, 4);
+        if (!response.isValid)
+        {
+            log_d("Failed to read Power Control status registers");
+            return false;
+        }
+
+        outMode = response.readUInt16(REG_POWER_CTRL_STATUS);
+        // ActivePowerTarget is int32 at 0x102-0x103 (LSB first)
+        uint16_t activeLSB = response.readUInt16(REG_POWER_CTRL_ACTIVE_TARGET);
+        uint16_t activeMSB = response.readUInt16(REG_POWER_CTRL_ACTIVE_TARGET + 1);
+        outActivePower = (int32_t)((activeMSB << 16) | activeLSB);
+        
+        log_d("Power Control Status: mode=%d, activePower=%d W, active=%s", 
+              outMode, outActivePower, outMode > 0 ? "yes" : "no");
+        
+        return true;
+    }
+    
+    /**
      * Reads the current run mode of the inverter
      * @return Run mode value (0=Waiting, 2=Normal, 9=Idle, 10=Standby, etc.)
      */
@@ -255,8 +404,28 @@ private:
     static constexpr uint16_t REG_SYSTEM_ON_OFF = 0x001C;           // System On/Off (1=On, 0=Off)
     static constexpr uint16_t REG_BATTERY_AWAKEN = 0x0056;          // Battery Awaken (write 1 to wake) - only for G2/lead-acid
     static constexpr uint16_t REG_VPP_EXIT_IDLE = 0x00F4;           // VPP Exit Idle Enable (0=Disabled, 1=Enabled)
-    static constexpr uint16_t REG_REMOTE_POWER_CONTROL = 0x007C;    // Remote Power Control Mode 1-7 start register (0x7C-0x8A)
-    static constexpr uint16_t REG_POWER_CONTROL_MODE_8 = 0x00A0;    // Power Control Mode 8/9 start register (0xA0-0xA7)
+    
+    // Remote Power Control WRITE registers (Holding registers 0x7C-0x85)
+    static constexpr uint16_t REG_POWER_CTRL_MODE = 0x007C;         // 0=disable, 1=power control, 2=electric quantity, 3=SOC target
+    static constexpr uint16_t REG_POWER_CTRL_SET_TYPE = 0x007D;     // 1=set, 2=update
+    static constexpr uint16_t REG_POWER_CTRL_ACTIVE_POWER = 0x007E; // int32 LSB - ActivePower (W): positive=charge, negative=discharge
+    // 0x007F = REG_POWER_CTRL_ACTIVE_POWER MSB
+    static constexpr uint16_t REG_POWER_CTRL_REACTIVE_POWER = 0x0080; // int32 LSB - ReactivePower (VAr)
+    // 0x0081 = REG_POWER_CTRL_REACTIVE_POWER MSB
+    static constexpr uint16_t REG_POWER_CTRL_TIMEOUT = 0x0082;      // Time of Duration in seconds
+    static constexpr uint16_t REG_POWER_CTRL_TARGET_SOC = 0x0083;   // Target SOC (%)
+    
+    // Remote Power Control READ registers (Input registers 0x100+)
+    static constexpr uint16_t REG_POWER_CTRL_STATUS = 0x0100;       // Current ModbusPowerControl status (0-3)
+    static constexpr uint16_t REG_POWER_CTRL_TARGET_FINISH = 0x0101; // 0=unfinished, 1=finish
+    static constexpr uint16_t REG_POWER_CTRL_ACTIVE_TARGET = 0x0102; // int32 LSB - ActivePowerTarget
+    // 0x0103 = REG_POWER_CTRL_ACTIVE_TARGET MSB
+    
+    // Power Control Mode values
+    static constexpr uint16_t POWER_CTRL_DISABLED = 0;              // Disable remote control
+    static constexpr uint16_t POWER_CTRL_POWER = 1;                 // Enable power control
+    static constexpr uint16_t POWER_CTRL_QUANTITY = 2;              // Enable electric quantity control
+    static constexpr uint16_t POWER_CTRL_SOC = 3;                   // Enable SOC target control
     
     // Lock State register - must unlock before writing mode registers
     static constexpr uint16_t REG_LOCK_STATE = 0x0000;              // Lock State register
@@ -548,6 +717,55 @@ private:
 
     bool readWorkMode(InverterData_t &data)
     {
+        // Nejprve zkusíme přečíst Power Control status z INPUT registrů (0x100+)
+        ModbusResponse pcResponse = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 
+                                                               REG_POWER_CTRL_STATUS, 4);
+        if (pcResponse.isValid)
+        {
+            uint16_t pcMode = pcResponse.readUInt16(REG_POWER_CTRL_STATUS);
+            // ActivePowerTarget is int32 at 0x102-0x103 (LSB first)
+            uint16_t activeLSB = pcResponse.readUInt16(REG_POWER_CTRL_ACTIVE_TARGET);
+            uint16_t activeMSB = pcResponse.readUInt16(REG_POWER_CTRL_ACTIVE_TARGET + 1);
+            int32_t activePowerTarget = (int32_t)((activeMSB << 16) | activeLSB);
+            
+            log_d("Power Control status: mode=%d, activePower=%d W", pcMode, activePowerTarget);
+            
+            if (pcMode == POWER_CTRL_POWER)  // Power control is active
+            {
+                // Určíme mode podle aktivního výkonu
+                // Podle dokumentace: positive = charge, negative = discharge
+                if (activePowerTarget > 100)  // Kladný = nabíjení (s tolerancí)
+                {
+                    data.inverterMode = INVERTER_MODE_CHARGE_FROM_GRID;
+                    log_d("Power Control active: CHARGE at %d W", activePowerTarget);
+                }
+                else if (activePowerTarget < -100)  // Záporný = vybíjení (s tolerancí)
+                {
+                    data.inverterMode = INVERTER_MODE_DISCHARGE_TO_GRID;
+                    log_d("Power Control active: DISCHARGE at %d W", -activePowerTarget);
+                }
+                else  // Blízko 0 = hold
+                {
+                    data.inverterMode = INVERTER_MODE_HOLD_BATTERY;
+                    log_d("Power Control active: HOLD battery");
+                }
+                return true;
+            }
+            else if (pcMode != POWER_CTRL_DISABLED)
+            {
+                log_d("Power Control in mode %d (quantity/SOC), falling back to work mode", pcMode);
+            }
+            else
+            {
+                log_d("Power Control disabled, falling back to work mode registers");
+            }
+        }
+        else
+        {
+            log_d("Failed to read Power Control status, falling back to work mode registers");
+        }
+        
+        // Fallback na klasické čtení work mode registrů
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, REG_SOLAR_CHARGER_USE_MODE, 2);
         if (!response.isValid)
         {

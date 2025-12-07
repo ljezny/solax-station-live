@@ -892,7 +892,13 @@ bool runIntelligenceTask()
                         if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX)
                         {
                             static SolaxModbusDongleAPI solaxAPI;
-                            success = solaxAPI.setWorkMode(wifiDiscoveryResult.inverterIP, lastIntelligenceResult.command);
+                            // Použij Power Control místo Work Mode - bezpečnější s automatickým timeoutem
+                            success = solaxAPI.setWorkModeViaPowerControl(
+                                wifiDiscoveryResult.inverterIP, 
+                                lastIntelligenceResult.command,
+                                (int32_t)(settings.maxChargePowerKw * 1000),
+                                (int32_t)(settings.maxDischargePowerKw * 1000),
+                                1200);  // 20 minut timeout (přepočítává se každých 15 min)
                         }
                         else if (wifiDiscoveryResult.type == CONNECTION_TYPE_GOODWE)
                         {
@@ -1522,7 +1528,12 @@ void updateState()
                 if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX)
                 {
                     static SolaxModbusDongleAPI solaxAPI;
-                    success = solaxAPI.setWorkMode(wifiDiscoveryResult.inverterIP, mode);
+                    // Použij Power Control místo Work Mode - bezpečnější s automatickým timeoutem
+                    // Pro manuální změnu použij kratší timeout (5 min)
+                    success = solaxAPI.setWorkModeViaPowerControl(
+                        wifiDiscoveryResult.inverterIP, mode,
+                        8000, 8000,  // Default 8kW charge/discharge power
+                        300);  // 5 minut timeout pro manuální změnu
                 }
                 else if (wifiDiscoveryResult.type == CONNECTION_TYPE_GOODWE)
                 {
