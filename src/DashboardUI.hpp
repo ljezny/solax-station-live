@@ -361,14 +361,13 @@ private:
     lv_obj_t *intelligenceDetailTitle = nullptr;
     // Upcoming plans container and rows
     lv_obj_t *intelligenceUpcomingContainer = nullptr;
-    static constexpr int VISIBLE_PLAN_ROWS = 10;
+    static constexpr int VISIBLE_PLAN_ROWS = 48;  // Support up to 48 plan changes (2 days)
     lv_obj_t *intelligenceUpcomingRows[VISIBLE_PLAN_ROWS] = {nullptr};
     lv_obj_t *intelligenceUpcomingModes[VISIBLE_PLAN_ROWS] = {nullptr};
     lv_obj_t *intelligenceUpcomingTimes[VISIBLE_PLAN_ROWS] = {nullptr};
     lv_obj_t *intelligenceUpcomingReasons[VISIBLE_PLAN_ROWS] = {nullptr};
     lv_obj_t *intelligenceUpcomingBullets[VISIBLE_PLAN_ROWS] = {nullptr};  // Timeline bullets
     lv_obj_t *intelligenceUpcomingLines[VISIBLE_PLAN_ROWS] = {nullptr};    // Timeline lines
-    lv_obj_t *intelligenceMorePlansLabel = nullptr;  // "X more plans..." label
     // Stats container
     lv_obj_t *intelligenceStatsContainer = nullptr;
     lv_obj_t *intelligenceStatsSeparator = nullptr;  // Vertical separator between stats
@@ -491,7 +490,7 @@ public:
         lv_obj_add_flag(intelligencePlanDetail, LV_OBJ_FLAG_CLICKABLE);
         // Event handler will be added after tile is fully created
         
-        // --- TOP: Upcoming plans container ---
+        // --- TOP: Upcoming plans container (scrollable) ---
         intelligenceUpcomingContainer = lv_obj_create(intelligencePlanDetail);
         lv_obj_remove_style_all(intelligenceUpcomingContainer);
         lv_obj_set_width(intelligenceUpcomingContainer, lv_pct(100));
@@ -499,8 +498,10 @@ public:
         lv_obj_set_flex_flow(intelligenceUpcomingContainer, LV_FLEX_FLOW_COLUMN);
         lv_obj_set_flex_align(intelligenceUpcomingContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
         lv_obj_set_style_pad_row(intelligenceUpcomingContainer, 4, 0);  // Reduced spacing
-        lv_obj_clear_flag(intelligenceUpcomingContainer, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
-        lv_obj_add_flag(intelligenceUpcomingContainer, LV_OBJ_FLAG_EVENT_BUBBLE);  // Pass clicks to parent
+        // Enable vertical scrolling for all plans
+        lv_obj_add_flag(intelligenceUpcomingContainer, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_set_scroll_dir(intelligenceUpcomingContainer, LV_DIR_VER);
+        lv_obj_set_scrollbar_mode(intelligenceUpcomingContainer, LV_SCROLLBAR_MODE_AUTO);
         
         // Create 4 upcoming plan rows - compact single-line layout
         for (int i = 0; i < VISIBLE_PLAN_ROWS; i++) {
@@ -576,14 +577,6 @@ public:
             lv_obj_set_style_text_font(intelligenceUpcomingReasons[i], &ui_font_OpenSansSmall, 0);
             lv_obj_set_style_text_color(intelligenceUpcomingReasons[i], lv_color_hex(0x666666), 0);
         }
-        
-        // "X more plans..." label at bottom of upcoming container
-        intelligenceMorePlansLabel = lv_label_create(intelligenceUpcomingContainer);
-        lv_label_set_text(intelligenceMorePlansLabel, "");
-        lv_obj_set_style_text_font(intelligenceMorePlansLabel, &ui_font_OpenSansSmall, 0);
-        lv_obj_set_style_text_color(intelligenceMorePlansLabel, lv_color_hex(0x999999), 0);
-        lv_obj_set_style_pad_left(intelligenceMorePlansLabel, 18, 0);  // Align with content after timeline
-        lv_obj_add_flag(intelligenceMorePlansLabel, LV_OBJ_FLAG_HIDDEN);  // Hidden by default
         
         // --- BOTTOM: Statistics container - like daily stats ---
         intelligenceStatsContainer = lv_obj_create(intelligencePlanDetail);
@@ -1569,17 +1562,6 @@ public:
         for (int i = foundChanges; i < VISIBLE_PLAN_ROWS; i++) {
             lv_obj_add_flag(intelligenceUpcomingRows[i], LV_OBJ_FLAG_HIDDEN);
         }
-        
-        // Show "X more plans..." if there are more
-        int remainingPlans = totalChanges - foundChanges;
-        if (remainingPlans > 0 && intelligenceMorePlansLabel != nullptr) {
-            char moreBuf[32];
-            snprintf(moreBuf, sizeof(moreBuf), "+%d more plan%s...", remainingPlans, remainingPlans > 1 ? "s" : "");
-            lv_label_set_text(intelligenceMorePlansLabel, moreBuf);
-            lv_obj_clear_flag(intelligenceMorePlansLabel, LV_OBJ_FLAG_HIDDEN);
-        } else if (intelligenceMorePlansLabel != nullptr) {
-            lv_obj_add_flag(intelligenceMorePlansLabel, LV_OBJ_FLAG_HIDDEN);
-        }
     }
     
     /**
@@ -2164,10 +2146,6 @@ public:
             if (intelligenceUpcomingLines[i] != nullptr) {
                 lv_obj_set_style_bg_color(intelligenceUpcomingLines[i], isDarkMode ? lv_color_hex(0x666666) : lv_color_hex(0x333333), 0);
             }
-        }
-        // Update "more plans" label color
-        if (intelligenceMorePlansLabel != nullptr) {
-            lv_obj_set_style_text_color(intelligenceMorePlansLabel, isDarkMode ? lv_color_hex(0x888888) : lv_color_hex(0x999999), 0);
         }
         // Update stats colors - values and units same color
         if (intelligenceStatsProduction != nullptr) {

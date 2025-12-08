@@ -605,6 +605,12 @@ public:
      * Načte historii z NVS
      */
     void loadFromPreferences() {
+        NVSGuard guard;
+        if (!guard.isLocked()) {
+            log_e("Failed to lock NVS mutex for loading consumption history");
+            return;
+        }
+        
         Preferences preferences;
         if (preferences.begin(NAMESPACE, true)) {
             uint16_t compressedData[QUARTERS_OF_DAY];

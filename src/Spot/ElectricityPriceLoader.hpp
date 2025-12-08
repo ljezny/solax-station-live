@@ -271,6 +271,12 @@ private:
 public:
     ElectricityPriceProvider_t getStoredElectricityPriceProvider()
     {
+        NVSGuard guard;
+        if (!guard.isLocked()) {
+            log_e("Failed to lock NVS mutex for reading provider");
+            return NONE;
+        }
+        
         Preferences preferences;
         preferences.begin("spot", true);
         int provider = preferences.getInt("provider", NONE);
@@ -294,6 +300,12 @@ public:
 
     String getStoredTimeZone()
     {
+        NVSGuard guard;
+        if (!guard.isLocked()) {
+            log_e("Failed to lock NVS mutex for reading timezone");
+            return "CET-1CEST,M3.5.0/2,M10.5.0/3";
+        }
+        
         Preferences preferences;
         preferences.begin("spot", true);
         String timeZone = preferences.getString("tz", "CET-1CEST,M3.5.0/2,M10.5.0/3");

@@ -3,6 +3,7 @@
 #include <Arduino.h>
 #include <Preferences.h>
 #include <esp_heap_caps.h>
+#include "NVSMutex.hpp"
 #include "../Spot/ElectricityPriceResult.hpp"  // Pro QUARTERS_OF_DAY, QUARTERS_TWO_DAYS
 
 /**
@@ -286,6 +287,12 @@ public:
         }
         lastSavedQuarter = currentQuarter;
         
+        NVSGuard guard;
+        if (!guard.isLocked()) {
+            log_e("Failed to lock NVS mutex for saving solar chart data");
+            return;
+        }
+        
         Preferences preferences;
         if (!preferences.begin(NAMESPACE, false)) {
             log_e("Failed to open NVS for SolarChartData");
@@ -330,6 +337,12 @@ public:
      * Načte pouze pokud je to stejný den
      */
     void loadFromPreferences() {
+        NVSGuard guard;
+        if (!guard.isLocked()) {
+            log_e("Failed to lock NVS mutex for loading solar chart data");
+            return;
+        }
+        
         Preferences preferences;
         if (!preferences.begin(NAMESPACE, true)) {
             log_d("No SolarChartData in NVS");

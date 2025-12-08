@@ -72,6 +72,12 @@ public:
     static IntelligenceSettings_t load() {
         IntelligenceSettings_t settings = IntelligenceSettings_t::getDefault();
         
+        NVSGuard guard;
+        if (!guard.isLocked()) {
+            log_e("Failed to lock NVS mutex for loading intelligence settings");
+            return settings;
+        }
+        
         Preferences preferences;
         if (preferences.begin(NAMESPACE, true)) {  // read-only
             // Use short keys matching save()

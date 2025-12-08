@@ -391,6 +391,12 @@ public:
      * Uloží historii do NVS
      */
     void saveToPreferences() {
+        NVSGuard guard;
+        if (!guard.isLocked()) {
+            log_e("Failed to lock NVS mutex for saving production history");
+            return;
+        }
+        
         Preferences preferences;
         if (preferences.begin(NAMESPACE, false)) {
             preferences.putInt("instPwr", installedPowerWp);
@@ -416,6 +422,12 @@ public:
      * Načte historii z NVS
      */
     void loadFromPreferences() {
+        NVSGuard guard;
+        if (!guard.isLocked()) {
+            log_e("Failed to lock NVS mutex for loading production history");
+            return;
+        }
+        
         Preferences preferences;
         if (preferences.begin(NAMESPACE, true)) {
             installedPowerWp = preferences.getInt("instPwr", installedPowerWp);

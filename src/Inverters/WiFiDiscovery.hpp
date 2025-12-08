@@ -417,6 +417,12 @@ private:
 
     bool loadDongleInfo(String ssid, DongleInfo_t &info)
     {
+        NVSGuard guard;
+        if (!guard.isLocked()) {
+            log_e("Failed to lock NVS mutex for loading dongle info");
+            return false;
+        }
+        
         Preferences preferences;
         preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, true);
         String key = hashString(ssid);
