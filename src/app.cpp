@@ -128,25 +128,27 @@ bool showSettings = false;
 bool showIntelligenceSettings = false;
 
 /* Display flushing */
-static uint32_t flushCount = 0;
-static uint32_t lastFlushLog = 0;
-static uint32_t maxFlushTime = 0;
-static uint32_t totalFlushTime = 0;
+static lv_disp_drv_t *flush_disp_drv = nullptr;
 
 void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
 {
-    uint32_t startTime = micros();
-
     uint32_t w = (area->x2 - area->x1 + 1);
     uint32_t h = (area->y2 - area->y1 + 1);
 
-    // Wait for previous DMA to complete before starting new one
-    tft.waitDMA();
-
-    // Start DMA transfer
-    tft.pushImageDMA(area->x1, area->y1, w, h, (lgfx::rgb565_t *)&color_p->full);
-
-    lv_disp_flush_ready(disp);
+    // For double buffering with DMA: wait for previous transfer, then start new one
+    // and signal ready immediately (LVGL can draw into other buffer)
+    if (disp->draw_buf->buf1 && disp->draw_buf->buf2) {
+        // Double buffering - wait for previous DMA, start new one, signal ready
+        tft.waitDMA();
+        tft.pushImageDMA(area->x1, area->y1, w, h, (lgfx::rgb565_t *)&color_p->full);
+        lv_disp_flush_ready(disp);
+    } else {
+        // Single buffering - must wait for DMA to complete before signaling ready
+        tft.waitDMA();
+        tft.pushImageDMA(area->x1, area->y1, w, h, (lgfx::rgb565_t *)&color_p->full);
+        tft.waitDMA();
+        lv_disp_flush_ready(disp);
+    }
 }
 
 void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
@@ -321,8 +323,24 @@ void setupLVGL()
     // touch setup
     touch.init();
 
-    // Use smaller buffers in internal DMA-capable RAM for faster rendering
-    // 1/10 of screen = 800*48 pixels = ~77KB per buffer (fits in internal RAM)
+    // For RGB panels with PSRAM framebuffer, use larger buffers in PSRAM
+    // Larger buffers = fewer flush operations = smoother scrolling
+    // Using 1/4 of screen height (120 lines) for good balance
+#if CROW_PANEL_ADVANCE
+    // CrowPanel Advance has RGB panel with PSRAM - use large PSRAM buffers
+    size_t bufferLines = screenHeight / 4; // 120 lines = ~192KB per buffer
+    size_t bufferSize = screenWidth * bufferLines * sizeof(lv_color_t);
+    
+    disp_draw_buf1 = (lv_color_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
+    disp_draw_buf2 = (lv_color_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
+    
+    if (!disp_draw_buf1 || !disp_draw_buf2) {
+        log_e("Failed to allocate display buffers in PSRAM!");
+    }
+    lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * bufferLines);
+    log_d("Display buffers in PSRAM: 2x %.1f KB (%d lines)", bufferSize / 1024.0f, bufferLines);
+#else
+    // Standard CrowPanel - try internal DMA RAM first for better performance
     size_t bufferLines = 48; // Number of lines per buffer
     size_t bufferSize = screenWidth * bufferLines * sizeof(lv_color_t);
 
@@ -351,6 +369,7 @@ void setupLVGL()
         lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * bufferLines);
         log_d("Display buffers in internal DMA RAM: 2x %.1f KB (%d lines)", bufferSize / 1024.0f, bufferLines);
     }
+#endif
     /* Initialize the display */
     lv_disp_drv_init(&disp_drv);
     /* Change the following line to your display resolution */
