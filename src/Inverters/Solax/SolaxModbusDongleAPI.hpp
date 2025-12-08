@@ -642,9 +642,10 @@ private:
 
     bool readInverterRTC(InverterData_t &data)
     {
-        // Solax RTC registers: 0x03-0x08 (holding registers)
-        // 0x03: Year-2000, 0x04: Month, 0x05: Day, 0x06: Hour, 0x07: Minute, 0x08: Second
-        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, 0x03, 6);
+        // Solax RTC registers: 0x85-0x8A (holding registers) - for reading
+        // 0x85: Second, 0x86: Minute, 0x87: Hour, 0x88: Day, 0x89: Month, 0x8A: Year-2000
+        // Note: Writing RTC uses registers 0x00-0x05
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, 0x85, 6);
         if (!response.isValid)
         {
             log_d("Failed to read RTC from Solax inverter");
@@ -652,12 +653,12 @@ private:
         }
 
         struct tm timeinfo = {};
-        timeinfo.tm_year = response.readUInt16(0x03) + 100; // Year-2000 + 100 = years since 1900
-        timeinfo.tm_mon = response.readUInt16(0x04) - 1;    // Month 1-12 to 0-11
-        timeinfo.tm_mday = response.readUInt16(0x05);
-        timeinfo.tm_hour = response.readUInt16(0x06);
-        timeinfo.tm_min = response.readUInt16(0x07);
-        timeinfo.tm_sec = response.readUInt16(0x08);
+        timeinfo.tm_sec = response.readUInt16(0x85);
+        timeinfo.tm_min = response.readUInt16(0x86);
+        timeinfo.tm_hour = response.readUInt16(0x87);
+        timeinfo.tm_mday = response.readUInt16(0x88);
+        timeinfo.tm_mon = response.readUInt16(0x89) - 1;    // Month 1-12 to 0-11
+        timeinfo.tm_year = response.readUInt16(0x8A) + 100; // Year-2000 + 100 = years since 1900
         timeinfo.tm_isdst = -1;  // Let mktime determine DST
 
         data.inverterTime = mktime(&timeinfo);

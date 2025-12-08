@@ -37,9 +37,9 @@ private:
     
     static void init() {
         if (!initialized) {
-            mutex = xSemaphoreCreateMutex();
+            mutex = xSemaphoreCreateRecursiveMutex();  // Rekurzivní mutex - umožňuje vnořené zamykání
             initialized = true;
-            log_d("NVSMutex initialized");
+            log_d("NVSMutex initialized (recursive)");
         }
     }
     
@@ -69,9 +69,9 @@ public:
             waitDMACallback();
         }
         
-        // Zamknout mutex
+        // Zamknout mutex (rekurzivní - umožňuje vnořené volání)
         TickType_t timeout = (timeoutMs == 0) ? portMAX_DELAY : pdMS_TO_TICKS(timeoutMs);
-        if (xSemaphoreTake(mutex, timeout) == pdTRUE) {
+        if (xSemaphoreTakeRecursive(mutex, timeout) == pdTRUE) {
             return true;
         }
         
@@ -84,7 +84,7 @@ public:
      */
     static void unlock() {
         if (initialized && mutex != nullptr) {
-            xSemaphoreGive(mutex);
+            xSemaphoreGiveRecursive(mutex);
         }
     }
     
@@ -96,8 +96,8 @@ public:
             return false;
         }
         // Zkusíme zamknout s timeout 0 - pokud se nepodaří, je zamčený
-        if (xSemaphoreTake(mutex, 0) == pdTRUE) {
-            xSemaphoreGive(mutex);
+        if (xSemaphoreTakeRecursive(mutex, 0) == pdTRUE) {
+            xSemaphoreGiveRecursive(mutex);
             return false;
         }
         return true;

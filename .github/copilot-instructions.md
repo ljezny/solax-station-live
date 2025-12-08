@@ -6,7 +6,8 @@ Je potřeba dělat věškeré změny opatrně s ohledem na migraci dat - ideáln
 
 Veškerý kód rozumně loguj pomocí LOGD. Určitě loguj negativní scénáře (chyby API, neúspěšné přihlášení, problémy s WiFi, atd.)
 
-Úkoly které ti zadám, nejprve analyzuj a navrhni 1-3 možná řešení, a já si vyberu. 
+Úkoly které ti zadám, nejprve analyzuj a navrhni 1-3 možná řešení.
+Vždy mne nech rozhodnout před implementací.
 
 Dělej minimální úpravy v kódu.
 
