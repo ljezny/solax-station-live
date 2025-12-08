@@ -502,6 +502,8 @@ public:
         lv_obj_add_flag(intelligenceUpcomingContainer, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_set_scroll_dir(intelligenceUpcomingContainer, LV_DIR_VER);
         lv_obj_set_scrollbar_mode(intelligenceUpcomingContainer, LV_SCROLLBAR_MODE_AUTO);
+        // Allow click events to bubble up to parent (so tile can be closed by clicking)
+        lv_obj_add_flag(intelligenceUpcomingContainer, LV_OBJ_FLAG_EVENT_BUBBLE);
         
         // Create 4 upcoming plan rows - compact single-line layout
         for (int i = 0; i < VISIBLE_PLAN_ROWS; i++) {
