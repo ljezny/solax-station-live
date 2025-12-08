@@ -91,6 +91,8 @@ private:
     static constexpr float MIN_ENERGY_THRESHOLD = 0.01f;       // Minimální energie pro akci (kWh)
     static constexpr float CONSUMPTION_SAFETY_MARGIN = 1.2f;   // 20% rezerva na spotřebu (pro jistotu)
     static constexpr int LOCAL_WINDOW_QUARTERS = 48;           // Okno pro lokální min/max (12 hodin = 48 čtvrthodin)
+    static constexpr float HOLD_MIN_PROFIT_RATIO = 0.15f;      // Minimální profit pro HOLD = 15% z buyPrice (relativní)
+    static constexpr float HOLD_PRICE_HYSTERESIS = 0.15f;      // 15% hystereze pro Hold vs Self-Use přepínání
     
     ConsumptionPredictor& consumptionPredictor;
     ProductionPredictor& productionPredictor;
@@ -464,15 +466,20 @@ public:
                 //    - HOLD se vyplatí když: localMaxBuyPrice - batteryCost > buyPrice
                 //    - Čili: localMaxBuyPrice > buyPrice + batteryCost
                 // 4) Budeme mít reálnou spotřebu v době vysoké ceny (ne jen teoreticky)
+                // 5) NOVÝ: Profit musí být dostatečný (> HOLD_MIN_PROFIT_CZK) aby se vyplatilo přepínat
                 //
                 // Používáme LOKÁLNÍ hodnoty (12h okno), protože:
                 // - Nás zajímá nejbližší špička, ne špička za 24 hodin
                 // - HOLD na příliš dlouhou dobu není efektivní
                 //
-                bool isCheapNow = buyPrice < localAvgBuyPrice;  // Teď je levněji než lokální průměr
+                
+                // Používáme hysterezi: pro HOLD potřebujeme výrazně nižší cenu než průměr
+                bool isCheapNow = buyPrice < localAvgBuyPrice * (1.0f - HOLD_PRICE_HYSTERESIS);
                 // Čistý zisk z HOLD = rozdíl cen (batteryCost se počítá jen při nabíjení, ne při vybíjení)
                 float holdProfit = localMaxBuyPrice - buyPrice;
-                bool holdIsProfitable = holdProfit > 0;
+                // HOLD se vyplatí jen když profit je dostatečný - relativně k buyPrice (ne jen pár haléřů)
+                float minRequiredHoldProfit = buyPrice * HOLD_MIN_PROFIT_RATIO;
+                bool holdIsProfitable = holdProfit > minRequiredHoldProfit;
                 
                 // Kolik energie potřebujeme do budoucna (bez solární výroby)?
                 float energyDeficit = max(0.0f, remainingConsumption - remainingProduction);
@@ -485,6 +492,7 @@ public:
                 // - Budeme potřebovat baterii později
                 // - Máme co držet
                 // - Nemáme místo pro nabíjení NEBO se nevyplatí nabíjet
+                // - NOVÝ: Lokální maximum je výrazně vyšší než průměr (skutečná špička)
                 //
                 // Klíčová změna: HOLD jen pokud by se NEVYPLATILO nabíjet
                 // Nabíjení se vyplatí když: jsme blízko minima A storageCost < localMaxBuyPrice
@@ -495,11 +503,15 @@ public:
                 // Nabíjení má přednost jen pokud jsme blízko minima - jinak čekáme na levnější cenu
                 bool shouldChargeInsteadOfHold = canCharge && isNearMinimumForHold && chargingWouldBeWorthEconomically;
                 
+                // Lokální maximum musí být výrazně vyšší než průměr (skutečná cenová špička)
+                bool hasRealPeakAhead = localMaxBuyPrice > localAvgBuyPrice * (1.0f + HOLD_PRICE_HYSTERESIS);
+                
                 bool shouldHoldForLater = batteryBetterThanGrid && 
                                           isCheapNow &&
                                           holdIsProfitable && 
                                           willNeedBatteryLater &&
                                           availableFromBattery > 0 &&
+                                          hasRealPeakAhead &&          // Musí být skutečná špička
                                           !shouldChargeInsteadOfHold;  // Nepřeskakuj nabíjení!
                 
                 if (shouldHoldForLater) {
