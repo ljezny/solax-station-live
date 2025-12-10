@@ -1391,7 +1391,7 @@ public:
      * @param currentQuarter Current quarter index
      * @param totalQuarters Total number of quarters in plan
      */
-    void updateIntelligencePlanSummary(InverterMode_t currentMode, const InverterMode_t plan[], int currentQuarter, int totalQuarters, float savings) {
+    void updateIntelligencePlanSummary(InverterMode_t currentMode, const InverterMode_t plan[], int currentQuarter, int totalQuarters, float savings, const char* currency = nullptr) {
         if (intelligenceSummaryBadge == nullptr || intelligenceSummaryTitle == nullptr) return;
         
         // Get mode name and color
@@ -1427,11 +1427,12 @@ public:
         // Update savings value
         if (intelligenceSummarySavings != nullptr) {
             char savingsText[32];
+            const char* currencyStr = currency ? currency : TR(STR_CURRENCY_CZK);
             if (savings >= 0) {
-                snprintf(savingsText, sizeof(savingsText), "+%.0f CZK", savings);
+                snprintf(savingsText, sizeof(savingsText), "+%.0f %s", savings, currencyStr);
                 lv_obj_set_style_text_color(intelligenceSummarySavings, lv_color_hex(0x00AA00), 0);  // Green for positive
             } else {
-                snprintf(savingsText, sizeof(savingsText), "%.0f CZK", savings);
+                snprintf(savingsText, sizeof(savingsText), "%.0f %s", savings, currencyStr);
                 lv_obj_set_style_text_color(intelligenceSummarySavings, lv_color_hex(0xAA0000), 0);  // Red for negative
             }
             lv_label_set_text(intelligenceSummarySavings, savingsText);

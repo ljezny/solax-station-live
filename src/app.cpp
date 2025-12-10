@@ -940,7 +940,7 @@ bool runIntelligenceTask()
                 xSemaphoreGive(lvgl_mutex);
 
                 xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-                dashboardUI->updateIntelligencePlanSummary(lastIntelligenceResult.command, intelligencePlan, currentQuarter, totalQuarters, totalSavings);
+                dashboardUI->updateIntelligencePlanSummary(lastIntelligenceResult.command, intelligencePlan, currentQuarter, totalQuarters, totalSavings, electricityPriceResult ? electricityPriceResult->currency : nullptr);
                 xSemaphoreGive(lvgl_mutex);
 
                 xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
