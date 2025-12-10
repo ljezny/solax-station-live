@@ -1509,16 +1509,16 @@ public:
                     
                     switch (plan[q]) {
                         case INVERTER_MODE_SELF_USE:
-                            snprintf(reasonBuf, sizeof(reasonBuf), "battery cheaper than %.1f %s", buyPrice, prices->currency);
+                            snprintf(reasonBuf, sizeof(reasonBuf), "%s %.1f %s", TR(STR_BATTERY_CHEAPER_THAN), buyPrice, prices->currency);
                             break;
                         case INVERTER_MODE_CHARGE_FROM_GRID:
-                            snprintf(reasonBuf, sizeof(reasonBuf), "low price %.1f %s", buyPrice, prices->currency);
+                            snprintf(reasonBuf, sizeof(reasonBuf), "%s %.1f %s", TR(STR_LOW_PRICE), buyPrice, prices->currency);
                             break;
                         case INVERTER_MODE_DISCHARGE_TO_GRID:
-                            snprintf(reasonBuf, sizeof(reasonBuf), "high price %.1f %s", sellPrice, prices->currency);
+                            snprintf(reasonBuf, sizeof(reasonBuf), "%s %.1f %s", TR(STR_HIGH_PRICE), sellPrice, prices->currency);
                             break;
                         case INVERTER_MODE_HOLD_BATTERY:
-                            snprintf(reasonBuf, sizeof(reasonBuf), "waiting for better price");
+                            snprintf(reasonBuf, sizeof(reasonBuf), "%s", TR(STR_WAITING_BETTER_PRICE));
                             break;
                         default:
                             reasonBuf[0] = '\0';
@@ -1527,16 +1527,16 @@ public:
                     // Fallback without prices
                     switch (plan[q]) {
                         case INVERTER_MODE_SELF_USE: 
-                            snprintf(reasonBuf, sizeof(reasonBuf), "using battery");
+                            snprintf(reasonBuf, sizeof(reasonBuf), "%s", TR(STR_USING_BATTERY));
                             break;
                         case INVERTER_MODE_CHARGE_FROM_GRID: 
-                            snprintf(reasonBuf, sizeof(reasonBuf), "low electricity price");
+                            snprintf(reasonBuf, sizeof(reasonBuf), "%s", TR(STR_LOW_ELECTRICITY_PRICE));
                             break;
                         case INVERTER_MODE_DISCHARGE_TO_GRID: 
-                            snprintf(reasonBuf, sizeof(reasonBuf), "high electricity price");
+                            snprintf(reasonBuf, sizeof(reasonBuf), "%s", TR(STR_HIGH_ELECTRICITY_PRICE));
                             break;
                         case INVERTER_MODE_HOLD_BATTERY: 
-                            snprintf(reasonBuf, sizeof(reasonBuf), "holding for later");
+                            snprintf(reasonBuf, sizeof(reasonBuf), "%s", TR(STR_HOLDING_FOR_LATER));
                             break;
                         default:
                             reasonBuf[0] = '\0';
