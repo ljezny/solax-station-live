@@ -44,7 +44,7 @@ typedef struct IntelligenceSettings {
     static IntelligenceSettings getDefault() {
         IntelligenceSettings settings;
         settings.enabled = false;
-        settings.batteryCostPerKwh = 0.5f;  // 0.5 Kč/kWh
+        settings.batteryCostPerKwh = 1.0f;  // 1 Kč/kWh (výchozí)
         settings.buyK = 1.21f;              // +21% DPH
         settings.buyQ = 2.5f;               // +2.5 Kč distribuční poplatky
         settings.sellK = 0.9f;              // 90% spotu

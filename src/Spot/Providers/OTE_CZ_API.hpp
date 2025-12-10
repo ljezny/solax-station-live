@@ -37,6 +37,11 @@ private:
     {
       ElectricityPriceResult_t result;
       result.updated = 0;
+      // Inicializace cen na 0 - prevence NaN hodnot při chybějících datech
+      for (int i = 0; i < QUARTERS_OF_DAY; i++) {
+        result.prices[i].electricityPrice = 0.0f;
+        result.prices[i].priceLevel = PRICE_LEVEL_CHEAP;
+      }
       WiFiClientSecure *client = new WiFiClientSecure;
       if (client)
       {
@@ -75,14 +80,52 @@ private:
                 DeserializationError error = deserializeJson(doc, payload, DeserializationOption::Filter(filter));
                 if (error == DeserializationError::Ok)
                 {
+                  // Nejdříve zjistíme počet hodnot v odpovědi
+                  int dataCount = 0;
                   for (int i = 0; i < QUARTERS_OF_DAY; i++)
                   {
                     if (doc["data"]["dataLine"][1]["point"][i]["y"].isNull())
                     {
                       break;
                     }
-                    result.prices[i].electricityPrice = doc["data"]["dataLine"][1]["point"][i]["y"].as<float>() * exchangeRate / 1000.0f;
+                    dataCount++;
+                  }
+                  
+                  log_d("OTE returned %d price values", dataCount);
+                  
+                  if (dataCount == 24) {
+                    // Hodinová data - rozšíříme na čtvrthodiny (každá hodina = 4 čtvrthodiny)
+                    log_d("Converting hourly data to quarterly (24 -> 96)");
+                    for (int hour = 0; hour < 24; hour++)
+                    {
+                      float hourlyPrice = doc["data"]["dataLine"][1]["point"][hour]["y"].as<float>() * exchangeRate / 1000.0f;
+                      // Každá hodina má 4 čtvrthodiny se stejnou cenou
+                      for (int q = 0; q < 4; q++)
+                      {
+                        result.prices[hour * 4 + q].electricityPrice = hourlyPrice;
+                      }
+                    }
                     result.updated = time(NULL);
+                  }
+                  else if (dataCount == 96) {
+                    // Čtvrthodinová data - použijeme přímo
+                    for (int i = 0; i < QUARTERS_OF_DAY; i++)
+                    {
+                      result.prices[i].electricityPrice = doc["data"]["dataLine"][1]["point"][i]["y"].as<float>() * exchangeRate / 1000.0f;
+                    }
+                    result.updated = time(NULL);
+                  }
+                  else if (dataCount > 0) {
+                    // Jiný počet hodnot - zkusíme použít co máme
+                    log_w("OTE returned unexpected number of values: %d", dataCount);
+                    for (int i = 0; i < dataCount && i < QUARTERS_OF_DAY; i++)
+                    {
+                      result.prices[i].electricityPrice = doc["data"]["dataLine"][1]["point"][i]["y"].as<float>() * exchangeRate / 1000.0f;
+                    }
+                    result.updated = time(NULL);
+                  }
+                  else {
+                    log_e("OTE returned no price data");
                   }
                 }
                 else

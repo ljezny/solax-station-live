@@ -16,6 +16,7 @@ class IntelligenceSetupUI {
 public:
     bool resultSaved = false;
     bool resultCancelled = false;
+    bool requestClearPredictions = false;  // Flag pro smazání predikcí (zpracuje app.cpp)
     
 private:
     bool eventHandlersAdded = false;
@@ -93,7 +94,11 @@ public:
         // Reset settings to defaults and reload UI
         IntelligenceSettings_t defaults = IntelligenceSettings_t::getDefault();
         loadSettingsToUI(defaults);
-        log_d("Intelligence settings reset to defaults");
+        
+        // Nastavit flag pro smazání predikcí (zpracuje app.cpp)
+        requestClearPredictions = true;
+        
+        log_d("Intelligence settings reset to defaults, predictions will be cleared");
     }
     
     void onInputFocus(lv_obj_t* obj, lv_event_code_t code) {

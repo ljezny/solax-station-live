@@ -388,6 +388,37 @@ public:
     }
     
     /**
+     * Vymaže všechna naučená data a reset na výchozí hodnoty
+     * Používá se při RESET tlačítku v UI
+     */
+    void clearAllData() {
+        log_i("Clearing all production prediction data");
+        
+        // Reset všech dat na výchozí hodnoty
+        for (int q = 0; q < QUARTERS_PER_DAY; q++) {
+            production[q] = 0;
+            sampleCount[q] = 0;
+        }
+        
+        // Reset korekce a stavu
+        resetCorrection();
+        lastRecordedQuarter = -1;
+        currentQuarterAccumulator = 0;
+        currentQuarterSampleCount = 0;
+        
+        // Smazání z NVS
+        NVSGuard guard;
+        if (guard.isLocked()) {
+            Preferences preferences;
+            if (preferences.begin(NAMESPACE, false)) {
+                preferences.clear();
+                preferences.end();
+                log_d("Production prediction NVS data cleared");
+            }
+        }
+    }
+    
+    /**
      * Uloží historii do NVS
      */
     void saveToPreferences() {

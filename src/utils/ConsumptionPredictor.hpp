@@ -551,10 +551,48 @@ public:
     }
     
     /**
-     * Vrátí predikci spotřeby pro konkrétní čtvrthodinu v kWh
+     * Vrátí predikovanou spotřebu pro čtvrthodinu v kWh
      */
     float predictQuarterConsumptionKwh(int day, int quarter) const {
         return predictQuarterlyConsumption(day, quarter) / 1000.0f;
+    }
+    
+    /**
+     * Vymaže všechna naučená data a reset na výchozí hodnoty
+     * Používá se při RESET tlačítku v UI
+     */
+    void clearAllData() {
+        log_i("Clearing all consumption prediction data");
+        
+        // Reset všech dat na výchozí hodnoty
+        for (int week = 0; week < WEEKS_HISTORY; week++) {
+            for (int day = 0; day < DAYS_PER_WEEK; day++) {
+                for (int quarter = 0; quarter < QUARTERS_OF_DAY; quarter++) {
+                    int hour = quarter / 4;
+                    consumptionAt(week, day, quarter) = getDefaultConsumption(hour);
+                    hasDataAt(week, day, quarter) = false;
+                }
+            }
+        }
+        
+        // Reset korekce a stavu
+        resetCorrection();
+        lastRecordedWeek = -1;
+        lastRecordedDay = -1;
+        lastRecordedQuarter = -1;
+        currentQuarterAccumulator = 0;
+        currentQuarterSampleCount = 0;
+        
+        // Smazání z NVS
+        NVSGuard guard;
+        if (guard.isLocked()) {
+            Preferences preferences;
+            if (preferences.begin(NAMESPACE, false)) {
+                preferences.clear();
+                preferences.end();
+                log_d("Consumption prediction NVS data cleared");
+            }
+        }
     }
     
     /**
