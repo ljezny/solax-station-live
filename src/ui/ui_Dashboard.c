@@ -576,7 +576,7 @@ ui_object_set_themeable_style_property(ui_selfUsePercentLabel, LV_PART_MAIN| LV_
 ui_object_set_themeable_style_property(ui_selfUsePercentLabel, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_BG_OPA, _ui_theme_alpha_loadColor);
 lv_obj_set_style_pad_left(ui_selfUsePercentLabel, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_right(ui_selfUsePercentLabel, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_top(ui_selfUsePercentLabel, 8, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_top(ui_selfUsePercentLabel, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_bottom(ui_selfUsePercentLabel, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_inverterContainer = lv_obj_create(ui_LeftContainer);
@@ -1156,7 +1156,7 @@ ui_object_set_themeable_style_property(ui_selfUseTodayUnitLabel, LV_PART_MAIN| L
 ui_object_set_themeable_style_property(ui_selfUseTodayUnitLabel, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA, _ui_theme_alpha_loadColor);
 lv_obj_set_style_text_align(ui_selfUseTodayUnitLabel, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_selfUseTodayUnitLabel, &ui_font_OpenSansExtraSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_bottom(ui_selfUseTodayUnitLabel, 3, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_selfUseTodayUnitLabel, 5, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Container36 = lv_obj_create(ui_TopRightContainer);
 lv_obj_remove_style_all(ui_Container36);
@@ -1386,8 +1386,8 @@ lv_obj_set_style_shadow_width(ui_clocksLabel, 32, LV_PART_MAIN| LV_STATE_DEFAULT
 lv_obj_set_style_shadow_spread(ui_clocksLabel, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_left(ui_clocksLabel, 6, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_right(ui_clocksLabel, 6, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_top(ui_clocksLabel, 6, LV_PART_MAIN| LV_STATE_DEFAULT);
-lv_obj_set_style_pad_bottom(ui_clocksLabel, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_top(ui_clocksLabel, 2, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_clocksLabel, 2, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_RightBottomContainer = lv_obj_create(ui_RightContainer);
 lv_obj_remove_style_all(ui_RightBottomContainer);
