@@ -225,6 +225,12 @@ public:
 
     String loadLastConnectedSSID()
     {
+        NVSGuard guard;
+        if (!guard.isLocked()) {
+            log_e("Failed to lock NVS mutex for loading last connected SSID");
+            return "";
+        }
+        
         Preferences preferences;
         preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, true);
         String ssid = preferences.getString("ssid", "");
