@@ -98,7 +98,7 @@ private:
         data.pvTotal = pvTotalVal / 10.0;
         uint32_t L1PowerVal = response.readUInt32(35);
         log_d("Register 35: %u (uint32_t)", L1PowerVal);
-        data.inverterOutpuPowerL1 = L1PowerVal / 10.0;
+        data.L1Power = L1PowerVal / 10.0;
         // data.L1Power = response.readInt32(40) / 10;
         // data.L2Power = response.readInt32(44) / 10;
         // data.L3Power = response.readInt32(48) / 10;
@@ -175,7 +175,7 @@ private:
 
         
         // Calculate total house consumption: inverter output minus grid export (or plus grid import)
-        data.loadPower = data.inverterOutpuPowerL1 - data.gridPowerL1;
+        data.loadPower = data.L1Power - data.gridPowerL1;
         
         // data.gridPowerL1 = response.readInt32(1023) / 10.0 - response.readInt32(1015) / 10.0;
         // data.gridPowerL2 = response.readInt32(1025) / 10.0 - response.readInt32(1017) / 10.0;
