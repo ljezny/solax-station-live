@@ -85,7 +85,7 @@ class IntelligenceSimulator {
 private:
     // === RELATIVNÍ PRAHY (fungují pro CZK, EUR i jiné měny) ===
     static constexpr float CHEAP_TIME_THRESHOLD = 1.10f;       // 10% tolerance nad minimum pro "levný čas"
-    static constexpr float BEST_SELL_TIME_THRESHOLD = 0.90f;   // 90% maxima pro "nejlepší čas prodeje"
+    static constexpr float BEST_SELL_TIME_THRESHOLD = 0.80f;   // 80% maxima pro "nejlepší čas prodeje"
     static constexpr float ARBITRAGE_PROFIT_THRESHOLD = 0.15f; // 15% zisk z buy price pro arbitráž
     static constexpr float LOW_BATTERY_SOC = 60.0f;            // SOC pod kterým je baterie "nízká"
     static constexpr float MIN_ENERGY_THRESHOLD = 0.01f;       // Minimální energie pro akci (kWh)
@@ -273,6 +273,149 @@ private:
             total += consumptionPredictor.predictQuarterlyConsumption(day, dayQ) / 1000.0f;
         }
         return total;
+    }
+    
+    /**
+     * Struktura pro informace o období solární výroby
+     */
+    struct SolarProductionPeriod {
+        int startQuarter;           // První čtvrthodina s výrobou
+        int endQuarter;             // Poslední čtvrthodina s výrobou
+        int firstSurplusQuarter;    // První čtvrthodina s přebytkem (výroba > spotřeba)
+        float totalProductionKwh;   // Celková výroba v období
+        float totalConsumptionKwh;  // Celková spotřeba v období
+        float surplusKwh;           // Očekávaný přebytek (production - consumption)
+        float consumptionUntilSurplus; // Spotřeba od teď do prvního přebytku
+        float avgSellPrice;         // Průměrná prodejní cena v období výroby (simple avg)
+        float weightedSellPrice;    // Vážený průměr prodejní ceny podle přebytku
+        float minSellPrice;         // Minimální prodejní cena v období s přebytkem
+        bool isValid;               // Zda bylo nalezeno období výroby
+    };
+    
+    /**
+     * Analyzuje budoucí období solární výroby
+     * Najde čtvrthodiny s nenulovou výrobou a spočítá očekávaný přebytek
+     */
+    SolarProductionPeriod analyzeSolarProductionPeriod(
+        int fromQuarter, int toQuarter,
+        int currentDay, int currentMonth,
+        const ElectricityPriceTwoDays_t& prices,
+        const IntelligenceSettings_t& settings) {
+        
+        SolarProductionPeriod result = {0, 0, -1, 0, 0, 0, 0, 0, 0, 999.0f, false};
+        
+        float sumSellPrice = 0;
+        float weightedSumSellPrice = 0;  // Součet (cena * přebytek)
+        float totalSurplusWeight = 0;    // Součet vah (přebytků)
+        int countWithProduction = 0;
+        bool foundStart = false;
+        bool foundFirstSurplus = false;
+        float consumptionBeforeSurplus = 0;  // Spotřeba od fromQuarter do prvního přebytku
+        
+        for (int q = fromQuarter; q < toQuarter; q++) {
+            int dayQ = q % QUARTERS_OF_DAY;
+            bool isTomorrow = (q >= QUARTERS_OF_DAY);
+            int day = isTomorrow ? (currentDay + 1) % 7 : currentDay;
+            
+            float productionKwh = productionPredictor.predictQuarterlyProduction(currentMonth, dayQ) / 1000.0f;
+            float consumptionKwh = consumptionPredictor.predictQuarterlyConsumption(day, dayQ) / 1000.0f;
+            
+            // Počítáme spotřebu do prvního přebytku (pro výpočet kolik energie potřebujeme v baterii)
+            if (!foundFirstSurplus) {
+                // Čistá spotřeba = spotřeba - výroba (co musíme dodat z baterie/sítě)
+                float netConsumption = max(0.0f, consumptionKwh - productionKwh);
+                consumptionBeforeSurplus += netConsumption;
+            }
+            
+            // Minimální práh pro "významnou" výrobu (např. 50W = 12.5Wh za čtvrthodinu)
+            const float MIN_PRODUCTION_THRESHOLD = 0.0125f;
+            
+            if (productionKwh > MIN_PRODUCTION_THRESHOLD) {
+                if (!foundStart) {
+                    result.startQuarter = q;
+                    foundStart = true;
+                }
+                result.endQuarter = q;
+                result.totalProductionKwh += productionKwh;
+                result.totalConsumptionKwh += consumptionKwh;
+                
+                float sellPrice = IntelligenceSettingsStorage::calculateSellPrice(
+                    prices.prices[q].electricityPrice, settings);
+                sumSellPrice += sellPrice;
+                countWithProduction++;
+                
+                // Vážený průměr - váhou je přebytek v dané čtvrthodině
+                float quarterSurplus = productionKwh - consumptionKwh;
+                if (quarterSurplus > 0) {
+                    // První čtvrthodina s přebytkem
+                    if (!foundFirstSurplus) {
+                        result.firstSurplusQuarter = q;
+                        result.consumptionUntilSurplus = consumptionBeforeSurplus;
+                        foundFirstSurplus = true;
+                    }
+                    
+                    weightedSumSellPrice += sellPrice * quarterSurplus;
+                    totalSurplusWeight += quarterSurplus;
+                    
+                    // Sleduj minimální cenu v době přebytku
+                    if (sellPrice < result.minSellPrice) {
+                        result.minSellPrice = sellPrice;
+                    }
+                }
+            }
+        }
+        
+        if (foundStart && countWithProduction > 0) {
+            result.surplusKwh = result.totalProductionKwh - result.totalConsumptionKwh;
+            result.avgSellPrice = sumSellPrice / countWithProduction;
+            
+            // Vážený průměr: ceny vážené podle přebytku v každé čtvrthodině
+            // Tím se více váží období s největším přebytkem (obvykle poledne = nízké ceny)
+            if (totalSurplusWeight > 0.01f) {
+                result.weightedSellPrice = weightedSumSellPrice / totalSurplusWeight;
+            } else {
+                result.weightedSellPrice = result.avgSellPrice;
+            }
+            
+            // Pokud jsme nenašli žádný přebytek, použij průměr
+            if (result.minSellPrice > 900.0f) {
+                result.minSellPrice = result.avgSellPrice;
+            }
+            
+            // Pokud jsme nenašli přebytek, nastav firstSurplusQuarter na konec výroby
+            if (!foundFirstSurplus) {
+                result.firstSurplusQuarter = result.endQuarter;
+                result.consumptionUntilSurplus = consumptionBeforeSurplus;
+            }
+            
+            result.isValid = true;
+        } else {
+            // Žádná výroba - nastavíme bezpečné hodnoty
+            result.avgSellPrice = 0.0f;
+            result.weightedSellPrice = 0.0f;
+            result.minSellPrice = 0.0f;
+            result.surplusKwh = 0.0f;
+            result.consumptionUntilSurplus = 0.0f;
+            result.isValid = false;
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Spočítá průměrnou prodejní cenu v daném rozsahu čtvrthodin
+     */
+    float calculateAvgSellPrice(const ElectricityPriceTwoDays_t& prices,
+                                int fromQuarter, int toQuarter,
+                                const IntelligenceSettings_t& settings) {
+        float sum = 0;
+        int count = 0;
+        for (int q = fromQuarter; q < toQuarter; q++) {
+            sum += IntelligenceSettingsStorage::calculateSellPrice(
+                prices.prices[q].electricityPrice, settings);
+            count++;
+        }
+        return count > 0 ? sum / count : 0;
     }
 
 public:
@@ -603,8 +746,95 @@ public:
             
             // === KROK 3: Speciální rozhodnutí ===
             
-            // 3a) NABÍJENÍ ZE SÍTĚ - levná elektřina
+            // 3a) PRE-EMPTIVE DISCHARGE - vybít baterii PŘED solární výrobou
+            // Cíl: Uvolnit místo pro solární energii, kterou bychom jinak museli prodat levně
+            // Vyplatí se když:
+            // 1) Baterie je téměř plná (málo místa pro solární)
+            // 2) Očekáváme solární přebytek (více výroby než spotřeby)
+            // 3) Aktuální prodejní cena > průměrná cena v době solární výroby + batteryCost
+            // 4) Máme dost energie v baterii na pokrytí spotřeby do prvního přebytku
+            // Podmínka productionKwh < consumptionKwh zajistí, že vybíjíme dokud výroba nepokryje spotřebu
+            if (availableFromBattery > 0 && decision == INVERTER_MODE_SELF_USE && productionKwh < consumptionKwh) {
+                // Analyzuj budoucí solární období
+                SolarProductionPeriod solarPeriod = analyzeSolarProductionPeriod(
+                    q + 1, maxQuarters, currentDay, currentMonth, prices, settings);
+                
+                if (solarPeriod.isValid && solarPeriod.surplusKwh > 0) {
+                    // Kolik místa máme v baterii?
+                    float currentSpace = spaceInBattery;
+                    
+                    // Kolik přebytku bychom mohli nabít do baterie?
+                    float potentialCharge = min(solarPeriod.surplusKwh, getUsableCapacityKwh());
+                    
+                    // Kolik přebytku bychom MUSELI prodat, protože nemáme místo?
+                    float forcedSell = max(0.0f, potentialCharge - currentSpace);
+                    
+                    // Pre-emptive discharge se vyplatí když:
+                    // 1) Máme přebytek který bychom museli prodat
+                    // 2) Teď dostaneme lepší cenu než bychom dostali za solární přebytek
+                    // 3) Zisk po odečtení opotřebení baterie je kladný
+                    //
+                    // Výpočet profitu:
+                    // - Teď prodáme za sellPrice
+                    // - Později bychom prodali za weightedSellPrice (vážený průměr podle přebytku)
+                    //   Tím se více váží období s největším přebytkem (obvykle poledne = nízké ceny)
+                    // - BatteryCost NEPOČÍTÁME - nabíjení ze soláru je zdarma, 
+                    //   baterie by se stejně nabila, jen prodáme za lepší cenu
+                    float preemptiveProfit = sellPrice - solarPeriod.weightedSellPrice;
+                    
+                    // Minimální profit pro pre-emptive discharge (15% z prodejní ceny)
+                    float minPreemptiveProfit = sellPrice * ARBITRAGE_PROFIT_THRESHOLD;
+                    
+                    // Kolik energie minimálně potřebujeme v baterii na pokrytí spotřeby do prvního přebytku?
+                    // Přidáme 10% rezervu pro jistotu
+                    float minEnergyNeeded = solarPeriod.consumptionUntilSurplus * 1.1f;
+                    float minSocNeeded = (minEnergyNeeded / batteryCapacityKwh) * 100.0f + minSocPercent;
+                    
+                    // Aktuální SOC
+                    float currentSoc = (currentBatteryKwh / batteryCapacityKwh) * 100.0f;
+                    
+                    // Můžeme vybíjet jen pokud máme dost energie na pokrytí spotřeby
+                    bool hasEnoughForConsumption = currentSoc > minSocNeeded;
+                    
+                    bool worthPreemptive = preemptiveProfit > minPreemptiveProfit && 
+                                           preemptiveProfit > 0 &&
+                                           forcedSell > 0.5f &&  // Alespoň 0.5 kWh přebytku
+                                           hasEnoughForConsumption;  // Dost energie na spotřebu
+                    
+                    // Debug log
+                    if (availableFromBattery > 0.5f) {
+                        log_d("Q%d PRE_DISCHARGE? sell=%.2f wghtSolar=%.2f profit=%.2f surplus=%.1f forced=%.1f consUntil=%.1f minSoc=%.0f curSoc=%.0f worth=%d",
+                              q, sellPrice, solarPeriod.weightedSellPrice,
+                              preemptiveProfit, solarPeriod.surplusKwh, forcedSell, 
+                              solarPeriod.consumptionUntilSurplus, minSocNeeded, currentSoc, worthPreemptive);
+                    }
+                    
+                    if (worthPreemptive) {
+                        decision = INVERTER_MODE_DISCHARGE_TO_GRID;
+                        
+                        // Vybijeme tolik, abychom uvolnili místo pro solární přebytek
+                        // Ale maximálně tolik, kolik máme k dispozici nad minimální potřebnou úroveň
+                        float maxDischargeable = max(0.0f, currentBatteryKwh - (minSocNeeded / 100.0f * batteryCapacityKwh));
+                        float toDischarge = min(forcedSell, min(maxDischargeable, maxDischargeQuarter));
+                        
+                        if (toDischarge > MIN_ENERGY_THRESHOLD) {
+                            result.toGridKwh += toDischarge;
+                            result.fromBatteryKwh += toDischarge;
+                            currentBatteryKwh -= toDischarge;
+                            result.costCzk -= toDischarge * sellPrice;  // Příjem z prodeje
+                            result.costCzk += toDischarge * batteryCostPerKwh;  // Náklad na opotřebení
+                            
+                            reason = String("PreDisch: sell@") + String(sellPrice, 1) + 
+                                     " vs solar@" + String(solarPeriod.avgSellPrice, 1) +
+                                     " surplus:" + String(solarPeriod.surplusKwh, 1);
+                        }
+                    }
+                }
+            }
+            
+            // 3b) NABÍJENÍ ZE SÍTĚ - levná elektřina
             // Nabíjíme pokud: je to výhodné pro pozdější spotřebu NEBO pro arbitráž
+            // ALE NIKDY nenakupujeme ze sítě pokud očekáváme solární přebytky!
             if (spaceInBattery > 0) {
                 // Podmínky pro nabíjení - používáme LOKÁLNÍ min/max (12h okno)
                 
@@ -623,26 +853,38 @@ public:
                 float expectedConsumption = remainingConsumption * CONSUMPTION_SAFETY_MARGIN;
                 bool willNeedLater = expectedConsumption > remainingProduction;
                 
+                // Zjisti jestli očekáváme solární přebytky které by nabily baterii zdarma
+                // Pokud ano, NENAKUPUJEME ze sítě - počkáme na solární nabíjení
+                bool expectSolarCharging = false;
+                if (remainingProduction > remainingConsumption) {
+                    float expectedSolarSurplus = remainingProduction - remainingConsumption;
+                    // Pokud přebytek pokryje alespoň 50% místa v baterii, čekáme na slunce
+                    expectSolarCharging = expectedSolarSurplus > spaceInBattery * 0.5f;
+                }
+                
                 // Arbitráž: koupit levně, prodat draze (potřebujeme zisk po započtení nákladů baterie)
                 // Profit musí být alespoň X% z nákupní ceny
                 // BatteryCost se počítá jen jednou za celý cyklus
+                // DŮLEŽITÉ: Arbitráž má smysl JEN když:
+                // 1) Neočekáváme solární přebytky (jinak nabijeme zdarma)
+                // 2) Jsme blízko cenového minima
                 float arbitrageProfit = maxFutureSellPrice - buyPrice - batteryCostPerKwh;
                 float minRequiredProfit = buyPrice * ARBITRAGE_PROFIT_THRESHOLD;
-                bool worthArbitrage = arbitrageProfit > minRequiredProfit && arbitrageProfit > 0;
+                bool worthArbitrage = !expectSolarCharging && 
+                                      isNearMinimum &&
+                                      arbitrageProfit > minRequiredProfit && 
+                                      arbitrageProfit > 0;
                 
                 // Debug: log charging decision factors
                 if (i < 3 || (q >= 96 && q <= 100)) {
-                    log_d("Q%d CHARGE? nearMin=%d (%.2f<=%.2f*1.1=%.2f), worthEcon=%d (%.2f<%.2f), need=%d (%.1f>%.1f), arb=%d",
-                          q, isNearMinimum, buyPrice, localMinBuyPrice, localMinBuyPrice * CHEAP_TIME_THRESHOLD,
-                          worthChargingEconomically, storageCost, localMaxBuyPrice,
-                          willNeedLater, expectedConsumption, remainingProduction,
-                          worthArbitrage);
+                    log_d("Q%d CHARGE? nearMin=%d expectSolar=%d arb=%d (%.2f<=%.2f*1.1)",
+                          q, isNearMinimum, expectSolarCharging, worthArbitrage,
+                          buyPrice, localMinBuyPrice);
                 }
                 
                 // Nabíjíme pokud:
                 // 1) Jsme blízko lokálního minima A vyplatí se nabíjet ekonomicky A budeme potřebovat energii
-                // 2) Nebo se vyplatí arbitráž (ta má vlastní pravidla o ceně)
-                // Klíčová změna: Musíme být u MINIMA, ne jen pod maximem!
+                // 2) Nebo se vyplatí arbitráž (ta teď vyžaduje: nearMin + !expectSolar + profit)
                 bool shouldCharge = (isNearMinimum && worthChargingEconomically && willNeedLater) || worthArbitrage;
                 
                 if (shouldCharge) {
@@ -665,11 +907,12 @@ public:
                 }
             }
             
-            // 3b) PRODEJ DO SÍTĚ - drahá elektřina
-            // Prodej má smysl pouze když:
-            // 1) Prodejní cena je vyšší než náklad na vybití baterie
-            // 2) Máme skutečný přebytek energie nad budoucí spotřebu
-            // 3) Je to nejlepší čas k prodeji (v lokálním okně 12h)
+            // 3c) PRODEJ DO SÍTĚ - drahá elektřina (včetně sell arbitráže)
+            // Prodej má smysl když:
+            // A) Máme skutečný přebytek energie nad budoucí spotřebu (původní logika)
+            // B) SELL ARBITRÁŽ: Teď je drahá elektřina a později bude levná
+            //    → Prodáme teď draze, nakoupíme později levně
+            //    → Funguje i v noci bez produkce!
             if (availableFromBattery > 0 && solarSurplus <= 0 && decision == INVERTER_MODE_SELF_USE) {
                 // Používáme LOKÁLNÍ maximum - je to nejlepší čas v následujících 12 hodinách?
                 bool isBestSellTime = sellPrice >= localMaxSellPrice * BEST_SELL_TIME_THRESHOLD;
@@ -681,19 +924,74 @@ public:
                 float minReserve = getMinBatteryKwh() + energyNeededForFuture;
                 bool hasRealExcess = currentBatteryKwh > minReserve * 1.2f;  // 20% rezerva navíc
                 
-                if (isBestSellTime && worthSelling && hasRealExcess) {
+                // === NOVÉ: SELL ARBITRÁŽ ===
+                // Prodat teď draze, nakoupit později levně
+                // Profit = sellPrice - minFutureBuyPrice - batteryCostPerKwh
+                // (batteryCost = půl cyklu při vybití, další půl cyklu bude při nabití)
+                // Zjednodušení: počítáme celý cyklus při prodeji (konzervativnější)
+                float sellArbitrageProfit = sellPrice - minFutureBuyPrice - batteryCostPerKwh;
+                float minRequiredSellProfit = sellPrice * ARBITRAGE_PROFIT_THRESHOLD;
+                // Sell arbitráž se vyplatí když:
+                // 1) Zisk je dostatečný (> 15% z prodejní ceny)
+                // 2) Máme kam později nabít (spaceInBattery po vybití)
+                // 3) Je to blízko lokálního maxima prodejní ceny
+                // 4) V budoucnu je výrazně levnější elektřina
+                bool isSellPeak = sellPrice >= localMaxSellPrice * BEST_SELL_TIME_THRESHOLD;
+                bool hasCheapFuture = minFutureBuyPrice < sellPrice * (1.0f - ARBITRAGE_PROFIT_THRESHOLD);
+                bool worthSellArbitrage = sellArbitrageProfit > minRequiredSellProfit && 
+                                          sellArbitrageProfit > 0 &&
+                                          isSellPeak &&
+                                          hasCheapFuture;
+                
+                // Debug log pro sell arbitráž
+                if (availableFromBattery > 0.5f) {
+                    log_d("Q%d SELL_ARB? sell=%.2f minBuy=%.2f batt=%.2f profit=%.2f (min=%.2f) peak=%d cheap=%d worth=%d",
+                          q, sellPrice, minFutureBuyPrice, batteryCostPerKwh,
+                          sellArbitrageProfit, minRequiredSellProfit,
+                          isSellPeak, hasCheapFuture, worthSellArbitrage);
+                }
+                
+                // Prodáváme pokud:
+                // 1) Máme skutečný přebytek (původní logika) - prodáme přebytek
+                // 2) NEBO se vyplatí sell arbitráž - prodáme i z "potřebné" baterie
+                bool shouldSellExcess = isBestSellTime && worthSelling && hasRealExcess;
+                bool shouldSellArbitrage = worthSellArbitrage;
+                
+                if (shouldSellExcess || shouldSellArbitrage) {
                     decision = INVERTER_MODE_DISCHARGE_TO_GRID;
-                    float excess = currentBatteryKwh - minReserve;
-                    float toSell = min(excess, min(availableFromBattery, maxDischargeQuarter));
+                    
+                    float toSell;
+                    if (shouldSellArbitrage && !shouldSellExcess) {
+                        // Sell arbitráž - prodáváme více, ale necháme rezervu na spotřebu do příštího nabíjení
+                        // Kolik spotřebujeme do doby než bude levná elektřina? (zhruba 4-8 hodin)
+                        float consumptionUntilCheap = consumptionKwh * 20;  // ~5 hodin spotřeby jako rezerva
+                        float arbitrageReserve = getMinBatteryKwh() + consumptionUntilCheap;
+                        float arbitrageExcess = max(0.0f, currentBatteryKwh - arbitrageReserve);
+                        toSell = min(arbitrageExcess, min(availableFromBattery, maxDischargeQuarter));
+                        reason = String("SellArb: sell@") + String(sellPrice, 1) + 
+                                 " buy@" + String(minFutureBuyPrice, 1) +
+                                 " profit:" + String(sellArbitrageProfit, 1);
+                    } else {
+                        // Přebytek - prodáváme jen to, co nepotřebujeme
+                        float excess = currentBatteryKwh - minReserve;
+                        toSell = min(excess, min(availableFromBattery, maxDischargeQuarter));
+                        reason = String("Selling@") + String(sellPrice, 1) + 
+                                 " > locAvgBuy@" + String(localAvgBuyPrice, 1);
+                    }
                     
                     if (toSell > MIN_ENERGY_THRESHOLD) {
                         result.toGridKwh += toSell;
                         result.fromBatteryKwh += toSell;
                         currentBatteryKwh -= toSell;
                         result.costCzk -= toSell * sellPrice;  // Příjem z prodeje
-                        // Opotřebení baterie se počítá jen při nabíjení (full cycle cost)
-                        reason = String("Selling@") + String(sellPrice, 1) + 
-                                 " > locAvgBuy@" + String(localAvgBuyPrice, 1);
+                        // Opotřebení baterie - pro arbitráž počítáme celý cyklus při prodeji
+                        if (shouldSellArbitrage && !shouldSellExcess) {
+                            result.costCzk += toSell * batteryCostPerKwh;  // Náklad na opotřebení
+                        }
+                    } else {
+                        // Není co prodat, vrátíme rozhodnutí na Self-Use
+                        decision = INVERTER_MODE_SELF_USE;
+                        reason = "Self-use";
                     }
                 }
             }
