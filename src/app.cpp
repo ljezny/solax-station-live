@@ -529,17 +529,34 @@ InverterData_t loadInverterData(WiFiDiscoveryResult_t &discoveryResult)
 
 /**
  * Check if current inverter type supports intelligence mode control
+ * Uses supportsIntelligence() from respective API classes
  */
 bool supportsIntelligenceForCurrentInverter(WiFiDiscoveryResult_t &discoveryResult)
 {
+    // Use static instances - same as in loadInverterData()
+    static SolaxModbusDongleAPI solaxModbusDongleAPI;
+    static GoodweDongleAPI goodweDongleAPI;
+    static SofarSolarDongleAPI sofarSolarDongleAPI;
+    static DeyeDongleAPI deyeDongleAPI;
+    static VictronDongleAPI victronDongleAPI;
+    static GrowattDongleAPI growattDongleAPI;
+
     switch (discoveryResult.type)
     {
     case CONNECTION_TYPE_SOLAX:
-        return true; // Solax supports intelligence
+        return solaxModbusDongleAPI.supportsIntelligence();
     case CONNECTION_TYPE_GOODWE:
-        return true; // Goodwe supports intelligence
+        return goodweDongleAPI.supportsIntelligence();
+    case CONNECTION_TYPE_SOFAR:
+        return sofarSolarDongleAPI.supportsIntelligence();
+    case CONNECTION_TYPE_DEYE:
+        return deyeDongleAPI.supportsIntelligence();
+    case CONNECTION_TYPE_VICTRON:
+        return victronDongleAPI.supportsIntelligence();
+    case CONNECTION_TYPE_GROWATT:
+        return growattDongleAPI.supportsIntelligence();
     default:
-        return false; // Other inverters don't support intelligence yet
+        return false;
     }
 }
 
@@ -1501,6 +1518,16 @@ void updateState()
                 lastProcessedQuarter = -1;
                 log_d("Intelligence settings saved, triggering recalculation");
             }
+            
+            // If reset was requested, clear all prediction data
+            if (intelligenceSetupUI->requestClearPredictions)
+            {
+                consumptionPredictor.clearAllData();
+                productionPredictor.clearAllData();
+                intelligenceSetupUI->requestClearPredictions = false;
+                log_i("Prediction data cleared by user request");
+            }
+            
             moveToState(STATE_DASHBOARD);
         }
         break;
