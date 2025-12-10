@@ -285,7 +285,7 @@ private:
         float totalProductionKwh;   // Celková výroba v období
         float totalConsumptionKwh;  // Celková spotřeba v období
         float surplusKwh;           // Očekávaný přebytek (production - consumption)
-        float consumptionUntilSurplus; // Spotřeba od teď do prvního přebytku
+        float deficitUntilSurplus;      // Net deficit (consumption - production) do začátku přebytků
         float avgSellPrice;         // Průměrná prodejní cena v období výroby (simple avg)
         float weightedSellPrice;    // Vážený průměr prodejní ceny podle přebytku
         float minSellPrice;         // Minimální prodejní cena v období s přebytkem
@@ -309,8 +309,9 @@ private:
         float totalSurplusWeight = 0;    // Součet vah (přebytků)
         int countWithProduction = 0;
         bool foundStart = false;
-        bool foundFirstSurplus = false;
-        float consumptionBeforeSurplus = 0;  // Spotřeba od fromQuarter do prvního přebytku
+        bool foundSustainedSurplus = false;  // Našli jsme trvalý přebytek?
+        float cumulativeNet = 0;             // Kumulativní (production - consumption)
+        float deficitBeforeSurplus = 0;      // Čistý deficit do začátku přebytků
         
         for (int q = fromQuarter; q < toQuarter; q++) {
             int dayQ = q % QUARTERS_OF_DAY;
@@ -320,11 +321,24 @@ private:
             float productionKwh = productionPredictor.predictQuarterlyProduction(currentMonth, dayQ) / 1000.0f;
             float consumptionKwh = consumptionPredictor.predictQuarterlyConsumption(day, dayQ) / 1000.0f;
             
-            // Počítáme spotřebu do prvního přebytku (pro výpočet kolik energie potřebujeme v baterii)
-            if (!foundFirstSurplus) {
-                // Čistá spotřeba = spotřeba - výroba (co musíme dodat z baterie/sítě)
-                float netConsumption = max(0.0f, consumptionKwh - productionKwh);
-                consumptionBeforeSurplus += netConsumption;
+            // Počítáme kumulativní net (production - consumption)
+            // Dokud je kumulativní < 0, stále máme deficit a potřebujeme energii v baterii
+            // Počítáme pro VŠECHNY čtvrthodiny, ne jen ty s produkcí!
+            if (!foundSustainedSurplus) {
+                float netThisQuarter = productionKwh - consumptionKwh;
+                cumulativeNet += netThisQuarter;
+                
+                // Deficit je MAXIMUM záporné hodnoty kumulativního net
+                // Uložíme nejvyšší deficit, protože to je kolik energie potřebujeme v baterii
+                if (cumulativeNet < 0 && -cumulativeNet > deficitBeforeSurplus) {
+                    deficitBeforeSurplus = -cumulativeNet;  // Záporné -> kladné
+                }
+                
+                // Debug: loguj deficit každých 20 čtvrthodin
+                if (q % 20 == 0 && fromQuarter > 60) {  // Jen pro večerní analýzu
+                    log_d("DEFICIT Q%d: prod=%.2f cons=%.2f net=%.2f cumNet=%.2f deficit=%.2f", 
+                          q, productionKwh, consumptionKwh, netThisQuarter, cumulativeNet, deficitBeforeSurplus);
+                }
             }
             
             // Minimální práh pro "významnou" výrobu (např. 50W = 12.5Wh za čtvrthodinu)
@@ -347,11 +361,12 @@ private:
                 // Vážený průměr - váhou je přebytek v dané čtvrthodině
                 float quarterSurplus = productionKwh - consumptionKwh;
                 if (quarterSurplus > 0) {
-                    // První čtvrthodina s přebytkem
-                    if (!foundFirstSurplus) {
+                    // Trvalý přebytek = kumulativní net je kladný
+                    // To znamená, že od teď solár pokryje spotřebu a ještě zbyde
+                    if (!foundSustainedSurplus && cumulativeNet > 0) {
                         result.firstSurplusQuarter = q;
-                        result.consumptionUntilSurplus = consumptionBeforeSurplus;
-                        foundFirstSurplus = true;
+                        result.deficitUntilSurplus = deficitBeforeSurplus;
+                        foundSustainedSurplus = true;
                     }
                     
                     weightedSumSellPrice += sellPrice * quarterSurplus;
@@ -382,10 +397,10 @@ private:
                 result.minSellPrice = result.avgSellPrice;
             }
             
-            // Pokud jsme nenašli přebytek, nastav firstSurplusQuarter na konec výroby
-            if (!foundFirstSurplus) {
+            // Pokud jsme nenašli trvalý přebytek, nastav firstSurplusQuarter na konec výroby
+            if (!foundSustainedSurplus) {
                 result.firstSurplusQuarter = result.endQuarter;
-                result.consumptionUntilSurplus = consumptionBeforeSurplus;
+                result.deficitUntilSurplus = deficitBeforeSurplus;
             }
             
             result.isValid = true;
@@ -395,7 +410,7 @@ private:
             result.weightedSellPrice = 0.0f;
             result.minSellPrice = 0.0f;
             result.surplusKwh = 0.0f;
-            result.consumptionUntilSurplus = 0.0f;
+            result.deficitUntilSurplus = 0.0f;
             result.isValid = false;
         }
         
@@ -639,12 +654,18 @@ public:
                 //
                 // Klíčová změna: HOLD jen pokud by se NEVYPLATILO nabíjet
                 // Nabíjení se vyplatí když: jsme blízko minima A storageCost < localMaxBuyPrice
+                // DŮLEŽITÉ: Nikdy nenakupujeme ze sítě pokud očekáváme solární nabíjení!
                 bool canCharge = spaceInBattery > 0;
                 float storageCostForHold = buyPrice + batteryCostPerKwh;
                 bool isNearMinimumForHold = buyPrice <= localMinBuyPrice * CHEAP_TIME_THRESHOLD;
                 bool chargingWouldBeWorthEconomically = storageCostForHold < localMaxBuyPrice;
                 // Nabíjení má přednost jen pokud jsme blízko minima - jinak čekáme na levnější cenu
-                bool shouldChargeInsteadOfHold = canCharge && isNearMinimumForHold && chargingWouldBeWorthEconomically;
+                // ALE: Nikdy nenakupujeme ze sítě pokud očekáváme solární přebytky
+                // Očekáváme solární nabíjení pokud je očekávaný přebytek > 50% místa v baterii
+                float expectedSolarSurplus = max(0.0f, remainingProduction - remainingConsumption);
+                bool willHaveSolarCharging = expectedSolarSurplus > spaceInBattery * 0.5f;
+                bool shouldChargeInsteadOfHold = canCharge && isNearMinimumForHold && 
+                                                 chargingWouldBeWorthEconomically && !willHaveSolarCharging;
                 
                 // Lokální maximum musí být výrazně vyšší než průměr (skutečná cenová špička)
                 bool hasRealPeakAhead = localMaxBuyPrice > localAvgBuyPrice * (1.0f + HOLD_PRICE_HYSTERESIS);
@@ -756,8 +777,30 @@ public:
             // Podmínka productionKwh < consumptionKwh zajistí, že vybíjíme dokud výroba nepokryje spotřebu
             if (availableFromBattery > 0 && decision == INVERTER_MODE_SELF_USE && productionKwh < consumptionKwh) {
                 // Analyzuj budoucí solární období
+                // DŮLEŽITÉ: Pro výpočet deficitu vždy začínáme od konce AKTUÁLNÍ produkce (západu slunce)
+                // Pokud jsme večer (produkce > 0), najdi konec produkce a počítej deficit od něj
+                // Pokud jsme v noci/ráno (produkce = 0), počítej od aktuálního kvartálu
+                
+                int deficitStartQuarter = q;
+                
+                // Najdi konec aktuální produkce (západ slunce)
+                // Práh pro "významnou" produkci - pod tímto je tma
+                const float SUNSET_THRESHOLD = 0.05f;  // 50Wh za čtvrthodinu = 200W
+                
+                if (productionKwh > SUNSET_THRESHOLD) {
+                    // Jsme ve dne - najdi kdy skončí produkce (západ slunce)
+                    for (int searchQ = q; searchQ < maxQuarters; searchQ++) {
+                        int dayQ = searchQ % QUARTERS_OF_DAY;
+                        float futureProduction = productionPredictor.predictQuarterlyProduction(currentMonth, dayQ) / 1000.0f;
+                        if (futureProduction < SUNSET_THRESHOLD) {
+                            deficitStartQuarter = searchQ;
+                            break;
+                        }
+                    }
+                }
+                
                 SolarProductionPeriod solarPeriod = analyzeSolarProductionPeriod(
-                    q + 1, maxQuarters, currentDay, currentMonth, prices, settings);
+                    deficitStartQuarter, maxQuarters, currentDay, currentMonth, prices, settings);
                 
                 if (solarPeriod.isValid && solarPeriod.surplusKwh > 0) {
                     // Kolik místa máme v baterii?
@@ -785,9 +828,33 @@ public:
                     // Minimální profit pro pre-emptive discharge (15% z prodejní ceny)
                     float minPreemptiveProfit = sellPrice * ARBITRAGE_PROFIT_THRESHOLD;
                     
-                    // Kolik energie minimálně potřebujeme v baterii na pokrytí spotřeby do prvního přebytku?
+                    // Kolik energie minimálně potřebujeme v baterii na pokrytí deficitu do začátku přebytků?
+                    // deficitUntilSurplus = kumulativní (consumption - production) dokud solár nezačne pokrývat
+                    // 
+                    // DŮLEŽITÉ: Pokud jsme večer (ještě před západem slunce), musíme přičíst
+                    // spotřebu od TEĎ do západu slunce, protože analyzeSolarProductionPeriod
+                    // počítá deficit až od deficitStartQuarter (západu slunce)
+                    float additionalDeficit = 0;
+                    if (deficitStartQuarter > q) {
+                        // Spočítej spotřebu od teď do západu slunce
+                        for (int addQ = q; addQ < deficitStartQuarter; addQ++) {
+                            int addDayQ = addQ % QUARTERS_OF_DAY;
+                            bool addIsTomorrow = (addQ >= QUARTERS_OF_DAY);
+                            int addDay = addIsTomorrow ? (currentDay + 1) % 7 : currentDay;
+                            float addProd = productionPredictor.predictQuarterlyProduction(currentMonth, addDayQ) / 1000.0f;
+                            float addCons = consumptionPredictor.predictQuarterlyConsumption(addDay, addDayQ) / 1000.0f;
+                            // Přidáváme jen deficit (když spotřeba > produkce)
+                            if (addCons > addProd) {
+                                additionalDeficit += (addCons - addProd);
+                            }
+                        }
+                    }
+                    
+                    // Celkový deficit = noční deficit + večerní deficit do západu slunce
+                    float totalDeficit = solarPeriod.deficitUntilSurplus + additionalDeficit;
+                    
                     // Přidáme 10% rezervu pro jistotu
-                    float minEnergyNeeded = solarPeriod.consumptionUntilSurplus * 1.1f;
+                    float minEnergyNeeded = totalDeficit * 1.1f;
                     float minSocNeeded = (minEnergyNeeded / batteryCapacityKwh) * 100.0f + minSocPercent;
                     
                     // Aktuální SOC
@@ -803,10 +870,11 @@ public:
                     
                     // Debug log
                     if (availableFromBattery > 0.5f) {
-                        log_d("Q%d PRE_DISCHARGE? sell=%.2f wghtSolar=%.2f profit=%.2f surplus=%.1f forced=%.1f consUntil=%.1f minSoc=%.0f curSoc=%.0f worth=%d",
+                        log_d("Q%d PRE_DISCHARGE? sell=%.2f wghtSolar=%.2f profit=%.2f surplus=%.1f forced=%.1f deficit=%.1f+%.1f=%.1f minSoc=%.0f curSoc=%.0f worth=%d",
                               q, sellPrice, solarPeriod.weightedSellPrice,
                               preemptiveProfit, solarPeriod.surplusKwh, forcedSell, 
-                              solarPeriod.consumptionUntilSurplus, minSocNeeded, currentSoc, worthPreemptive);
+                              solarPeriod.deficitUntilSurplus, additionalDeficit, totalDeficit,
+                              minSocNeeded, currentSoc, worthPreemptive);
                     }
                     
                     if (worthPreemptive) {
@@ -996,13 +1064,10 @@ public:
                 }
             }
             
-            // 3c) HOLD - čekáme na lepší podmínky
-            if (decision == INVERTER_MODE_SELF_USE && expectSolarSurplus && 
-                batterySocStart < maxSocPercent && productionKwh < 0.1f) {
-                // Ráno bez výroby, ale očekáváme solární přebytek
-                decision = INVERTER_MODE_HOLD_BATTERY;
-                reason = "Holding for solar charging later";
-            }
+            // 3c) HOLD - úplně odstraněn
+            // HOLD blokoval vybíjení baterie a spotřeba šla ze sítě
+            // Při přebytku energie za den není důvod HOLD používat
+            // Self-Use je vždy lepší - baterie pokryje spotřebu
             
             // === KROK 4: Výpočet úspor ===
             // Úspora = kolik jsme ušetřili oproti nákupu ze sítě
@@ -1059,7 +1124,13 @@ public:
                            float startingBatterySoc,
                            float& outFinalBatteryKwh) {
         float totalCost = 0;
-        float batteryKwh = socToKwh(startingBatterySoc);
+        // Baseline začíná maximálně na maxSoc - hloupý systém by nikdy nenabil více
+        float batteryKwh = min(socToKwh(startingBatterySoc), getMaxBatteryKwh());
+        
+        // Debug counters
+        float totalSold = 0;
+        float totalBought = 0;
+        float totalCharged = 0;
         
         for (const auto& r : intelligentResults) {
             float productionKwh = r.productionKwh;
@@ -1092,6 +1163,7 @@ public:
             // 1c) Ze sítě (platíme plnou cenu)
             if (remainingConsumption > 0) {
                 totalCost += remainingConsumption * buyPrice;
+                totalBought += remainingConsumption;
             }
             
             // === KROK 2: Přebytek výroby ===
@@ -1100,11 +1172,13 @@ public:
                 float toCharge = min(solarSurplus, min(spaceInBattery, maxChargeQuarter));
                 batteryKwh += toCharge;
                 totalCost += toCharge * batteryCostPerKwh;  // Náklad na opotřebení při nabíjení
+                totalCharged += toCharge;
                 solarSurplus -= toCharge;
                 
                 // 2b) Zbytek prodáváme
                 if (solarSurplus > 0) {
                     totalCost -= solarSurplus * sellPrice;  // Záporné = výdělek
+                    totalSold += solarSurplus;
                 }
             }
             
@@ -1113,6 +1187,8 @@ public:
         }
         
         outFinalBatteryKwh = batteryKwh;
+        log_d("BASELINE: cost=%.1f sold=%.1f bought=%.1f charged=%.1f finalBat=%.1f kWh (%.0f%%)", 
+              totalCost, totalSold, totalBought, totalCharged, batteryKwh, kwhToSoc(batteryKwh));
         return totalCost;
     }
     
