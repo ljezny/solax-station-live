@@ -83,7 +83,7 @@ lv_obj_set_width( ui_Container11, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_Container11, LV_SIZE_CONTENT);   /// 20
 lv_obj_set_align( ui_Container11, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container11,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_Container11, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
+lv_obj_set_flex_align(ui_Container11, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER);
 lv_obj_clear_flag( ui_Container11, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_pvLabel = lv_label_create(ui_Container11);
@@ -99,6 +99,7 @@ lv_obj_set_height( ui_pvUnitLabel, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_pvUnitLabel, LV_ALIGN_CENTER );
 lv_label_set_text(ui_pvUnitLabel,"W");
 lv_obj_set_style_text_font(ui_pvUnitLabel, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_pvUnitLabel, 5, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Container1 = lv_obj_create(ui_pvContainer);
 lv_obj_remove_style_all(ui_Container1);
@@ -230,7 +231,7 @@ lv_obj_set_width( ui_Container23, 100);
 lv_obj_set_height( ui_Container23, LV_SIZE_CONTENT);   /// 50
 lv_obj_set_align( ui_Container23, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container23,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_Container23, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+lv_obj_set_flex_align(ui_Container23, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_START);
 lv_obj_clear_flag( ui_Container23, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_socLabel = lv_label_create(ui_Container23);
@@ -250,6 +251,7 @@ lv_obj_set_flex_flow(ui_socLabel1,LV_FLEX_FLOW_ROW);
 lv_obj_set_flex_align(ui_socLabel1, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
 lv_label_set_text(ui_socLabel1,"%");
 lv_obj_set_style_text_font(ui_socLabel1, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_socLabel1, 5, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Container17 = lv_obj_create(ui_batteryContainer);
 lv_obj_remove_style_all(ui_Container17);
@@ -380,7 +382,7 @@ lv_obj_set_width( ui_Container20, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_Container20, LV_SIZE_CONTENT);   /// 50
 lv_obj_set_align( ui_Container20, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container20,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_Container20, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+lv_obj_set_flex_align(ui_Container20, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_START);
 lv_obj_clear_flag( ui_Container20, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_loadPowerLabel = lv_label_create(ui_Container20);
@@ -396,6 +398,7 @@ lv_obj_set_height( ui_loadPowerUnitLabel, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_loadPowerUnitLabel, LV_ALIGN_CENTER );
 lv_label_set_text(ui_loadPowerUnitLabel,"W");
 lv_obj_set_style_text_font(ui_loadPowerUnitLabel, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_loadPowerUnitLabel, 5, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_gridContainer = lv_obj_create(ui_LeftContainer);
 lv_obj_remove_style_all(ui_gridContainer);
@@ -542,7 +545,7 @@ lv_obj_set_width( ui_Container22, 100);
 lv_obj_set_height( ui_Container22, LV_SIZE_CONTENT);   /// 50
 lv_obj_set_align( ui_Container22, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container22,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_Container22, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+lv_obj_set_flex_align(ui_Container22, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_START);
 lv_obj_clear_flag( ui_Container22, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_feedInPowerLabel = lv_label_create(ui_Container22);
@@ -558,6 +561,7 @@ lv_obj_set_height( ui_feedInPowerUnitLabel, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_feedInPowerUnitLabel, LV_ALIGN_CENTER );
 lv_label_set_text(ui_feedInPowerUnitLabel,"W");
 lv_obj_set_style_text_font(ui_feedInPowerUnitLabel, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_feedInPowerUnitLabel, 5, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_selfUsePercentLabel = lv_label_create(ui_LeftContainer);
 lv_obj_set_width( ui_selfUsePercentLabel, LV_SIZE_CONTENT);  /// 1
@@ -657,7 +661,7 @@ lv_obj_set_width( ui_Container26, LV_SIZE_CONTENT);  /// 1
 lv_obj_set_height( ui_Container26, LV_SIZE_CONTENT);   /// 50
 lv_obj_set_align( ui_Container26, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container26,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_Container26, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+lv_obj_set_flex_align(ui_Container26, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_START);
 lv_obj_clear_flag( ui_Container26, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 ui_inverterPowerLabel = lv_label_create(ui_Container26);
@@ -673,6 +677,7 @@ lv_obj_set_height( ui_inverterPowerUnitLabel, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_inverterPowerUnitLabel, LV_ALIGN_CENTER );
 lv_label_set_text(ui_inverterPowerUnitLabel,"W");
 lv_obj_set_style_text_font(ui_inverterPowerUnitLabel, &ui_font_OpenSansSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_inverterPowerUnitLabel, 5, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_inverterPhasesContainer = lv_obj_create(ui_inverterContainer);
 lv_obj_remove_style_all(ui_inverterPhasesContainer);
@@ -997,7 +1002,7 @@ lv_obj_set_width( ui_Container27, lv_pct(100));
 lv_obj_set_height( ui_Container27, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_Container27, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container27,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_Container27, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
+lv_obj_set_flex_align(ui_Container27, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER);
 lv_obj_clear_flag( ui_Container27, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 lv_obj_set_style_pad_row(ui_Container27, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_Container27, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -1018,6 +1023,7 @@ lv_obj_set_align( ui_yieldTodayUnitLabel, LV_ALIGN_CENTER );
 lv_label_set_text(ui_yieldTodayUnitLabel,"kWh");
 lv_obj_set_style_text_align(ui_yieldTodayUnitLabel, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_yieldTodayUnitLabel, &ui_font_OpenSansExtraSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_yieldTodayUnitLabel, 6, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Container5 = lv_obj_create(ui_Container34);
 lv_obj_remove_style_all(ui_Container5);
@@ -1025,7 +1031,7 @@ lv_obj_set_width( ui_Container5, lv_pct(100));
 lv_obj_set_height( ui_Container5, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_Container5, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container5,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_Container5, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
+lv_obj_set_flex_align(ui_Container5, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER);
 lv_obj_clear_flag( ui_Container5, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 lv_obj_set_style_pad_row(ui_Container5, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_Container5, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -1046,6 +1052,7 @@ lv_obj_set_align( ui_yieldTotalUnitLabel, LV_ALIGN_CENTER );
 lv_label_set_text(ui_yieldTotalUnitLabel,"MWh");
 lv_obj_set_style_text_align(ui_yieldTotalUnitLabel, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_yieldTotalUnitLabel, &ui_font_OpenSansExtraSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_yieldTotalUnitLabel, 3, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_loadStatsContainer = lv_obj_create(ui_Container33);
 lv_obj_remove_style_all(ui_loadStatsContainer);
@@ -1093,7 +1100,7 @@ lv_obj_set_width( ui_Container8, lv_pct(100));
 lv_obj_set_height( ui_Container8, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_Container8, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container8,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_Container8, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
+lv_obj_set_flex_align(ui_Container8, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER);
 lv_obj_clear_flag( ui_Container8, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 lv_obj_set_style_pad_row(ui_Container8, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_Container8, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -1114,6 +1121,7 @@ lv_obj_set_align( ui_loadTodayUnitLabel, LV_ALIGN_CENTER );
 lv_label_set_text(ui_loadTodayUnitLabel,"kWh");
 lv_obj_set_style_text_align(ui_loadTodayUnitLabel, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_loadTodayUnitLabel, &ui_font_OpenSansExtraSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_loadTodayUnitLabel, 6, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Container30 = lv_obj_create(ui_Container37);
 lv_obj_remove_style_all(ui_Container30);
@@ -1123,7 +1131,7 @@ lv_obj_set_x( ui_Container30, 0 );
 lv_obj_set_y( ui_Container30, -1 );
 lv_obj_set_align( ui_Container30, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container30,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_Container30, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
+lv_obj_set_flex_align(ui_Container30, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER);
 lv_obj_clear_flag( ui_Container30, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 lv_obj_set_style_pad_row(ui_Container30, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_Container30, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -1148,6 +1156,7 @@ ui_object_set_themeable_style_property(ui_selfUseTodayUnitLabel, LV_PART_MAIN| L
 ui_object_set_themeable_style_property(ui_selfUseTodayUnitLabel, LV_PART_MAIN| LV_STATE_DEFAULT, LV_STYLE_TEXT_OPA, _ui_theme_alpha_loadColor);
 lv_obj_set_style_text_align(ui_selfUseTodayUnitLabel, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_selfUseTodayUnitLabel, &ui_font_OpenSansExtraSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_selfUseTodayUnitLabel, 3, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Container36 = lv_obj_create(ui_TopRightContainer);
 lv_obj_remove_style_all(ui_Container36);
@@ -1205,7 +1214,7 @@ lv_obj_set_width( ui_Container6, lv_pct(100));
 lv_obj_set_height( ui_Container6, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_Container6, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container6,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_Container6, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
+lv_obj_set_flex_align(ui_Container6, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER);
 lv_obj_clear_flag( ui_Container6, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 lv_obj_set_style_pad_row(ui_Container6, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_Container6, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -1227,6 +1236,7 @@ lv_label_set_long_mode(ui_batteryChargedTodayUnitLabel,LV_LABEL_LONG_DOT);
 lv_label_set_text(ui_batteryChargedTodayUnitLabel,"kWh");
 lv_obj_set_style_text_align(ui_batteryChargedTodayUnitLabel, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_batteryChargedTodayUnitLabel, &ui_font_OpenSansExtraSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_batteryChargedTodayUnitLabel, 3, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Container9 = lv_obj_create(ui_Container35);
 lv_obj_remove_style_all(ui_Container9);
@@ -1234,7 +1244,7 @@ lv_obj_set_width( ui_Container9, lv_pct(100));
 lv_obj_set_height( ui_Container9, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_Container9, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container9,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_Container9, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
+lv_obj_set_flex_align(ui_Container9, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER);
 lv_obj_clear_flag( ui_Container9, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 lv_obj_set_style_pad_row(ui_Container9, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_Container9, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -1258,6 +1268,7 @@ lv_label_set_long_mode(ui_batteryDischargedTodayUnitLabel,LV_LABEL_LONG_DOT);
 lv_label_set_text(ui_batteryDischargedTodayUnitLabel,"kWh");
 lv_obj_set_style_text_align(ui_batteryDischargedTodayUnitLabel, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_batteryDischargedTodayUnitLabel, &ui_font_OpenSansExtraSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_batteryDischargedTodayUnitLabel, 3, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_gridStatsContainer = lv_obj_create(ui_Container36);
 lv_obj_remove_style_all(ui_gridStatsContainer);
@@ -1303,7 +1314,7 @@ lv_obj_set_width( ui_Container7, lv_pct(100));
 lv_obj_set_height( ui_Container7, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_Container7, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container7,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_Container7, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
+lv_obj_set_flex_align(ui_Container7, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER);
 lv_obj_clear_flag( ui_Container7, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 lv_obj_set_style_pad_row(ui_Container7, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_Container7, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -1325,6 +1336,7 @@ lv_obj_set_align( ui_gridSellTodayUnitLabel, LV_ALIGN_CENTER );
 lv_label_set_text(ui_gridSellTodayUnitLabel,"kWh");
 lv_obj_set_style_text_align(ui_gridSellTodayUnitLabel, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_gridSellTodayUnitLabel, &ui_font_OpenSansExtraSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_gridSellTodayUnitLabel, 3, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Container10 = lv_obj_create(ui_Container38);
 lv_obj_remove_style_all(ui_Container10);
@@ -1332,7 +1344,7 @@ lv_obj_set_width( ui_Container10, lv_pct(100));
 lv_obj_set_height( ui_Container10, LV_SIZE_CONTENT);   /// 1
 lv_obj_set_align( ui_Container10, LV_ALIGN_CENTER );
 lv_obj_set_flex_flow(ui_Container10,LV_FLEX_FLOW_ROW);
-lv_obj_set_flex_align(ui_Container10, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER);
+lv_obj_set_flex_align(ui_Container10, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_CENTER);
 lv_obj_clear_flag( ui_Container10, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 lv_obj_set_style_pad_row(ui_Container10, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_column(ui_Container10, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -1356,6 +1368,7 @@ lv_obj_set_align( ui_gridBuyTodayUnitLabel, LV_ALIGN_CENTER );
 lv_label_set_text(ui_gridBuyTodayUnitLabel,"kWh");
 lv_obj_set_style_text_align(ui_gridBuyTodayUnitLabel, LV_TEXT_ALIGN_LEFT, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_gridBuyTodayUnitLabel, &ui_font_OpenSansExtraSmall, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_pad_bottom(ui_gridBuyTodayUnitLabel, 3, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_clocksLabel = lv_label_create(ui_TopRightContainer);
 lv_obj_set_width( ui_clocksLabel, LV_SIZE_CONTENT);  /// 1
