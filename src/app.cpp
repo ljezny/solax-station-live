@@ -86,6 +86,17 @@ ElectricityPriceTwoDays_t *previousElectricityPriceResult = nullptr;
 SolarChartDataProvider solarChartDataProvider;
 static bool chartDataLoaded = false; // Track if chart data was loaded after time sync
 static bool ntpTimeSynced = false;   // Track if time was synced via NTP
+
+// === DEBUG: Testování simulace s konkrétním časem ===
+// Nastavit na true pro override systémového času
+// POZOR: Před releasem nastavit na false!
+static constexpr bool DEBUG_USE_FIXED_TIME = false;
+static constexpr int DEBUG_TIME_YEAR = 2025;
+static constexpr int DEBUG_TIME_MONTH = 9; 
+static constexpr int DEBUG_TIME_DAY = 4;
+static constexpr int DEBUG_TIME_HOUR = 4;
+static constexpr int DEBUG_TIME_MINUTE = 0;
+
 MedianPowerSampler shellyMedianPowerSampler;
 MedianPowerSampler wallboxMedianPowerSampler;
 MedianPowerSampler uiMedianPowerSampler;
@@ -1281,6 +1292,27 @@ void syncTime()
     }
     ntpTimeSynced = true;
     log_d("NTP sync successful, current time: %s", asctime(&timeinfo));
+    
+    // === DEBUG: Override systémového času pro testování ===
+    if (DEBUG_USE_FIXED_TIME) {
+        struct tm debugTime = {0};
+        debugTime.tm_year = DEBUG_TIME_YEAR - 1900;  // Years since 1900
+        debugTime.tm_mon = DEBUG_TIME_MONTH - 1;     // 0-11
+        debugTime.tm_mday = DEBUG_TIME_DAY;
+        debugTime.tm_hour = DEBUG_TIME_HOUR;
+        debugTime.tm_min = DEBUG_TIME_MINUTE;
+        debugTime.tm_sec = 0;
+        debugTime.tm_isdst = -1;  // Let system determine DST
+        
+        time_t debugTimestamp = mktime(&debugTime);
+        struct timeval tv = {.tv_sec = debugTimestamp, .tv_usec = 0};
+        settimeofday(&tv, nullptr);
+        setTimeZone();
+        
+        log_w("DEBUG MODE: System time overridden to %04d-%02d-%02d %02d:%02d:00",
+              DEBUG_TIME_YEAR, DEBUG_TIME_MONTH, DEBUG_TIME_DAY,
+              DEBUG_TIME_HOUR, DEBUG_TIME_MINUTE);
+    }
 }
 
 /**
