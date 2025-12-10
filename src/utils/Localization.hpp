@@ -130,6 +130,24 @@ typedef enum {
     STR_SELL_INFO,
     STR_PRICE_FORMULA,
     
+    // Intelligence reasons (with price)
+    STR_BATTERY_CHEAPER_THAN,     // "battery cheaper than %.1f %s"
+    STR_LOW_PRICE,                // "low price %.1f %s"
+    STR_HIGH_PRICE,               // "high price %.1f %s"
+    STR_WAITING_BETTER_PRICE,     // "waiting for better price"
+    
+    // Intelligence reasons (without price)
+    STR_USING_BATTERY,            // "using battery"
+    STR_LOW_ELECTRICITY_PRICE,    // "low electricity price"
+    STR_HIGH_ELECTRICITY_PRICE,   // "high electricity price"
+    STR_HOLDING_FOR_LATER,        // "holding for later"
+    
+    // Currencies (localized)
+    STR_CURRENCY_CZK,             // "CZK" / "Kč"
+    STR_CURRENCY_EUR_CENT,        // "ct" (euro cents)
+    STR_CURRENCY_PLN_GR,          // "gr" (grosze)
+    STR_CURRENCY_SEK_ORE,         // "öre"
+    
     STR_COUNT  // Must be last
 } StringId_t;
 
@@ -356,6 +374,24 @@ const char* const Localization::stringsEN[] = {
     "K=1.21 for 21% VAT\nQ = distribution fees", // STR_BUY_INFO
     "Usually K<1 (lower buyback)\nQ can be negative", // STR_SELL_INFO
     "price = K * spot + Q", // STR_PRICE_FORMULA
+    
+    // Intelligence reasons (with price)
+    "battery cheaper than",   // STR_BATTERY_CHEAPER_THAN
+    "low price",              // STR_LOW_PRICE
+    "high price",             // STR_HIGH_PRICE
+    "waiting for better price", // STR_WAITING_BETTER_PRICE
+    
+    // Intelligence reasons (without price)
+    "using battery",          // STR_USING_BATTERY
+    "low electricity price",  // STR_LOW_ELECTRICITY_PRICE
+    "high electricity price", // STR_HIGH_ELECTRICITY_PRICE
+    "holding for later",      // STR_HOLDING_FOR_LATER
+    
+    // Currencies
+    "CZK",                    // STR_CURRENCY_CZK
+    "ct",                     // STR_CURRENCY_EUR_CENT
+    "gr",                     // STR_CURRENCY_PLN_GR
+    "öre",                    // STR_CURRENCY_SEK_ORE
 };
 
 // German strings
@@ -471,6 +507,24 @@ const char* const Localization::stringsDE[] = {
     "K=1,21 für 21% MwSt\nQ = Verteilungsgebühren", // STR_BUY_INFO
     "Meist K<1 (niedrigerer Rückkauf)\nQ kann negativ sein", // STR_SELL_INFO
     "Preis = K * Spot + Q", // STR_PRICE_FORMULA
+    
+    // Intelligence reasons (with price)
+    "Batterie günstiger als", // STR_BATTERY_CHEAPER_THAN
+    "niedriger Preis",        // STR_LOW_PRICE
+    "hoher Preis",            // STR_HIGH_PRICE
+    "warte auf besseren Preis", // STR_WAITING_BETTER_PRICE
+    
+    // Intelligence reasons (without price)
+    "Batterie verwenden",     // STR_USING_BATTERY
+    "niedriger Strompreis",   // STR_LOW_ELECTRICITY_PRICE
+    "hoher Strompreis",       // STR_HIGH_ELECTRICITY_PRICE
+    "halten für später",      // STR_HOLDING_FOR_LATER
+    
+    // Currencies
+    "CZK",                    // STR_CURRENCY_CZK
+    "ct",                     // STR_CURRENCY_EUR_CENT
+    "gr",                     // STR_CURRENCY_PLN_GR
+    "öre",                    // STR_CURRENCY_SEK_ORE
 };
 
 // Czech strings
@@ -586,6 +640,24 @@ const char* const Localization::stringsCS[] = {
     "K=1,21 pro 21% DPH\nQ = distribuční poplatky", // STR_BUY_INFO
     "Obvykle K<1 (nižší výkup)\nQ může být záporné", // STR_SELL_INFO
     "cena = K * spot + Q",  // STR_PRICE_FORMULA
+    
+    // Intelligence reasons (with price)
+    "baterie levnější než",   // STR_BATTERY_CHEAPER_THAN
+    "nízká cena",             // STR_LOW_PRICE
+    "vysoká cena",            // STR_HIGH_PRICE
+    "čekám na lepší cenu",    // STR_WAITING_BETTER_PRICE
+    
+    // Intelligence reasons (without price)
+    "využívám baterii",       // STR_USING_BATTERY
+    "nízká cena elektřiny",   // STR_LOW_ELECTRICITY_PRICE
+    "vysoká cena elektřiny",  // STR_HIGH_ELECTRICITY_PRICE
+    "držím pro později",      // STR_HOLDING_FOR_LATER
+    
+    // Currencies
+    "Kč",                     // STR_CURRENCY_CZK
+    "ct",                     // STR_CURRENCY_EUR_CENT
+    "gr",                     // STR_CURRENCY_PLN_GR
+    "öre",                    // STR_CURRENCY_SEK_ORE
 };
 
 // Convenience macro for translation
