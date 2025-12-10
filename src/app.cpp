@@ -195,6 +195,9 @@ void setupWiFi()
 {
     WiFi.persistent(false);
     WiFi.setSleep(false);
+    // Initialize WiFi stack (AP+STA mode) - required before starting web server
+    // This initializes LwIP TCP/IP stack
+    WiFi.mode(WIFI_AP_STA);
 }
 
 void setupLVGL()
