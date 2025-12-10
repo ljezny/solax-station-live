@@ -334,11 +334,6 @@ private:
                     deficitBeforeSurplus = -cumulativeNet;  // Záporné -> kladné
                 }
                 
-                // Debug: loguj deficit každých 20 čtvrthodin
-                if (q % 20 == 0 && fromQuarter > 60) {  // Jen pro večerní analýzu
-                    log_d("DEFICIT Q%d: prod=%.2f cons=%.2f net=%.2f cumNet=%.2f deficit=%.2f", 
-                          q, productionKwh, consumptionKwh, netThisQuarter, cumulativeNet, deficitBeforeSurplus);
-                }
             }
             
             // Minimální práh pro "významnou" výrobu (např. 50W = 12.5Wh za čtvrthodinu)
@@ -868,15 +863,6 @@ public:
                                            forcedSell > 0.5f &&  // Alespoň 0.5 kWh přebytku
                                            hasEnoughForConsumption;  // Dost energie na spotřebu
                     
-                    // Debug log
-                    if (availableFromBattery > 0.5f) {
-                        log_d("Q%d PRE_DISCHARGE? sell=%.2f wghtSolar=%.2f profit=%.2f surplus=%.1f forced=%.1f deficit=%.1f+%.1f=%.1f minSoc=%.0f curSoc=%.0f worth=%d",
-                              q, sellPrice, solarPeriod.weightedSellPrice,
-                              preemptiveProfit, solarPeriod.surplusKwh, forcedSell, 
-                              solarPeriod.deficitUntilSurplus, additionalDeficit, totalDeficit,
-                              minSocNeeded, currentSoc, worthPreemptive);
-                    }
-                    
                     if (worthPreemptive) {
                         decision = INVERTER_MODE_DISCHARGE_TO_GRID;
                         
@@ -943,13 +929,6 @@ public:
                                       arbitrageProfit > minRequiredProfit && 
                                       arbitrageProfit > 0;
                 
-                // Debug: log charging decision factors
-                if (i < 3 || (q >= 96 && q <= 100)) {
-                    log_d("Q%d CHARGE? nearMin=%d expectSolar=%d arb=%d (%.2f<=%.2f*1.1)",
-                          q, isNearMinimum, expectSolarCharging, worthArbitrage,
-                          buyPrice, localMinBuyPrice);
-                }
-                
                 // Nabíjíme pokud:
                 // 1) Jsme blízko lokálního minima A vyplatí se nabíjet ekonomicky A budeme potřebovat energii
                 // 2) Nebo se vyplatí arbitráž (ta teď vyžaduje: nearMin + !expectSolar + profit)
@@ -1010,14 +989,6 @@ public:
                                           sellArbitrageProfit > 0 &&
                                           isSellPeak &&
                                           hasCheapFuture;
-                
-                // Debug log pro sell arbitráž
-                if (availableFromBattery > 0.5f) {
-                    log_d("Q%d SELL_ARB? sell=%.2f minBuy=%.2f batt=%.2f profit=%.2f (min=%.2f) peak=%d cheap=%d worth=%d",
-                          q, sellPrice, minFutureBuyPrice, batteryCostPerKwh,
-                          sellArbitrageProfit, minRequiredSellProfit,
-                          isSellPeak, hasCheapFuture, worthSellArbitrage);
-                }
                 
                 // Prodáváme pokud:
                 // 1) Máme skutečný přebytek (původní logika) - prodáme přebytek

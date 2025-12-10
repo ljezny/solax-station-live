@@ -51,6 +51,12 @@ extern lv_obj_t *ui_intelligenceSellKInput;
 extern lv_obj_t *ui_intelligenceSellQLabel;
 extern lv_obj_t *ui_intelligenceSellQInput;
 
+// Info labels for localization
+extern lv_obj_t *ui_intelligenceBuyInfoLabel;
+extern lv_obj_t *ui_intelligenceSellInfoLabel;
+extern lv_obj_t *ui_intelligenceBuyFormulaLabel;
+extern lv_obj_t *ui_intelligenceSellFormulaLabel;
+
 // Bottom - Buttons
 extern lv_obj_t *ui_intelligenceButtonContainer;
 extern lv_obj_t *ui_intelligenceResetButton;

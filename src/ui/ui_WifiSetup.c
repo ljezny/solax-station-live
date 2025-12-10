@@ -34,6 +34,7 @@ lv_obj_t *ui_Container21 = NULL;
 lv_obj_t *ui_Label2 = NULL;
 lv_obj_t *ui_spotProviderDropdown = NULL;
 lv_obj_t *ui_timeZoneDropdown = NULL;
+lv_obj_t *ui_languageDropdown = NULL;
 lv_obj_t *ui_keyboard = NULL;
 
 // Helper function to style a dropdown
@@ -45,7 +46,10 @@ static void style_dropdown(lv_obj_t* dropdown) {
     lv_obj_set_style_border_opa(dropdown, LV_OPA_70, LV_PART_MAIN);
     lv_obj_set_style_radius(dropdown, 6, LV_PART_MAIN);
     lv_obj_set_style_text_color(dropdown, COLOR_TEXT, LV_PART_MAIN);
+    lv_obj_set_style_text_font(dropdown, &ui_font_OpenSansExtraSmall, LV_PART_MAIN);
     lv_obj_set_style_pad_all(dropdown, 10, LV_PART_MAIN);
+    // Disable default symbol (would show square because our font doesn't have it)
+    lv_dropdown_set_symbol(dropdown, NULL);
 }
 
 // Helper function to style a textarea input
@@ -57,6 +61,7 @@ static void style_textarea(lv_obj_t* input) {
     lv_obj_set_style_border_opa(input, LV_OPA_70, LV_PART_MAIN);
     lv_obj_set_style_radius(input, 6, LV_PART_MAIN);
     lv_obj_set_style_text_color(input, COLOR_TEXT, LV_PART_MAIN);
+    lv_obj_set_style_text_font(input, &ui_font_OpenSansExtraSmall, LV_PART_MAIN);
     lv_obj_set_style_pad_all(input, 10, LV_PART_MAIN);
     // Cursor style
     lv_obj_set_style_bg_color(input, COLOR_ACCENT, LV_PART_CURSOR);
@@ -143,6 +148,7 @@ void ui_WifiSetup_screen_init(void)
     lv_obj_set_align(ui_Label3, LV_ALIGN_CENTER);
     lv_label_set_text(ui_Label3, "Connect");
     lv_obj_set_style_text_color(ui_Label3, lv_color_hex(0xFFFFFF), 0);
+    lv_obj_set_style_text_font(ui_Label3, &ui_font_OpenSansSmall, 0);
     
     // Main container with 3 columns
     ui_Container12 = lv_obj_create(ui_WifiSetup);
@@ -262,6 +268,20 @@ void ui_WifiSetup_screen_init(void)
     lv_obj_add_flag(ui_timeZoneDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     style_dropdown(ui_timeZoneDropdown);
     
+    // Language label
+    lv_obj_t* langLabel = lv_label_create(ui_Container21);
+    lv_label_set_text(langLabel, "Language:");
+    lv_obj_set_style_text_color(langLabel, COLOR_TEXT_DIM, 0);
+    lv_obj_set_style_text_font(langLabel, &ui_font_OpenSansExtraSmall, 0);
+    
+    // Language dropdown
+    ui_languageDropdown = lv_dropdown_create(ui_Container21);
+    lv_dropdown_set_options(ui_languageDropdown, "English\nDeutsch\nČeština");
+    lv_obj_set_width(ui_languageDropdown, lv_pct(100));
+    lv_obj_set_height(ui_languageDropdown, LV_SIZE_CONTENT);
+    lv_obj_add_flag(ui_languageDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    style_dropdown(ui_languageDropdown);
+    
     // Info text
     lv_obj_t* infoLabel = lv_label_create(ui_Container21);
     lv_label_set_text(infoLabel, "Enable spot prices for\nintelligent battery control");
@@ -307,5 +327,6 @@ void ui_WifiSetup_screen_destroy(void)
     ui_Label2 = NULL;
     ui_spotProviderDropdown = NULL;
     ui_timeZoneDropdown = NULL;
+    ui_languageDropdown = NULL;
     ui_keyboard = NULL;
 }

@@ -11,6 +11,7 @@
 #include "utils/MedianPowerSampler.hpp"
 #include "Spot/ElectricityPriceLoader.hpp"
 #include "utils/IntelligenceSettings.hpp"
+#include "utils/Localization.hpp"
 
 lv_color_t red = lv_color_hex(0xE63946);
 lv_color_t orange = lv_color_hex(0xFFA726);
@@ -454,23 +455,23 @@ public:
         
         // "Inteligence" title label
         intelligenceSummaryTitle = lv_label_create(intelligencePlanSummary);
-        lv_label_set_text(intelligenceSummaryTitle, "Intelligence");
+        lv_label_set_text(intelligenceSummaryTitle, TR(STR_INTELLIGENCE));
         lv_obj_set_style_text_font(intelligenceSummaryTitle, &ui_font_OpenSansSmall, 0);
         lv_obj_set_style_text_color(intelligenceSummaryTitle, lv_color_hex(0x333333), 0);
         lv_obj_set_flex_grow(intelligenceSummaryTitle, 1);  // Title takes remaining space, pushes rest to right
         
         // Savings value - aligned to the right next to badge
         intelligenceSummarySavings = lv_label_create(intelligencePlanSummary);
-        lv_label_set_text(intelligenceSummarySavings, "~-- CZK");
+        lv_label_set_text(intelligenceSummarySavings, "");
         lv_obj_set_style_text_font(intelligenceSummarySavings, &ui_font_OpenSansSmall, 0);
         lv_obj_set_style_text_color(intelligenceSummarySavings, lv_color_hex(0x00AA00), 0);
         
         // Mode badge with colored background
         intelligenceSummaryBadge = lv_label_create(intelligencePlanSummary);
-        lv_label_set_text(intelligenceSummaryBadge, "Self Use");
+        lv_label_set_text(intelligenceSummaryBadge, "...");
         lv_obj_set_style_text_font(intelligenceSummaryBadge, &ui_font_OpenSansSmall, 0);
         lv_obj_set_style_text_color(intelligenceSummaryBadge, lv_color_white(), 0);
-        lv_obj_set_style_bg_color(intelligenceSummaryBadge, lv_color_hex(0x00AA00), 0);
+        lv_obj_set_style_bg_color(intelligenceSummaryBadge, lv_color_hex(0x888888), 0);
         lv_obj_set_style_bg_opa(intelligenceSummaryBadge, LV_OPA_COVER, 0);
         lv_obj_set_style_radius(intelligenceSummaryBadge, 4, 0);
         lv_obj_set_style_pad_hor(intelligenceSummaryBadge, 8, 0);
@@ -913,7 +914,7 @@ public:
             lv_label_set_text(ipBadgeLabel, ip.toString().c_str());
         } else {
             // Not connected yet
-            lv_label_set_text(ipBadgeLabel, "No WiFi");
+            lv_label_set_text(ipBadgeLabel, TR(STR_NO_WIFI));
         }
     }
 
@@ -944,7 +945,7 @@ public:
 
         // Title
         lv_obj_t* title = lv_label_create(inverterModeMenu);
-        lv_label_set_text(title, "Inverter Mode");
+        lv_label_set_text(title, TR(STR_INVERTER_MODE));
         lv_obj_set_style_text_font(title, &lv_font_montserrat_16, 0);
         lv_obj_set_width(title, lv_pct(100));
         lv_obj_set_style_text_align(title, LV_TEXT_ALIGN_CENTER, 0);
@@ -961,11 +962,11 @@ public:
         };
         
         MenuItem items[] = {
-            {"INTELLIGENCE", INVERTER_MODE_UNKNOWN, true, lv_color_hex(0x2196F3)},
-            {"NORMAL", INVERTER_MODE_SELF_USE, false, lv_color_hex(_ui_theme_color_loadColor[0])},
-            {"CHARGE", INVERTER_MODE_CHARGE_FROM_GRID, false, lv_color_hex(_ui_theme_color_gridColor[0])},
-            {"DISCHARGE", INVERTER_MODE_DISCHARGE_TO_GRID, false, lv_color_hex(_ui_theme_color_batteryColor[0])},
-            {"HOLD", INVERTER_MODE_HOLD_BATTERY, false, lv_color_hex(0x888888)},
+            {TR(STR_INTELLIGENCE), INVERTER_MODE_UNKNOWN, true, lv_color_hex(0x2196F3)},
+            {TR(STR_NORMAL), INVERTER_MODE_SELF_USE, false, lv_color_hex(_ui_theme_color_loadColor[0])},
+            {TR(STR_CHARGE), INVERTER_MODE_CHARGE_FROM_GRID, false, lv_color_hex(_ui_theme_color_gridColor[0])},
+            {TR(STR_DISCHARGE), INVERTER_MODE_DISCHARGE_TO_GRID, false, lv_color_hex(_ui_theme_color_batteryColor[0])},
+            {TR(STR_HOLD), INVERTER_MODE_HOLD_BATTERY, false, lv_color_hex(0x888888)},
         };
 
         for (int i = 0; i < 5; i++) {
@@ -1349,25 +1350,25 @@ public:
         
         if (intelligenceEnabled) {
             // When intelligence is active, show "INTELLIGENCE" badge
-            labelText = "INTELLIGENCE";
+            labelText = TR(STR_INTELLIGENCE);
             bgColor = lv_color_hex(0x2196F3);  // Blue
         } else {
             // When intelligence is disabled, show actual inverter mode
             switch (mode) {
                 case INVERTER_MODE_SELF_USE:
-                    labelText = "NORMAL";
+                    labelText = TR(STR_NORMAL);
                     bgColor = lv_color_hex(_ui_theme_color_loadColor[0]);  // Green (load color)
                     break;
                 case INVERTER_MODE_CHARGE_FROM_GRID:
-                    labelText = "CHARGE";
+                    labelText = TR(STR_CHARGE);
                     bgColor = lv_color_hex(_ui_theme_color_gridColor[0]);  // Red/Pink (grid color)
                     break;
                 case INVERTER_MODE_DISCHARGE_TO_GRID:
-                    labelText = "DISCHARGE";
+                    labelText = TR(STR_DISCHARGE);
                     bgColor = lv_color_hex(_ui_theme_color_batteryColor[0]);  // Blue (battery color)
                     break;
                 case INVERTER_MODE_HOLD_BATTERY:
-                    labelText = "HOLD";
+                    labelText = TR(STR_HOLD);
                     bgColor = lv_color_hex(0x888888);  // Gray
                     break;
                 default:
@@ -1398,23 +1399,23 @@ public:
         lv_color_t badgeColor = lv_color_hex(0x666666);
         switch (currentMode) {
             case INVERTER_MODE_SELF_USE: 
-                modeName = "NORMAL"; 
+                modeName = TR(STR_NORMAL); 
                 badgeColor = lv_color_hex(_ui_theme_color_loadColor[0]);  // Green (load color)
                 break;
             case INVERTER_MODE_CHARGE_FROM_GRID: 
-                modeName = "CHARGE"; 
+                modeName = TR(STR_CHARGE); 
                 badgeColor = lv_color_hex(_ui_theme_color_gridColor[0]);  // Red/Pink (grid color)
                 break;
             case INVERTER_MODE_DISCHARGE_TO_GRID: 
-                modeName = "DISCHARGE"; 
+                modeName = TR(STR_DISCHARGE); 
                 badgeColor = lv_color_hex(_ui_theme_color_batteryColor[0]);  // Blue (battery color)
                 break;
             case INVERTER_MODE_HOLD_BATTERY: 
-                modeName = "HOLD"; 
+                modeName = TR(STR_HOLD); 
                 badgeColor = lv_color_hex(0x888888);  // Gray
                 break;
             default: 
-                modeName = "UNKNOWN"; 
+                modeName = "---"; 
                 badgeColor = lv_color_hex(0x666666);
                 break;
         }
@@ -1453,10 +1454,10 @@ public:
         // Helper to get mode name
         auto getModeName = [](InverterMode_t mode) -> const char* {
             switch (mode) {
-                case INVERTER_MODE_SELF_USE: return "NORMAL";
-                case INVERTER_MODE_CHARGE_FROM_GRID: return "CHARGE";
-                case INVERTER_MODE_DISCHARGE_TO_GRID: return "DISCHARGE";
-                case INVERTER_MODE_HOLD_BATTERY: return "HOLD";
+                case INVERTER_MODE_SELF_USE: return TR(STR_NORMAL);
+                case INVERTER_MODE_CHARGE_FROM_GRID: return TR(STR_CHARGE);
+                case INVERTER_MODE_DISCHARGE_TO_GRID: return TR(STR_DISCHARGE);
+                case INVERTER_MODE_HOLD_BATTERY: return TR(STR_HOLD);
                 default: return "---";
             }
         };
@@ -2068,19 +2069,19 @@ public:
             }
             break;
         case DONGLE_STATUS_CONNECTION_ERROR:
-            lv_label_set_text(ui_statusLabel, "Connection error");
+            lv_label_set_text(ui_statusLabel, TR(STR_CONNECTION_ERROR));
             break;
         case DONGLE_STATUS_HTTP_ERROR:
-            lv_label_set_text(ui_statusLabel, "HTTP error");
+            lv_label_set_text(ui_statusLabel, TR(STR_HTTP_ERROR));
             break;
         case DONGLE_STATUS_JSON_ERROR:
-            lv_label_set_text(ui_statusLabel, "JSON error");
+            lv_label_set_text(ui_statusLabel, TR(STR_JSON_ERROR));
             break;
         case DONGLE_STATUS_WIFI_DISCONNECTED:
-            lv_label_set_text(ui_statusLabel, "WiFi disconnected");
+            lv_label_set_text(ui_statusLabel, TR(STR_WIFI_DISCONNECTED));
             break;
         default:
-            lv_label_set_text(ui_statusLabel, "Unknown error");
+            lv_label_set_text(ui_statusLabel, TR(STR_UNKNOWN_ERROR));
             break;
         }
 
@@ -2223,10 +2224,10 @@ public:
         } else if (!hasSpotPrices) {
             // Intelligence enabled but no spot prices - show waiting state
             lv_obj_clear_flag(intelligencePlanTile, LV_OBJ_FLAG_HIDDEN);
-            lv_label_set_text(intelligenceSummaryBadge, "Waiting");
+            lv_label_set_text(intelligenceSummaryBadge, TR(STR_WAITING));
             lv_obj_set_style_bg_color(intelligenceSummaryBadge, lv_color_hex(0x888888), 0);
             if (intelligenceSummarySavings != nullptr) {
-                lv_label_set_text(intelligenceSummarySavings, "-- Kč");
+                lv_label_set_text(intelligenceSummarySavings, "");
             }
         } else if (active) {
             // Intelligence is working

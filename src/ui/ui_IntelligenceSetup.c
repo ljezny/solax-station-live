@@ -52,6 +52,12 @@ lv_obj_t *ui_intelligenceSellKInput = NULL;
 lv_obj_t *ui_intelligenceSellQLabel = NULL;
 lv_obj_t *ui_intelligenceSellQInput = NULL;
 
+// Info labels for localization
+lv_obj_t *ui_intelligenceBuyInfoLabel = NULL;
+lv_obj_t *ui_intelligenceSellInfoLabel = NULL;
+lv_obj_t *ui_intelligenceBuyFormulaLabel = NULL;
+lv_obj_t *ui_intelligenceSellFormulaLabel = NULL;
+
 // Bottom - Buttons
 lv_obj_t *ui_intelligenceButtonContainer = NULL;
 lv_obj_t *ui_intelligenceResetButton = NULL;
@@ -73,6 +79,7 @@ static void style_input(lv_obj_t* input) {
     lv_obj_set_style_border_opa(input, LV_OPA_70, LV_PART_MAIN);
     lv_obj_set_style_radius(input, 6, LV_PART_MAIN);
     lv_obj_set_style_text_color(input, COLOR_TEXT, LV_PART_MAIN);
+    lv_obj_set_style_text_font(input, &ui_font_OpenSansExtraSmall, LV_PART_MAIN);
     lv_obj_set_style_pad_all(input, 8, LV_PART_MAIN);
     // Cursor style
     lv_obj_set_style_bg_color(input, COLOR_ACCENT, LV_PART_CURSOR);
@@ -92,6 +99,7 @@ static lv_obj_t* create_input_row(lv_obj_t* parent, const char* labelText, lv_ob
     lv_obj_set_width(*labelOut, lv_pct(55));
     lv_label_set_text(*labelOut, labelText);
     lv_obj_set_style_text_color(*labelOut, COLOR_TEXT, 0);
+    lv_obj_set_style_text_font(*labelOut, &ui_font_OpenSansExtraSmall, 0);
     
     *inputOut = lv_textarea_create(container);
     lv_obj_set_width(*inputOut, lv_pct(42));
@@ -182,6 +190,7 @@ void ui_IntelligenceSetup_screen_init(void)
     ui_intelligenceEnableLabel = lv_label_create(enableContainer);
     lv_label_set_text(ui_intelligenceEnableLabel, "Enable");
     lv_obj_set_style_text_color(ui_intelligenceEnableLabel, COLOR_TEXT, 0);
+    lv_obj_set_style_text_font(ui_intelligenceEnableLabel, &ui_font_OpenSansSmall, 0);
     
     ui_intelligenceEnableSwitch = lv_switch_create(enableContainer);
     lv_obj_set_width(ui_intelligenceEnableSwitch, 50);
@@ -231,10 +240,10 @@ void ui_IntelligenceSetup_screen_init(void)
     ui_intelligenceMiddleColumn = create_card(ui_intelligenceMainContainer, "Buy Price", COLOR_ACCENT);
     
     // Formula label
-    lv_obj_t* buyFormulaLabel = lv_label_create(ui_intelligenceMiddleColumn);
-    lv_label_set_text(buyFormulaLabel, "price = K * spot + Q");
-    lv_obj_set_style_text_color(buyFormulaLabel, COLOR_TEXT_DIM, 0);
-    lv_obj_set_style_text_font(buyFormulaLabel, &ui_font_OpenSansExtraSmall, 0);
+    ui_intelligenceBuyFormulaLabel = lv_label_create(ui_intelligenceMiddleColumn);
+    lv_label_set_text(ui_intelligenceBuyFormulaLabel, "price = K * spot + Q");
+    lv_obj_set_style_text_color(ui_intelligenceBuyFormulaLabel, COLOR_TEXT_DIM, 0);
+    lv_obj_set_style_text_font(ui_intelligenceBuyFormulaLabel, &ui_font_OpenSansExtraSmall, 0);
     
     // Buy K input
     create_input_row(ui_intelligenceMiddleColumn, "K (multiplier):", 
@@ -245,19 +254,19 @@ void ui_IntelligenceSetup_screen_init(void)
                      &ui_intelligenceBuyQLabel, &ui_intelligenceBuyQInput, "2.5");
     
     // Info label
-    lv_obj_t* buyInfoLabel = lv_label_create(ui_intelligenceMiddleColumn);
-    lv_label_set_text(buyInfoLabel, "K=1.21 for 21% VAT\nQ = distribution fees");
-    lv_obj_set_style_text_color(buyInfoLabel, COLOR_TEXT_DIM, 0);
-    lv_obj_set_style_text_font(buyInfoLabel, &ui_font_OpenSansExtraSmall, 0);
+    ui_intelligenceBuyInfoLabel = lv_label_create(ui_intelligenceMiddleColumn);
+    lv_label_set_text(ui_intelligenceBuyInfoLabel, "K=1.21 for 21% VAT\nQ = distribution fees");
+    lv_obj_set_style_text_color(ui_intelligenceBuyInfoLabel, COLOR_TEXT_DIM, 0);
+    lv_obj_set_style_text_font(ui_intelligenceBuyInfoLabel, &ui_font_OpenSansExtraSmall, 0);
     
     // ===== RIGHT COLUMN - Sell coefficients (Red accent) =====
     ui_intelligenceRightColumn = create_card(ui_intelligenceMainContainer, "Sell Price", COLOR_RED);
     
     // Formula label
-    lv_obj_t* sellFormulaLabel = lv_label_create(ui_intelligenceRightColumn);
-    lv_label_set_text(sellFormulaLabel, "price = K * spot + Q");
-    lv_obj_set_style_text_color(sellFormulaLabel, COLOR_TEXT_DIM, 0);
-    lv_obj_set_style_text_font(sellFormulaLabel, &ui_font_OpenSansExtraSmall, 0);
+    ui_intelligenceSellFormulaLabel = lv_label_create(ui_intelligenceRightColumn);
+    lv_label_set_text(ui_intelligenceSellFormulaLabel, "price = K * spot + Q");
+    lv_obj_set_style_text_color(ui_intelligenceSellFormulaLabel, COLOR_TEXT_DIM, 0);
+    lv_obj_set_style_text_font(ui_intelligenceSellFormulaLabel, &ui_font_OpenSansExtraSmall, 0);
     
     // Sell K input
     create_input_row(ui_intelligenceRightColumn, "K (multiplier):", 
@@ -268,10 +277,10 @@ void ui_IntelligenceSetup_screen_init(void)
                      &ui_intelligenceSellQLabel, &ui_intelligenceSellQInput, "0.0");
     
     // Info label
-    lv_obj_t* sellInfoLabel = lv_label_create(ui_intelligenceRightColumn);
-    lv_label_set_text(sellInfoLabel, "Usually K<1 (lower buyback)\nQ can be negative");
-    lv_obj_set_style_text_color(sellInfoLabel, COLOR_TEXT_DIM, 0);
-    lv_obj_set_style_text_font(sellInfoLabel, &ui_font_OpenSansExtraSmall, 0);
+    ui_intelligenceSellInfoLabel = lv_label_create(ui_intelligenceRightColumn);
+    lv_label_set_text(ui_intelligenceSellInfoLabel, "Usually K<1 (lower buyback)\nQ can be negative");
+    lv_obj_set_style_text_color(ui_intelligenceSellInfoLabel, COLOR_TEXT_DIM, 0);
+    lv_obj_set_style_text_font(ui_intelligenceSellInfoLabel, &ui_font_OpenSansExtraSmall, 0);
     
     // ===== BUTTON CONTAINER =====
     ui_intelligenceButtonContainer = lv_obj_create(ui_IntelligenceSetup);
@@ -300,6 +309,7 @@ void ui_IntelligenceSetup_screen_init(void)
     lv_obj_set_align(ui_intelligenceResetLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_intelligenceResetLabel, "Reset");
     lv_obj_set_style_text_color(ui_intelligenceResetLabel, COLOR_ACCENT, 0);
+    lv_obj_set_style_text_font(ui_intelligenceResetLabel, &ui_font_OpenSansSmall, 0);
     
     // Cancel button
     ui_intelligenceCancelButton = lv_btn_create(ui_intelligenceButtonContainer);
@@ -317,6 +327,7 @@ void ui_IntelligenceSetup_screen_init(void)
     lv_obj_set_align(ui_intelligenceCancelLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_intelligenceCancelLabel, "Cancel");
     lv_obj_set_style_text_color(ui_intelligenceCancelLabel, COLOR_TEXT, 0);
+    lv_obj_set_style_text_font(ui_intelligenceCancelLabel, &ui_font_OpenSansSmall, 0);
     
     // Save button
     ui_intelligenceSaveButton = lv_btn_create(ui_intelligenceButtonContainer);
@@ -334,6 +345,7 @@ void ui_IntelligenceSetup_screen_init(void)
     lv_obj_set_align(ui_intelligenceSaveLabel, LV_ALIGN_CENTER);
     lv_label_set_text(ui_intelligenceSaveLabel, "Save");
     lv_obj_set_style_text_color(ui_intelligenceSaveLabel, lv_color_hex(0xFFFFFF), 0);
+    lv_obj_set_style_text_font(ui_intelligenceSaveLabel, &ui_font_OpenSansSmall, 0);
     
     // ===== KEYBOARD =====
     ui_intelligenceKeyboard = lv_keyboard_create(ui_IntelligenceSetup);

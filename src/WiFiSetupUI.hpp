@@ -5,10 +5,12 @@
 #include "ui/ui.h"
 #include "Inverters/WiFiDiscovery.hpp"
 #include "Spot/ElectricityPriceLoader.hpp"
+#include "utils/Localization.hpp"
 static void wifiSetupCompleteHandler(lv_event_t *e);
 static void wifiRollerHandler(lv_event_t *e);
 static void spotRollerHandler(lv_event_t *e);
 static void timezoneRollerHandler(lv_event_t *e);
+static void languageRollerHandler(lv_event_t *e);
 static void connectionTypeHandler(lv_event_t *e);
 static void onFocusHandler(lv_event_t *e);
 static void onTextChangedHandler(lv_event_t *e);
@@ -43,6 +45,7 @@ public:
         lv_obj_add_event_cb(ui_connectionTypeDropdown, connectionTypeHandler, LV_EVENT_ALL, this);
         lv_obj_add_event_cb(ui_spotProviderDropdown, spotRollerHandler, LV_EVENT_ALL, this);
         lv_obj_add_event_cb(ui_timeZoneDropdown, timezoneRollerHandler, LV_EVENT_ALL, this);
+        lv_obj_add_event_cb(ui_languageDropdown, languageRollerHandler, LV_EVENT_ALL, this);
         lv_obj_add_event_cb(ui_wifiPassword, onFocusHandler, LV_EVENT_FOCUSED, this);
         lv_obj_add_event_cb(ui_inverterIP, onFocusHandler, LV_EVENT_FOCUSED, this);
         lv_obj_add_event_cb(ui_inverterSN, onFocusHandler, LV_EVENT_FOCUSED, this);
@@ -119,7 +122,41 @@ public:
             }
         }
 
+        // Language dropdown
+        lv_dropdown_set_options(ui_languageDropdown, Localization::getLanguageOptions().c_str());
+        lv_dropdown_set_selected(ui_languageDropdown, Localization::getLanguage());
+
+        // Update localized texts
+        updateLocalizedTexts();
+        
         setCompleteButtonVisibility();
+    }
+
+    void updateLocalizedTexts()
+    {
+        // Header title - find through traversal
+        lv_obj_t* header = lv_obj_get_child(ui_WifiSetup, 0);
+        if (header) {
+            lv_obj_t* titleLabel = lv_obj_get_child(header, 0);
+            if (titleLabel) lv_label_set_text(titleLabel, TR(STR_SETUP));
+        }
+        
+        // Connect button label
+        if (ui_Label3) lv_label_set_text(ui_Label3, TR(STR_CONNECT));
+        
+        // Card titles (stored as first child of each card)
+        if (ui_Label1) lv_label_set_text(ui_Label1, TR(STR_WIFI_NETWORK));
+        if (ui_Label5) lv_label_set_text(ui_Label5, TR(STR_INVERTER));
+        if (ui_Label2) lv_label_set_text(ui_Label2, TR(STR_SPOT_PRICE));
+        
+        // Spot info label - last child of Spot Price card (ui_Container21)
+        if (ui_Container21) {
+            uint32_t childCount = lv_obj_get_child_cnt(ui_Container21);
+            if (childCount > 0) {
+                lv_obj_t* infoLabel = lv_obj_get_child(ui_Container21, childCount - 1);
+                if (infoLabel) lv_label_set_text(infoLabel, TR(STR_SPOT_INFO));
+            }
+        }
     }
 
     void setCompleteButtonVisibility()
@@ -187,6 +224,16 @@ public:
             }
         }
         setCompleteButtonVisibility();
+    }
+
+    void onLanguageChanged()
+    {
+        int selectedIndex = lv_dropdown_get_selected(ui_languageDropdown);
+        if (selectedIndex >= 0 && selectedIndex < LANG_COUNT)
+        {
+            Localization::setLanguage((Language_t)selectedIndex);
+            log_d("Language changed to: %d", selectedIndex);
+        }
     }
 
     void onFocusChanged(lv_obj_t *obj)
@@ -328,6 +375,19 @@ static void connectionTypeHandler(lv_event_t *e)
         if (ui)
         {
             ui->onConnectionTypeChanged();
+        }
+    }
+}
+
+static void languageRollerHandler(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_VALUE_CHANGED)
+    {
+        WiFiSetupUI *ui = (WiFiSetupUI *)lv_event_get_user_data(e);
+        if (ui)
+        {
+            ui->onLanguageChanged();
         }
     }
 }

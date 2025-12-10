@@ -19,6 +19,7 @@
 #include "utils/UnitFormatter.hpp"
 #include "utils/SolarChartDataProvider.hpp"
 #include "utils/BacklightResolver.hpp"
+#include "utils/Localization.hpp"
 #include "DashboardUI.hpp"
 #include "SplashUI.hpp"
 #include "WiFiSetupUI.hpp"
@@ -310,6 +311,9 @@ void setupWiFi()
 {
     WiFi.persistent(false);
     WiFi.setSleep(false);
+    // Initialize WiFi stack (AP+STA mode) - required before starting web server
+    // This initializes LwIP TCP/IP stack
+    WiFi.mode(WIFI_AP_STA);
 }
 
 void setupLVGL()
@@ -443,6 +447,9 @@ void setupLVGL()
 void setup()
 {
     Serial.begin(921600);
+
+    // Initialize localization system (load language from NVS)
+    Localization::init();
 
     // NOTE: loopTask is NOT subscribed to watchdog because it performs
     // long-running network operations (HTTPS, DNS, SSL handshake, etc.)
@@ -1500,19 +1507,19 @@ void updateState()
     case STATE_SPLASH:
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         splashUI->update(softAP.getESPIdHex(), String(VERSION_NUMBER));
-        splashUI->updateText("Discovering dongles...");
+        splashUI->updateText(TR(STR_DISCOVERING_DONGLES));
         xSemaphoreGive(lvgl_mutex);
 
         if (wifiDiscoveryResult.type != CONNECTION_TYPE_NONE)
         {
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-            splashUI->updateText("Connecting... " + wifiDiscoveryResult.ssid);
+            splashUI->updateText(String(TR(STR_CONNECTING)) + " " + wifiDiscoveryResult.ssid);
             xSemaphoreGive(lvgl_mutex);
 
             if (dongleDiscovery.connectToDongle(wifiDiscoveryResult))
             {
                 xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-                splashUI->updateText("Loading data... ");
+                splashUI->updateText(TR(STR_LOADING_DATA));
                 xSemaphoreGive(lvgl_mutex);
 
                 syncTime();
@@ -1542,7 +1549,7 @@ void updateState()
                 else
                 {
                     xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-                    splashUI->updateText("Failed to load data :-(");
+                    splashUI->updateText(TR(STR_FAILED_LOAD_DATA));
                     xSemaphoreGive(lvgl_mutex);
                     delay(2000);
 
@@ -1553,7 +1560,7 @@ void updateState()
             else
             {
                 xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-                splashUI->updateText("Failed to connect :-(");
+                splashUI->updateText(TR(STR_FAILED_CONNECT));
                 xSemaphoreGive(lvgl_mutex);
                 delay(2000);
 
