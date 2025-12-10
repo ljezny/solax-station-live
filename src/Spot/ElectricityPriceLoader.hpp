@@ -4,6 +4,7 @@
 #include <esp_heap_caps.h>
 #include "ElectricityPriceResult.hpp"
 #include "utils/NVSMutex.hpp"
+#include "utils/Localization.hpp"
 
 #include "Spot/Providers/OTE_CZ_API.hpp"
 #include "Spot/Providers/OTK_SK_API.hpp"
@@ -396,16 +397,16 @@ private:
         switch (provider)
         {
         case OTE_CZ:
-            return "CZK";
+            return TR(STR_CURRENCY_CZK);
         case PSE_PL:
-            return "gr";
+            return TR(STR_CURRENCY_PLN_GR);
         case ELPRIS_SE1:
         case ELPRIS_SE2:
         case ELPRIS_SE3:
         case ELPRIS_SE4:
-            return "öre";
+            return TR(STR_CURRENCY_SEK_ORE);
         default:
-            return "ct";
+            return TR(STR_CURRENCY_EUR_CENT);
         }
     }
 
