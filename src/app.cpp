@@ -310,7 +310,6 @@ void setupWiFi()
 {
     WiFi.persistent(false);
     WiFi.setSleep(false);
-    softAP.start();
 }
 
 void setupLVGL()
@@ -487,6 +486,31 @@ void resetAllTasks()
     lastIntelligenceAttempt = 0;
 }
 
+// Checks if any Shelly device is found in discovery results and starts SoftAP if needed
+void startSoftAPIfShellyFound()
+{
+    if (softAP.isRunning()) {
+        return; // Already running
+    }
+    
+    for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
+    {
+        if (!dongleDiscovery.discoveries[i].ssid.isEmpty() && 
+            shellyAPI.isShellySSID(dongleDiscovery.discoveries[i].ssid))
+        {
+            log_d("Found Shelly device in scan, starting SoftAP");
+            softAP.start();
+            return;
+        }
+    }
+}
+
+// Manages SoftAP idle timeout
+bool manageSoftAPTask()
+{
+    return softAP.manageIdleTimeout();
+}
+
 bool discoverDonglesTask()
 {
     bool hasDongles = false;
@@ -496,6 +520,9 @@ bool discoverDonglesTask()
         run = true;
         lastWiFiScanAttempt = millis();
         dongleDiscovery.scanWiFi(true);
+        
+        // Po každém scanu zkontrolujeme, zda jsme nenašli Shelly
+        startSoftAPIfShellyFound();
     }
     return run;
 }
@@ -671,6 +698,12 @@ bool pairShellyTask()
             log_d("Checking SSID: %s", dongleDiscovery.discoveries[i].ssid.c_str());
             if (shellyAPI.isShellySSID(dongleDiscovery.discoveries[i].ssid))
             {
+                // Pokud najdeme Shelly a SoftAP neběží, zapneme ho
+                if (!softAP.isRunning()) {
+                    log_d("Found Shelly to pair, starting SoftAP");
+                    softAP.start();
+                }
+                
                 if (dongleDiscovery.connectToDongle(dongleDiscovery.discoveries[i]))
                 {
                     if (shellyAPI.setWiFiSTA(dongleDiscovery.discoveries[i].ssid, softAP.getSSID(), softAP.getPassword()))
@@ -681,7 +714,7 @@ bool pairShellyTask()
                 }
             }
         }
-        if (shellyAPI.getPairedCount() < softAP.getNumberOfConnectedDevices())
+        if (softAP.isRunning() && shellyAPI.getPairedCount() < softAP.getNumberOfConnectedDevices())
         {
             log_d("Connected devices: %d, paired devices: %d", softAP.getNumberOfConnectedDevices(), shellyAPI.getPairedCount());
             shellyAPI.queryMDNS(WiFi.softAPIP(), WiFi.softAPSubnetMask());
@@ -1407,6 +1440,8 @@ void onEntering(state_t newState)
             previousInverterData.millis = 0;
         }
 
+        softAP.start();
+ 
         resetAllTasks();
         setTimeZone();
         break;
@@ -1657,6 +1692,9 @@ void updateState()
             {
                 break;
             }
+            // Manage SoftAP idle timeout (vypne AP po 5 minutách bez klientů)
+            manageSoftAPTask();
+            
             if (loadEcoVolterTask())
             {
                 resolveEcoVolterSmartCharge();
