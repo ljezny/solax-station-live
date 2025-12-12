@@ -144,6 +144,44 @@ private:
     }
     
     /**
+     * Spočítá za kolik čtvrthodin dojde baterie (bez nabíjení)
+     * Vrací počet čtvrthodin do vyprázdnění baterie na minSoc
+     * Pokud baterie vydrží déle než horizont, vrací (toQuarter - fromQuarter)
+     */
+    int calculateQuartersUntilBatteryEmpty(int fromQuarter, int toQuarter,
+                                            float currentBatteryKwh, int currentDay, int currentMonth) {
+        float batteryKwh = currentBatteryKwh;
+        float minBatteryKwh = getMinBatteryKwh();
+        
+        for (int q = fromQuarter; q < toQuarter; q++) {
+            int dayQ = q % QUARTERS_OF_DAY;
+            bool isTomorrow = (q >= QUARTERS_OF_DAY);
+            int day = isTomorrow ? (currentDay + 1) % 7 : currentDay;
+            
+            // Predikce výroby a spotřeby
+            float productionKwh = productionPredictor.predictQuarterlyProduction(currentMonth, dayQ) / 1000.0f;
+            float consumptionKwh = consumptionPredictor.predictQuarterlyConsumption(day, dayQ) / 1000.0f;
+            
+            // Net spotřeba (kolik potřebujeme z baterie)
+            float netConsumption = consumptionKwh - productionKwh;
+            
+            if (netConsumption > 0) {
+                batteryKwh -= netConsumption;
+                if (batteryKwh <= minBatteryKwh) {
+                    // Baterie dojde v této čtvrthodině
+                    return q - fromQuarter + 1;
+                }
+            } else {
+                // Solární přebytek - dobíjí baterii
+                batteryKwh = min(batteryKwh - netConsumption, getMaxBatteryKwh());
+            }
+        }
+        
+        // Baterie vydrží celý horizont
+        return toQuarter - fromQuarter;
+    }
+    
+    /**
      * Najde nejlevnější nákupní cenu v budoucnosti
      */
     float findMinFutureBuyPrice(const ElectricityPriceTwoDays_t& prices, 
@@ -890,18 +928,28 @@ public:
             // Nabíjíme pokud: je to výhodné pro pozdější spotřebu NEBO pro arbitráž
             // ALE NIKDY nenakupujeme ze sítě pokud očekáváme solární přebytky!
             if (spaceInBattery > 0) {
-                // Podmínky pro nabíjení - používáme LOKÁLNÍ min/max (12h okno)
-                
-                // Je aktuální cena blízko lokálního minima? (do 10% nad minimum)
-                // Toto zajistí, že nabíjíme jen v nejlevnějších hodinách
-                bool isNearMinimum = buyPrice <= localMinBuyPrice * CHEAP_TIME_THRESHOLD;
-                
-                // Cena uložení energie = nákup + opotřebení baterie (full cycle cost se počítá jen jednou)
+                // Cena uložení energie = nákup + opotřebení baterie
                 float storageCost = buyPrice + batteryCostPerKwh;
                 
-                // Nabíjení se vyplatí ekonomicky když uložená energie bude levnější než LOKÁLNÍ MAXIMUM
-                // (v následujících 12 hodinách nastane špička kde energii využijeme)
-                bool worthChargingEconomically = storageCost < localMaxBuyPrice;
+                // === NABÍJENÍ PRO VLASTNÍ SPOTŘEBU ===
+                // Používáme RELEVANTNÍ minimum - minimum v období, na které nám vydrží baterie
+                // Tím zajistíme, že nenakupujeme zbytečně brzy (když bude levněji),
+                // ale také nezmeškáme nákup pokud nám baterie dojde dřív než nastane globální minimum
+                int quartersUntilEmpty = calculateQuartersUntilBatteryEmpty(
+                    q + 1, maxQuarters, currentBatteryKwh, currentDay, currentMonth);
+                int relevantWindowEnd = min(q + 1 + quartersUntilEmpty, maxQuarters);
+                float relevantMinBuyPrice = (q + 1 < relevantWindowEnd)
+                    ? findMinFutureBuyPrice(prices, q + 1, relevantWindowEnd, settings)
+                    : buyPrice;
+                
+                bool isNearRelevantMinimum = buyPrice <= relevantMinBuyPrice * CHEAP_TIME_THRESHOLD;
+                
+                // Nabíjení se vyplatí ekonomicky když uložená energie bude levnější než MAXIMÁLNÍ
+                // budoucí cena v relevantním okně (do kdy nám vydrží baterie)
+                float relevantMaxBuyPrice = (q + 1 < relevantWindowEnd)
+                    ? findMaxFutureBuyPrice(prices, q + 1, relevantWindowEnd, settings)
+                    : buyPrice;
+                bool worthChargingEconomically = storageCost < relevantMaxBuyPrice;
                 
                 // Spotřeba s bezpečnostní rezervou (pro jistotu nakoupíme víc)
                 float expectedConsumption = remainingConsumption * CONSUMPTION_SAFETY_MARGIN;
@@ -916,23 +964,32 @@ public:
                     expectSolarCharging = expectedSolarSurplus > spaceInBattery * 0.5f;
                 }
                 
+                // Baterie dojde v relevantním okně - MUSÍME nakoupit někdy v tomto období
+                // (jinak budeme kupovat za aktuální cenu když dojde)
+                bool batteryWillRunOut = quartersUntilEmpty < (maxQuarters - q - 1);
+                bool mustBuyInWindow = batteryWillRunOut && willNeedLater && !expectSolarCharging;
+                
+                // Nabíjení pro spotřebu:
+                // A) Klasická logika: jsme blízko minima A vyplatí se ekonomicky (velký spread)
+                // B) NEBO: baterie dojde v okně, tak nakupujeme v minimu (i při plochých cenách)
+                bool shouldChargeForConsumption = (isNearRelevantMinimum && worthChargingEconomically && willNeedLater && !expectSolarCharging)
+                                                || (mustBuyInWindow && isNearRelevantMinimum);
+                
+                // === ARBITRÁŽ ===
+                // Používáme LOKÁLNÍ minimum (12h okno) - chceme rychlý obrat
+                bool isNearLocalMinimum = buyPrice <= localMinBuyPrice * CHEAP_TIME_THRESHOLD;
+                
                 // Arbitráž: koupit levně, prodat draze (potřebujeme zisk po započtení nákladů baterie)
                 // Profit musí být alespoň X% z nákupní ceny
-                // BatteryCost se počítá jen jednou za celý cyklus
-                // DŮLEŽITÉ: Arbitráž má smysl JEN když:
-                // 1) Neočekáváme solární přebytky (jinak nabijeme zdarma)
-                // 2) Jsme blízko cenového minima
                 float arbitrageProfit = maxFutureSellPrice - buyPrice - batteryCostPerKwh;
                 float minRequiredProfit = buyPrice * ARBITRAGE_PROFIT_THRESHOLD;
                 bool worthArbitrage = !expectSolarCharging && 
-                                      isNearMinimum &&
+                                      isNearLocalMinimum &&
                                       arbitrageProfit > minRequiredProfit && 
                                       arbitrageProfit > 0;
                 
-                // Nabíjíme pokud:
-                // 1) Jsme blízko lokálního minima A vyplatí se nabíjet ekonomicky A budeme potřebovat energii
-                // 2) Nebo se vyplatí arbitráž (ta teď vyžaduje: nearMin + !expectSolar + profit)
-                bool shouldCharge = (isNearMinimum && worthChargingEconomically && willNeedLater) || worthArbitrage;
+                // Nabíjíme pokud se vyplatí pro spotřebu NEBO pro arbitráž
+                bool shouldCharge = shouldChargeForConsumption || worthArbitrage;
                 
                 if (shouldCharge) {
                     decision = INVERTER_MODE_CHARGE_FROM_GRID;
@@ -943,13 +1000,18 @@ public:
                     result.costCzk += toCharge * buyPrice;  // Platba za elektřinu
                     result.costCzk += toCharge * batteryCostPerKwh;  // Náklad na opotřebení při nabíjení
                     
-                    if (worthArbitrage) {
+                    if (worthArbitrage && !shouldChargeForConsumption) {
                         reason = String("Arbitrage: buy@") + String(buyPrice, 1) + 
                                  " sell@" + String(maxFutureSellPrice, 1) +
                                  " profit:" + String(arbitrageProfit / buyPrice * 100, 0) + "%";
+                    } else if (mustBuyInWindow && !worthChargingEconomically) {
+                        reason = String("MustBuy: buy@") + String(buyPrice, 1) + 
+                                 " relMin@" + String(relevantMinBuyPrice, 1) +
+                                 " empty in " + String(quartersUntilEmpty / 4) + "h";
                     } else {
-                        reason = String("Charging: store@") + String(storageCost, 1) + 
-                                 " < maxBuy@" + String(maxFutureBuyPrice, 1);
+                        reason = String("Charging: buy@") + String(buyPrice, 1) + 
+                                 " relMin@" + String(relevantMinBuyPrice, 1) +
+                                 " (" + String(quartersUntilEmpty / 4) + "h)";
                     }
                 }
             }
@@ -1059,12 +1121,12 @@ public:
             result.reason = reason;
             
             // === DIAGNOSTICKÉ LOGOVÁNÍ PRO KAŽDÉ Q ===
-            log_d("Q%d %02d:%02d | SOC:%.0f%% | prod:%.2f cons:%.2f | spot:%.2f buy:%.2f sell:%.2f | locMin:%.2f locMax:%.2f | dec:%s | %s",
+            log_d("Q%d %02d:%02d | SOC:%.0f%% | prod:%.2f cons:%.2f | spot:%.2f buy:%.2f sell:%.2f | globMin:%.2f locMin:%.2f locMax:%.2f | dec:%s | %s",
                   q, result.hour, result.minute,
                   batterySocStart,
                   productionKwh, consumptionKwh,
                   spotPrice, buyPrice, sellPrice,
-                  localMinBuyPrice, localMaxBuyPrice,
+                  minFutureBuyPrice, localMinBuyPrice, localMaxBuyPrice,
                   decisionToString(decision).c_str(),
                   reason.c_str());
             
