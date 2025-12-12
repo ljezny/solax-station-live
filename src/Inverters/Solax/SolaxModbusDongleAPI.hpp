@@ -69,7 +69,7 @@ public:
         readInverterRTC(inverterData);
 
         finalizePowerCalculations(inverterData);
-        logInverterData(inverterData);
+        logInverterData(inverterData, millis() - inverterData.millis);
         channel.disconnect();
         return inverterData;
     }

@@ -68,10 +68,11 @@ typedef struct
     time_t inverterTime = 0;  // RTC čas ze střídače (0 = neplatný)
 } InverterData_t;
 
-void logInverterData(InverterData_t& inverterData) {
-    LOGD("Inv: SOC=%d%% BatPwr=%dW PV1=%dW PV2=%dW PV3=%dW PV4=%dW Load=%dW GridPwr=%d/%d/%dW",
+void logInverterData(InverterData_t& inverterData, int loadTimeMs = 0) {
+    LOGD("Inv: SOC=%d%% BatPwr=%dW PV1=%dW PV2=%dW PV3=%dW PV4=%dW Load=%dW GridPwr=%d/%d/%dW [%dms]",
          inverterData.soc, inverterData.batteryPower,
          inverterData.pv1Power, inverterData.pv2Power, inverterData.pv3Power, inverterData.pv4Power,
          inverterData.loadPower,
-         inverterData.gridPowerL1, inverterData.gridPowerL2, inverterData.gridPowerL3);
+         inverterData.gridPowerL1, inverterData.gridPowerL2, inverterData.gridPowerL3,
+         loadTimeMs);
 } 

@@ -112,7 +112,6 @@ public:
             shutdown(sock, SHUT_RDWR);
             close(sock);
             sock = -1;
-            LOGI("Socket closed");
         }
     }
 

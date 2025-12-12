@@ -40,7 +40,7 @@ public:
         // Try to read RTC time (optional, won't fail if not available)
         readInverterRTC(inverterData);
 
-        logInverterData(inverterData);
+        logInverterData(inverterData, millis() - inverterData.millis);
         channel.disconnect();
         return inverterData;
     }

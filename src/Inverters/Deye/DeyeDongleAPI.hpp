@@ -50,7 +50,7 @@ private:
         readInverterRTC(sn, inverterData);
 
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
-        logInverterData(inverterData);
+        logInverterData(inverterData, millis() - inverterData.millis);
 
         return inverterData;
     }

@@ -547,7 +547,7 @@ private:
         }
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
         rtuChannel.disconnect();
-        logInverterData(inverterData);
+        logInverterData(inverterData, millis() - inverterData.millis);
 
         if (inverterData.status != DONGLE_STATUS_OK)
         {

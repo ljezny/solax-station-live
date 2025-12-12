@@ -279,13 +279,9 @@ void lvglTimerTask(void *param)
             maxLvglTime = elapsed;
         lvglCallCount++;
 
-        // Log every 5 seconds
+        // Reset stats every 5 seconds
         if (millis() - lastLvglLog > 5000)
         {
-            LOGD("LVGL handler: %d calls (%.1f/s), avg: %dus, max: %dus, maxMutexWait: %dus",
-                  lvglCallCount, lvglCallCount / 5.0f,
-                  lvglCallCount > 0 ? totalLvglTime / lvglCallCount : 0,
-                  maxLvglTime, maxMutexWait);
             lvglCallCount = 0;
             totalLvglTime = 0;
             maxLvglTime = 0;
@@ -570,7 +566,6 @@ InverterData_t loadInverterData(WiFiDiscoveryResult_t &discoveryResult)
         d.status = DONGLE_STATUS_UNSUPPORTED_DONGLE;
         break;
     }
-    LOGD("Inverter data loaded in %d ms", millis() - millisBefore);
     return d;
 }
 
@@ -617,7 +612,6 @@ bool loadInverterDataTask()
     static int incrementalDelayTimeOnError = 0;
     if (lastInverterDataAttempt == 0 || (millis() - lastInverterDataAttempt) > (INVERTER_DATA_REFRESH_INTERVAL + incrementalDelayTimeOnError))
     {
-        LOGD("Loading inverter data");
         run = true;
 #if DEMO
         inverterData = createRandomMockData();
@@ -628,8 +622,6 @@ bool loadInverterDataTask()
 
         if (dongleDiscovery.connectToDongle(wifiDiscoveryResult))
         {
-            LOGD("Dongle wifi connected.");
-
             InverterData_t d = loadInverterData(wifiDiscoveryResult);
 
             if (d.status == DONGLE_STATUS_OK)
@@ -737,7 +729,6 @@ bool reloadShellyTask()
     bool run = false;
     if (lastShellyAttempt == 0 || millis() - lastShellyAttempt > SHELLY_REFRESH_INTERVAL)
     {
-        LOGD("Reloading Shelly data");
         shellyResult = shellyAPI.getState();
         RequestedSmartControlState_t state = shellyRuleResolver.resolveSmartControlState(1500, 100, 500, 100);
         if (state != SMART_CONTROL_UNKNOWN)
@@ -1375,9 +1366,8 @@ void syncTimeFromInverter(const InverterData_t &data)
 
 void logMemory()
 {
-    // Don't take lvgl_mutex just for logging - it's not needed and can block LVGL
-    LOGD("Memory: Free=%d MinFree=%d MinStack=%d", 
-         ESP.getFreeHeap(), ESP.getMinFreeHeap(), uxTaskGetStackHighWaterMark(NULL));
+    // Memory stats disabled to reduce log spam
+    // Use remoteLogger debug level if needed
 }
 
 void onEntering(state_t newState)

@@ -63,17 +63,14 @@ public:
         {
             if (pvPower > 2000)
             {
-                LOGD("Setting brightness to 100%");
                 brightness = 255;
             }
             else if (pvPower > 0)
             {
-                LOGD("Setting brightness to 80%");
                 brightness = 192;
             }
             else
             {
-                LOGD("Setting brightness to 20%");
                 brightness = 16;
             }
         }

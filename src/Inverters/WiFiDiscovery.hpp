@@ -386,16 +386,11 @@ private:
         {
             hash = (hash << 5) + hash + str[i];
         }
-        String result = String(hash, HEX);
-        LOGD("Data: %s, Hash: %s", str.c_str(), result.c_str());
-        return result;
+        return String(hash, HEX);
     }
 
     void saveDongleInfo(String ssid, DongleInfo_t &info)
     {
-
-        LOGD("Connection Type: %d", info.connectionType);
-
         NVSGuard guard;
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for saving dongle info");
@@ -420,25 +415,13 @@ private:
         preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, true);
         String key = hashString(ssid);
         bool result = false;
-        if (!preferences.isKey(key.c_str()))
-        {
-            LOGD("No dongle info found for %s", ssid.c_str());
-        }
-        else
+        if (preferences.isKey(key.c_str()))
         {
             size_t len = preferences.getBytesLength(key.c_str());
             if (len == sizeof(DongleInfo_t))
             {
                 preferences.getBytes(key.c_str(), (void *)&info, sizeof(DongleInfo_t));
                 result = true;
-                LOGD("Loaded dongle info for %s", ssid.c_str());
-                LOGD("Password: %s", info.password);
-                LOGD("Dongle IP: %s", info.dongleIp);
-                LOGD("Connection Type: %d", info.connectionType);
-            }
-            else
-            {
-                LOGD("Dongle info for %s has invalid length: %d", ssid.c_str(), len);
             }
         }
         preferences.end();
