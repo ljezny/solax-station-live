@@ -2,6 +2,7 @@
 #define AWATTAR_API_h
 
 #include <WiFi.h>
+#include "../../utils/RemoteLogger.hpp"
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
@@ -34,7 +35,7 @@ public:
         time_t startOfDayTimestamp = mktime(t);
         url += String(startOfDayTimestamp) + "000"; // this is ugly, i know
 
-        log_d("Fetching URL: %s", url.c_str());
+        LOGD("Fetching URL: %s", url.c_str());
         // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *client is
         HTTPClient https;
         if (https.begin(*client, url))
@@ -47,7 +48,7 @@ public:
             if (httpCode == HTTP_CODE_OK)
             {
               String payload = https.getString();
-              log_d("Response payload: %s", payload.c_str());
+              LOGD("Response payload: %s", payload.c_str());
               DynamicJsonDocument doc(4196);
               DynamicJsonDocument filter(1024);
               filter["data"][0]["marketprice"] = true;
@@ -55,21 +56,21 @@ public:
               for (int i = 0; i < QUARTERS_OF_DAY; i++)
               {
                 result.prices[i].electricityPrice = doc["data"][i / 4]["marketprice"].as<float>() / 1000.0f * 100.0f;
-                log_d("Price for quarter %d: %f", i, result.prices[i].electricityPrice);
+                LOGD("Price for quarter %d: %f", i, result.prices[i].electricityPrice);
               }
               result.updated = time(NULL);
             }
           }
           else
           {
-            log_d("ERROR: %s", https.errorToString(httpCode).c_str());
+            LOGD("ERROR: %s", https.errorToString(httpCode).c_str());
           }
 
           https.end();
         }
         else
         {
-          log_d("Unable to connect to URL: %s", url.c_str());
+          LOGD("Unable to connect to URL: %s", url.c_str());
         }
       }
       client->stop();

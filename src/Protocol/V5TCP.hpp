@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "../utils/RemoteLogger.hpp"
 #include <WiFi.h>
 #include <CRC.h>
 #include <CRC16.h>
@@ -67,7 +68,7 @@ public:
     {
         if (!client.connect(ip, 8899))
         {
-            log_d("Failed to connect to V5TCP at %s", ip.toString().c_str());
+            LOGD("Failed to connect to V5TCP at %s", ip.toString().c_str());
             return false;
         }
         return true;
@@ -82,7 +83,7 @@ public:
     {
         if (sn == 0)
         {
-            log_d("SN is zero, cannot send request");
+            LOGD("SN is zero, cannot send request");
             return false;
         }
         sequenceNumber++;
@@ -139,7 +140,7 @@ public:
         }
         request[sizeof(request) - 2] = checksum & 0xff;
 
-        log_d("Sending solarmanv5 request. Sequence: %d, SN: %lu, Addr: %d, Len: %d",
+        LOGD("Sending solarmanv5 request. Sequence: %d, SN: %lu, Addr: %d, Len: %d",
               sequenceNumber, sn, addr, len);
 
         size_t requestSize = sizeof(request);
@@ -149,7 +150,7 @@ public:
         {
             dump += String(request[i], HEX) + " ";
         }
-        log_d("Request: %s", dump.c_str());
+        LOGD("Request: %s", dump.c_str());
 
         bool result = client.write(request, requestSize) == requestSize;
         return result;
@@ -159,36 +160,36 @@ public:
     {
         if (client.read(packetBuffer, 1) != 1)
         {
-            log_d("Unable to read client.");
+            LOGD("Unable to read client.");
             return -1;
         }
         if (packetBuffer[0] != 0xA5)
         {
-            log_d("Invalid header");
+            LOGD("Invalid header");
             return -1;
         }
         if (client.read(packetBuffer, 2) != 2)
         {
-            log_d("Unable to read client.");
+            LOGD("Unable to read client.");
             return -1;
         }
         uint16_t length = packetBuffer[0] | (packetBuffer[1] << 8);
         if (length > bufferLength)
         {
-            log_d("Buffer too small");
+            LOGD("Buffer too small");
             return -1;
         }
 
-        log_d("Payload length: %d", length);
+        LOGD("Payload length: %d", length);
         if (client.read(packetBuffer, 8) != 8)
         { // read rest of header
-            log_d("Unable to read client.");
+            LOGD("Unable to read client.");
             return -1;
         }
 
         if (packetBuffer[0] != 0x10 || packetBuffer[1] != 0x15)
         {
-            log_d("Invalid response");
+            LOGD("Invalid response");
             return -1;
         }
 
@@ -196,41 +197,41 @@ public:
 
         if (client.read(packetBuffer, PAYLOAD_HEADER) != PAYLOAD_HEADER)
         { // payload header
-            log_d("Unable to read client.");
+            LOGD("Unable to read client.");
             return -1;
         }
 
         if (packetBuffer[0] != 0x02 || packetBuffer[1] != 0x01)
         {
 
-            log_d("Invalid sensor in response");
+            LOGD("Invalid sensor in response");
             return -1;
         }
 
         int MODBUS_RTU_FRAME_LENGTH = length - PAYLOAD_HEADER;
         if (client.read(packetBuffer, MODBUS_RTU_FRAME_LENGTH) != MODBUS_RTU_FRAME_LENGTH)
         { // modbus rtu packet
-            log_d("Unable to read client.");
+            LOGD("Unable to read client.");
             return -1;
         }
 
         // for (int i = 0; i < MODBUS_RTU_FRAME_LENGTH; i++)
         // {
-        //     log_d("%02X ", packetBuffer[i]);
+        //     LOGD("%02X ", packetBuffer[i]);
         // }
 
         byte trailerBuffer[2];
         if (client.read(trailerBuffer, 2) != 2)
         {
             // read trailer
-            log_d("Unable to read client.");
+            LOGD("Unable to read client.");
         }
         String dump = "";
         for (int i = 0; i < MODBUS_RTU_FRAME_LENGTH; i++)
         {
             dump += String(packetBuffer[i], HEX) + " ";
         }
-        log_d("Request: %s", dump.c_str());
+        LOGD("Request: %s", dump.c_str());
         return MODBUS_RTU_FRAME_LENGTH;
     }
 
@@ -250,18 +251,18 @@ public:
                     }
                     else
                     {
-                        log_d("Read failed for 0x%04X", startReg);
+                        LOGD("Read failed for 0x%04X", startReg);
                     }
                 }
                 else
                 {
-                    log_d("Send request failed for 0x%04X", startReg);
+                    LOGD("Send request failed for 0x%04X", startReg);
                 }
                 disconnect();
             }
             else
             {
-                log_d("Failed to connect to dongle at %s", ip.toString().c_str());
+                LOGD("Failed to connect to dongle at %s", ip.toString().c_str());
             }
         }
         return false;
@@ -286,12 +287,12 @@ public:
                 char d[128] = {0};
                 udp.read(d, sizeof(d));
 
-                log_d("Received IP address: %s", String(d).c_str());
+                LOGD("Received IP address: %s", String(d).c_str());
                 int indexOfComma = String(d).indexOf(',');
                 String ip = String(d).substring(0, indexOfComma);
-                log_d("Parsed IP address: %s", ip.c_str());
+                LOGD("Parsed IP address: %s", ip.c_str());
                 dongleIP.fromString(ip);
-                log_d("Dongle IP: %s", dongleIP.toString());
+                LOGD("Dongle IP: %s", dongleIP.toString());
                 break;
             }
         }
@@ -328,7 +329,7 @@ public:
     {
         if (sn == 0)
         {
-            log_d("SN is zero, cannot send write request");
+            LOGD("SN is zero, cannot send write request");
             return false;
         }
 
@@ -359,12 +360,12 @@ public:
     {
         if (sn == 0)
         {
-            log_d("SN is zero, cannot send write request");
+            LOGD("SN is zero, cannot send write request");
             return false;
         }
         if (count == 0 || count > 123)
         {
-            log_d("Invalid register count: %d", count);
+            LOGD("Invalid register count: %d", count);
             return false;
         }
 
@@ -413,12 +414,12 @@ public:
     {
         if (sn == 0)
         {
-            log_d("SN is zero, cannot send write request");
+            LOGD("SN is zero, cannot send write request");
             return false;
         }
         if (byteCount == 0 || byteCount > 246 || (byteCount % 2) != 0)
         {
-            log_d("Invalid byte count: %d", byteCount);
+            LOGD("Invalid byte count: %d", byteCount);
             return false;
         }
 
@@ -547,7 +548,7 @@ private:
         {
             dump += String(v5Frame[i], HEX) + " ";
         }
-        log_d("Sending V5 write frame: %s", dump.c_str());
+        LOGD("Sending V5 write frame: %s", dump.c_str());
 
         // Send the frame
         size_t written = client.write(v5Frame, idx);
@@ -555,7 +556,7 @@ private:
         
         if (written != idx)
         {
-            log_d("Failed to send V5 write frame");
+            LOGD("Failed to send V5 write frame");
             return false;
         }
 
@@ -564,7 +565,7 @@ private:
         int respLen = readV5Response(responseBuffer, sizeof(responseBuffer));
         if (respLen < 0)
         {
-            log_d("Failed to read V5 write response");
+            LOGD("Failed to read V5 write response");
             return false;
         }
 
@@ -572,7 +573,7 @@ private:
         // Response control code should be 0x1510 (response to 0x4510 request)
         if (respLen < 11)
         {
-            log_d("V5 write response too short: %d bytes", respLen);
+            LOGD("V5 write response too short: %d bytes", respLen);
             return false;
         }
 
@@ -582,7 +583,7 @@ private:
         {
             dump += String(responseBuffer[i], HEX) + " ";
         }
-        log_d("V5 write response: %s", dump.c_str());
+        LOGD("V5 write response: %s", dump.c_str());
 
         // Check for Modbus exception in response
         // The Modbus RTU frame starts at byte 25 (after V5 header)
@@ -593,12 +594,12 @@ private:
             if (functionCode & 0x80)
             {
                 uint8_t exceptionCode = responseBuffer[27];
-                log_d("Modbus exception in write response: function=0x%02X, exception=%d", functionCode, exceptionCode);
+                LOGD("Modbus exception in write response: function=0x%02X, exception=%d", functionCode, exceptionCode);
                 return false;
             }
         }
 
-        log_d("V5 write request successful");
+        LOGD("V5 write request successful");
         return true;
     }
 
@@ -611,21 +612,21 @@ private:
         // Read start byte
         if (client.read(buffer, 1) != 1 || buffer[0] != 0xA5)
         {
-            log_d("Invalid V5 response start byte");
+            LOGD("Invalid V5 response start byte");
             return -1;
         }
 
         // Read length (2 bytes, little endian)
         if (client.read(buffer + 1, 2) != 2)
         {
-            log_d("Failed to read V5 response length");
+            LOGD("Failed to read V5 response length");
             return -1;
         }
         uint16_t length = buffer[1] | (buffer[2] << 8);
 
         if (length + 5 > bufferSize)
         {
-            log_d("V5 response too large: %d bytes", length + 5);
+            LOGD("V5 response too large: %d bytes", length + 5);
             return -1;
         }
 
@@ -633,7 +634,7 @@ private:
         int remaining = 8 + length + 2;
         if (client.read(buffer + 3, remaining) != remaining)
         {
-            log_d("Failed to read V5 response body");
+            LOGD("Failed to read V5 response body");
             return -1;
         }
 
@@ -641,7 +642,7 @@ private:
         int totalLen = 3 + remaining;
         if (buffer[totalLen - 1] != 0x15)
         {
-            log_d("Invalid V5 response end byte: 0x%02X", buffer[totalLen - 1]);
+            LOGD("Invalid V5 response end byte: 0x%02X", buffer[totalLen - 1]);
             return -1;
         }
 

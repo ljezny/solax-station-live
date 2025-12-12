@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "utils/RemoteLogger.hpp"
 #include <lvgl.h>
 #include "ui/ui.h"
 #include "ui/ui_IntelligenceSetup.h"
@@ -80,18 +81,18 @@ public:
     
     void onSaveClick() {
         IntelligenceSettings_t settings = readSettingsFromUI();
-        log_d("Saving intelligence settings: batCost=%.2f, minSoc=%d, maxSoc=%d, buyK=%.2f, buyQ=%.2f, sellK=%.2f, sellQ=%.2f, cap=%.1f, chg=%.1f, dis=%.1f",
+        LOGD("Saving intelligence settings: batCost=%.2f, minSoc=%d, maxSoc=%d, buyK=%.2f, buyQ=%.2f, sellK=%.2f, sellQ=%.2f, cap=%.1f, chg=%.1f, dis=%.1f",
               settings.batteryCostPerKwh, settings.minSocPercent, settings.maxSocPercent,
               settings.buyK, settings.buyQ, settings.sellK, settings.sellQ,
               settings.batteryCapacityKwh, settings.maxChargePowerKw, settings.maxDischargePowerKw);
         IntelligenceSettingsStorage::save(settings);
         resultSaved = true;
-        log_d("Intelligence settings saved");
+        LOGD("Intelligence settings saved");
     }
     
     void onCancelClick() {
         resultCancelled = true;
-        log_d("Intelligence setup cancelled");
+        LOGD("Intelligence setup cancelled");
     }
     
     void onResetClick() {
@@ -102,7 +103,7 @@ public:
         // Nastavit flag pro smazání predikcí (zpracuje app.cpp)
         requestClearPredictions = true;
         
-        log_d("Intelligence settings reset to defaults, predictions will be cleared");
+        LOGD("Intelligence settings reset to defaults, predictions will be cleared");
     }
     
     void onInputFocus(lv_obj_t* obj, lv_event_code_t code) {
@@ -208,7 +209,7 @@ private:
     }
     
     void loadSettingsToUI(const IntelligenceSettings_t& settings) {
-        log_d("Loading settings to UI: batCost=%.2f, minSoc=%d, maxSoc=%d",
+        LOGD("Loading settings to UI: batCost=%.2f, minSoc=%d, maxSoc=%d",
               settings.batteryCostPerKwh, settings.minSocPercent, settings.maxSocPercent);
         
         // Enable switch

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "../utils/RemoteLogger.hpp"
 #include <esp_heap_caps.h>
 #include "ElectricityPriceResult.hpp"
 #include "utils/NVSMutex.hpp"
@@ -132,7 +133,7 @@ public:
         ElectricityPriceResult_t result = getElectricityPriceInternal(provider, true);
         
         if (result.updated == 0) {
-            log_d("Tomorrow electricity prices not yet available");
+            LOGD("Tomorrow electricity prices not yet available");
             return false;
         }
         
@@ -141,7 +142,7 @@ public:
             outResult->prices[QUARTERS_OF_DAY + i] = result.prices[i];
         }
         outResult->hasTomorrowData = true;
-        log_d("Tomorrow electricity prices loaded successfully");
+        LOGD("Tomorrow electricity prices loaded successfully");
         
         return true;
     }
@@ -161,10 +162,10 @@ private:
         result.updated = 0;
         memset(result.currency, 0, CURRENCY_LENGTH);
         memset(result.energyUnit, 0, ENERGY_UNIT_LENGTH);
-        log_d("Loading electricity price data for provider %s", getProviderCaption(provider).c_str());
+        LOGD("Loading electricity price data for provider %s", getProviderCaption(provider).c_str());
         if(provider == NONE)
         {
-            log_d("No electricity price provider selected.");
+            LOGD("No electricity price provider selected.");
             return result;
         }
         for (int r = 0; r < 5; r++)
@@ -274,7 +275,7 @@ public:
     {
         NVSGuard guard;
         if (!guard.isLocked()) {
-            log_e("Failed to lock NVS mutex for reading provider");
+            LOGE("Failed to lock NVS mutex for reading provider");
             return NONE;
         }
         
@@ -289,7 +290,7 @@ public:
     {
         NVSGuard guard;
         if (!guard.isLocked()) {
-            log_e("Failed to lock NVS mutex for storing provider");
+            LOGE("Failed to lock NVS mutex for storing provider");
             return;
         }
         
@@ -303,7 +304,7 @@ public:
     {
         NVSGuard guard;
         if (!guard.isLocked()) {
-            log_e("Failed to lock NVS mutex for reading timezone");
+            LOGE("Failed to lock NVS mutex for reading timezone");
             return "CET-1CEST,M3.5.0/2,M10.5.0/3";
         }
         
@@ -318,7 +319,7 @@ public:
     {
         NVSGuard guard;
         if (!guard.isLocked()) {
-            log_e("Failed to lock NVS mutex for storing timezone");
+            LOGE("Failed to lock NVS mutex for storing timezone");
             return;
         }
         

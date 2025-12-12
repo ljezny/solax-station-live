@@ -6,6 +6,7 @@
 #include <cmath>  // Pro exp()
 #include "../Spot/ElectricityPriceResult.hpp"  // Pro QUARTERS_OF_DAY
 #include "NVSMutex.hpp"
+#include "RemoteLogger.hpp"
 
 /**
  * Predikce spotřeby na základě historie
@@ -95,12 +96,12 @@ public:
         hasData = (bool*)heap_caps_malloc(dataSize * sizeof(bool), MALLOC_CAP_SPIRAM);
         
         if (!consumption || !hasData) {
-            log_e("Failed to allocate ConsumptionPredictor in PSRAM!");
+            LOGE("Failed to allocate ConsumptionPredictor in PSRAM!");
             // Fallback na běžnou RAM
             if (!consumption) consumption = (float*)malloc(dataSize * sizeof(float));
             if (!hasData) hasData = (bool*)malloc(dataSize * sizeof(bool));
         } else {
-            log_d("ConsumptionPredictor allocated in PSRAM (%d bytes)", 
+            LOGD("ConsumptionPredictor allocated in PSRAM (%d bytes)", 
                   dataSize * (sizeof(float) + sizeof(bool)));
         }
         
@@ -223,7 +224,7 @@ public:
      * Posune historii týdnů - aktuální týden se stane minulým
      */
     void shiftWeekHistory() {
-        log_d("Shifting week history");
+        LOGD("Shifting week history");
         // Posuneme týden 0 na pozici 1 (starší data se ztratí)
         for (int day = 0; day < DAYS_PER_WEEK; day++) {
             for (int quarter = 0; quarter < QUARTERS_OF_DAY; quarter++) {
@@ -265,7 +266,7 @@ public:
         // Pomáhá rychleji vytvořit historii pro predikce
         propagateToLastWeek(day, quarter, consumptionWh);
         
-        log_d("Updated consumption for day %d, quarter %d: %.1f Wh (correction: %.1f)", 
+        LOGD("Updated consumption for day %d, quarter %d: %.1f Wh (correction: %.1f)", 
               day, quarter, consumptionWh, cumulativeError);
     }
     
@@ -290,7 +291,7 @@ public:
                 float newValue = CROSS_DAY_ALPHA * consumptionWh + (1 - CROSS_DAY_ALPHA) * oldValue;
                 consumptionAt(0, otherDay, quarter) = newValue;
                 
-                log_d("Cross-day propagation: day %d -> day %d, quarter %d: %.1f -> %.1f Wh",
+                LOGD("Cross-day propagation: day %d -> day %d, quarter %d: %.1f -> %.1f Wh",
                       sourceDay, otherDay, quarter, oldValue, newValue);
             }
         }
@@ -322,7 +323,7 @@ public:
                 float newValue = alpha * consumptionWh + (1.0f - alpha) * oldValue;
                 consumptionAt(0, day, targetQuarter) = newValue;
                 
-                log_d("Neighbor propagation: q%d -> q%d (±%d), alpha=%.2f: %.1f -> %.1f Wh",
+                LOGD("Neighbor propagation: q%d -> q%d (±%d), alpha=%.2f: %.1f -> %.1f Wh",
                       centerQuarter, targetQuarter, offset, alpha, oldValue, newValue);
             }
         }
@@ -340,14 +341,14 @@ public:
             float newValue = LAST_WEEK_ALPHA * consumptionWh + (1.0f - LAST_WEEK_ALPHA) * oldValue;
             consumptionAt(1, day, quarter) = newValue;
             
-            log_d("Last week propagation: week 0 -> week 1, day %d, q%d: %.1f -> %.1f Wh",
+            LOGD("Last week propagation: week 0 -> week 1, day %d, q%d: %.1f -> %.1f Wh",
                   day, quarter, oldValue, newValue);
         } else {
             // Pokud data pro minulý týden neexistují, vytvoříme je
             consumptionAt(1, day, quarter) = consumptionWh;
             hasDataAt(1, day, quarter) = true;
             
-            log_d("Last week created: day %d, q%d: %.1f Wh", day, quarter, consumptionWh);
+            LOGD("Last week created: day %d, q%d: %.1f Wh", day, quarter, consumptionWh);
         }
     }
     
@@ -368,11 +369,11 @@ public:
         // Reset korekce o půlnoci
         if (quarter < lastCorrectionQuarter) {
             cumulativeError = 0;
-            log_d("Consumption correction reset at midnight");
+            LOGD("Consumption correction reset at midnight");
         }
         lastCorrectionQuarter = quarter;
         
-        log_d("Consumption correction updated: actual=%.1f, predicted=%.1f, error=%.1f, cumError=%.1f",
+        LOGD("Consumption correction updated: actual=%.1f, predicted=%.1f, error=%.1f, cumError=%.1f",
               actualWh, basePrediction, error, cumulativeError);
     }
     
@@ -562,7 +563,7 @@ public:
      * Používá se při RESET tlačítku v UI
      */
     void clearAllData() {
-        log_i("Clearing all consumption prediction data");
+        LOGI("Clearing all consumption prediction data");
         
         // Reset všech dat na výchozí hodnoty
         for (int week = 0; week < WEEKS_HISTORY; week++) {
@@ -590,7 +591,7 @@ public:
             if (preferences.begin(NAMESPACE, false)) {
                 preferences.clear();
                 preferences.end();
-                log_d("Consumption prediction NVS data cleared");
+                LOGD("Consumption prediction NVS data cleared");
             }
         }
     }
@@ -635,7 +636,7 @@ public:
             }
             preferences.putInt("lastWeek", lastRecordedWeek);
             preferences.end();
-            log_d("Consumption history saved (compressed)");
+            LOGD("Consumption history saved (compressed)");
         }
     }
     
@@ -645,7 +646,7 @@ public:
     void loadFromPreferences() {
         NVSGuard guard;
         if (!guard.isLocked()) {
-            log_e("Failed to lock NVS mutex for loading consumption history");
+            LOGE("Failed to lock NVS mutex for loading consumption history");
             return;
         }
         
@@ -685,7 +686,7 @@ public:
             }
             lastRecordedWeek = preferences.getInt("lastWeek", -1);
             preferences.end();
-            log_d("Consumption history loaded, lastWeek=%d", lastRecordedWeek);
+            LOGD("Consumption history loaded, lastWeek=%d", lastRecordedWeek);
         }
     }
     

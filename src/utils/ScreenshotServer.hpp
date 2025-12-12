@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "RemoteLogger.hpp"
 #include <esp_http_server.h>
 #include <lvgl.h>
 #include "../gfx_conf.h"
@@ -271,11 +272,11 @@ public:
             };
             httpd_register_uri_handler(server, &screenshotUri);
 
-            log_i("Screenshot server started on port 80");
+            LOGI("Screenshot server started on port 80");
         }
         else
         {
-            log_e("Failed to start screenshot server");
+            LOGE("Failed to start screenshot server");
         }
     }
 
@@ -285,7 +286,7 @@ public:
         {
             httpd_stop(server);
             server = nullptr;
-            log_i("Screenshot server stopped");
+            LOGI("Screenshot server stopped");
         }
     }
 
@@ -348,7 +349,7 @@ private:
         uint8_t *rowBuffer = (uint8_t *)heap_caps_malloc(rowSize, MALLOC_CAP_DEFAULT);
         if (!rowBuffer)
         {
-            log_e("Failed to allocate row buffer");
+            LOGE("Failed to allocate row buffer");
             httpd_resp_send_chunk(req, NULL, 0);
             return ESP_FAIL;
         }
@@ -357,7 +358,7 @@ private:
         lgfx::rgb888_t *pixelBuffer = (lgfx::rgb888_t *)heap_caps_malloc(width * sizeof(lgfx::rgb888_t), MALLOC_CAP_DEFAULT);
         if (!pixelBuffer)
         {
-            log_e("Failed to allocate pixel buffer");
+            LOGE("Failed to allocate pixel buffer");
             free(rowBuffer);
             httpd_resp_send_chunk(req, NULL, 0);
             return ESP_FAIL;
@@ -403,7 +404,7 @@ private:
         }
         else
         {
-            log_w("Could not acquire LVGL mutex for screenshot");
+            LOGW("Could not acquire LVGL mutex for screenshot");
             // Send gray image as fallback
             memset(rowBuffer, 0x80, rowSize);
             for (int y = 0; y < height; y++)
@@ -418,7 +419,7 @@ private:
         // End chunked response
         httpd_resp_send_chunk(req, NULL, 0);
         
-        log_d("Screenshot sent successfully");
+        LOGD("Screenshot sent successfully");
         return ESP_OK;
     }
 };

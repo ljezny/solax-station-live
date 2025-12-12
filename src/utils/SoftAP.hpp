@@ -1,5 +1,6 @@
 #pragma once
 #include <Arduino.h>
+#include "RemoteLogger.hpp"
 #include "Shelly/Shelly.hpp"
 #include <mdns.h>
 
@@ -22,12 +23,12 @@ public:
     void start()
     {
         if (_isRunning) {
-            log_d("SoftAP already running");
+            LOGD("SoftAP already running");
             return;
         }
-        log_d("Starting SoftAP");
+        LOGD("Starting SoftAP");
         int channel = selectBestChannelForSoftAP();
-        log_d("SoftAP channel: %d", channel);
+        LOGD("SoftAP channel: %d", channel);
         //do NOT use a hidden SSID, it will not work for Shelly, some devices has connection issues with hidden SSID
         WiFi.softAP(getSSID().c_str(), getPassword().c_str(), channel, 0, MAX_SHELLY_PAIRS);
         _isRunning = true;
@@ -39,7 +40,7 @@ public:
         if (!_isRunning) {
             return;
         }
-        log_d("Stopping SoftAP");
+        LOGD("Stopping SoftAP");
         WiFi.softAPdisconnect(true);
         _isRunning = false;
     }
@@ -70,7 +71,7 @@ public:
 
         // No clients connected, check timeout
         if (millis() - _lastClientConnectedTime > SOFT_AP_IDLE_TIMEOUT_MS) {
-            log_d("SoftAP idle timeout - no clients for 5 minutes, stopping");
+            LOGD("SoftAP idle timeout - no clients for 5 minutes, stopping");
             stop();
             return true;
         }
@@ -93,7 +94,7 @@ private:
         // If connected to WiFi, use the same channel to avoid interference
         if (WiFi.status() == WL_CONNECTED) {
             int staChannel = WiFi.channel();
-            log_d("Using STA channel for SoftAP: %d", staChannel);
+            LOGD("Using STA channel for SoftAP: %d", staChannel);
             return staChannel;
         }
 
@@ -103,7 +104,7 @@ private:
         for (int i = 0; i < found; i++)
         {
             int channel = WiFi.channel(i);
-            log_d("Found network: %s, channel: %d", WiFi.SSID(i).c_str(), channel);
+            LOGD("Found network: %s, channel: %d", WiFi.SSID(i).c_str(), channel);
             if (channel > 0 && channel < 14)
             {
                 count[channel]++;
@@ -119,7 +120,7 @@ private:
                 bestChannel = i;
             }
         }
-        log_d("Best channel for SoftAP: %d", bestChannel);
+        LOGD("Best channel for SoftAP: %d", bestChannel);
         return bestChannel;
     }
 };

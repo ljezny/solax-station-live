@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "../../utils/RemoteLogger.hpp"
 #include "../../Protocol/ModbusTCP.hpp"
 
 class VictronDongleAPI
@@ -55,7 +56,6 @@ public:
             ip.fromString(ipAddress);
             if (!channel.connect(ip, 502))
             {
-                log_d("Failed to connect to Victron dongle");
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 channel.disconnect();
                 return inverterData;
@@ -65,7 +65,6 @@ public:
         {
             if (!channel.connect(String("venus.local"), 502))
             {
-                log_d("Failed to connect to Victron dongle");
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 channel.disconnect();
                 return inverterData;
@@ -80,7 +79,6 @@ public:
         {
             inverterData.status = DONGLE_STATUS_OK;
             inverterData.sn = String((char *)response.data);
-            log_d("SN: %s", inverterData.sn.c_str());
         }
 
         response = channel.sendModbusRequest(100, 0x03, 842, 2);
@@ -234,13 +232,10 @@ public:
             // Store inverter RTC time
             inverterData.inverterTime = time;
 
-            log_d("Time: %s", ctime(&time));
-            log_d("Day: %d", day);
             struct tm *tm = localtime(&time);
             int day = tm->tm_mday;
             if (this->day != day)
             {
-                log_d("Day changed, resetting counters");
                 this->day = day;
                 pvTotal = inverterData.pvTotal;
                 gridBuyTotal = inverterData.gridBuyTotal;
@@ -308,7 +303,6 @@ public:
             ip.fromString(ipAddress);
             if (!channel.connect(ip, 502))
             {
-                log_d("Failed to connect to Victron for setWorkMode");
                 channel.disconnect();
                 return false;
             }
@@ -317,13 +311,11 @@ public:
         {
             if (!channel.connect(String("venus.local"), 502))
             {
-                log_d("Failed to connect to Victron for setWorkMode");
                 channel.disconnect();
                 return false;
             }
         }
 
-        log_d("Setting Victron work mode to %d", mode);
         bool success = false;
 
         switch (mode)
@@ -359,7 +351,6 @@ public:
             break;
 
         default:
-            log_d("Unknown mode: %d", mode);
             break;
         }
 

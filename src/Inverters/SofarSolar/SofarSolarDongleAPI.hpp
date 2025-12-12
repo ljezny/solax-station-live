@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../Protocol/V5TCP.hpp"
+#include "../../utils/RemoteLogger.hpp"
 
 class SofarSolarDongleAPI
 {
@@ -107,9 +108,6 @@ private:
                                        timeinfo.tm_isdst = -1;
 
                                        inverterData.inverterTime = mktime(&timeinfo);
-                                       log_d("SofarSolar RTC: %04d-%02d-%02d %02d:%02d:%02d",
-                                             timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
-                                             timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
                                    });
     }
 
@@ -138,12 +136,10 @@ private:
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
         if (sn == 0)
         {
-            log_d("Invalid dongle SN for setWorkMode");
             return false;
         }
 
         channel.ensureIPAddress(ipAddress);
-        log_d("Setting SofarSolar work mode to %d", mode);
 
         bool success = false;
 
@@ -184,7 +180,6 @@ private:
             break;
 
         default:
-            log_d("Unknown mode: %d", mode);
             break;
         }
 
@@ -194,7 +189,6 @@ private:
     // Overload for compatibility - without dongleSN parameter
     bool setWorkMode(const String& ipAddress, InverterMode_t mode)
     {
-        log_d("setWorkMode called without dongleSN - not supported for SofarSolar");
         return false;
     }
 
@@ -217,11 +211,9 @@ private:
      */
     bool writeRegister(uint32_t sn, uint16_t addr, uint16_t value)
     {
-        log_d("Writing SofarSolar register 0x%04X = %d", addr, value);
         
         if (!channel.connect(channel.ip))
         {
-            log_d("Failed to connect for write");
             return false;
         }
         

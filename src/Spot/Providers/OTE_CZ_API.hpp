@@ -1,6 +1,7 @@
 #pragma once
 
 #include <WiFi.h>
+#include "../../utils/RemoteLogger.hpp"
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
@@ -60,7 +61,7 @@ private:
           strftime(buf, sizeof(buf), "%Y-%m-%d", localtime((time_t *)&timestamp));
           url += String(buf);
           url += "&amp;time_resolution=PT15M";
-          log_d("Fetching URL: %s", url.c_str());
+          LOGD("Fetching URL: %s", url.c_str());
           // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *client is
           HTTPClient https;
           https.useHTTP10(true);
@@ -91,11 +92,11 @@ private:
                     dataCount++;
                   }
                   
-                  log_d("OTE returned %d price values", dataCount);
+                  LOGD("OTE returned %d price values", dataCount);
                   
                   if (dataCount == 24) {
                     // Hodinová data - rozšíříme na čtvrthodiny (každá hodina = 4 čtvrthodiny)
-                    log_d("Converting hourly data to quarterly (24 -> 96)");
+                    LOGD("Converting hourly data to quarterly (24 -> 96)");
                     for (int hour = 0; hour < 24; hour++)
                     {
                       float hourlyPrice = doc["data"]["dataLine"][1]["point"][hour]["y"].as<float>() * exchangeRate / 1000.0f;
@@ -117,7 +118,7 @@ private:
                   }
                   else if (dataCount > 0) {
                     // Jiný počet hodnot - zkusíme použít co máme
-                    log_w("OTE returned unexpected number of values: %d", dataCount);
+                    LOGW("OTE returned unexpected number of values: %d", dataCount);
                     for (int i = 0; i < dataCount && i < QUARTERS_OF_DAY; i++)
                     {
                       result.prices[i].electricityPrice = doc["data"]["dataLine"][1]["point"][i]["y"].as<float>() * exchangeRate / 1000.0f;
@@ -125,25 +126,25 @@ private:
                     result.updated = time(NULL);
                   }
                   else {
-                    log_e("OTE returned no price data");
+                    LOGE("OTE returned no price data");
                   }
                 }
                 else
                 {
-                  log_d("ERROR: %s", error.c_str());
+                  LOGD("ERROR: %s", error.c_str());
                 }
               }
             }
             else
             {
-              log_d("ERROR: %s", https.errorToString(httpCode).c_str());
+              LOGD("ERROR: %s", https.errorToString(httpCode).c_str());
             }
 
             https.end();
           }
           else
           {
-            log_d("Unable to connect to URL: %s", url.c_str());
+            LOGD("Unable to connect to URL: %s", url.c_str());
           }
         }
         delete client;
@@ -192,14 +193,14 @@ private:
             }
             else
             {
-              log_d("ERROR: %s", https.errorToString(httpCode).c_str());
+              LOGD("ERROR: %s", https.errorToString(httpCode).c_str());
             }
 
             https.end();
           }
           else
           {
-            log_d("Unable to connect");
+            LOGD("Unable to connect");
           }
         }
         client->stop();

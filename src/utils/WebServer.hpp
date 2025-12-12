@@ -8,6 +8,7 @@
 #include "../Inverters/InverterResult.hpp"
 #include "../Spot/ElectricityPriceResult.hpp"
 #include "../webserver/icons.h"
+#include "RemoteLogger.hpp"
 
 // Forward declarations
 extern LGFX tft;
@@ -89,11 +90,11 @@ public:
             };
             httpd_register_uri_handler(server, &screenshotUri);
 
-            log_i("Web server started on port 80");
+            LOGI("Web server started on port 80");
         }
         else
         {
-            log_e("Failed to start web server");
+            LOGE("Failed to start web server");
         }
     }
 
@@ -103,7 +104,7 @@ public:
         {
             httpd_stop(server);
             server = nullptr;
-            log_i("Web server stopped");
+            LOGI("Web server stopped");
         }
     }
 

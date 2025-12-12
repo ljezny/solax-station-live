@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "RemoteLogger.hpp"
 #include <Preferences.h>
 #include <esp_heap_caps.h>
 #include "NVSMutex.hpp"
@@ -99,10 +100,10 @@ public:
             CHART_QUARTERS_TWO_DAYS * sizeof(SolarChartDataItem_t), MALLOC_CAP_SPIRAM);
         
         if (!chartData) {
-            log_e("Failed to allocate SolarChartDataProvider in PSRAM!");
+            LOGE("Failed to allocate SolarChartDataProvider in PSRAM!");
             chartData = (SolarChartDataItem_t*)malloc(CHART_QUARTERS_TWO_DAYS * sizeof(SolarChartDataItem_t));
         } else {
-            log_d("SolarChartDataProvider allocated in PSRAM (%d bytes)", 
+            LOGD("SolarChartDataProvider allocated in PSRAM (%d bytes)", 
                   CHART_QUARTERS_TWO_DAYS * sizeof(SolarChartDataItem_t));
         }
         
@@ -289,13 +290,13 @@ public:
         
         NVSGuard guard;
         if (!guard.isLocked()) {
-            log_e("Failed to lock NVS mutex for saving solar chart data");
+            LOGE("Failed to lock NVS mutex for saving solar chart data");
             return;
         }
         
         Preferences preferences;
         if (!preferences.begin(NAMESPACE, false)) {
-            log_e("Failed to open NVS for SolarChartData");
+            LOGE("Failed to open NVS for SolarChartData");
             return;
         }
         
@@ -329,7 +330,7 @@ public:
         preferences.putBytes("has", hasData, sizeof(hasData));
         
         preferences.end();
-        log_d("SolarChartData saved for quarter %d", currentQuarter);
+        LOGD("SolarChartData saved for quarter %d", currentQuarter);
     }
     
     /**
@@ -339,13 +340,13 @@ public:
     void loadFromPreferences() {
         NVSGuard guard;
         if (!guard.isLocked()) {
-            log_e("Failed to lock NVS mutex for loading solar chart data");
+            LOGE("Failed to lock NVS mutex for loading solar chart data");
             return;
         }
         
         Preferences preferences;
         if (!preferences.begin(NAMESPACE, true)) {
-            log_d("No SolarChartData in NVS");
+            LOGD("No SolarChartData in NVS");
             return;
         }
         
@@ -354,7 +355,7 @@ public:
         int currentDay = getCurrentDayOfYear();
         
         if (savedDay != currentDay) {
-            log_d("SolarChartData from different day (saved: %d, current: %d), ignoring", savedDay, currentDay);
+            LOGD("SolarChartData from different day (saved: %d, current: %d), ignoring", savedDay, currentDay);
             preferences.end();
             return;
         }
@@ -373,7 +374,7 @@ public:
         preferences.end();
         
         if (pvLen == 0 || loadLen == 0 || socLen == 0 || hasLen == 0) {
-            log_d("SolarChartData incomplete in NVS");
+            LOGD("SolarChartData incomplete in NVS");
             return;
         }
         
@@ -391,7 +392,7 @@ public:
         }
         
         lastRecordedDay = currentDay;
-        log_i("SolarChartData restored: %d quarters for day %d", restoredCount, currentDay);
+        LOGI("SolarChartData restored: %d quarters for day %d", restoredCount, currentDay);
     }
 };
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "utils/RemoteLogger.hpp"
 #include <lvgl.h>
 #include "ui/ui.h"
 #include "Inverters/WiFiDiscovery.hpp"
@@ -232,7 +233,7 @@ public:
         if (selectedIndex >= 0 && selectedIndex < LANG_COUNT)
         {
             Localization::setLanguage((Language_t)selectedIndex);
-            log_d("Language changed to: %d", selectedIndex);
+            LOGD("Language changed to: %d", selectedIndex);
         }
     }
 
@@ -306,7 +307,7 @@ public:
             int selectedIndex = lv_dropdown_get_selected(ui_wifiDropdown);
             if (selectedIndex >= 0 && selectedIndex < DONGLE_DISCOVERY_MAX_RESULTS)
             {
-                log_d("Inverter SN changed: %s", lv_textarea_get_text(ui_inverterSN));
+                LOGD("Inverter SN changed: %s", lv_textarea_get_text(ui_inverterSN));
                 dongleDiscovery.discoveries[selectedIndex].sn = lv_textarea_get_text(ui_inverterSN);
             }
         }
@@ -345,7 +346,7 @@ static void spotRollerHandler(lv_event_t *e)
     if (code == LV_EVENT_VALUE_CHANGED)
     {
         int selectedIndex = lv_dropdown_get_selected(ui_spotProviderDropdown);
-        log_d("Spot provider changed to index: %d", selectedIndex);
+        LOGD("Spot provider changed to index: %d", selectedIndex);
         ElectricityPriceLoader priceLoader;
         priceLoader.storeElectricityPriceProvider((ElectricityPriceProvider_t)selectedIndex);
     }
@@ -359,7 +360,7 @@ static void timezoneRollerHandler(lv_event_t *e)
         int selectedIndex = lv_dropdown_get_selected(ui_timeZoneDropdown);
         if (selectedIndex >= 0 && selectedIndex < TIMEZONE_COUNT)
         {
-            log_d("Timezone changed to index: %d", selectedIndex);
+            LOGD("Timezone changed to index: %d", selectedIndex);
             ElectricityPriceLoader priceLoader;
             priceLoader.storeTimeZone(String(TIMEZONES[selectedIndex].tz));
         }

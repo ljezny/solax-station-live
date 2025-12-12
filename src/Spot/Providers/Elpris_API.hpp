@@ -1,6 +1,7 @@
 #pragma once
 
 #include <WiFi.h>
+#include "../../utils/RemoteLogger.hpp"
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>
@@ -61,14 +62,14 @@ public:
           }
           else
           {
-            log_d("ERROR: %s", https.errorToString(httpCode).c_str());
+            LOGD("ERROR: %s", https.errorToString(httpCode).c_str());
           }
 
           https.end();
         }
         else
         {
-          log_d("Unable to connect to URL: %s", url.c_str());
+          LOGD("Unable to connect to URL: %s", url.c_str());
         }
       }
       client->stop();

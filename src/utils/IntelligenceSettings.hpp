@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "RemoteLogger.hpp"
 #include <Preferences.h>
 #include "NVSMutex.hpp"
 
@@ -74,7 +75,7 @@ public:
         
         NVSGuard guard;
         if (!guard.isLocked()) {
-            log_e("Failed to lock NVS mutex for loading intelligence settings");
+            LOGE("Failed to lock NVS mutex for loading intelligence settings");
             return settings;
         }
         
@@ -95,7 +96,7 @@ public:
             preferences.end();
         }
         
-        log_d("Intelligence settings loaded: enabled=%d, batCost=%.2f, buyK=%.2f, buyQ=%.2f, sellK=%.2f, sellQ=%.2f, minSoc=%d, maxSoc=%d, cap=%.1f, chg=%.1f, dis=%.1f",
+        LOGD("Intelligence settings loaded: enabled=%d, batCost=%.2f, buyK=%.2f, buyQ=%.2f, sellK=%.2f, sellQ=%.2f, minSoc=%d, maxSoc=%d, cap=%.1f, chg=%.1f, dis=%.1f",
               settings.enabled, settings.batteryCostPerKwh, settings.buyK, settings.buyQ, 
               settings.sellK, settings.sellQ, settings.minSocPercent, settings.maxSocPercent,
               settings.batteryCapacityKwh, settings.maxChargePowerKw, settings.maxDischargePowerKw);
@@ -109,7 +110,7 @@ public:
     static void save(const IntelligenceSettings_t& settings) {
         NVSGuard guard;
         if (!guard.isLocked()) {
-            log_e("Failed to lock NVS mutex for saving intelligence settings");
+            LOGE("Failed to lock NVS mutex for saving intelligence settings");
             return;
         }
         
@@ -134,12 +135,12 @@ public:
             preferences.end();
             
             if (ok) {
-                log_d("Intelligence settings saved");
+                LOGD("Intelligence settings saved");
             } else {
-                log_e("Failed to save some intelligence settings");
+                LOGE("Failed to save some intelligence settings");
             }
         } else {
-            log_e("Failed to open preferences for writing");
+            LOGE("Failed to open preferences for writing");
         }
     }
     
@@ -163,11 +164,11 @@ public:
      * @return true pokud byly hodnoty aktualizovány
      */
     static bool updateFromInverter(uint16_t batteryCapacityWh) {
-        log_d("updateFromInverter called: capacity=%d Wh", batteryCapacityWh);
+        LOGD("updateFromInverter called: capacity=%d Wh", batteryCapacityWh);
         
         // Pouze pokud máme nějakou hodnotu kapacity ze střídače
         if (batteryCapacityWh == 0) {
-            log_d("No inverter capacity available, skipping update");
+            LOGD("No inverter capacity available, skipping update");
             return false;
         }
         
@@ -178,7 +179,7 @@ public:
         if (abs(settings.batteryCapacityKwh - newCapacity) > 0.1f) {
             settings.batteryCapacityKwh = newCapacity;
             changed = true;
-            log_d("Updated battery capacity from inverter: %.1f kWh", newCapacity);
+            LOGD("Updated battery capacity from inverter: %.1f kWh", newCapacity);
         }
         
         if (changed) {

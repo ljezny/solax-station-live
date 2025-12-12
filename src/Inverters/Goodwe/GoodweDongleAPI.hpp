@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "../../utils/RemoteLogger.hpp"
 #include <algorithm>
 #include "../../Protocol/ModbusRTU.hpp"
 #include "../../Protocol/ModbusTCP.hpp"
@@ -56,15 +57,12 @@ public:
         }
         else
         {
-            log_d("No IP address available for setWorkMode");
             return false;
         }
 
-        log_d("Setting GoodWe work mode to %d at %s", mode, targetIp.toString().c_str());
 
         if (!rtuChannel.connect())
         {
-            log_d("Failed to connect for setWorkMode");
             return false;
         }
 
@@ -93,7 +91,6 @@ public:
             break;
 
         default:
-            log_d("Unknown mode: %d", mode);
             break;
         }
 
@@ -209,7 +206,6 @@ private:
             }
         
         default:
-            log_d("Unknown GoodWe work_mode: %d", goodweMode);
             return INVERTER_MODE_UNKNOWN;
         }
     }
@@ -219,7 +215,6 @@ private:
      */
     bool writeWorkModeRegister(IPAddress targetIp, uint16_t workMode)
     {
-        log_d("Writing work_mode register: %d", workMode);
         for (int retry = 0; retry < RETRY_COUNT; retry++)
         {
             if (rtuChannel.writeSingleRegister(targetIp, GOODWE_UDP_PORT, GOODWE_UNIT_ID, REG_WORK_MODE, workMode))
@@ -228,7 +223,6 @@ private:
             }
             delay(retry * 200);
         }
-        log_d("Failed to write work_mode register after %d retries", RETRY_COUNT);
         return false;
     }
 
@@ -240,7 +234,6 @@ private:
      */
     bool setEcoModeCharge(IPAddress targetIp, int powerPercent, int targetSoc)
     {
-        log_d("Setting Eco Mode V2 CHARGE at %d%%, target SOC=%d%%", powerPercent, targetSoc);
         
         // Power is negative for charge, encoded as signed int16
         int16_t powerValue = -abs(powerPercent);  // Negative for charge
@@ -277,7 +270,6 @@ private:
      */
     bool setEcoModeDischarge(IPAddress targetIp, int powerPercent, int minSoc)
     {
-        log_d("Setting Eco Mode V2 DISCHARGE at %d%%, min SOC=%d%%", powerPercent, minSoc);
         
         // Power is positive for discharge
         uint16_t powerEncoded = abs(powerPercent);
@@ -314,7 +306,6 @@ private:
             snprintf(buf, sizeof(buf), "%02X ", ecoModeData[i]);
             dataHex += buf;
         }
-        log_d("Writing eco_mode_1 V2 data at register %d: %s", REG_ECO_MODE_V2_1, dataHex.c_str());
         
         // Step 1: Write eco_mode_1 V2 (6 registers = 12 bytes) at register 47547
         bool success = false;
@@ -331,7 +322,6 @@ private:
         
         if (!success)
         {
-            log_d("Failed to write eco_mode_1 V2");
             return false;
         }
         
@@ -371,11 +361,9 @@ private:
         bool workModeSuccess = writeWorkModeRegister(targetIp, GOODWE_WORK_MODE_ECO);
         if (!workModeSuccess)
         {
-            log_d("Failed to set work_mode to Eco");
             return false;
         }
         
-        log_d("Eco mode V2 activated successfully");
         return true;
     }
 
@@ -399,10 +387,8 @@ private:
         }
 
         InverterData_t inverterData{};
-        log_d("Connecting to dongle...%s", ip.toString().c_str());
         if (rtuChannel.connect())
         {
-            log_d("Connected.");
 
             for (int i = 0; i < RETRY_COUNT; i++)
             {
@@ -439,10 +425,8 @@ private:
                     inverterData.batteryDischargedToday = response.readUInt16(35100 + 111) / 10.0;
                    
                     int day = (response.readUInt16(35100 + 1) >> 8) & 0xFF;
-                    log_d("Day: %d", day);
                     if (this->day != day)
                     {
-                        log_d("Day changed, resetting counters");
                         this->day = day;
                         gridBuyTotal = 0;
                         gridSellTotal = 0;
@@ -460,9 +444,6 @@ private:
                     timeinfo.tm_sec = 0;
                     timeinfo.tm_isdst = -1;
                     inverterData.inverterTime = mktime(&timeinfo);
-                    log_d("GoodWe RTC: %04d-%02d-%02d %02d:%02d:%02d",
-                          timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
-                          timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 
                     break;
                 }
@@ -475,7 +456,6 @@ private:
                 if (response.isValid)
                 {
                     inverterData.sn = response.readString(35003, 8);
-                    log_d("Dongle SN: %s", inverterData.sn.c_str());
                     break;
                 }
                 delay(i * 300);
@@ -495,8 +475,6 @@ private:
                     
                     inverterData.loadPower -= (inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
                     
-                    log_d("Grid sell total: %f", inverterData.gridSellTotal);
-                    log_d("Grid buy total: %f", inverterData.gridBuyTotal);
                     if (gridBuyTotal == 0)
                     {
                         gridBuyTotal = inverterData.gridBuyTotal;
@@ -535,7 +513,6 @@ private:
                 if (response.isValid)
                 {
                     workMode = response.readUInt16(47000);
-                    log_d("GoodWe work_mode: %d", workMode);
                     break;
                 }
                 delay(i * 300);
@@ -560,7 +537,6 @@ private:
                         ecoModePower = (int16_t)((response.data[6] << 8) | response.data[7]);  // Bytes 6-7 = power
                         uint16_t soc = (response.data[8] << 8) | response.data[9];  // Bytes 8-9 = SOC
                         ecoModeEnabled = (onOff != 0 && onOff != 85);  // 0xFF/-1 = enabled, 0 = disabled, 85 = NOT_SET
-                        log_d("GoodWe eco_mode_1 V2: power=%d, on_off=%d, soc=%d, enabled=%d", ecoModePower, onOff, soc, ecoModeEnabled);
                         break;
                     }
                     delay(i * 300);
@@ -568,7 +544,6 @@ private:
             }
             
             inverterData.inverterMode = goodweModeToInverterMode(workMode, ecoModePower, ecoModeEnabled);
-            log_d("GoodWe InverterMode: %d", inverterData.inverterMode);
         }
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
         rtuChannel.disconnect();
@@ -576,7 +551,6 @@ private:
 
         if (inverterData.status != DONGLE_STATUS_OK)
         {
-            log_d("Failed to read data from dongle, status: %d", inverterData.status);
             ip = IPAddress(0, 0, 0, 0);
         }
 
@@ -601,12 +575,9 @@ private:
                 char d[128] = {0};
                 udp.read(d, sizeof(d));
 
-                log_d("Received IP address: %s", String(d).c_str());
                 int indexOfComma = String(d).indexOf(',');
                 String ip = String(d).substring(0, indexOfComma);
-                log_d("Parsed IP address: %s", ip.c_str());
                 dongleIP.fromString(ip);
-                log_d("Dongle IP: %s", dongleIP.toString());
                 break;
             }
         }

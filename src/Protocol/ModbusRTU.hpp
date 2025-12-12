@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "../utils/RemoteLogger.hpp"
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <CRC.h>
@@ -49,7 +50,7 @@ public:
         udp.clear();
         if (!udp.beginPacket(ipAddress, port))
         {
-            log_d("Failed to begin packet");
+            LOGD("Failed to begin packet");
             return response;
         }
 
@@ -64,7 +65,7 @@ public:
 
         if (!udp.endPacket())
         {
-            log_d("Failed to send packet");
+            LOGD("Failed to send packet");
             return response;
         }
 
@@ -72,31 +73,31 @@ public:
 
         if (!awaitPacket(5000))
         {
-            log_d("Response timeout");
+            LOGD("Response timeout");
             return response;
         }
 
         int respLen = udp.read(response.data, RX_BUFFER_SIZE);
         if (respLen < 7)
         {
-            log_d("Invalid response length: %d", len);
+            LOGD("Invalid response length: %d", len);
             memset(response.data, 0, RX_BUFFER_SIZE);
             udp.clear();
             return response;
         }
         
-        log_d("Request address: %d", addr);
+        LOGD("Request address: %d", addr);
         String dataHex = "";
         for (int i = 0; i < respLen; i++) {
             dataHex += String(response.data[i], HEX);
             dataHex += " ";
         }
-        log_d("Response data: %s", dataHex.c_str());
+        LOGD("Response data: %s", dataHex.c_str());
 
         c = calcCRC16(response.data + 2, respLen - 2, 0x8005, 0xFFFF, 0, true, true);
         if (c != 0)
         {
-            log_d("CRC error: %04X", c);
+            LOGD("CRC error: %04X", c);
             memset(response.data, 0, RX_BUFFER_SIZE);
             udp.clear();
             return response;
@@ -107,9 +108,9 @@ public:
         
         response.address = addr;
         response.length = response.data[4];
-        log_d("Response: unit=%d, functionCode=%d, address=%d, length=%d", response.unit, response.functionCode, response.address, response.length);
+        LOGD("Response: unit=%d, functionCode=%d, address=%d, length=%d", response.unit, response.functionCode, response.address, response.length);
         if(response.length != len * 2) {
-            log_d("Warning: Expected length %d, but got %d", len * 2, response.length);
+            LOGD("Warning: Expected length %d, but got %d", len * 2, response.length);
             return response;
         }
         // shift data N bytes (header)
@@ -120,7 +121,7 @@ public:
         }
         response.length -= skip;
         response.isValid = true;
-        log_d("Received response: %d bytes", response.length);
+        LOGD("Received response: %d bytes", response.length);
         return response;
     }
 
@@ -140,7 +141,7 @@ public:
         udp.clear();
         if (!udp.beginPacket(ipAddress, port))
         {
-            log_d("Failed to begin packet for write");
+            LOGD("Failed to begin packet for write");
             return false;
         }
 
@@ -157,13 +158,13 @@ public:
 
         if (!udp.endPacket())
         {
-            log_d("Failed to send write packet");
+            LOGD("Failed to send write packet");
             return false;
         }
 
         if (!awaitPacket(5000))
         {
-            log_d("Write response timeout");
+            LOGD("Write response timeout");
             return false;
         }
 
@@ -171,7 +172,7 @@ public:
         int respLen = udp.read(response, sizeof(response));
         if (respLen < 8)
         {
-            log_d("Invalid write response length: %d", respLen);
+            LOGD("Invalid write response length: %d", respLen);
             return false;
         }
 
@@ -181,7 +182,7 @@ public:
             dataHex += String(response[i], HEX);
             dataHex += " ";
         }
-        log_d("Write response: %s", dataHex.c_str());
+        LOGD("Write response: %s", dataHex.c_str());
 
         // Check for exception response (function code with high bit set)
         // Response format for RTU: [header bytes][unit][function][addr_hi][addr_lo][value_hi][value_lo][crc_lo][crc_hi]
@@ -190,17 +191,17 @@ public:
         
         if (response[offset + 1] == (0x06 | 0x80))
         {
-            log_d("Modbus write exception: code %d", response[offset + 2]);
+            LOGD("Modbus write exception: code %d", response[offset + 2]);
             return false;
         }
 
         if (response[offset + 1] != 0x06)
         {
-            log_d("Invalid function code in write response: expected 0x06, got 0x%02X", response[offset + 1]);
+            LOGD("Invalid function code in write response: expected 0x06, got 0x%02X", response[offset + 1]);
             return false;
         }
 
-        log_d("Successfully wrote value %d to register 0x%04X", value, addr);
+        LOGD("Successfully wrote value %d to register 0x%04X", value, addr);
         return true;
     }
 
@@ -220,7 +221,7 @@ public:
     {
         if (byteCount == 0 || byteCount > 246 || (byteCount % 2) != 0)
         {
-            log_d("Invalid byte count: %d", byteCount);
+            LOGD("Invalid byte count: %d", byteCount);
             return false;
         }
 
@@ -229,7 +230,7 @@ public:
         udp.clear();
         if (!udp.beginPacket(ipAddress, port))
         {
-            log_d("Failed to begin packet for write multiple");
+            LOGD("Failed to begin packet for write multiple");
             return false;
         }
 
@@ -254,13 +255,13 @@ public:
 
         if (!udp.endPacket())
         {
-            log_d("Failed to send write multiple packet");
+            LOGD("Failed to send write multiple packet");
             return false;
         }
 
         if (!awaitPacket(5000))
         {
-            log_d("Write multiple response timeout");
+            LOGD("Write multiple response timeout");
             return false;
         }
 
@@ -274,14 +275,14 @@ public:
             snprintf(buf, sizeof(buf), "%02X ", response[i]);
             dataHex += buf;
         }
-        log_d("Write multiple response (%d bytes): %s", respLen, dataHex.c_str());
+        LOGD("Write multiple response (%d bytes): %s", respLen, dataHex.c_str());
         
         // GoodWe may return shorter response (7 bytes without leading unit ID in some cases)
         // Minimum valid response: FC(1) + Addr(2) + RegCount(2) + CRC(2) = 7 bytes
         // Or with Unit ID: Unit(1) + FC(1) + Addr(2) + RegCount(2) + CRC(2) = 8 bytes
         if (respLen < 7)
         {
-            log_d("Invalid write multiple response length: %d (expected >= 7)", respLen);
+            LOGD("Invalid write multiple response length: %d (expected >= 7)", respLen);
             return false;
         }
 
@@ -298,17 +299,17 @@ public:
 
         if (response[offset + 1] == (0x10 | 0x80))
         {
-            log_d("Modbus write multiple exception: code %d", response[offset + 2]);
+            LOGD("Modbus write multiple exception: code %d", response[offset + 2]);
             return false;
         }
 
         if (response[offset + 1] != 0x10)
         {
-            log_d("Invalid function code in write multiple response: expected 0x10, got 0x%02X", response[offset + 1]);
+            LOGD("Invalid function code in write multiple response: expected 0x10, got 0x%02X", response[offset + 1]);
             return false;
         }
 
-        log_d("Successfully wrote %d registers starting at 0x%04X", regCount, startAddr);
+        LOGD("Successfully wrote %d registers starting at 0x%04X", regCount, startAddr);
         return true;
     }
 };

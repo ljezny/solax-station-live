@@ -2,6 +2,7 @@
 #define PSE_PL_API_h
 
 #include <WiFi.h>
+#include "../../utils/RemoteLogger.hpp"
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
@@ -36,7 +37,7 @@ public:
         // https://api.raporty.pse.pl/api/rce-pln?$filter=business_date%20eq%20%272024-11-14%27
 
         String url = "https://api.raporty.pse.pl/api/rce-pln?$filter=business_date%20eq%20%27" + fromDay + "%27";
-        log_d("Fetching URL: %s", url.c_str());
+        LOGD("Fetching URL: %s", url.c_str());
         // Add a scoping block for HTTPClient https to make sure it is destroyed before WiFiClientSecure *client is
         HTTPClient https;
         if (https.begin(*client, url))
@@ -63,20 +64,20 @@ public:
               }
               else
               {
-                log_d("deserializeJson() failed: %s", error.c_str());
+                LOGD("deserializeJson() failed: %s", error.c_str());
               }
             }
           }
           else
           {
-            log_d("ERROR: %s", https.errorToString(httpCode).c_str());
+            LOGD("ERROR: %s", https.errorToString(httpCode).c_str());
           }
 
           https.end();
         }
         else
         {
-          log_d("Unable to connect.");
+          LOGD("Unable to connect.");
         }
       }
       client->stop();
@@ -84,7 +85,7 @@ public:
     }
     else
     {
-      log_d("Unable to create client.");
+      LOGD("Unable to create client.");
     }
 
     return result;

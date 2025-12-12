@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "RemoteLogger.hpp"
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 
@@ -39,7 +40,7 @@ private:
         if (!initialized) {
             mutex = xSemaphoreCreateRecursiveMutex();  // Rekurzivní mutex - umožňuje vnořené zamykání
             initialized = true;
-            log_d("NVSMutex initialized (recursive)");
+            LOGD("NVSMutex initialized (recursive)");
         }
     }
     
@@ -51,7 +52,7 @@ public:
     static void setWaitDMACallback(void (*callback)()) {
         init();
         waitDMACallback = callback;
-        log_d("NVSMutex DMA callback set");
+        LOGD("NVSMutex DMA callback set");
     }
     
     /**
@@ -75,7 +76,7 @@ public:
             return true;
         }
         
-        log_w("NVSMutex lock timeout!");
+        LOGW("NVSMutex lock timeout!");
         return false;
     }
     

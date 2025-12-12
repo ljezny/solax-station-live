@@ -1,5 +1,6 @@
 #pragma once
 #include <WiFi.h>
+#include "../utils/RemoteLogger.hpp"
 #include <WiFiMulti.h>
 
 #include "WallboxResult.hpp"
@@ -125,7 +126,7 @@ private:
                 mdns_result_t *r = results;
                 while (r)
                 {
-                    log_d("Found dongle: %s", r->hostname);
+                    LOGD("Found dongle: %s", r->hostname);
                     ip = r->addr->addr.u_addr.ip4.addr;
 
                     // SN is in the TXT record
@@ -134,7 +135,7 @@ private:
                         if (strcmp(r->txt[i].key, "SN") == 0)
                         {
                             sn = String((const char *)r->txt[i].value, r->txt_value_len[i]);
-                            log_d("Found dongle SN: %s", sn.c_str());
+                            LOGD("Found dongle SN: %s", sn.c_str());
                         }
                     }
 
@@ -146,12 +147,12 @@ private:
             }
             else
             {
-                log_d("No results found.");
+                LOGD("No results found.");
             }
         }
         else
         {
-            log_d("MDNS Query failed with error: %s", String(err).c_str());
+            LOGD("MDNS Query failed with error: %s", String(err).c_str());
         }
 
         mdns_free();
@@ -172,7 +173,7 @@ private:
                 if (httpCode == HTTP_CODE_OK)
                 {
                     String payload = client.getString();
-                    log_d("Wallbox payload: %s", payload.c_str());
+                    LOGD("Wallbox payload: %s", payload.c_str());
                     DynamicJsonDocument doc(4096); // Adjust size as needed
                     DeserializationError error = deserializeJson(doc, payload);
                     if (!error)
@@ -190,7 +191,7 @@ private:
                             7: SuspendedEV
                             8: SuspendedEVSE*/
                             int deviceState = doc["Data"][0].as<int>();
-                            log_d("Device state: %d", deviceState);
+                            LOGD("Device state: %d", deviceState);
                             result.evConnected = deviceState == 1 || deviceState == 2 || deviceState == 3;
 
                             result.chargingPower = doc["Data"][11].as<int>();
@@ -210,23 +211,23 @@ private:
                         }
                         else
                         {
-                            log_d("No data found in response.");
+                            LOGD("No data found in response.");
                         }
                     }
                     else
                     {
-                        log_d("JSON deserialization failed: %s", error.c_str());
+                        LOGD("JSON deserialization failed: %s", error.c_str());
                     }
                 }
                 else
                 {
-                    log_d("HTTP GET failed with code: %d", httpCode);
+                    LOGD("HTTP GET failed with code: %d", httpCode);
                 }
                 client.end();
             }
             else
             {
-                log_d("Failed to connect to wallbox dongle at %s", wallboxInfo.ip.toString().c_str());
+                LOGD("Failed to connect to wallbox dongle at %s", wallboxInfo.ip.toString().c_str());
             }
         }
         return result;
@@ -245,7 +246,7 @@ private:
                 if (httpCode == HTTP_CODE_OK)
                 {
                     String payload = client.getString();
-                    log_d("Wallbox set payload: %s", payload.c_str());
+                    LOGD("Wallbox set payload: %s", payload.c_str());
                     DynamicJsonDocument doc(4*1024); // Adjust size as needed
                     DeserializationError error = deserializeJson(doc, payload);
                     if (!error)
@@ -256,18 +257,18 @@ private:
                     }
                     else
                     {
-                        log_d("JSON deserialization failed: %s", error.c_str());
+                        LOGD("JSON deserialization failed: %s", error.c_str());
                     }
                 }
                 else
                 {
-                    log_d("HTTP GET failed with code: %d", httpCode);
+                    LOGD("HTTP GET failed with code: %d", httpCode);
                 }
                 client.end();
             }
             else
             {
-                log_d("Failed to connect to wallbox dongle at %s", wallboxInfo.ip.toString().c_str());
+                LOGD("Failed to connect to wallbox dongle at %s", wallboxInfo.ip.toString().c_str());
             }
         }
         return result;
@@ -276,7 +277,7 @@ private:
     bool setRegValue(int reg, int value)
     {
         bool result = false;
-        log_d("Setting reg %d to value %d", reg, value);
+        LOGD("Setting reg %d to value %d", reg, value);
         if (wallboxInfo.ip != IPAddress(0, 0, 0, 0))
         {
             HTTPClient client;
@@ -284,23 +285,23 @@ private:
             {
                 //optType=setReg&pwd=SQTGDYPBXK&data={"num":1,"Data":[{"reg":2,"val":"3"}]}
                 String postData = "optType=setReg&pwd=" + wallboxInfo.sn + "&data={\"num\":1,\"Data\":[{\"reg\":" + String(reg) + ",\"val\":\"" + String(value) + "\"}]}";
-                log_d("POST data: %s", postData.c_str());
+                LOGD("POST data: %s", postData.c_str());
                 int httpCode = client.POST(postData);
                 if (httpCode == HTTP_CODE_OK)
                 {
                     String payload = client.getString();
                     result = payload.startsWith("Y:code");
-                    log_d("Set reg result: %s", payload.c_str());
+                    LOGD("Set reg result: %s", payload.c_str());
                 }
                 else
                 {
-                    log_d("HTTP POST failed with code: %d", httpCode);
+                    LOGD("HTTP POST failed with code: %d", httpCode);
                 }
                 client.end();
             }
             else
             {
-                log_d("Failed to connect to wallbox dongle at %s", wallboxInfo.ip.toString().c_str());
+                LOGD("Failed to connect to wallbox dongle at %s", wallboxInfo.ip.toString().c_str());
             }
         }
         return result;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Inverters/InverterResult.hpp"
+#include "RemoteLogger.hpp"
 #include "gfx_conf.h"
 
 #define BACKLIGHT_TOUCH_TIMEOUT 15000
@@ -62,17 +63,17 @@ public:
         {
             if (pvPower > 2000)
             {
-                log_d("Setting brightness to 100%");
+                LOGD("Setting brightness to 100%");
                 brightness = 255;
             }
             else if (pvPower > 0)
             {
-                log_d("Setting brightness to 80%");
+                LOGD("Setting brightness to 80%");
                 brightness = 192;
             }
             else
             {
-                log_d("Setting brightness to 20%");
+                LOGD("Setting brightness to 20%");
                 brightness = 16;
             }
         }

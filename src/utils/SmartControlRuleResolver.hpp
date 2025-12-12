@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "RemoteLogger.hpp"
 #include "MedianPowerSampler.hpp"
 typedef enum
 {
@@ -35,67 +36,67 @@ public:
         int soc = medianPowerSampler.getSOC();
 
         bool hasBattery = medianPowerSampler.getSOC() != 0 && medianPowerSampler.getMedianBatteryPower() != 0;
-        log_d("SOC: %d, Median battery power: %d, Median feed in power: %d, Median PV power: %d, Median load power: %d", soc, batteryPower, feedInPower, pvPower, loadPower);
+        LOGD("SOC: %d, Median battery power: %d, Median feed in power: %d, Median PV power: %d, Median load power: %d", soc, batteryPower, feedInPower, pvPower, loadPower);
 
         medianPowerSampler.resetSamples();
 
         if (hasBattery && soc < 80)
         {
-            log_d("Battery under limit empty, deactivating");
+            LOGD("Battery under limit empty, deactivating");
             return SMART_CONTROL_FULL_OFF;
         }
 
         if (batteryPower < -disableFullPowerTreshold)
         {
-            log_d("Battery discharging, deactivating");
+            LOGD("Battery discharging, deactivating");
             return SMART_CONTROL_FULL_OFF;
         }
 
         if (feedInPower < -disableFullPowerTreshold)
         {
-            log_d("Grid power, deactivating");
+            LOGD("Grid power, deactivating");
             return SMART_CONTROL_FULL_OFF;
         }
 
         if (batteryPower < -disablePartialPowerTreshold)
         {
-            log_d("Battery discharging, partial deactivating");
+            LOGD("Battery discharging, partial deactivating");
             return SMART_CONTROL_PARTIAL_OFF;
         }
 
         if (feedInPower < -disablePartialPowerTreshold)
         {
-            log_d("Grid power, partial deactivating");
+            LOGD("Grid power, partial deactivating");
             return SMART_CONTROL_PARTIAL_OFF;
         }
 
         if (soc >= 95)
         {
-            log_d("Battery full, activating");
+            LOGD("Battery full, activating");
             return SMART_CONTROL_FULL_ON;
         }
 
         if (soc >= 85 && batteryPower > enablePowerTreshold)
         {
-            log_d("Battery almost full and charging, activating");
+            LOGD("Battery almost full and charging, activating");
             return SMART_CONTROL_FULL_ON;
         }
 
         if (soc >= 90 && batteryPower > enablePartialPowerTreshold)
         {
-            log_d("Battery almost full and charging, partial activating");
+            LOGD("Battery almost full and charging, partial activating");
             return SMART_CONTROL_PARTIAL_ON;
         }
 
         if (feedInPower > enablePowerTreshold)
         {
-            log_d("Feeding in power, activating");
+            LOGD("Feeding in power, activating");
             return SMART_CONTROL_FULL_ON;
         }
 
         if (feedInPower > enablePartialPowerTreshold)
         {
-            log_d("Feeding in power, partial activating");
+            LOGD("Feeding in power, partial activating");
             return SMART_CONTROL_PARTIAL_ON;
         }
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../Protocol/ModbusTCP.hpp"
+#include "../../utils/RemoteLogger.hpp"
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include "../InverterResult.hpp"
@@ -23,7 +24,6 @@ public:
         if (!isSupportedDongle)
         {
             inverterData.status = DONGLE_STATUS_UNSUPPORTED_DONGLE;
-            log_d("Unsupported dongle");
             return inverterData;
         }
 
@@ -53,7 +53,6 @@ public:
         uint16_t runMode = readRunMode();
         if (runMode == RUN_MODE_IDLE || runMode == RUN_MODE_STANDBY)
         {
-            log_d("Inverter is in idle/standby mode (%d), assuming Self-Use mode", runMode);
             inverterData.inverterMode = INVERTER_MODE_SELF_USE;
         }
         else
@@ -86,46 +85,37 @@ public:
     {
         if (!connectToDongle(ipAddress))
         {
-            log_d("Failed to connect for setWorkMode");
             return false;
         }
 
         // First check if inverter is awake
         uint16_t runMode = readRunMode();
-        log_d("Current run mode: %d", runMode);
         
         // If inverter is in idle/standby mode, try to wake it up
         // According to forum advice: Switch to Manual Mode + Hold (Stop Charge/Discharge)
         // This should wake the inverter, then we can set the desired mode
         if (runMode == RUN_MODE_IDLE || runMode == RUN_MODE_STANDBY)
         {
-            log_d("Inverter is in idle/standby mode (%d), attempting to wake up via Manual Mode + Hold...", runMode);
             
             // First unlock the inverter with advanced code
             bool unlockSuccess = channel.writeSingleRegister(UNIT_ID, REG_LOCK_STATE, LOCK_STATE_UNLOCKED_ADVANCED);
             if (!unlockSuccess)
             {
-                log_w("Failed to unlock inverter for wakeup");
+                LOGW("Failed to unlock inverter for wakeup");
             }
             else
             {
-                log_d("Inverter unlocked for wakeup");
             }
             
             // Step 1: Set Work Mode to Manual (3) 
-            log_d("Setting Work Mode to Manual (3)...");
             bool workModeSuccess = channel.writeSingleRegister(UNIT_ID, REG_CHARGER_USE_MODE_WRITE, SOLAX_WORK_MODE_MANUAL);
-            log_d("Work Mode = Manual: %s", workModeSuccess ? "success" : "failed");
             
             // Step 2: Set Manual Mode to Stop/Hold (0) - this should wake the inverter
-            log_d("Setting Manual Mode to Stop/Hold (0)...");
             bool manualModeSuccess = channel.writeSingleRegister(UNIT_ID, REG_MANUAL_MODE_WRITE, SOLAX_MANUAL_STOP);
-            log_d("Manual Mode = Stop/Hold: %s", manualModeSuccess ? "success" : "failed");
             
             if (workModeSuccess && manualModeSuccess)
             {
                 // Wait for the inverter to wake up - poll every 5 seconds for up to 5 minutes
-                log_d("Waiting for inverter to wake up (polling every 5s, max 5 min)...");
                 const int maxWaitMs = 300000;  // 5 minutes
                 const int pollIntervalMs = 5000;
                 int elapsedMs = 0;
@@ -136,18 +126,16 @@ public:
                     elapsedMs += pollIntervalMs;
                     
                     runMode = readRunMode();
-                    log_d("Run mode after %d seconds: %d", elapsedMs / 1000, runMode);
                     
                     if (runMode != RUN_MODE_IDLE && runMode != RUN_MODE_STANDBY && runMode != 0xFFFF)
                     {
-                        log_d("Inverter woke up successfully via Manual+Hold after %d seconds!", elapsedMs / 1000);
                         break;
                     }
                 }
                 
                 if (runMode == RUN_MODE_IDLE || runMode == RUN_MODE_STANDBY)
                 {
-                    log_w("Inverter still in idle/standby mode after %d seconds, will try to set mode anyway", elapsedMs / 1000);
+                    LOGW("Inverter still in idle/standby mode after %d seconds, will try to set mode anyway", elapsedMs / 1000);
                 }
             }
         }
@@ -155,7 +143,6 @@ public:
         // If waiting, we might be able to proceed after a short delay
         if (runMode == RUN_MODE_WAITING)
         {
-            log_d("Inverter is in Waiting mode, will attempt to set mode anyway...");
         }
 
         uint16_t solaxWorkMode, solaxManualMode;
@@ -165,11 +152,9 @@ public:
         bool success = channel.writeSingleRegister(UNIT_ID, REG_LOCK_STATE, LOCK_STATE_UNLOCKED_ADVANCED);
         if (!success)
         {
-            log_d("Failed to unlock inverter");
             channel.disconnect();
             return false;
         }
-        log_d("Inverter unlocked (Advanced mode)");
 
         // Set the work mode using WRITE register 0x1F (GEN4/GEN5/GEN6)
         success = channel.writeSingleRegister(UNIT_ID, REG_CHARGER_USE_MODE_WRITE, solaxWorkMode);
@@ -187,12 +172,9 @@ public:
         
         if (success)
         {
-            log_d("Successfully set work mode to %d (Solax WorkMode: %d, ManualMode: %d)", 
-                  mode, solaxWorkMode, solaxManualMode);
         }
         else
         {
-            log_d("Failed to set work mode to %d", mode);
         }
         
         return success;
@@ -216,7 +198,6 @@ public:
     {
         if (!connectToDongle(ipAddress))
         {
-            log_d("Failed to connect for setWorkModeViaPowerControl");
             return false;
         }
 
@@ -232,29 +213,24 @@ public:
             powerCtrlMode = POWER_CTRL_DISABLED;  // 0 = disable
             timeoutSec = 0;
             activePowerTarget = 0;
-            log_d("Power Control: Self-Use (disabled remote control)");
             break;
             
         case INVERTER_MODE_CHARGE_FROM_GRID:
             // Nabíjení = KLADNÝ výkon (podle dokumentace: positive = charge)
             activePowerTarget = (int32_t)maxChargePowerW;
-            log_d("Power Control: Charge from grid at %d W", maxChargePowerW);
             break;
             
         case INVERTER_MODE_DISCHARGE_TO_GRID:
             // Vybíjení = ZÁPORNÝ výkon (podle dokumentace: negative = discharge)
             activePowerTarget = -(int32_t)maxDischargePowerW;
-            log_d("Power Control: Discharge to grid at %d W", maxDischargePowerW);
             break;
             
         case INVERTER_MODE_HOLD_BATTERY:
             // Držet baterii = 0 W výkon
             activePowerTarget = 0;
-            log_d("Power Control: Hold battery (0 W)");
             break;
             
         default:
-            log_d("Power Control: Unknown mode, defaulting to Self-Use");
             powerCtrlMode = POWER_CTRL_DISABLED;
             timeoutSec = 0;
             break;
@@ -264,11 +240,9 @@ public:
         bool success = channel.writeSingleRegister(UNIT_ID, REG_LOCK_STATE, LOCK_STATE_UNLOCKED_ADVANCED);
         if (!success)
         {
-            log_d("Failed to unlock inverter for Power Control");
             channel.disconnect();
             return false;
         }
-        log_d("Inverter unlocked for Power Control");
 
         // Sestavit payload pro writeMultipleRegisters
         // Registry 0x7C-0x88 (13 registrů) podle HA implementace:
@@ -297,8 +271,6 @@ public:
         registers[11] = 0;                                               // 0x87: charge/discharge power MSB (dummy)
         registers[12] = timeoutSec > 0 ? 2 : 0;                          // 0x88: timeout (0 or 2 minutes default)
         
-        log_d("Writing Power Control registers: mode=%d, activePower=%d, duration=%d", 
-              powerCtrlMode, activePowerTarget, timeoutSec);
         
         // Použít writeMultipleRegisters pro atomický zápis všech registrů najednou
         success = channel.writeMultipleRegisters(UNIT_ID, REG_POWER_CTRL_MODE, registers, 13);
@@ -307,12 +279,10 @@ public:
         
         if (success)
         {
-            log_d("Power Control set successfully: mode=%d, activePower=%d W, duration=%d s", 
-                  mode, activePowerTarget, timeoutSec);
         }
         else
         {
-            log_w("Failed to write Power Control registers");
+            LOGW("Failed to write Power Control registers");
         }
         
         return success;
@@ -331,7 +301,6 @@ public:
                                                             REG_POWER_CTRL_STATUS, 4);
         if (!response.isValid)
         {
-            log_d("Failed to read Power Control status registers");
             return false;
         }
 
@@ -341,8 +310,6 @@ public:
         uint16_t activeMSB = response.readUInt16(REG_POWER_CTRL_ACTIVE_TARGET + 1);
         outActivePower = (int32_t)((activeMSB << 16) | activeLSB);
         
-        log_d("Power Control Status: mode=%d, activePower=%d W, active=%s", 
-              outMode, outActivePower, outMode > 0 ? "yes" : "no");
         
         return true;
     }
@@ -356,7 +323,6 @@ public:
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, REG_RUN_MODE, 1);
         if (!response.isValid)
         {
-            log_d("Failed to read run mode register");
             return 0xFFFF;  // Return invalid value
         }
         return response.readUInt16(REG_RUN_MODE);
@@ -526,7 +492,6 @@ private:
         IPAddress targetIp = getIp(ipAddress);
         if (!channel.connect(targetIp, MODBUS_PORT))
         {
-            log_d("Failed to connect to Solax Modbus dongle at %s", targetIp.toString().c_str());
             ip = IPAddress(0, 0, 0, 0);
             channel.disconnect();
             return false;
@@ -545,7 +510,7 @@ private:
         IPAddress targetIp = getIp(ipAddress);
         String url = "http://" + targetIp.toString() + "/update.htm";
         
-        log_w("Attempting to reset stuck dongle at %s", url.c_str());
+        LOGW("Attempting to reset stuck dongle at %s", url.c_str());
         
         HTTPClient http;
         http.begin(url);
@@ -569,13 +534,13 @@ private:
         
         if (httpCode > 0)
         {
-            log_w("Dongle reset request sent, HTTP code: %d. Dongle should restart within 20 seconds.", httpCode);
+            LOGW("Dongle reset request sent, HTTP code: %d. Dongle should restart within 20 seconds.", httpCode);
             consecutiveTimeoutErrors = 0;  // Reset the counter
             return true;
         }
         else
         {
-            log_e("Failed to send dongle reset request, error: %s", http.errorToString(httpCode).c_str());
+            LOGE("Failed to send dongle reset request, error: %s", http.errorToString(httpCode).c_str());
             return false;
         }
     }
@@ -593,19 +558,18 @@ private:
             // Reset counter on successful communication
             if (consecutiveTimeoutErrors > 0)
             {
-                log_d("Modbus communication restored after %d timeout(s)", consecutiveTimeoutErrors);
             }
             consecutiveTimeoutErrors = 0;
         }
         else
         {
             consecutiveTimeoutErrors++;
-            log_w("Modbus timeout error #%d", consecutiveTimeoutErrors);
+            LOGW("Modbus timeout error #%d", consecutiveTimeoutErrors);
             
             // If we've had too many consecutive timeouts, try to reset the dongle
             if (consecutiveTimeoutErrors >= MAX_TIMEOUT_ERRORS_BEFORE_RESET)
             {
-                log_w("Detected stuck dongle (connected but %d consecutive timeouts), attempting reset...", 
+                LOGW("Detected stuck dongle (connected but %d consecutive timeouts), attempting reset...", 
                       consecutiveTimeoutErrors);
                 channel.disconnect();
                 resetDongle(ipAddress);
@@ -626,7 +590,6 @@ private:
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, 0x00, 0x14);
         if (!response.isValid)
         {
-            log_d("Failed to read inverter info");
             return false;
         }
 
@@ -635,8 +598,6 @@ private:
         data.sn = sn;
         String factoryName = response.readString(0x07, 14);
         String moduleName = response.readString(0x0E, 14);
-        log_d("SN: %s, Factory: %s, Module: %s",
-              sn.c_str(), factoryName.c_str(), moduleName.c_str());
         return true;
     }
 
@@ -648,7 +609,6 @@ private:
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, 0x85, 6);
         if (!response.isValid)
         {
-            log_d("Failed to read RTC from Solax inverter");
             return false;
         }
 
@@ -662,9 +622,6 @@ private:
         timeinfo.tm_isdst = -1;  // Let mktime determine DST
 
         data.inverterTime = mktime(&timeinfo);
-        log_d("Solax RTC: %04d-%02d-%02d %02d:%02d:%02d",
-              timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
-              timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
         return true;
     }
 
@@ -673,7 +630,6 @@ private:
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x00, 0x54 + 1);
         if (!response.isValid)
         {
-            log_d("Failed to read main inverter data");
             return false;
         }
         data.status = DONGLE_STATUS_OK;
@@ -698,7 +654,6 @@ private:
         data.loadToday = response.readUInt16(0x50) / 10.0f;
         data.batteryCapacityWh = response.readUInt16(0x26);
         //log 0x26 register value for debugging
-        log_d("Battery capacity (0x26): %d Wh", data.batteryCapacityWh);
         
         // Read BMS max charge/discharge current from registers 0x24 and 0x25
         // Scale is 0.1A, we convert to power using battery voltage
@@ -708,8 +663,6 @@ private:
         float batteryVoltageForCalc = data.batteryVoltage;
         data.maxChargePowerW = (uint16_t)(bmsChargeMaxCurrent * batteryVoltageForCalc);
         data.maxDischargePowerW = (uint16_t)(bmsDischargeMaxCurrent * batteryVoltageForCalc);
-        log_d("BMS max charge current: %.1f A, max discharge current: %.1f A", bmsChargeMaxCurrent, bmsDischargeMaxCurrent);
-        log_d("Max charge power: %d W, max discharge power: %d W", data.maxChargePowerW, data.maxDischargePowerW);
         
         data.minSoc = 10;
         data.maxSoc = 100;
@@ -729,7 +682,6 @@ private:
             uint16_t activeMSB = pcResponse.readUInt16(REG_POWER_CTRL_ACTIVE_TARGET + 1);
             int32_t activePowerTarget = (int32_t)((activeMSB << 16) | activeLSB);
             
-            log_d("Power Control status: mode=%d, activePower=%d W", pcMode, activePowerTarget);
             
             if (pcMode == POWER_CTRL_POWER)  // Power control is active
             {
@@ -738,46 +690,38 @@ private:
                 if (activePowerTarget > 100)  // Kladný = nabíjení (s tolerancí)
                 {
                     data.inverterMode = INVERTER_MODE_CHARGE_FROM_GRID;
-                    log_d("Power Control active: CHARGE at %d W", activePowerTarget);
                 }
                 else if (activePowerTarget < -100)  // Záporný = vybíjení (s tolerancí)
                 {
                     data.inverterMode = INVERTER_MODE_DISCHARGE_TO_GRID;
-                    log_d("Power Control active: DISCHARGE at %d W", -activePowerTarget);
                 }
                 else  // Blízko 0 = hold
                 {
                     data.inverterMode = INVERTER_MODE_HOLD_BATTERY;
-                    log_d("Power Control active: HOLD battery");
                 }
                 return true;
             }
             else if (pcMode != POWER_CTRL_DISABLED)
             {
-                log_d("Power Control in mode %d (quantity/SOC), falling back to work mode", pcMode);
             }
             else
             {
-                log_d("Power Control disabled, falling back to work mode registers");
             }
         }
         else
         {
-            log_d("Failed to read Power Control status, falling back to work mode registers");
         }
         
         // Fallback na klasické čtení work mode registrů
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, REG_SOLAR_CHARGER_USE_MODE, 2);
         if (!response.isValid)
         {
-            log_d("Failed to read work mode register");
             return false;
         }
 
         uint16_t solaxMode = response.readUInt16(REG_SOLAR_CHARGER_USE_MODE);
         uint16_t manualMode = response.readUInt16(REG_MANUAL_MODE_READ);
         data.inverterMode = solaxModeToInverterMode(solaxMode, manualMode);
-        log_d("Read work mode: SolarChargerUseMode=%d, ManualMode=%d, InverterMode=%d", solaxMode, manualMode, data.inverterMode);
         return true;
     }
 
@@ -786,7 +730,6 @@ private:
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x91, 0x9A - 0x91 + 2);
         if (!response.isValid)
         {
-            log_d("Failed to read power data");
             return false;
         }
 
@@ -801,7 +744,6 @@ private:
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x6A, 0x88 - 0x6A + 2);
         if (!response.isValid)
         {
-            log_d("Failed to read phase data");
             return false;
         }
         data.inverterOutpuPowerL1 = response.readInt16(0x6C);
@@ -828,7 +770,6 @@ private:
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x0124, 1);
         if (!response.isValid)
         {
-            log_d("Failed to read PV3 power");
             return false;
         }
 
@@ -864,7 +805,6 @@ private:
             ip = (WiFi.localIP()[0] == 192) ? IPAddress(192, 168, 10, 10) : IPAddress(5, 8, 8, 8);
         }
 
-        log_d("Using IP: %s", ip.toString().c_str());
         return ip;
     }
 
@@ -875,7 +815,6 @@ private:
         esp_err_t err = mdns_query_ptr("_pocketseries", "_tcp", 5000, 20, &results);
         if (err != ESP_OK || !results)
         {
-            log_d("MDNS query failed or no results");
             mdns_query_results_free(results);
             return IPAddress(0, 0, 0, 0);
         }
@@ -883,8 +822,6 @@ private:
         IPAddress foundIp(0, 0, 0, 0);
         for (mdns_result_t *r = results; r; r = r->next)
         {
-            log_d("Found MDNS: %s, type: %s, proto: %s, hostname: %s, port: %d",
-                  r->instance_name, r->service_type, r->proto, r->hostname, r->port);
             foundIp = r->addr->addr.u_addr.ip4.addr;
             break;
         }

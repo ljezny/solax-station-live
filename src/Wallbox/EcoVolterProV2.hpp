@@ -1,6 +1,7 @@
 #pragma once
 
 #include <WiFi.h>
+#include "../utils/RemoteLogger.hpp"
 #include <WiFiMulti.h>
 #include <ArduinoJson.h>
 #include <Preferences.h>
@@ -76,15 +77,15 @@ public:
             }
             else
             {
-                log_d("ERROR: %s", http.errorToString(httpCode).c_str());
-                log_d("Response: %s", http.getString().c_str());
+                LOGD("ERROR: %s", http.errorToString(httpCode).c_str());
+                LOGD("Response: %s", http.getString().c_str());
             }
 
             http.end();
         }
         else
         {
-            log_d("Unable to connect.");
+            LOGD("Unable to connect.");
         }
 
         return result;
@@ -93,10 +94,10 @@ public:
     
     
     void resetDiscovery() {
-        log_d("Resetting EcoVolter discovery, current id length: %d", ecoVolterId.length());
+        LOGD("Resetting EcoVolter discovery, current id length: %d", ecoVolterId.length());
         ecoVolterId = String();  // Create new empty String instead of assigning
         ip = IPAddress(0, 0, 0, 0);
-        log_d("EcoVolter discovery reset complete");
+        LOGD("EcoVolter discovery reset complete");
     }
 
     bool isDiscovered()
@@ -110,13 +111,13 @@ public:
 
         if (mdns_init() != ESP_OK)
         {
-            log_e("Failed starting MDNS");
+            LOGE("Failed starting MDNS");
             return;
         }
 
         if (mdns_query_ptr("_http", "_tcp", 3000, 20, &results) != ESP_OK)
         {
-            log_e("Failed to query MDNS");
+            LOGE("Failed to query MDNS");
             mdns_free();
             return;
         }
@@ -129,40 +130,40 @@ public:
             const char *rawHost = r->hostname;
             if (!rawHost || !*rawHost)
             {
-                log_w("mDNS result with null/empty hostname; skipping");
+                LOGW("mDNS result with null/empty hostname; skipping");
                 r = r->next;
                 continue;
             }
             String hostname(rawHost);
 
-            log_d("Found service: %s", hostname.c_str());
+            LOGD("Found service: %s", hostname.c_str());
             // check null
             if (r->addr == nullptr)
             {
-                log_w("mDNS result with null address; skipping");
+                LOGW("mDNS result with null address; skipping");
                 r = r->next;
                 continue;
             }
             if (r->addr->addr.type != ESP_IPADDR_TYPE_V4)
             {
-                log_w("mDNS result with non-IPv4 address; skipping");
+                LOGW("mDNS result with non-IPv4 address; skipping");
                 r = r->next;
                 continue;
             }
             IPAddress ipAddress = r->addr->addr.u_addr.ip4.addr;
-            log_d("Found IP: %s", ipAddress.toString().c_str());
+            LOGD("Found IP: %s", ipAddress.toString().c_str());
             const char *rawInstance = r->instance_name;
             if (!rawInstance || !*rawInstance)
             {
-                log_w("mDNS result with null/empty instance name; skipping");
+                LOGW("mDNS result with null/empty instance name; skipping");
                 continue;
             }
             String instanceName(rawInstance);
-            log_d("Found instance: %s", instanceName.c_str());
+            LOGD("Found instance: %s", instanceName.c_str());
 
             if (hostname.startsWith("REVCS"))
             {
-                log_d("Found REVCS device: %s", hostname.c_str());
+                LOGD("Found REVCS device: %s", hostname.c_str());
                 hostname.toLowerCase();
                 ecoVolterId = hostname;
                 ip = ipAddress;
@@ -243,11 +244,11 @@ private:
         EcoVolterSettings_t result;
         result.updated = 0;
 
-        log_d("Loading EcoVolterProV2 settings");
+        LOGD("Loading EcoVolterProV2 settings");
 
         String path = "/api/v1/charger/settings";
         String url = "http://" + ip.toString() + path;
-        log_d("Requesting: %s", url.c_str());
+        LOGD("Requesting: %s", url.c_str());
         time_t timestamp = time(NULL);
 
         if (http.begin(url))
@@ -257,7 +258,7 @@ private:
             if (httpCode == HTTP_CODE_OK)
             {
                 String payload = http.getString();
-                log_d("Response: %s", payload.c_str());
+                LOGD("Response: %s", payload.c_str());
                 DynamicJsonDocument doc(1024);
                 deserializeJson(doc, payload);
 
@@ -267,13 +268,13 @@ private:
             }
             else
             {
-                log_d("ERROR: %s", http.errorToString(httpCode).c_str());
-                log_d("Response: %s", http.getString().c_str());
+                LOGD("ERROR: %s", http.errorToString(httpCode).c_str());
+                LOGD("Response: %s", http.getString().c_str());
             }
         }
         else
         {
-            log_d("Unable to connect.");
+            LOGD("Unable to connect.");
         }
         http.end();
         return result;
@@ -284,11 +285,11 @@ private:
         EcoVolterStats_t result;
         result.updated = 0;
 
-        log_d("Loading EcoVolterProV2 stats");
+        LOGD("Loading EcoVolterProV2 stats");
 
         String path = "/api/v1/charger/diagnostic";
         String url = "http://" + ip.toString() + path;
-        log_d("Requesting: %s", url.c_str());
+        LOGD("Requesting: %s", url.c_str());
         time_t timestamp = time(NULL);
 
         if (http.begin(url))
@@ -298,7 +299,7 @@ private:
             if (httpCode == HTTP_CODE_OK)
             {
                 String payload = http.getString();
-                log_d("Response: %s", payload.c_str());
+                LOGD("Response: %s", payload.c_str());
                 DynamicJsonDocument doc(1024);
                 deserializeJson(doc, payload);
 
@@ -309,13 +310,13 @@ private:
             }
             else
             {
-                log_d("ERROR: %s", http.errorToString(httpCode).c_str());
-                log_d("Response: %s", http.getString().c_str());
+                LOGD("ERROR: %s", http.errorToString(httpCode).c_str());
+                LOGD("Response: %s", http.getString().c_str());
             }
         }
         else
         {
-            log_d("Unable to connect.");
+            LOGD("Unable to connect.");
         }
         http.end();
         return result;
@@ -326,11 +327,11 @@ private:
         WallboxResult_t result;
         result.updated = 0;
 
-        log_d("Reloading EcoVolterProV2 data");
+        LOGD("Reloading EcoVolterProV2 data");
 
         String path = "/api/v1/charger/status";
         String url = "http://" + ip.toString() + path;
-        log_d("Requesting: %s", url.c_str());
+        LOGD("Requesting: %s", url.c_str());
         time_t timestamp = time(NULL);
 
         if (http.begin(url))
@@ -340,7 +341,7 @@ private:
             if (httpCode == HTTP_CODE_OK)
             {
                 String payload = http.getString();
-                log_d("Response: %s", payload.c_str());
+                LOGD("Response: %s", payload.c_str());
                 DynamicJsonDocument doc(2048);
                 deserializeJson(doc, payload);
 
@@ -360,17 +361,17 @@ private:
                 result.currentL2 = round(doc["currentL2"].as<float>());
                 result.currentL3 = round(doc["currentL3"].as<float>());
                 result.temperature = round(doc["temperatures"]["internal"].as<float>());
-                log_d("EVConnected: %s", String(result.evConnected).c_str());
+                LOGD("EVConnected: %s", String(result.evConnected).c_str());
             }
             else
             {
-                log_d("ERROR: %s", http.errorToString(httpCode));
-                log_d("Response: %s", http.getString());
+                LOGD("ERROR: %s", http.errorToString(httpCode));
+                LOGD("Response: %s", http.getString());
             }
         }
         else
         {
-            log_d("Unable to connect.");
+            LOGD("Unable to connect.");
             
         }
         http.end();

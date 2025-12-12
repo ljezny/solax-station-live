@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "../utils/RemoteLogger.hpp"
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <Preferences.h>
@@ -33,11 +34,9 @@ public:
         int j = 0;
         for (int i = 0; i < found; i++)
         {
-            log_d("Found network: %s", WiFi.SSID(i).c_str());
             String ssid = WiFi.SSID(i);
             if (ssid.length() == 0)
             {
-                log_d("Empty SSID");
                 continue;
             }
             // skip if already found
@@ -52,7 +51,6 @@ public:
             }
             if (alreadyFound)
             {
-                log_d("Already found %s", ssid.c_str());
                 continue;
             }
 
@@ -98,7 +96,7 @@ public:
             // Lukas Capka
             if (discoveries[j].ssid == "wifi.sosna")
             {
-                log_d("Found special SSID: %s", discoveries[j].ssid.c_str());
+                LOGD("Found special SSID: %s", discoveries[j].ssid.c_str());
                 discoveries[j].password = "1sosna2sosny";
                 discoveries[j].type = CONNECTION_TYPE_GROWATT;
             }
@@ -122,35 +120,28 @@ public:
 
     bool disconnect()
     {
-        log_d("Disconnecting from WiFi");
         return WiFi.disconnect();
     }
 
     bool connectToDongle(WiFiDiscoveryResult_t &discovery)
     {
-        log_d("Connecting to dongle: %s", discovery.ssid.c_str());
-
         if (WiFi.SSID() == discovery.ssid)
         {
-            log_d("Already connected to %s", discovery.ssid.c_str());
             return true;
         }
         else
         {
-            log_d("Disconnecting from %s", WiFi.SSID().c_str());
             WiFi.disconnect();
         }
 
         WiFi.persistent(false);
 
-        log_d("Connecting to %s", discovery.ssid.c_str());
         WiFi.begin(discovery.ssid.c_str(), discovery.password.c_str());
         WiFi.setSleep(false);
         bool connectionResult = awaitWifiConnection();
 
         if (connectionResult)
         {
-            log_d("Connected to %s", discovery.ssid.c_str());
 
             DongleInfo_t dongleInfo;
             loadDongleInfo(discovery.ssid, dongleInfo);
@@ -192,12 +183,12 @@ public:
 
             if (foundCount > 1)
             {
-                log_d("Multiple prefered dongles found, no autoconnect");
+                LOGD("Multiple prefered dongles found, no autoconnect");
                 autoconnectDongle.type = CONNECTION_TYPE_NONE;
             }
             else if (foundCount == 0)
             {
-                log_d("No prefered dongle found, no autoconnect");
+                LOGD("No prefered dongle found, no autoconnect");
                 autoconnectDongle.type = CONNECTION_TYPE_NONE;
             }
         }
@@ -227,7 +218,7 @@ public:
     {
         NVSGuard guard;
         if (!guard.isLocked()) {
-            log_e("Failed to lock NVS mutex for loading last connected SSID");
+            LOGE("Failed to lock NVS mutex for loading last connected SSID");
             return "";
         }
         
@@ -242,7 +233,7 @@ public:
     {
         NVSGuard guard;
         if (!guard.isLocked()) {
-            log_e("Failed to lock NVS mutex for storing SSID");
+            LOGE("Failed to lock NVS mutex for storing SSID");
             return;
         }
         
@@ -285,11 +276,9 @@ private:
         {
             if (WiFi.status() == WL_CONNECTED && WiFi.localIP() != IPAddress(0, 0, 0, 0))
             {
-                log_d("Connected to WiFi: %s", WiFi.SSID().c_str());
-                log_d("IP Address: %s", WiFi.localIP().toString().c_str());
-                log_d("RSSI: %d", WiFi.RSSI());
-                log_d("Signal strength: %d%%", wifiSignalPercent(WiFi.RSSI()));
-
+                LOGD("WiFi: %s IP=%s RSSI=%d (%d%%)", 
+                     WiFi.SSID().c_str(), WiFi.localIP().toString().c_str(), 
+                     WiFi.RSSI(), wifiSignalPercent(WiFi.RSSI()));
                 return true;
             }
             else
@@ -298,7 +287,7 @@ private:
             }
         }
         WiFi.disconnect();
-        log_d("Failed to connect to WiFi");
+        LOGE("Failed to connect to WiFi");
 
         return false;
     }
@@ -398,20 +387,18 @@ private:
             hash = (hash << 5) + hash + str[i];
         }
         String result = String(hash, HEX);
-        log_d("Data: %s, Hash: %s", str.c_str(), result.c_str());
+        LOGD("Data: %s, Hash: %s", str.c_str(), result.c_str());
         return result;
     }
 
     void saveDongleInfo(String ssid, DongleInfo_t &info)
     {
-        log_d("Saving dongle info for %s", ssid.c_str());
-        log_d("Password: %s", info.password);
-        log_d("Dongle IP: %s", info.dongleIp);
-        log_d("Connection Type: %d", info.connectionType);
+
+        LOGD("Connection Type: %d", info.connectionType);
 
         NVSGuard guard;
         if (!guard.isLocked()) {
-            log_e("Failed to lock NVS mutex for saving dongle info");
+            LOGE("Failed to lock NVS mutex for saving dongle info");
             return;
         }
 
@@ -425,7 +412,7 @@ private:
     {
         NVSGuard guard;
         if (!guard.isLocked()) {
-            log_e("Failed to lock NVS mutex for loading dongle info");
+            LOGE("Failed to lock NVS mutex for loading dongle info");
             return false;
         }
         
@@ -435,7 +422,7 @@ private:
         bool result = false;
         if (!preferences.isKey(key.c_str()))
         {
-            log_d("No dongle info found for %s", ssid.c_str());
+            LOGD("No dongle info found for %s", ssid.c_str());
         }
         else
         {
@@ -444,14 +431,14 @@ private:
             {
                 preferences.getBytes(key.c_str(), (void *)&info, sizeof(DongleInfo_t));
                 result = true;
-                log_d("Loaded dongle info for %s", ssid.c_str());
-                log_d("Password: %s", info.password);
-                log_d("Dongle IP: %s", info.dongleIp);
-                log_d("Connection Type: %d", info.connectionType);
+                LOGD("Loaded dongle info for %s", ssid.c_str());
+                LOGD("Password: %s", info.password);
+                LOGD("Dongle IP: %s", info.dongleIp);
+                LOGD("Connection Type: %d", info.connectionType);
             }
             else
             {
-                log_d("Dongle info for %s has invalid length: %d", ssid.c_str(), len);
+                LOGD("Dongle info for %s has invalid length: %d", ssid.c_str(), len);
             }
         }
         preferences.end();

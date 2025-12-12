@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "../utils/RemoteLogger.hpp"
 #include "ModbusResponse.hpp"
 #include "utils/CustomNetworkClient.hpp"
 
@@ -32,7 +33,7 @@ public:
     ModbusResponse sendModbusRequest(uint8_t unit, uint8_t functionCode, uint16_t addr, uint8_t count)
     {
         if (functionCode < 1 || functionCode > 4) {
-            log_d("Unsupported function code: %d", functionCode);
+            LOGD("Unsupported function code: %d", functionCode);
             ModbusResponse response;
             response.sequenceNumber = sequenceNumber;
             response.address = addr;
@@ -58,42 +59,42 @@ public:
         response.sequenceNumber = sequenceNumber;
         response.address = addr;
         if(!isConnected()) {
-            log_d("Not connected, cannot send request");
+            LOGD("Not connected, cannot send request");
             return response;
         }
         int len = client.write(request, sizeof(request));
         if (len != sizeof(request)) {
-            log_d("Failed to send request");
+            LOGD("Failed to send request");
             return response;
         }
 
         uint8_t header[6];
         if (readFully(header, 6, 5000) != 6) {
-            log_d("Response timeout or incomplete header");
+            LOGD("Response timeout or incomplete header");
             return response;
         }
 
         uint16_t receivedSequence = (header[0] << 8) | header[1];
         if (receivedSequence != sequenceNumber) {
-            log_d("Expected sequence number %d, but got %d", sequenceNumber, receivedSequence);
+            LOGD("Expected sequence number %d, but got %d", sequenceNumber, receivedSequence);
             return response;
         }
 
         uint16_t protocolId = (header[2] << 8) | header[3];
         if (protocolId != 0) {
-            log_d("Invalid protocol ID: %d", protocolId);
+            LOGD("Invalid protocol ID: %d", protocolId);
             return response;
         }
 
         uint16_t responseLength = (header[4] << 8) | header[5];
         if (responseLength < 3 || responseLength > RX_BUFFER_SIZE) {
-            log_d("Invalid response length: %d", responseLength);
+            LOGD("Invalid response length: %d", responseLength);
             return response;
         }
 
         uint8_t body[RX_BUFFER_SIZE];
         if (readFully(body, responseLength, 5000) != responseLength) {
-            log_d("Incomplete body read");
+            LOGD("Incomplete body read");
             return response;
         }
 
@@ -111,7 +112,7 @@ public:
             }
 
             if (byteCount != expectedByteCount || responseLength != 3 + byteCount) {
-                log_d("Invalid byte count: %d, expected: %d", byteCount, expectedByteCount);
+                LOGD("Invalid byte count: %d, expected: %d", byteCount, expectedByteCount);
                 return response;
             }
 
@@ -120,21 +121,21 @@ public:
             response.isValid = true;
 
             // Log response data as hex
-            // log_d("Request address: %d", addr);
+            // LOGD("Request address: %d", addr);
             // String dataHex = "";
             // for (int i = 0; i < response.length; i++) {
             //     dataHex += String(response.data[i], HEX);
             // }
-            // log_d("Response data: %s", dataHex.c_str());
+            // LOGD("Response data: %s", dataHex.c_str());
         } else if (receivedFunctionCode == (functionCode | 0x80)) {
             if (responseLength != 3) {
-                log_d("Invalid exception response length");
+                LOGD("Invalid exception response length");
                 return response;
             }
             uint8_t exceptionCode = body[2];
-            log_d("Modbus exception: code %d", exceptionCode);
+            LOGD("Modbus exception: code %d", exceptionCode);
         } else {
-            log_d("Invalid function code: expected %d, got %d", functionCode, receivedFunctionCode);
+            LOGD("Invalid function code: expected %d, got %d", functionCode, receivedFunctionCode);
         }
 
         return response;
@@ -167,44 +168,44 @@ public:
         };
 
         if(!isConnected()) {
-            log_d("Not connected, cannot send write request");
+            LOGD("Not connected, cannot send write request");
             return false;
         }
 
         int len = client.write(request, sizeof(request));
         if (len != sizeof(request)) {
-            log_d("Failed to send write request");
+            LOGD("Failed to send write request");
             return false;
         }
 
         // Read MBAP header (7 bytes for write response)
         uint8_t header[6];
         if (readFully(header, 6, 5000) != 6) {
-            log_d("Write response timeout or incomplete header");
+            LOGD("Write response timeout or incomplete header");
             return false;
         }
 
         uint16_t receivedSequence = (header[0] << 8) | header[1];
         if (receivedSequence != sequenceNumber) {
-            log_d("Expected sequence number %d, but got %d", sequenceNumber, receivedSequence);
+            LOGD("Expected sequence number %d, but got %d", sequenceNumber, receivedSequence);
             return false;
         }
 
         uint16_t protocolId = (header[2] << 8) | header[3];
         if (protocolId != 0) {
-            log_d("Invalid protocol ID: %d", protocolId);
+            LOGD("Invalid protocol ID: %d", protocolId);
             return false;
         }
 
         uint16_t responseLength = (header[4] << 8) | header[5];
         if (responseLength < 3) {
-            log_d("Invalid response length: %d", responseLength);
+            LOGD("Invalid response length: %d", responseLength);
             return false;
         }
 
         uint8_t body[16];
         if (readFully(body, responseLength, 5000) != responseLength) {
-            log_d("Incomplete write response body");
+            LOGD("Incomplete write response body");
             return false;
         }
 
@@ -213,13 +214,13 @@ public:
         // Check for exception response
         if (receivedFunctionCode == (0x06 | 0x80)) {
             uint8_t exceptionCode = body[2];
-            log_d("Modbus write exception: code %d", exceptionCode);
+            LOGD("Modbus write exception: code %d", exceptionCode);
             return false;
         }
 
         // Successful write echoes back: unit, function, addr (2 bytes), value (2 bytes)
         if (receivedFunctionCode != 0x06) {
-            log_d("Invalid function code in write response: expected 0x06, got 0x%02X", receivedFunctionCode);
+            LOGD("Invalid function code in write response: expected 0x06, got 0x%02X", receivedFunctionCode);
             return false;
         }
 
@@ -228,12 +229,12 @@ public:
         uint16_t echoedValue = (body[4] << 8) | body[5];
         
         if (echoedAddr != addr || echoedValue != value) {
-            log_d("Write response mismatch: addr=0x%04X (expected 0x%04X), value=%d (expected %d)", 
+            LOGD("Write response mismatch: addr=0x%04X (expected 0x%04X), value=%d (expected %d)", 
                   echoedAddr, addr, echoedValue, value);
             return false;
         }
 
-        log_d("Successfully wrote value %d to register 0x%04X", value, addr);
+        LOGD("Successfully wrote value %d to register 0x%04X", value, addr);
         return true;
     }
 
@@ -250,7 +251,7 @@ public:
     bool writeMultipleRegisters(uint8_t unit, uint16_t startAddr, const uint16_t* values, uint16_t count)
     {
         if (count == 0 || count > 123) { // Max 123 registers per Modbus spec
-            log_d("Invalid register count: %d", count);
+            LOGD("Invalid register count: %d", count);
             return false;
         }
 
@@ -287,44 +288,44 @@ public:
         }
 
         if(!isConnected()) {
-            log_d("Not connected, cannot send write multiple request");
+            LOGD("Not connected, cannot send write multiple request");
             return false;
         }
 
         int len = client.write(request, idx);
         if (len != idx) {
-            log_d("Failed to send write multiple request");
+            LOGD("Failed to send write multiple request");
             return false;
         }
 
         // Read MBAP header (6 bytes)
         uint8_t header[6];
         if (readFully(header, 6, 5000) != 6) {
-            log_d("Write multiple response timeout or incomplete header");
+            LOGD("Write multiple response timeout or incomplete header");
             return false;
         }
 
         uint16_t receivedSequence = (header[0] << 8) | header[1];
         if (receivedSequence != sequenceNumber) {
-            log_d("Expected sequence number %d, but got %d", sequenceNumber, receivedSequence);
+            LOGD("Expected sequence number %d, but got %d", sequenceNumber, receivedSequence);
             return false;
         }
 
         uint16_t protocolId = (header[2] << 8) | header[3];
         if (protocolId != 0) {
-            log_d("Invalid protocol ID: %d", protocolId);
+            LOGD("Invalid protocol ID: %d", protocolId);
             return false;
         }
 
         uint16_t responseLength = (header[4] << 8) | header[5];
         if (responseLength < 3) {
-            log_d("Invalid response length: %d", responseLength);
+            LOGD("Invalid response length: %d", responseLength);
             return false;
         }
 
         uint8_t body[16];
         if (readFully(body, responseLength, 5000) != responseLength) {
-            log_d("Incomplete write multiple response body");
+            LOGD("Incomplete write multiple response body");
             return false;
         }
 
@@ -333,13 +334,13 @@ public:
         // Check for exception response
         if (receivedFunctionCode == (0x10 | 0x80)) {
             uint8_t exceptionCode = body[2];
-            log_d("Modbus write multiple exception: code %d", exceptionCode);
+            LOGD("Modbus write multiple exception: code %d", exceptionCode);
             return false;
         }
 
         // Successful response: unit, function, start addr (2 bytes), quantity (2 bytes)
         if (receivedFunctionCode != 0x10) {
-            log_d("Invalid function code in write multiple response: expected 0x10, got 0x%02X", receivedFunctionCode);
+            LOGD("Invalid function code in write multiple response: expected 0x10, got 0x%02X", receivedFunctionCode);
             return false;
         }
 
@@ -348,12 +349,12 @@ public:
         uint16_t echoedCount = (body[4] << 8) | body[5];
         
         if (echoedAddr != startAddr || echoedCount != count) {
-            log_d("Write multiple response mismatch: addr=0x%04X (expected 0x%04X), count=%d (expected %d)", 
+            LOGD("Write multiple response mismatch: addr=0x%04X (expected 0x%04X), count=%d (expected %d)", 
                   echoedAddr, startAddr, echoedCount, count);
             return false;
         }
 
-        log_d("Successfully wrote %d registers starting at 0x%04X", count, startAddr);
+        LOGD("Successfully wrote %d registers starting at 0x%04X", count, startAddr);
         return true;
     }
 
@@ -367,7 +368,7 @@ private:
         while (bytesRead < len && (millis() - start) < timeoutMs) {
             int got = client.read(buf + bytesRead, len - bytesRead);
             if (got < 0) {
-                log_d("Error reading data: %d", got);
+                LOGD("Error reading data: %d", got);
                 break;
             }
             bytesRead += got;

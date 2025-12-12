@@ -1,6 +1,7 @@
 #pragma once
 
 #include <WiFi.h>
+#include "../../utils/RemoteLogger.hpp"
 #include <WiFiMulti.h>
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
@@ -18,7 +19,7 @@ public:
 
     if (tommorow)
     {
-      log_d("SpotHinta_API does not support fetching electricity prices for tomorrow.");
+      LOGD("SpotHinta_API does not support fetching electricity prices for tomorrow.");
       return result;
     }
 
@@ -28,7 +29,7 @@ public:
       client->setInsecure();
       {
         String url = "https://api.spot-hinta.fi/Today?region=" + domain;
-        log_d("Fetching URL: %s", url.c_str());
+        LOGD("Fetching URL: %s", url.c_str());
         HTTPClient https;
         if (https.begin(*client, url))
         {
@@ -53,14 +54,14 @@ public:
           }
           else
           {
-            log_d("HTTP error code: %d", httpCode);
+            LOGD("HTTP error code: %d", httpCode);
           }
 
           https.end();
         }
         else
         {
-          log_d("Unable to connect to URL: %s", url.c_str());
+          LOGD("Unable to connect to URL: %s", url.c_str());
         }
       }
       client->stop();
@@ -68,7 +69,7 @@ public:
     }
     else
     {
-      log_d("Unable to create client.");
+      LOGD("Unable to create client.");
     }
 
     return result;

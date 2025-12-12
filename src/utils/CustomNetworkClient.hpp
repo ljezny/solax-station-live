@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string.h>
+#include "RemoteLogger.hpp"
 #include <unistd.h>
 #include <sys/socket.h>
 #include <errno.h>
@@ -26,14 +27,14 @@ public:
         int err = getaddrinfo(hostname.c_str(), String(port).c_str(), &hints, &res);
         if (err != 0 || res == nullptr)
         {
-            log_e("getaddrinfo failed: %d", err);
+            LOGE("getaddrinfo failed: %d", err);
             return false;
         }
 
         sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
         if (sock < 0)
         {
-            log_e("Unable to create socket: errno %d", errno);
+            LOGE("Unable to create socket: errno %d", errno);
             freeaddrinfo(res);
             return false;
         }
@@ -53,12 +54,11 @@ public:
         freeaddrinfo(res);
         if (err != 0)
         {
-            log_e("Socket unable to connect: errno %d", errno);
+            LOGE("Socket unable to connect: errno %d", errno);
             close(sock); // Fix: Close the socket on failure
             sock = -1;
             return false;
         }
-        log_i("Successfully connected");
         return true;
     }
 
@@ -74,10 +74,9 @@ public:
         sock = socket(addr_family, SOCK_STREAM, ip_protocol);
         if (sock < 0)
         {
-            log_e("Unable to create socket: errno %d", errno);
+            LOGE("Unable to create socket: errno %d", errno);
             return false;
         }
-        log_i("Socket created %d, connecting to %s:%d", sock, ip.toString().c_str(), port);
 
         struct linger ling;
         ling.l_onoff = 1;
@@ -93,12 +92,11 @@ public:
         int err = ::connect(sock, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
         if (err != 0)
         {
-            log_e("Socket unable to connect: errno %d", errno);
+            LOGE("Socket unable to connect: errno %d", errno);
             close(sock); // Fix: Close the socket on failure
             sock = -1;
             return false;
         }
-        log_i("Successfully connected");
         return true;
     }
 
@@ -109,13 +107,12 @@ public:
 
     void stop()
     {
-        log_i("Stopping socket %d", sock);
         if (sock != -1)
         {
             shutdown(sock, SHUT_RDWR);
             close(sock);
             sock = -1;
-            log_i("Socket closed");
+            LOGI("Socket closed");
         }
     }
 
@@ -124,7 +121,7 @@ public:
         int err = send(sock, buf, size, 0);
         if (err < 0)
         {
-            log_e("Error occurred during sending: errno %d", errno);
+            LOGE("Error occurred during sending: errno %d", errno);
             return err;
         }
         return err;
@@ -135,7 +132,7 @@ public:
         int bytesRead = recv(sock, buf, size, 0);
         if (bytesRead < 0)
         {
-            log_e("Error occurred during receiving: errno %d", errno);
+            LOGE("Error occurred during receiving: errno %d", errno);
             return -1;
         }
         buf[bytesRead] = '\0'; // Null-terminate the buffer

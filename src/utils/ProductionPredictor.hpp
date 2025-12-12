@@ -4,6 +4,7 @@
 #include <Preferences.h>
 #include <cmath>
 #include "NVSMutex.hpp"
+#include "RemoteLogger.hpp"
 
 /**
  * Predikce výroby na základě historie
@@ -130,7 +131,7 @@ public:
         cumulativeError = 0;
         lastCorrectionQuarter = -1;
         
-        log_d("ProductionPredictor initialized with %d Wp, using %d bytes", 
+        LOGD("ProductionPredictor initialized with %d Wp, using %d bytes", 
               installedPowerWp, sizeof(production) + sizeof(sampleCount));
     }
     
@@ -204,7 +205,7 @@ public:
         
         sampleCount[quarter]++;
         
-        log_d("Updated production for quarter %d: %.1f Wh (samples: %d, correction: %.1f)", 
+        LOGD("Updated production for quarter %d: %.1f Wh (samples: %d, correction: %.1f)", 
               quarter, production[quarter], sampleCount[quarter], cumulativeError);
     }
     
@@ -224,11 +225,11 @@ public:
         // Reset korekce o půlnoci
         if (quarter < lastCorrectionQuarter) {
             cumulativeError = 0;
-            log_d("Production correction reset at midnight");
+            LOGD("Production correction reset at midnight");
         }
         lastCorrectionQuarter = quarter;
         
-        log_d("Production correction updated: actual=%.1f, predicted=%.1f, error=%.1f, cumError=%.1f",
+        LOGD("Production correction updated: actual=%.1f, predicted=%.1f, error=%.1f, cumError=%.1f",
               actualWh, basePrediction, error, cumulativeError);
     }
     
@@ -392,7 +393,7 @@ public:
      * Používá se při RESET tlačítku v UI
      */
     void clearAllData() {
-        log_i("Clearing all production prediction data");
+        LOGI("Clearing all production prediction data");
         
         // Reset všech dat na výchozí hodnoty
         for (int q = 0; q < QUARTERS_PER_DAY; q++) {
@@ -413,7 +414,7 @@ public:
             if (preferences.begin(NAMESPACE, false)) {
                 preferences.clear();
                 preferences.end();
-                log_d("Production prediction NVS data cleared");
+                LOGD("Production prediction NVS data cleared");
             }
         }
     }
@@ -424,7 +425,7 @@ public:
     void saveToPreferences() {
         NVSGuard guard;
         if (!guard.isLocked()) {
-            log_e("Failed to lock NVS mutex for saving production history");
+            LOGE("Failed to lock NVS mutex for saving production history");
             return;
         }
         
@@ -445,7 +446,7 @@ public:
             preferences.putBytes("cnt", compressedCnt, sizeof(compressedCnt));
             
             preferences.end();
-            log_d("Production history saved (simplified format)");
+            LOGD("Production history saved (simplified format)");
         }
     }
     
@@ -455,7 +456,7 @@ public:
     void loadFromPreferences() {
         NVSGuard guard;
         if (!guard.isLocked()) {
-            log_e("Failed to lock NVS mutex for loading production history");
+            LOGE("Failed to lock NVS mutex for loading production history");
             return;
         }
         
@@ -471,7 +472,7 @@ public:
                 for (int q = 0; q < QUARTERS_PER_DAY; q++) {
                     production[q] = (float)compressedProd[q];
                 }
-                log_d("Production loaded from new format");
+                LOGD("Production loaded from new format");
             } else {
                 // Zkusíme starý formát (měsíční) - načteme aktuální měsíc
                 time_t now = time(nullptr);
@@ -484,13 +485,13 @@ public:
                     for (int q = 0; q < QUARTERS_PER_DAY; q++) {
                         production[q] = (float)compressedProd[q];
                     }
-                    log_d("Production migrated from old format (month %d)", month);
+                    LOGD("Production migrated from old format (month %d)", month);
                 } else {
                     // Žádná data - použijeme výchozí hodnoty
                     for (int q = 0; q < QUARTERS_PER_DAY; q++) {
                         production[q] = getDefaultProduction(q);
                     }
-                    log_d("Production initialized with defaults");
+                    LOGD("Production initialized with defaults");
                 }
             }
             

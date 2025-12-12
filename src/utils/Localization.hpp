@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "RemoteLogger.hpp"
 #include <Preferences.h>
 #include "NVSMutex.hpp"
 
@@ -185,7 +186,7 @@ public:
             }
         }
         initialized = true;
-        log_d("Localization initialized, language: %d", currentLanguage);
+        LOGD("Localization initialized, language: %d", currentLanguage);
     }
     
     /**
@@ -211,7 +212,7 @@ public:
                 prefs.end();
             }
         }
-        log_d("Language set to: %d", lang);
+        LOGD("Language set to: %d", lang);
     }
     
     /**

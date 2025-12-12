@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../utils/RemoteLogger.hpp"
+
 typedef enum DongleStatus {
     DONGLE_STATUS_OK = 1,
     DONGLE_STATUS_UNKNOWN = 0,
@@ -67,44 +69,9 @@ typedef struct
 } InverterData_t;
 
 void logInverterData(InverterData_t& inverterData) {
-    log_d("Inverter data:");
-    log_d("Status: %d", inverterData.status);
-    log_d("Millis: %ld", inverterData.millis);
-    log_d("SN: %s", inverterData.sn.c_str());
-    log_d("PV1 Power: %d", inverterData.pv1Power);
-    log_d("PV2 Power: %d", inverterData.pv2Power);
-    log_d("PV3 Power: %d", inverterData.pv3Power);
-    log_d("PV4 Power: %d", inverterData.pv4Power);
-    log_d("SOC: %d", inverterData.soc);
-    log_d("Battery Power: %d", inverterData.batteryPower);
-    log_d("Battery Charged Today: %f", inverterData.batteryChargedToday);
-    log_d("Battery Discharged Today: %f", inverterData.batteryDischargedToday);
-    log_d("Battery capacity: %f", inverterData.batteryCapacityWh);
-    log_d("Grid Buy Today: %f", inverterData.gridBuyToday);
-    log_d("Grid Sell Today: %f", inverterData.gridSellToday);
-    log_d("Grid Buy Total: %f", inverterData.gridBuyTotal);
-    log_d("Grid Sell Total: %f", inverterData.gridSellTotal);
-    log_d("L1 Power: %d", inverterData.inverterOutpuPowerL1);
-    log_d("L2 Power: %d", inverterData.inverterOutpuPowerL2);
-    log_d("L3 Power: %d", inverterData.inverterOutpuPowerL3);
-    log_d("Load Power: %d", inverterData.loadPower);
-    log_d("Load Today: %f", inverterData.loadToday);
-    log_d("Load Total: %f", inverterData.loadTotal);
-    log_d("Grid Power L1: %d", inverterData.gridPowerL1);
-    log_d("Grid Power L2: %d", inverterData.gridPowerL2);
-    log_d("Grid Power L3: %d", inverterData.gridPowerL3);
-    log_d("Inverter Temperature: %d", inverterData.inverterTemperature);
-    log_d("Battery Temperature: %d", inverterData.batteryTemperature);
-    log_d("PV Today: %f", inverterData.pvToday);
-    log_d("PV Total: %f", inverterData.pvTotal);
-    log_d("Has Battery: %d", inverterData.hasBattery);
-    log_d("Max Charge Power: %d W", inverterData.maxChargePowerW);
-    log_d("Max Discharge Power: %d W", inverterData.maxDischargePowerW);
-    if (inverterData.inverterTime > 0) {
-        struct tm timeinfo;
-        localtime_r(&inverterData.inverterTime, &timeinfo);
-        log_d("Inverter Time: %04d-%02d-%02d %02d:%02d:%02d", 
-              timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
-              timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-    }
+    LOGD("Inv: SOC=%d%% BatPwr=%dW PV1=%dW PV2=%dW PV3=%dW PV4=%dW Load=%dW GridPwr=%d/%d/%dW",
+         inverterData.soc, inverterData.batteryPower,
+         inverterData.pv1Power, inverterData.pv2Power, inverterData.pv3Power, inverterData.pv4Power,
+         inverterData.loadPower,
+         inverterData.gridPowerL1, inverterData.gridPowerL2, inverterData.gridPowerL3);
 } 

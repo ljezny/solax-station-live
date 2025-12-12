@@ -8,6 +8,7 @@
 #include "ProductionPredictor.hpp"
 #include "../Inverters/InverterResult.hpp"
 #include "../Spot/ElectricityPriceResult.hpp"
+#include "RemoteLogger.hpp"
 
 /**
  * Výsledek simulace pro jednu čtvrthodinu
@@ -1121,7 +1122,7 @@ public:
             result.reason = reason;
             
             // === DIAGNOSTICKÉ LOGOVÁNÍ PRO KAŽDÉ Q ===
-            log_d("Q%d %02d:%02d | SOC:%.0f%% | prod:%.2f cons:%.2f | spot:%.2f buy:%.2f sell:%.2f | globMin:%.2f locMin:%.2f locMax:%.2f | dec:%s | %s",
+            LOGD("Q%d %02d:%02d | SOC:%.0f%% | prod:%.2f cons:%.2f | spot:%.2f buy:%.2f sell:%.2f | globMin:%.2f locMin:%.2f locMax:%.2f | dec:%s | %s",
                   q, result.hour, result.minute,
                   batterySocStart,
                   productionKwh, consumptionKwh,
@@ -1220,7 +1221,7 @@ public:
         }
         
         outFinalBatteryKwh = batteryKwh;
-        log_d("BASELINE: cost=%.1f sold=%.1f bought=%.1f charged=%.1f finalBat=%.1f kWh (%.0f%%)", 
+        LOGD("BASELINE: cost=%.1f sold=%.1f bought=%.1f charged=%.1f finalBat=%.1f kWh (%.0f%%)", 
               totalCost, totalSold, totalBought, totalCharged, batteryKwh, kwhToSoc(batteryKwh));
         return totalCost;
     }

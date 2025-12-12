@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
+#include "utils/RemoteLogger.hpp"
 #include <lvgl.h>
 #include "ui/ui.h"
 #include "utils/UIBallAnimator.hpp"
@@ -399,10 +400,10 @@ public:
         lv_obj_add_flag(ui_Chart1, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_add_event_cb(ui_Chart1, onAnyTouchShowButtons, LV_EVENT_PRESSED, this);
         lv_obj_add_event_cb(ui_Chart1, [](lv_event_t *e) {
-            log_d("Solar chart clicked");
+            LOGD("Solar chart clicked");
             DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
             if (self) {
-                log_d("Self valid, calling toggleChartExpand for solar chart");
+                LOGD("Self valid, calling toggleChartExpand for solar chart");
                 self->toggleChartExpand(ui_RightBottomContainer);
             }
         }, LV_EVENT_CLICKED, this);
@@ -410,10 +411,10 @@ public:
         lv_obj_add_flag(ui_spotPriceContainer, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_add_event_cb(ui_spotPriceContainer, onAnyTouchShowButtons, LV_EVENT_PRESSED, this);
         lv_obj_add_event_cb(ui_spotPriceContainer, [](lv_event_t *e) {
-            log_d("Spot price clicked");
+            LOGD("Spot price clicked");
             DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
             if (self) {
-                log_d("Self valid, calling toggleChartExpand for spot");
+                LOGD("Self valid, calling toggleChartExpand for spot");
                 self->toggleChartExpand(ui_spotPriceContainer);
             }
         }, LV_EVENT_CLICKED, this);
@@ -693,7 +694,7 @@ public:
             // Summary is the first child (index 0), detail is second (index 1)
             lv_obj_t* summary = lv_obj_get_child(tile, 0);
             lv_obj_t* detail = lv_obj_get_child(tile, 1);
-            log_d("Intelligence tile clicked, tile=%p, summary=%p, detail=%p", tile, summary, detail);
+            LOGD("Intelligence tile clicked, tile=%p, summary=%p, detail=%p", tile, summary, detail);
             self->toggleChartExpand(tile, summary, detail);
         }, LV_EVENT_CLICKED, intelligencePlanTile);
         
@@ -710,7 +711,7 @@ public:
             if (!self) return;
             lv_obj_t* summary = lv_obj_get_child(tile, 0);
             lv_obj_t* detail = lv_obj_get_child(tile, 1);
-            log_d("Intelligence detail clicked, tile=%p, summary=%p, detail=%p", tile, summary, detail);
+            LOGD("Intelligence detail clicked, tile=%p, summary=%p, detail=%p", tile, summary, detail);
             self->toggleChartExpand(tile, summary, detail);
         }, LV_EVENT_CLICKED, intelligencePlanTile);
         
@@ -1105,22 +1106,22 @@ public:
     }
 
     void toggleChartExpand(lv_obj_t *chart, lv_obj_t *summary = nullptr, lv_obj_t *detail = nullptr) {
-        log_d("toggleChartExpand called with chart=%p, ui_spotPriceContainer=%p, ui_RightBottomContainer=%p", 
+        LOGD("toggleChartExpand called with chart=%p, ui_spotPriceContainer=%p, ui_RightBottomContainer=%p", 
               chart, ui_spotPriceContainer, ui_RightBottomContainer);
         if (!chart) {
-            log_e("Toggle chart: null chart pointer");
+            LOGE("Toggle chart: null chart pointer");
             return;
         }
         
         bool isCollapsing = (expandedChart == chart);
         bool isIntelligenceTile = (summary != nullptr && detail != nullptr);
-        log_d("Toggle chart: isCollapsing=%d, isIntelligenceTile=%d, expandedChart=%p, chart=%p", 
+        LOGD("Toggle chart: isCollapsing=%d, isIntelligenceTile=%d, expandedChart=%p, chart=%p", 
               isCollapsing, isIntelligenceTile, expandedChart, chart);
         
         if (isCollapsing) {
             // If collapsing intelligence tile
             if (isIntelligenceTile) {
-                log_d("Collapsing intelligence tile");
+                LOGD("Collapsing intelligence tile");
                 // 1. Fade out and hide detail content
                 animateFade(detail, false);
                 lv_obj_set_flex_grow(detail, 0);
@@ -1163,14 +1164,14 @@ public:
                         animateFade(child, true, ANIM_DURATION / 2);
                         lv_obj_set_flex_grow(child, 0);
                         lv_obj_set_height(child, LV_SIZE_CONTENT);
-                        log_d("Restoring intelligence tile visibility");
+                        LOGD("Restoring intelligence tile visibility");
                     }
                     continue;
                 }
                 
                 // Handle spot price container
                 if (child == ui_spotPriceContainer) {
-                    log_d("Processing spotPriceContainer, hasValidPriceData=%d", hasValidPriceData());
+                    LOGD("Processing spotPriceContainer, hasValidPriceData=%d", hasValidPriceData());
                     if (hasValidPriceData()) {
                         animateFade(child, true, ANIM_DURATION / 2);
                         lv_obj_set_flex_grow(child, 1);
@@ -1180,7 +1181,7 @@ public:
                 
                 // Handle solar chart (RightBottomContainer)
                 if (child == ui_RightBottomContainer) {
-                    log_d("Processing RightBottomContainer");
+                    LOGD("Processing RightBottomContainer");
                     animateFade(child, true, ANIM_DURATION / 2);
                     lv_obj_set_flex_grow(child, 2);
                     continue;
@@ -1212,7 +1213,7 @@ public:
             
             // If expanding intelligence tile
             if (isIntelligenceTile) {
-                log_d("Expanding intelligence tile");
+                LOGD("Expanding intelligence tile");
                 // Summary stays visible (always shown)
                 lv_obj_clear_flag(summary, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_set_height(summary, LV_SIZE_CONTENT);
@@ -1237,9 +1238,9 @@ public:
         for (uint32_t i = 0; i < childCount; i++) {
             lv_obj_t *child = lv_obj_get_child(ui_RightContainer, i);
             bool hidden = lv_obj_has_flag(child, LV_OBJ_FLAG_HIDDEN);
-            log_d("Child %d: height=%d, flex_grow=%d, hidden=%d", i, lv_obj_get_height(child), lv_obj_get_style_flex_grow(child, 0), hidden);
+            LOGD("Child %d: height=%d, flex_grow=%d, hidden=%d", i, lv_obj_get_height(child), lv_obj_get_style_flex_grow(child, 0), hidden);
         }
-        log_d("Toggle chart: layout updated, chart height=%d", lv_obj_get_height(chart));
+        LOGD("Toggle chart: layout updated, chart height=%d", lv_obj_get_height(chart));
     }
 
     void setModeChangeCallback(InverterModeChangeCallback callback) {

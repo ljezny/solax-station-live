@@ -3,6 +3,7 @@
 #define ShellyAPI_h
 
 #include <WiFi.h>
+#include "../utils/RemoteLogger.hpp"
 #include <Preferences.h>
 #include <HTTPClient.h>
 #include <WiFiClient.h>
@@ -114,7 +115,7 @@ public:
         {
             if (WiFi.status() == WL_CONNECTED)
             {
-                log_d("Connected to Shelly AP: %s", shellySSId.c_str());
+                LOGD("Connected to Shelly AP: %s", shellySSId.c_str());
                 setWiFiSTA(shellySSId, ssid, password);
                 break;
             }
@@ -129,7 +130,7 @@ public:
 
     bool sendRequest(WiFiClient &client, IPAddress ipAddress, String method, String path, String requestBody)
     {
-        log_d("IP: %s", ipAddress.toString().c_str());
+        LOGD("IP: %s", ipAddress.toString().c_str());
         if (client.connect(ipAddress, 80, 3000))
         {
             String request = "";
@@ -150,7 +151,7 @@ public:
             {
                 request += requestBody;
             }
-            log_d("Request: %s", request.c_str());
+            LOGD("Request: %s", request.c_str());
             client.write(request.c_str(), request.length());
 
             for (int i = 0; i < 50; i++)
@@ -163,7 +164,7 @@ public:
             }
 
             String headerLine = client.readStringUntil('\n');
-            log_d("Response code: %s", headerLine.c_str());
+            LOGD("Response code: %s", headerLine.c_str());
             if (headerLine.startsWith("HTTP/1.1 200 OK"))
             {
                 while (!headerLine.isEmpty())
@@ -176,7 +177,7 @@ public:
         }
         else
         {
-            log_e("Failed to connect");
+            LOGE("Failed to connect");
         }
 
         return false;
@@ -196,13 +197,13 @@ public:
 
         if (mdns_init() != ESP_OK)
         {
-            log_e("Failed starting MDNS");
+            LOGE("Failed starting MDNS");
             return;
         }
 
         if (mdns_query_ptr("_http", "_tcp", 3000, 20, &results) != ESP_OK)
         {
-            log_e("Failed to query MDNS");
+            LOGE("Failed to query MDNS");
             mdns_free();
             return;
         }
@@ -210,28 +211,28 @@ public:
         uint8_t numResult = 0;
 
         mdns_result_t *r = results;
-        log_d("SoftAP IP: %s, Subnet: %s", softAPIP.toString().c_str(), softAPSubnet.toString().c_str());
+        LOGD("SoftAP IP: %s, Subnet: %s", softAPIP.toString().c_str(), softAPSubnet.toString().c_str());
         while (r)
         {
             const char *rawHost = r->hostname;
             if (!rawHost || !*rawHost)
             {
-                log_w("mDNS result with null/empty hostname; skipping");
+                LOGW("mDNS result with null/empty hostname; skipping");
                 r = r->next;
                 continue;
             }
             String hostname(rawHost);
-            log_d("Found service: %s", hostname.c_str());
+            LOGD("Found service: %s", hostname.c_str());
             // check null
             if (r->addr == nullptr)
             {
-                log_w("mDNS result with null address; skipping");
+                LOGW("mDNS result with null address; skipping");
                 r = r->next;
                 continue;
             }
             if (r->addr->addr.type != ESP_IPADDR_TYPE_V4)
             {
-                log_w("mDNS result with non-IPv4 address; skipping");
+                LOGW("mDNS result with non-IPv4 address; skipping");
                 r = r->next;
                 continue;
             }
@@ -240,7 +241,7 @@ public:
             // check if IP is in the same subnet as softAP
             if (inSameSubnet(ipAddress, softAPIP, softAPSubnet))
             {
-                log_d("Found Shelly on softAP subnet: %s", hostname.c_str());
+                LOGD("Found Shelly on softAP subnet: %s", hostname.c_str());
                 hostname.toLowerCase();
                 for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
                 {
@@ -248,18 +249,18 @@ public:
                     prefix.toLowerCase();
                     if (hostname.startsWith(prefix))
                     {
-                        log_d("Found Shelly: %s model: %s", hostname.c_str(), supportedModels[i].prefix.c_str());
+                        LOGD("Found Shelly: %s model: %s", hostname.c_str(), supportedModels[i].prefix.c_str());
                         String idText = hostname.substring(prefix.length());
                         unsigned long long shellyId = strtoull(idText.c_str(), NULL, 16);
                         for (int j = 0; j < MAX_SHELLY_PAIRS; j++)
                         {
-                            log_d("Checking Shelly %s", String(pairs[j].shellyId, HEX).c_str());
+                            LOGD("Checking Shelly %s", String(pairs[j].shellyId, HEX).c_str());
                             if (pairs[j].shellyId == 0 || pairs[j].shellyId == shellyId)
                             {
                                 pairs[j].shellyId = shellyId;
                                 pairs[j].ip = r->addr->addr.u_addr.ip4.addr;
                                 pairs[j].model = supportedModels[i].model;
-                                log_d("Paired Shelly %s", String(shellyId, HEX).c_str());
+                                LOGD("Paired Shelly %s", String(shellyId, HEX).c_str());
                                 break;
                             }
                         }
@@ -272,7 +273,7 @@ public:
         }
         mdns_query_results_free(results);
         mdns_free();
-        log_d("Paired Shelly count: %d", getPairedCount());
+        LOGD("Paired Shelly count: %d", getPairedCount());
     }
 
     ShellyResult_t getState()
@@ -282,7 +283,7 @@ public:
         {
             if (pairs[i].shellyId != 0 && pairs[i].ip != INADDR_NONE)
             {
-                log_d("Getting state for Shelly %s", String(pairs[i].shellyId, HEX).c_str());
+                LOGD("Getting state for Shelly %s", String(pairs[i].shellyId, HEX).c_str());
                 result.pairedCount++;
 
                 ShellyStateResult_t state = getState(pairs[i]);
@@ -292,7 +293,7 @@ public:
                 }
                 else
                 {
-                    log_e("Failed to get state for Shelly %s", String(pairs[i].shellyId, HEX).c_str());
+                    LOGE("Failed to get state for Shelly %s", String(pairs[i].shellyId, HEX).c_str());
                 }
 
                 if (pairs[i].lastState.isOn)
@@ -305,7 +306,7 @@ public:
 
                 if ((millis() - pairs[i].lastState.updated) > 5 * 60 * 1000)
                 {
-                    log_w("Shelly %s state is outdated", String(pairs[i].shellyId, HEX).c_str());
+                    LOGW("Shelly %s state is outdated", String(pairs[i].shellyId, HEX).c_str());
                     pairs[i].lastState = ShellyStateResult_t();
                     pairs[i].ip = INADDR_NONE;
                     pairs[i].shellyId = 0;
@@ -317,7 +318,7 @@ public:
 
     void updateState(RequestedSmartControlState_t requestedState, int timeoutSec)
     {
-        log_d("Updating state to %d", requestedState);
+        LOGD("Updating state to %d", requestedState);
         for (int i = 0; i < MAX_SHELLY_PAIRS; i++)
         {
             if (pairs[i].shellyId != 0 && pairs[i].ip != INADDR_NONE)
@@ -339,7 +340,7 @@ public:
                     }
                     else
                     {
-                        log_w("Shelly %s cannot be controlled", String(pairs[i].shellyId, HEX).c_str());
+                        LOGW("Shelly %s cannot be controlled", String(pairs[i].shellyId, HEX).c_str());
                     }
                 }
             }
@@ -484,7 +485,7 @@ private:
             DeserializationError err = deserializeJson(doc, loggingStream);
             if (err)
             {
-                log_e("Failed to parse JSON");
+                LOGE("Failed to parse JSON");
             }
             else
             {
@@ -513,7 +514,7 @@ private:
             DeserializationError err = deserializeJson(doc, loggingStream);
             if (err)
             {
-                log_e("Failed to parse JSON");
+                LOGE("Failed to parse JSON");
             }
             else
             {

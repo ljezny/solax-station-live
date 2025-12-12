@@ -35,6 +35,7 @@
 #include "utils/ProductionPredictor.hpp"
 #include "utils/WebServer.hpp"
 #include "utils/NVSMutex.hpp"
+#include "utils/RemoteLogger.hpp"
 
 #define UI_REFRESH_INTERVAL 5000            // Define the UI refresh interval in milliseconds
 #define INVERTER_DATA_REFRESH_INTERVAL 5000 // Seems that 3s is problematic for some dongles (GoodWe), so we use 5s
@@ -64,7 +65,7 @@ static long lastShellyPairAttempt = 0;
 static long lastWiFiScanAttempt = 0;
 static long lastInverterDataAttempt = 0;
 
-SET_LOOP_TASK_STACK_SIZE(8 * 1024); // use freeStack
+SET_LOOP_TASK_STACK_SIZE(16 * 1024); // Increased for RemoteLogger (HTTPS + buffers)
 
 WiFiDiscovery dongleDiscovery;
 ShellyAPI shellyAPI;
@@ -74,6 +75,7 @@ BacklightResolver backlightResolver;
 SoftAP softAP;
 Touch touch;
 WebServer webServer;
+RemoteLogger remoteLogger;
 
 InverterData_t inverterData;
 InverterData_t previousInverterData;
@@ -93,9 +95,9 @@ static bool ntpTimeSynced = false;   // Track if time was synced via NTP
 // POZOR: Před releasem nastavit na false!
 static constexpr bool DEBUG_USE_FIXED_TIME = false;
 static constexpr int DEBUG_TIME_YEAR = 2025;
-static constexpr int DEBUG_TIME_MONTH = 9; 
-static constexpr int DEBUG_TIME_DAY = 4;
-static constexpr int DEBUG_TIME_HOUR = 4;
+static constexpr int DEBUG_TIME_MONTH = 12; 
+static constexpr int DEBUG_TIME_DAY = 12;
+static constexpr int DEBUG_TIME_HOUR = 7;
 static constexpr int DEBUG_TIME_MINUTE = 0;
 
 MedianPowerSampler shellyMedianPowerSampler;
@@ -256,7 +258,7 @@ void lvglTimerTask(void *param)
             static uint32_t lastMutexWarning = 0;
             if (millis() - lastMutexWarning > 5000)
             {
-                log_w("LVGL mutex timeout - something blocking UI!");
+                LOGW("LVGL mutex timeout - something blocking UI!");
                 lastMutexWarning = millis();
             }
             vTaskDelay(pdMS_TO_TICKS(5));
@@ -280,7 +282,7 @@ void lvglTimerTask(void *param)
         // Log every 5 seconds
         if (millis() - lastLvglLog > 5000)
         {
-            log_d("LVGL handler: %d calls (%.1f/s), avg: %dus, max: %dus, maxMutexWait: %dus",
+            LOGD("LVGL handler: %d calls (%.1f/s), avg: %dus, max: %dus, maxMutexWait: %dus",
                   lvglCallCount, lvglCallCount / 5.0f,
                   lvglCallCount > 0 ? totalLvglTime / lvglCallCount : 0,
                   maxLvglTime, maxMutexWait);
@@ -349,10 +351,10 @@ void setupLVGL()
     disp_draw_buf2 = (lv_color_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
     
     if (!disp_draw_buf1 || !disp_draw_buf2) {
-        log_e("Failed to allocate display buffers in PSRAM!");
+        LOGE("Failed to allocate display buffers in PSRAM!");
     }
     lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * bufferLines);
-    log_d("Display buffers in PSRAM: 2x %.1f KB (%d lines)", bufferSize / 1024.0f, bufferLines);
+    LOGD("Display buffers in PSRAM: 2x %.1f KB (%d lines)", bufferSize / 1024.0f, bufferLines);
 #else
     // Standard CrowPanel - try internal DMA RAM first for better performance
     size_t bufferLines = 48; // Number of lines per buffer
@@ -364,7 +366,7 @@ void setupLVGL()
 
     if (!disp_draw_buf1 || !disp_draw_buf2)
     {
-        log_w("Failed to allocate in internal RAM, falling back to PSRAM");
+        LOGW("Failed to allocate in internal RAM, falling back to PSRAM");
         // Free any partial allocation
         if (disp_draw_buf1)
             heap_caps_free(disp_draw_buf1);
@@ -376,12 +378,12 @@ void setupLVGL()
         disp_draw_buf1 = (lv_color_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
         disp_draw_buf2 = (lv_color_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
         lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight);
-        log_d("Display buffers in PSRAM: 2x %.1f KB", bufferSize / 1024.0f);
+        LOGD("Display buffers in PSRAM: 2x %.1f KB", bufferSize / 1024.0f);
     }
     else
     {
         lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * bufferLines);
-        log_d("Display buffers in internal DMA RAM: 2x %.1f KB (%d lines)", bufferSize / 1024.0f, bufferLines);
+        LOGD("Display buffers in internal DMA RAM: 2x %.1f KB (%d lines)", bufferSize / 1024.0f, bufferLines);
     }
 #endif
     /* Initialize the display */
@@ -416,7 +418,7 @@ void setupLVGL()
     // operations here. Instead, we queue the request and process it in mainUpdateTask.
     dashboardUI->setModeChangeCallback([](InverterMode_t mode, bool enableIntelligence)
                                        {
-        log_d("Mode change requested: mode=%d, intelligence=%d", mode, enableIntelligence);
+        LOGD("Mode change requested: mode=%d, intelligence=%d", mode, enableIntelligence);
         
         // Update intelligence settings (NVS is fast, OK to do here)
         IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
@@ -462,11 +464,11 @@ void setup()
 
     if (!electricityPriceResult || !previousElectricityPriceResult)
     {
-        log_e("Failed to allocate electricity price structures in PSRAM!");
+        LOGE("Failed to allocate electricity price structures in PSRAM!");
     }
     else
     {
-        log_d("Electricity price structures allocated in PSRAM (%d bytes each)", sizeof(ElectricityPriceTwoDays_t));
+        LOGD("Electricity price structures allocated in PSRAM (%d bytes each)", sizeof(ElectricityPriceTwoDays_t));
     }
 
     setupLVGL();
@@ -505,7 +507,7 @@ void startSoftAPIfShellyFound()
         if (!dongleDiscovery.discoveries[i].ssid.isEmpty() && 
             shellyAPI.isShellySSID(dongleDiscovery.discoveries[i].ssid))
         {
-            log_d("Found Shelly device in scan, starting SoftAP");
+            LOGD("Found Shelly device in scan, starting SoftAP");
             softAP.start();
             return;
         }
@@ -568,7 +570,7 @@ InverterData_t loadInverterData(WiFiDiscoveryResult_t &discoveryResult)
         d.status = DONGLE_STATUS_UNSUPPORTED_DONGLE;
         break;
     }
-    log_d("Inverter data loaded in %d ms", millis() - millisBefore);
+    LOGD("Inverter data loaded in %d ms", millis() - millisBefore);
     return d;
 }
 
@@ -615,7 +617,7 @@ bool loadInverterDataTask()
     static int incrementalDelayTimeOnError = 0;
     if (lastInverterDataAttempt == 0 || (millis() - lastInverterDataAttempt) > (INVERTER_DATA_REFRESH_INTERVAL + incrementalDelayTimeOnError))
     {
-        log_d("Loading inverter data");
+        LOGD("Loading inverter data");
         run = true;
 #if DEMO
         inverterData = createRandomMockData();
@@ -626,7 +628,7 @@ bool loadInverterDataTask()
 
         if (dongleDiscovery.connectToDongle(wifiDiscoveryResult))
         {
-            log_d("Dongle wifi connected.");
+            LOGD("Dongle wifi connected.");
 
             InverterData_t d = loadInverterData(wifiDiscoveryResult);
 
@@ -653,7 +655,7 @@ bool loadInverterDataTask()
                 // Save predictors to flash when quarter changes
                 if (consumptionQuarterChanged || productionQuarterChanged)
                 {
-                    log_d("Quarter changed, saving predictors to flash");
+                    LOGD("Quarter changed, saving predictors to flash");
                     NVSGuard guard;
                     if (guard.isLocked())
                     {
@@ -672,7 +674,7 @@ bool loadInverterDataTask()
             {
                 failures++;
                 incrementalDelayTimeOnError += 2000; // increase delay if connection failed
-                log_d("Failed to load data from  dongle. Failures: %d", failures);
+                LOGD("Failed to load data from  dongle. Failures: %d", failures);
                 if (failures > 10)
                 {
                     failures = 0;
@@ -695,19 +697,17 @@ bool pairShellyTask()
     bool run = false;
     if (lastShellyPairAttempt == 0 || millis() - lastShellyPairAttempt > 30000)
     {
-        log_d("Pairing Shelly");
         for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
         {
             if (dongleDiscovery.discoveries[i].ssid.isEmpty())
             {
                 continue;
             }
-            log_d("Checking SSID: %s", dongleDiscovery.discoveries[i].ssid.c_str());
             if (shellyAPI.isShellySSID(dongleDiscovery.discoveries[i].ssid))
             {
                 // Pokud najdeme Shelly a SoftAP neběží, zapneme ho
                 if (!softAP.isRunning()) {
-                    log_d("Found Shelly to pair, starting SoftAP");
+                    LOGD("Shelly pair: found %s, starting SoftAP", dongleDiscovery.discoveries[i].ssid.c_str());
                     softAP.start();
                 }
                 
@@ -715,6 +715,7 @@ bool pairShellyTask()
                 {
                     if (shellyAPI.setWiFiSTA(dongleDiscovery.discoveries[i].ssid, softAP.getSSID(), softAP.getPassword()))
                     {
+                        LOGD("Shelly paired: %s → %s", dongleDiscovery.discoveries[i].ssid.c_str(), softAP.getSSID().c_str());
                         dongleDiscovery.discoveries[i].ssid = ""; // clear SSID to avoid reconnecting
                     }
                     WiFi.disconnect();
@@ -723,7 +724,6 @@ bool pairShellyTask()
         }
         if (softAP.isRunning() && shellyAPI.getPairedCount() < softAP.getNumberOfConnectedDevices())
         {
-            log_d("Connected devices: %d, paired devices: %d", softAP.getNumberOfConnectedDevices(), shellyAPI.getPairedCount());
             shellyAPI.queryMDNS(WiFi.softAPIP(), WiFi.softAPSubnetMask());
         }
         lastShellyPairAttempt = millis();
@@ -737,7 +737,7 @@ bool reloadShellyTask()
     bool run = false;
     if (lastShellyAttempt == 0 || millis() - lastShellyAttempt > SHELLY_REFRESH_INTERVAL)
     {
-        log_d("Reloading Shelly data");
+        LOGD("Reloading Shelly data");
         shellyResult = shellyAPI.getState();
         RequestedSmartControlState_t state = shellyRuleResolver.resolveSmartControlState(1500, 100, 500, 100);
         if (state != SMART_CONTROL_UNKNOWN)
@@ -763,7 +763,7 @@ bool loadElectricityPriceTask()
     bool run = false;
     if (lastElectricityPriceAttempt == 0 || millis() - lastElectricityPriceAttempt > ELECTRICITY_PRICE_REFRESH_INTERVAL)
     {
-        log_d("Loading electricity price data");
+        LOGD("Loading electricity price data");
         ElectricityPriceLoader loader;
         ElectricityPriceProvider_t provider = loader.getStoredElectricityPriceProvider();
 
@@ -772,7 +772,7 @@ bool loadElectricityPriceTask()
             // Nejprve načteme dnešní data
             if (loader.loadTodayPrices(provider, electricityPriceResult))
             {
-                log_d("Today electricity prices loaded");
+                LOGD("Today electricity prices loaded");
 
                 // Invalidate intelligence to recalculate with new prices
                 lastIntelligenceAttempt = 0;
@@ -812,7 +812,7 @@ bool runIntelligenceTask()
 
     if (shouldRun)
     {
-        log_d("Running intelligence resolver");
+        LOGD("Running intelligence resolver");
 
         IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
         bool hasSpotPrices = electricityPriceResult && electricityPriceResult->updated > 0;
@@ -829,13 +829,13 @@ bool runIntelligenceTask()
             float buyPrice = IntelligenceSettingsStorage::calculateBuyPrice(currentSpotPrice, settings);
             float sellPrice = IntelligenceSettingsStorage::calculateSellPrice(currentSpotPrice, settings);
 
-            log_i("=== INTELLIGENCE SIMULATION ===");
-            log_i("Time: %02d:%02d (Q%d), SOC: %d%%, Enabled: %s",
+            LOGI("=== INTELLIGENCE SIMULATION ===");
+            LOGI("Time: %02d:%02d (Q%d), SOC: %d%%, Enabled: %s",
                   timeinfo_log->tm_hour, timeinfo_log->tm_min, currentQuarterLog, inverterData.soc,
                   settings.enabled ? "YES" : "NO");
-            log_i("Spot: %.2f %s, Buy: %.2f, Sell: %.2f, Battery cost: %.2f",
+            LOGI("Spot: %.2f %s, Buy: %.2f, Sell: %.2f, Battery cost: %.2f",
                   currentSpotPrice, electricityPriceResult->currency, buyPrice, sellPrice, settings.batteryCostPerKwh);
-            log_i("Battery: %.1f kWh capacity, min SOC: %d%%, max SOC: %d%%",
+            LOGI("Battery: %.1f kWh capacity, min SOC: %d%%, max SOC: %d%%",
                   inverterData.batteryCapacityWh / 1000.0f, settings.minSocPercent, settings.maxSocPercent);
 
             // Run simulation to get all quarter decisions at once
@@ -850,7 +850,7 @@ bool runIntelligenceTask()
                 lastIntelligenceResult.expectedSavings = summary.totalSavingsCzk;
             }
 
-            log_i("Recommended action: %s - %s",
+            LOGI("Recommended action: %s - %s",
                   IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str(),
                   lastIntelligenceResult.reason.c_str());
 
@@ -878,32 +878,32 @@ bool runIntelligenceTask()
             }
 
             // Log simulation summary
-            log_i("=== SIMULATION SUMMARY ===");
-            log_i("Total production: %.1f kWh, consumption: %.1f kWh",
+            LOGI("=== SIMULATION SUMMARY ===");
+            LOGI("Total production: %.1f kWh, consumption: %.1f kWh",
                   summary.totalProductionKwh, summary.totalConsumptionKwh);
-            log_i("Grid: bought %.1f kWh, sold %.1f kWh",
+            LOGI("Grid: bought %.1f kWh, sold %.1f kWh",
                   summary.totalFromGridKwh, summary.totalToGridKwh);
-            log_i("Intelligent: cost %.1f CZK, final SOC %.0f%%",
+            LOGI("Intelligent: cost %.1f CZK, final SOC %.0f%%",
                   summary.totalCostCzk, summary.finalBatterySoc);
-            log_i("Baseline (dumb): cost %.1f CZK, final SOC %.0f%%",
+            LOGI("Baseline (dumb): cost %.1f CZK, final SOC %.0f%%",
                   summary.baselineCostCzk, summary.baselineFinalSoc);
             
             // Detailní info o arbitráži
             if (summary.chargedFromGridKwh > 0) {
                 float avgChargeCost = summary.chargedFromGridCost / summary.chargedFromGridKwh;
                 float potentialSavings = summary.chargedFromGridKwh * (summary.maxBuyPrice - avgChargeCost);
-                log_i("Arbitrage: charged %.1f kWh @ avg %.1f CZK, max buy %.1f CZK, potential savings %.1f CZK",
+                LOGI("Arbitrage: charged %.1f kWh @ avg %.1f CZK, max buy %.1f CZK, potential savings %.1f CZK",
                       summary.chargedFromGridKwh, avgChargeCost, summary.maxBuyPrice, potentialSavings);
             }
             
-            log_i("Battery value adjustment: %.1f CZK (diff %.1f kWh @ %.1f CZK)",
+            LOGI("Battery value adjustment: %.1f CZK (diff %.1f kWh @ %.1f CZK)",
                   summary.batteryValueAdjustment,
                   (summary.finalBatterySoc - summary.baselineFinalSoc) / 100.0f * settings.batteryCapacityKwh,
                   summary.maxBuyPrice - settings.batteryCostPerKwh);
-            log_i("Savings vs dumb Self-Use: %.1f CZK", summary.totalSavingsCzk);
+            LOGI("Savings vs dumb Self-Use: %.1f CZK", summary.totalSavingsCzk);
 
             // Log summary of mode changes only
-            log_i("=== MODE CHANGES ===");
+            LOGI("=== MODE CHANGES ===");
             int lastMode = -1;
             for (int q = currentQuarter; q < totalQuarters; q++)
             {
@@ -915,7 +915,7 @@ bool runIntelligenceTask()
                     float spotPrice = (q < (electricityPriceResult->hasTomorrowData ? 192 : 96))
                                           ? electricityPriceResult->prices[q].electricityPrice
                                           : 0;
-                    log_i("  Q%d (%02d:%02d): %s (spot: %.2f %s)",
+                    LOGI("  Q%d (%02d:%02d): %s (spot: %.2f %s)",
                           q, hour, minute, modeName, spotPrice, electricityPriceResult->currency);
                     lastMode = intelligencePlan[q];
                 }
@@ -964,13 +964,13 @@ bool runIntelligenceTask()
 
                 if (quarterChanged || (modeNeedsUpdate && lastProcessedQuarter == -1))
                 {
-                    log_d("Quarter changed (%d -> %d) or first run, checking if mode update needed",
+                    LOGD("Quarter changed (%d -> %d) or first run, checking if mode update needed",
                           lastProcessedQuarter, currentQuarter);
                     lastProcessedQuarter = currentQuarter;
 
                     if (modeNeedsUpdate)
                     {
-                        log_d("Mode update needed: command=%s, lastSent=%s, inverterMode=%s",
+                        LOGD("Mode update needed: command=%s, lastSent=%s, inverterMode=%s",
                               IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str(),
                               IntelligenceResolver::commandToString(lastSentMode).c_str(),
                               IntelligenceResolver::commandToString(inverterData.inverterMode).c_str());
@@ -995,23 +995,23 @@ bool runIntelligenceTask()
                         }
                         else
                         {
-                            log_d("Work mode control not implemented for inverter type %d", wifiDiscoveryResult.type);
+                            LOGD("Work mode control not implemented for inverter type %d", wifiDiscoveryResult.type);
                         }
                         
                         if (success)
                         {
-                            log_i("Successfully sent work mode %s to inverter",
+                            LOGI("Successfully sent work mode %s to inverter",
                                   IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str());
                             lastSentMode = lastIntelligenceResult.command;
                         }
                         else if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX || wifiDiscoveryResult.type == CONNECTION_TYPE_GOODWE)
                         {
-                            log_w("Failed to send work mode to inverter");
+                            LOGW("Failed to send work mode to inverter");
                         }
                     }
                     else
                     {
-                        log_d("Mode unchanged (%s), no update sent",
+                        LOGD("Mode unchanged (%s), no update sent",
                               IntelligenceResolver::commandToString(lastSentMode).c_str());
                     }
                 }
@@ -1114,7 +1114,7 @@ bool loadEcoVolterTask()
         }
         if (ecoVolterAPI.isDiscovered())
         {
-            log_d("Loading EcoVolter data");
+            LOGD("Loading EcoVolter data");
             wallboxData = ecoVolterAPI.getData();
             if (wallboxData.updated == 0)
             {
@@ -1138,7 +1138,6 @@ bool loadEcoVolterTask()
 
 void resolveEcoVolterSmartCharge()
 {
-    log_d("Resolving EcoVolter Smart Charge");
     bool smartEnabled = false;
     xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
     smartEnabled = dashboardUI->isWallboxSmartChecked();
@@ -1154,40 +1153,36 @@ void resolveEcoVolterSmartCharge()
                 switch (state)
                 {
                 case SMART_CONTROL_FULL_ON:
-                    log_d("Setting EcoVolter to FULL ON");
                     if (wallboxData.chargingCurrent == 0)
                     {
+                        LOGD("EcoVolter: FULL_ON → 6A");
                         ecoVolterAPI.setTargetCurrent(6); // start at six
                     }
                     else
                     {
+                        LOGD("EcoVolter: FULL_ON → %dA", wallboxData.targetChargingCurrent + 1);
                         ecoVolterAPI.setTargetCurrent(max(6, (wallboxData.targetChargingCurrent + 1))); // increase when requested
                     }
                     break;
                 case SMART_CONTROL_PARTIAL_ON:
-                    log_d("Setting EcoVolter to PARTIAL ON");
                     if (wallboxData.chargingCurrent > 0)
                     {
+                        LOGD("EcoVolter: PARTIAL_ON → %dA", wallboxData.targetChargingCurrent + 1);
                         ecoVolterAPI.setTargetCurrent(max(6, (wallboxData.targetChargingCurrent + 1)));
-                    }
-                    else
-                    {
-                        log_d("EcoVolter not charging, cannot set to PARTIAL ON");
                     }
                     break;
                 case SMART_CONTROL_KEEP_CURRENT_STATE:
-                    log_d("Keeping EcoVolter current state");
-                    // Do nothing, keep current state
+                    // Do nothing, keep current state (no log)
                     break;
                 case SMART_CONTROL_PARTIAL_OFF:
-                    log_d("Setting EcoVolter to PARTIAL OFF");
                     if (wallboxData.chargingCurrent > 0)
                     {
+                        LOGD("EcoVolter: PARTIAL_OFF → %dA", wallboxData.targetChargingCurrent - 1);
                         ecoVolterAPI.setTargetCurrent(max(6, (wallboxData.targetChargingCurrent - 1)));
                     }
                     break;
                 case SMART_CONTROL_FULL_OFF:
-                    log_d("Setting EcoVolter to FULL OFF");
+                    LOGD("EcoVolter: FULL_OFF → 0A");
                     ecoVolterAPI.setTargetCurrent(0);
                     break;
                 default:
@@ -1195,14 +1190,6 @@ void resolveEcoVolterSmartCharge()
                 }
             }
         }
-        else
-        {
-            log_d("Smart control disabled in UI");
-        }
-    }
-    else
-    {
-        log_d("EcoVolter Pro not discovered, cannot resolve smart charge");
     }
 }
 
@@ -1218,7 +1205,7 @@ bool loadSolaxWallboxTask()
         }
         if (solaxWallboxAPI.isDiscovered())
         {
-            log_d("Loading Solax Wallbox data");
+            LOGD("Loading Solax Wallbox data");
             wallboxData = solaxWallboxAPI.getStatus();
         }
         lastWallboxStatusAttempt = millis();
@@ -1229,7 +1216,6 @@ bool loadSolaxWallboxTask()
 
 void resolveSolaxSmartCharge()
 {
-    log_d("Resolving Solax Smart Charge");
     bool smartEnabled = false;
     xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
     smartEnabled = dashboardUI->isWallboxSmartChecked();
@@ -1245,41 +1231,37 @@ void resolveSolaxSmartCharge()
                 switch (state)
                 {
                 case SMART_CONTROL_FULL_ON:
-                    log_d("Setting Solax Wallbox to FULL ON");
                     if (wallboxData.chargingCurrent == 0)
                     {
+                        LOGD("Solax: FULL_ON → 6A");
                         solaxWallboxAPI.setMaxCurrent(6); // start at six
                         solaxWallboxAPI.setCharging(true);
                     }
                     else
                     {
+                        LOGD("Solax: FULL_ON → %dA", wallboxData.targetChargingCurrent + 1);
                         solaxWallboxAPI.setMaxCurrent(max(6, (wallboxData.targetChargingCurrent + 1))); // increase when requested
                     }
                     break;
                 case SMART_CONTROL_PARTIAL_ON:
-                    log_d("Setting Solax Wallbox to PARTIAL ON");
                     if (wallboxData.chargingCurrent > 0)
                     {
+                        LOGD("Solax: PARTIAL_ON → %dA", wallboxData.targetChargingCurrent + 1);
                         solaxWallboxAPI.setMaxCurrent(max(6, (wallboxData.targetChargingCurrent + 1)));
-                    }
-                    else
-                    {
-                        log_d("Solax Wallbox not charging, cannot set to PARTIAL ON");
                     }
                     break;
                 case SMART_CONTROL_KEEP_CURRENT_STATE:
-                    log_d("Keeping Solax Wallbox current state");
-                    // Do nothing, keep current state
+                    // Do nothing, keep current state (no log)
                     break;
                 case SMART_CONTROL_PARTIAL_OFF:
-                    log_d("Setting Solax Wallbox to PARTIAL OFF");
                     if (wallboxData.chargingCurrent > 0)
                     {
+                        LOGD("Solax: PARTIAL_OFF → %dA", wallboxData.targetChargingCurrent - 1);
                         solaxWallboxAPI.setMaxCurrent(max(6, (wallboxData.targetChargingCurrent - 1)));
                     }
                     break;
                 case SMART_CONTROL_FULL_OFF:
-                    log_d("Setting Solax Wallbox to FULL OFF");
+                    LOGD("Solax: FULL_OFF → OFF");
                     solaxWallboxAPI.setCharging(false);
                     solaxWallboxAPI.setMaxCurrent(16); // reset to max for next possible manual charge
                     break;
@@ -1288,14 +1270,6 @@ void resolveSolaxSmartCharge()
                 }
             }
         }
-        else
-        {
-            log_d("Smart control disabled in UI");
-        }
-    }
-    else
-    {
-        log_d("EcoVolter Pro not discovered, cannot resolve smart charge");
     }
 }
 
@@ -1303,18 +1277,18 @@ void setTimeZone()
 {
     ElectricityPriceLoader loader;
     String tz = loader.getStoredTimeZone();
-    log_d("Stored time zone: %s", tz.c_str());
+    LOGD("Stored time zone: %s", tz.c_str());
     if (tz.length() > 0)
     {
 
         setenv("TZ", tz.c_str(), 1);
         tzset();
 
-        log_d("Time zone set to %s", tz.c_str());
+        LOGD("Time zone set to %s", tz.c_str());
     }
     else
     {
-        log_d("No time zone stored, using default");
+        LOGD("No time zone stored, using default");
     }
 }
 
@@ -1326,12 +1300,16 @@ void syncTime()
     struct tm timeinfo;
     if (!getLocalTime(&timeinfo, 5000))
     {
-        log_e("Failed to obtain time from NTP");
+        LOGE("Failed to obtain time from NTP");
         ntpTimeSynced = false;
         return;
     }
     ntpTimeSynced = true;
-    log_d("NTP sync successful, current time: %s", asctime(&timeinfo));
+    LOGD("NTP sync successful, current time: %s", asctime(&timeinfo));
+    
+    // Initialize remote logger after time sync (needs WiFi and time)
+    remoteLogger.begin(ESP.getEfuseMac(), String(VERSION_NUMBER));
+    remoteLogger.checkLevel();
     
     // === DEBUG: Override systémového času pro testování ===
     if (DEBUG_USE_FIXED_TIME) {
@@ -1349,7 +1327,7 @@ void syncTime()
         settimeofday(&tv, nullptr);
         setTimeZone();
         
-        log_w("DEBUG MODE: System time overridden to %04d-%02d-%02d %02d:%02d:00",
+        LOGW("DEBUG MODE: System time overridden to %04d-%02d-%02d %02d:%02d:00",
               DEBUG_TIME_YEAR, DEBUG_TIME_MONTH, DEBUG_TIME_DAY,
               DEBUG_TIME_HOUR, DEBUG_TIME_MINUTE);
     }
@@ -1372,7 +1350,7 @@ void syncTimeFromInverter(const InverterData_t &data)
     localtime_r(&data.inverterTime, &timeinfo);
     if (timeinfo.tm_year < 120) // Year 2020 = 120 (years since 1900)
     {
-        log_w("Inverter time is invalid (year %d), not syncing", timeinfo.tm_year + 1900);
+        LOGW("Inverter time is invalid (year %d), not syncing", timeinfo.tm_year + 1900);
         return;
     }
 
@@ -1383,7 +1361,7 @@ void syncTimeFromInverter(const InverterData_t &data)
     // Apply timezone
     setTimeZone();
 
-    log_i("System time set from inverter RTC: %04d-%02d-%02d %02d:%02d:%02d",
+    LOGI("System time set from inverter RTC: %04d-%02d-%02d %02d:%02d:%02d",
           timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
           timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 
@@ -1398,16 +1376,13 @@ void syncTimeFromInverter(const InverterData_t &data)
 void logMemory()
 {
     // Don't take lvgl_mutex just for logging - it's not needed and can block LVGL
-    log_d("-- Memory Info --");
-    log_d("Free heap: %d", ESP.getFreeHeap());
-    log_d("Min free heap: %d", ESP.getMinFreeHeap());
-    log_d("Min free stack: %d", uxTaskGetStackHighWaterMark(NULL));
-    log_d("-- Memory Info End --");
+    LOGD("Memory: Free=%d MinFree=%d MinStack=%d", 
+         ESP.getFreeHeap(), ESP.getMinFreeHeap(), uxTaskGetStackHighWaterMark(NULL));
 }
 
 void onEntering(state_t newState)
 {
-    log_d("Entering state %d", newState);
+    LOGD("Entering state %d", newState);
     switch (newState)
     {
     case BOOT:
@@ -1457,7 +1432,7 @@ void onEntering(state_t newState)
 
 void onLeaving(state_t oldState)
 {
-    log_d("Leaving state %d", oldState);
+    LOGD("Leaving state %d", oldState);
     switch (oldState)
     {
     case BOOT:
@@ -1495,7 +1470,7 @@ void updateState()
         wifiDiscoveryResult = dongleDiscovery.getAutoconnectDongle();
         if (wifiDiscoveryResult.type != CONNECTION_TYPE_NONE)
         {
-            log_d("Autoconnect dongle found: %s, type: %d", wifiDiscoveryResult.ssid.c_str(), wifiDiscoveryResult.type);
+            LOGD("Autoconnect dongle found: %s, type: %d", wifiDiscoveryResult.ssid.c_str(), wifiDiscoveryResult.type);
             moveToState(STATE_SPLASH);
         }
         else
@@ -1590,7 +1565,7 @@ void updateState()
             {
                 lastIntelligenceAttempt = 0;
                 lastProcessedQuarter = -1;
-                log_d("Intelligence settings saved, triggering recalculation");
+                LOGD("Intelligence settings saved, triggering recalculation");
             }
             
             // If reset was requested, clear all prediction data
@@ -1599,7 +1574,7 @@ void updateState()
                 consumptionPredictor.clearAllData();
                 productionPredictor.clearAllData();
                 intelligenceSetupUI->requestClearPredictions = false;
-                log_i("Prediction data cleared by user request");
+                LOGI("Prediction data cleared by user request");
             }
             
             moveToState(STATE_DASHBOARD);
@@ -1642,7 +1617,7 @@ void updateState()
             {
                 pendingModeChangeRequest = false;
                 InverterMode_t mode = pendingModeChange;
-                log_d("Processing pending mode change: %d", mode);
+                LOGD("Processing pending mode change: %d", mode);
 
                 bool success = false;
                 if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX)
@@ -1664,12 +1639,12 @@ void updateState()
                 
                 if (success)
                 {
-                    log_d("Successfully sent work mode %d to inverter", mode);
+                    LOGD("Successfully sent work mode %d to inverter", mode);
                     lastSentMode = mode;
                 }
                 else if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX || wifiDiscoveryResult.type == CONNECTION_TYPE_GOODWE)
                 {
-                    log_w("Failed to send work mode %d to inverter", mode);
+                    LOGW("Failed to send work mode %d to inverter", mode);
                 }
                 break;
             }
