@@ -8,8 +8,8 @@
 #include <WiFi.h>
 
 #define REMOTE_LOGGER_SERVER "http://141.144.227.173"
-#define REMOTE_LOGGER_MAX_BUFFER_SIZE 20  // Maximum buffer size (reduced to save RAM)
-#define REMOTE_LOGGER_AUTO_FLUSH_SIZE 10  // Auto-flush after this many logs
+#define REMOTE_LOGGER_MAX_BUFFER_SIZE 200  // Maximum buffer size (reduced to save RAM)
+#define REMOTE_LOGGER_AUTO_FLUSH_SIZE 100  // Auto-flush after this many logs
 
 // Logging levels (from least to most verbose)
 // LEVEL_NONE = no remote logging
@@ -412,27 +412,27 @@ extern RemoteLogger remoteLogger;
         return String(_rlog_buf); \
     }())
 
-// Debug log - logs to both Serial and RemoteLogger
+// Debug log - logs to both Serial and RemoteLogger (independent of CORE_DEBUG_LEVEL)
 #define LOGD(fmt, ...) do { \
-    log_d(fmt, ##__VA_ARGS__); \
+    Serial.printf("[D][%s:%d] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
     remoteLogger.logDebug(_RLOG_FORMAT(fmt, ##__VA_ARGS__), __FILE__, __LINE__); \
 } while(0)
 
-// Info log - logs to both Serial and RemoteLogger
+// Info log - logs to both Serial and RemoteLogger (independent of CORE_DEBUG_LEVEL)
 #define LOGI(fmt, ...) do { \
-    log_i(fmt, ##__VA_ARGS__); \
+    Serial.printf("[I][%s:%d] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
     remoteLogger.logInfo(_RLOG_FORMAT(fmt, ##__VA_ARGS__), __FILE__, __LINE__); \
 } while(0)
 
-// Warning log - logs to both Serial and RemoteLogger
+// Warning log - logs to both Serial and RemoteLogger (independent of CORE_DEBUG_LEVEL)
 #define LOGW(fmt, ...) do { \
-    log_w(fmt, ##__VA_ARGS__); \
+    Serial.printf("[W][%s:%d] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
     remoteLogger.logWarning(_RLOG_FORMAT(fmt, ##__VA_ARGS__), __FILE__, __LINE__); \
 } while(0)
 
-// Error log - logs to both Serial and RemoteLogger
+// Error log - logs to both Serial and RemoteLogger (independent of CORE_DEBUG_LEVEL)
 #define LOGE(fmt, ...) do { \
-    log_e(fmt, ##__VA_ARGS__); \
+    Serial.printf("[E][%s:%d] " fmt "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
     remoteLogger.logError(_RLOG_FORMAT(fmt, ##__VA_ARGS__), __FILE__, __LINE__); \
 } while(0)
 
