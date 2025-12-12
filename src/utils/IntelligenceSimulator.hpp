@@ -965,6 +965,14 @@ public:
                     expectSolarCharging = expectedSolarSurplus > spaceInBattery * 0.5f;
                 }
                 
+                // === KONTROLA: Máme už dost energie do konce simulace? ===
+                // Kolik energie reálně potřebujeme do konce (po odečtení solární výroby)?
+                float energyNeededUntilEnd = max(0.0f, remainingConsumption - remainingProduction);
+                // Kolik máme dostupné energie v baterii (nad minimum)?
+                float availableEnergyInBattery = currentBatteryKwh - getMinBatteryKwh();
+                // Máme dost? (s 10% rezervou pro jistotu)
+                bool hasEnoughEnergyForRest = availableEnergyInBattery >= energyNeededUntilEnd * 1.1f;
+                
                 // Baterie dojde v relevantním okně - MUSÍME nakoupit někdy v tomto období
                 // (jinak budeme kupovat za aktuální cenu když dojde)
                 bool batteryWillRunOut = quartersUntilEmpty < (maxQuarters - q - 1);
@@ -973,8 +981,9 @@ public:
                 // Nabíjení pro spotřebu:
                 // A) Klasická logika: jsme blízko minima A vyplatí se ekonomicky (velký spread)
                 // B) NEBO: baterie dojde v okně, tak nakupujeme v minimu (i při plochých cenách)
-                bool shouldChargeForConsumption = (isNearRelevantMinimum && worthChargingEconomically && willNeedLater && !expectSolarCharging)
-                                                || (mustBuyInWindow && isNearRelevantMinimum);
+                // DŮLEŽITÉ: Nenabíjíme pokud už máme dost energie na zbytek simulace
+                bool shouldChargeForConsumption = (isNearRelevantMinimum && worthChargingEconomically && willNeedLater && !expectSolarCharging && !hasEnoughEnergyForRest)
+                                                || (mustBuyInWindow && isNearRelevantMinimum && !hasEnoughEnergyForRest);
                 
                 // === ARBITRÁŽ ===
                 // Používáme LOKÁLNÍ minimum (12h okno) - chceme rychlý obrat
@@ -990,6 +999,7 @@ public:
                                       arbitrageProfit > 0;
                 
                 // Nabíjíme pokud se vyplatí pro spotřebu NEBO pro arbitráž
+                // Arbitráž může nabíjet i když máme dost energie (je to pro prodej, ne spotřebu)
                 bool shouldCharge = shouldChargeForConsumption || worthArbitrage;
                 
                 if (shouldCharge) {
