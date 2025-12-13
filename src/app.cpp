@@ -446,7 +446,7 @@ void setupLVGL()
 
 void setup()
 {
-    Serial.begin(921600);
+    Serial.begin(115200);
 
     // Initialize localization system (load language from NVS)
     Localization::init();
