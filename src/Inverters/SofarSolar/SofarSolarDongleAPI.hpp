@@ -21,8 +21,23 @@ private:
     InverterData_t readData(String ipAddress, String dongleSN)
     {
         InverterData_t inverterData{};
+        
+        // Validate SN length - should be max 10 digits for uint32_t
+        if (dongleSN.length() > 10) {
+            log_e("Dongle SN '%s' is too long (%d chars). Max 10 digits allowed. Truncating.", 
+                  dongleSN.c_str(), dongleSN.length());
+            dongleSN = dongleSN.substring(0, 10);
+        }
+        
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
-        inverterData.sn = sn;
+        
+        // Check for overflow
+        if (sn == ULONG_MAX || sn == 0) {
+            log_e("Invalid SN conversion: '%s' -> %lu. Check SN format.", dongleSN.c_str(), sn);
+        }
+        
+        log_d("SN: %lu (from string: '%s')", sn, dongleSN.c_str());
+        inverterData.sn = dongleSN;
         byte packetBuffer[1024];
 
         channel.ensureIPAddress(ipAddress);

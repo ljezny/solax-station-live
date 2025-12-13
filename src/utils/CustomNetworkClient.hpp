@@ -132,13 +132,28 @@ public:
 
     int read(uint8_t *buf, size_t size)
     {
+        if (sock < 0) {
+            log_e("Cannot read: socket not connected");
+            return -1;
+        }
+        
         int bytesRead = recv(sock, buf, size, 0);
         if (bytesRead < 0)
         {
-            log_e("Error occurred during receiving: errno %d", errno);
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                log_w("Read timeout (errno %d: %s) - remote not responding within 10s", errno, strerror(errno));
+            } else {
+                log_e("Error during receiving: errno %d (%s)", errno, strerror(errno));
+            }
             return -1;
         }
-        buf[bytesRead] = '\0'; // Null-terminate the buffer
+        if (bytesRead == 0) {
+            log_w("Connection closed by remote");
+            return 0;
+        }
+        if ((size_t)bytesRead < size) {
+            buf[bytesRead] = '\0'; // Null-terminate only if there's space
+        }
         return bytesRead;
     }
 

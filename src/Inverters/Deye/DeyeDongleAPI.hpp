@@ -25,8 +25,22 @@ private:
         uint16_t deviceType = 0;
         InverterData_t inverterData;
         log_d("Connecting to dongle...");
+        
+        // Validate SN length - should be max 10 digits for uint32_t
+        if (dongleSN.length() > 10) {
+            log_e("Dongle SN '%s' is too long (%d chars). Max 10 digits allowed. Truncating.", 
+                  dongleSN.c_str(), dongleSN.length());
+            dongleSN = dongleSN.substring(0, 10);
+        }
+        
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
-        log_d("SN: %d", sn);
+        
+        // Check for overflow (strtoul returns ULONG_MAX on overflow)
+        if (sn == ULONG_MAX || sn == 0) {
+            log_e("Invalid SN conversion: '%s' -> %lu. Check SN format.", dongleSN.c_str(), sn);
+        }
+        
+        log_d("SN: %lu (from string: '%s')", sn, dongleSN.c_str());
         byte packetBuffer[1024];
         channel.ensureIPAddress(ipAddress);
 

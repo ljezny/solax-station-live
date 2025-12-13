@@ -1725,6 +1725,5 @@ void updateState()
 void loop()
 {
     updateState();
-
-    vTaskDelay(pdMS_TO_TICKS(1));
+    delay(50);
 }
