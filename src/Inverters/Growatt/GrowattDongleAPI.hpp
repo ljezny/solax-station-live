@@ -9,6 +9,11 @@ class GrowattDongleAPI
 public:
     GrowattDongleAPI() : ip(0, 0, 0, 0) {}
 
+    /**
+     * Returns true if this inverter supports intelligence mode control
+     */
+    bool supportsIntelligence() { return false; }
+
     InverterData_t loadData(const String &ipAddress)
     {
         InverterData_t inverterData = {};
@@ -27,6 +32,12 @@ public:
             channel.disconnect();
             return inverterData;
         }
+        
+        // Try to read battery power limits (optional, won't fail if not available)
+        readBatteryLimits(inverterData);
+        
+        // Try to read RTC time (optional, won't fail if not available)
+        readInverterRTC(inverterData);
 
         logInverterData(inverterData);
         channel.disconnect();
@@ -173,6 +184,61 @@ private:
         return true;
     }
 
+    bool readBatteryLimits(InverterData_t &data)
+    {
+        // Try to read BMS charge/discharge power from registers 3331 and 3334
+        // These are INPUT registers with scale 0.1W
+        const int baseAddress = 3331;
+        log_d("Reading Growatt BMS power limits from address %d", baseAddress);
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, baseAddress, 4);
+        if (!response.isValid)
+        {
+            log_d("Failed to read Growatt BMS power limits (optional)");
+            return false;
+        }
+        log_d("Growatt BMS power limits read successfully");
+        
+        // Register 3331-3332: BMS 1 Charge Power (U32, scale 0.1W)
+        uint32_t chargePowerVal = response.readUInt32(3331);
+        data.maxChargePowerW = (uint16_t)(chargePowerVal / 10);
+        
+        // Register 3334-3335: BMS 1 Discharge Power (U32, scale 0.1W)
+        uint32_t dischargePowerVal = response.readUInt32(3334);
+        data.maxDischargePowerW = (uint16_t)(dischargePowerVal / 10);
+        
+        log_d("Growatt max charge power: %d W, max discharge power: %d W", data.maxChargePowerW, data.maxDischargePowerW);
+        return true;
+    }
+
+    bool readInverterRTC(InverterData_t &data)
+    {
+        // Growatt RTC registers: 45-50 (holding registers)
+        // 45: Year (2000-based), 46: Month, 47: Day, 48: Hour, 49: Minute, 50: Second
+        const int baseAddress = 45;
+        log_d("Reading Growatt RTC from address %d", baseAddress);
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, baseAddress, 6);
+        if (!response.isValid)
+        {
+            log_d("Failed to read Growatt RTC (optional)");
+            return false;
+        }
+
+        struct tm timeinfo = {};
+        timeinfo.tm_year = response.readUInt16(45) + 100;  // Year-2000 + 100 = years since 1900
+        timeinfo.tm_mon = response.readUInt16(46) - 1;     // Month 1-12 to 0-11
+        timeinfo.tm_mday = response.readUInt16(47);
+        timeinfo.tm_hour = response.readUInt16(48);
+        timeinfo.tm_min = response.readUInt16(49);
+        timeinfo.tm_sec = response.readUInt16(50);
+        timeinfo.tm_isdst = -1;
+
+        data.inverterTime = mktime(&timeinfo);
+        log_d("Growatt RTC: %04d-%02d-%02d %02d:%02d:%02d",
+              timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
+              timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+        return true;
+    }
+
     bool readHoldingData1(InverterData_t &data)
     {
         if(sn != "")
@@ -234,4 +300,90 @@ private:
         log_d("Using IP: %s", ip.toString().c_str());
         return ip;
     }
+
+    /**
+     * Sets the work mode of the Growatt inverter for intelligent battery control
+     * 
+     * Growatt SPH Work Modes (register 1044/1110):
+     * 0 = Load First (Self-Use)
+     * 1 = Battery First
+     * 2 = Grid First
+     * 
+     * For force charge/discharge, Growatt uses:
+     * - Register 1100: Priority Mode (0=LoadFirst, 1=BatFirst, 2=GridFirst)
+     * - Register 1044: System Mode (0=SelfUse, 1=ForceCharge, 2=ForceDischarge)
+     * - Register 1070-1091: Time of Use settings
+     * 
+     * @param ipAddress IP address of the dongle
+     * @param mode Desired inverter mode
+     * @return true if mode was set successfully
+     */
+    bool setWorkMode(const String& ipAddress, InverterMode_t mode)
+    {
+        if (!connectToDongle(ipAddress))
+        {
+            log_d("Failed to connect for setWorkMode");
+            return false;
+        }
+
+        log_d("Setting Growatt work mode to %d", mode);
+        bool success = false;
+
+        switch (mode)
+        {
+        case INVERTER_MODE_SELF_USE:
+            // Load First mode - register 1100 = 0
+            success = channel.writeSingleRegister(UNIT_ID, GROWATT_REG_PRIORITY_MODE, GROWATT_PRIORITY_LOAD_FIRST);
+            if (success)
+            {
+                // Also set system mode to Self-Use
+                channel.writeSingleRegister(UNIT_ID, GROWATT_REG_SYSTEM_MODE, GROWATT_SYSTEM_SELF_USE);
+            }
+            break;
+
+        case INVERTER_MODE_HOLD_BATTERY:
+            // Battery First mode - keeps battery from discharging
+            success = channel.writeSingleRegister(UNIT_ID, GROWATT_REG_PRIORITY_MODE, GROWATT_PRIORITY_BAT_FIRST);
+            break;
+
+        case INVERTER_MODE_CHARGE_FROM_GRID:
+            // Force Charge mode
+            success = channel.writeSingleRegister(UNIT_ID, GROWATT_REG_SYSTEM_MODE, GROWATT_SYSTEM_FORCE_CHARGE);
+            break;
+
+        case INVERTER_MODE_DISCHARGE_TO_GRID:
+            // Grid First + allow export
+            success = channel.writeSingleRegister(UNIT_ID, GROWATT_REG_PRIORITY_MODE, GROWATT_PRIORITY_GRID_FIRST);
+            if (success)
+            {
+                // Enable battery discharge (set low SOC limit)
+                channel.writeSingleRegister(UNIT_ID, GROWATT_REG_DISCHARGE_SOC_LIMIT, 10);  // 10%
+            }
+            break;
+
+        default:
+            log_d("Unknown mode: %d", mode);
+            break;
+        }
+
+        channel.disconnect();
+        return success;
+    }
+
+private:
+    // Growatt SPH Modbus register addresses
+    static constexpr uint16_t GROWATT_REG_PRIORITY_MODE = 1100;      // Priority Mode (holding)
+    static constexpr uint16_t GROWATT_REG_SYSTEM_MODE = 1044;        // System Mode
+    static constexpr uint16_t GROWATT_REG_DISCHARGE_SOC_LIMIT = 1071; // Min SOC for discharge
+    static constexpr uint16_t GROWATT_REG_CHARGE_SOC_LIMIT = 1072;   // Max SOC for charge
+    
+    // Growatt Priority Mode values
+    static constexpr uint16_t GROWATT_PRIORITY_LOAD_FIRST = 0;       // Load First (Self-Use)
+    static constexpr uint16_t GROWATT_PRIORITY_BAT_FIRST = 1;        // Battery First
+    static constexpr uint16_t GROWATT_PRIORITY_GRID_FIRST = 2;       // Grid First
+    
+    // Growatt System Mode values
+    static constexpr uint16_t GROWATT_SYSTEM_SELF_USE = 0;           // Self-Use
+    static constexpr uint16_t GROWATT_SYSTEM_FORCE_CHARGE = 1;       // Force Charge
+    static constexpr uint16_t GROWATT_SYSTEM_FORCE_DISCHARGE = 2;    // Force Discharge
 };

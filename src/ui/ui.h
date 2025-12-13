@@ -21,6 +21,7 @@ extern "C" {
 #include "ui_Splash.h"
 #include "ui_Dashboard.h"
 #include "ui_WifiSetup.h"
+#include "ui_IntelligenceSetup.h"
 
 ///////////////////// VARIABLES ////////////////////
 

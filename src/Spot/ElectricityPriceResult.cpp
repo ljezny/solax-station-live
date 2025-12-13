@@ -5,19 +5,19 @@ float getTotalPrice(ElectricityPriceItem_t item)
     return item.electricityPrice;
 }
 
-ElectricityPriceItem_t getQuarterElectricityPrice(ElectricityPriceResult_t result, int quarter)
+ElectricityPriceItem_t getQuarterElectricityPrice(const ElectricityPriceResult_t& result, int quarter)
 {
     return result.prices[quarter];
 }
 
-ElectricityPriceItem_t getCurrentQuarterElectricityPrice(ElectricityPriceResult_t result)
+ElectricityPriceItem_t getCurrentQuarterElectricityPrice(const ElectricityPriceResult_t& result)
 {
     time_t now = time(nullptr);
     struct tm *timeinfo = localtime(&now);
     return getQuarterElectricityPrice(result, timeinfo->tm_hour * 4 + timeinfo->tm_min / 15);
 }
 
-ElectricityPriceItem_t getMinimumElectricityPrice(ElectricityPriceResult_t result)
+ElectricityPriceItem_t getMinimumElectricityPrice(const ElectricityPriceResult_t& result)
 {
     ElectricityPriceItem_t min = result.prices[0];
     for (int i = 1; i < QUARTERS_OF_DAY; i++)
@@ -30,7 +30,7 @@ ElectricityPriceItem_t getMinimumElectricityPrice(ElectricityPriceResult_t resul
     return min;
 }
 
-ElectricityPriceItem_t getMaximumElectricityPrice(ElectricityPriceResult_t result)
+ElectricityPriceItem_t getMaximumElectricityPrice(const ElectricityPriceResult_t& result)
 {
     ElectricityPriceItem_t max = result.prices[0];
     for (int i = 1; i < QUARTERS_OF_DAY; i++)
@@ -43,7 +43,7 @@ ElectricityPriceItem_t getMaximumElectricityPrice(ElectricityPriceResult_t resul
     return max;
 }
 
-ElectricityPriceItem_t getAverageElectricityPrice(ElectricityPriceResult_t result)
+ElectricityPriceItem_t getAverageElectricityPrice(const ElectricityPriceResult_t& result)
 {
     ElectricityPriceItem_t average;
     average.electricityPrice = 0;
@@ -55,7 +55,7 @@ ElectricityPriceItem_t getAverageElectricityPrice(ElectricityPriceResult_t resul
     return average;
 }
 
-int getMinimumQuarterElectricityPrice(ElectricityPriceResult_t result)
+int getMinimumQuarterElectricityPrice(const ElectricityPriceResult_t& result)
 {
     ElectricityPriceItem_t min = result.prices[0];
     int minIndex = 0;
@@ -70,7 +70,7 @@ int getMinimumQuarterElectricityPrice(ElectricityPriceResult_t result)
     return minIndex;
 }
 
-int getMaximumQuarterElectricityPrice(ElectricityPriceResult_t result)
+int getMaximumQuarterElectricityPrice(const ElectricityPriceResult_t& result)
 {
     ElectricityPriceItem_t max = result.prices[0];
     int maxIndex = 0;
@@ -85,7 +85,7 @@ int getMaximumQuarterElectricityPrice(ElectricityPriceResult_t result)
     return maxIndex;
 }
 
-int getPriceRank(ElectricityPriceResult_t result, float price)
+int getPriceRank(const ElectricityPriceResult_t& result, float price)
 {
     int rank = 1;
     for (int i = 0; i < QUARTERS_OF_DAY; i++)
@@ -100,9 +100,20 @@ int getPriceRank(ElectricityPriceResult_t result, float price)
     return rank;
 }
 
-int getCurrentQuarterPriceRank(ElectricityPriceResult_t result)
+int getCurrentQuarterPriceRank(const ElectricityPriceResult_t& result)
 {
     time_t now = time(nullptr);
     struct tm *timeinfo = localtime(&now);
     return getPriceRank(result, timeinfo->tm_hour * 4 + timeinfo->tm_min / 15);
+}
+
+ElectricityPriceItem_t getQuarterElectricityPriceTwoDays(const ElectricityPriceTwoDays_t& result, int quarter)
+{
+    if (quarter >= 0 && quarter < QUARTERS_TWO_DAYS) {
+        return result.prices[quarter];
+    }
+    ElectricityPriceItem_t empty;
+    empty.electricityPrice = 0;
+    empty.priceLevel = PRICE_LEVEL_MEDIUM;
+    return empty;
 }

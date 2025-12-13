@@ -29,7 +29,7 @@ typedef struct
 class EcoVolterProAPIV2
 {
 public:
-    EcoVolterProAPIV2()
+    EcoVolterProAPIV2() : ecoVolterId(), ip(0, 0, 0, 0)
     {
     }
     
@@ -93,8 +93,10 @@ public:
     
     
     void resetDiscovery() {
-        ecoVolterId = "";
+        log_d("Resetting EcoVolter discovery, current id length: %d", ecoVolterId.length());
+        ecoVolterId = String();  // Create new empty String instead of assigning
         ip = IPAddress(0, 0, 0, 0);
+        log_d("EcoVolter discovery reset complete");
     }
 
     bool isDiscovered()
@@ -174,8 +176,8 @@ public:
     }
 
 private:
-    String ecoVolterId = "";
-    IPAddress ip = IPAddress(0, 0, 0, 0);
+    String ecoVolterId;
+    IPAddress ip;
     HTTPClient http;
     void authorize(HTTPClient &http, String url, String body, String apiKey, time_t timestamp)
     {

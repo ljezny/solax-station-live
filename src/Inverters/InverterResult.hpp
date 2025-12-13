@@ -10,6 +10,17 @@ typedef enum DongleStatus {
     DONGLE_STATUS_UNSUPPORTED_DONGLE = -5,
 } DongleStatus_t;
 
+/**
+ * Příkazy pro režim střídače (inteligentní řízení)
+ */
+typedef enum InverterMode {
+    INVERTER_MODE_UNKNOWN = 0,         // Neznámý stav / inteligence vypnutá
+    INVERTER_MODE_SELF_USE,            // Normální provoz - spotřeba z baterie pro vlastní potřebu
+    INVERTER_MODE_CHARGE_FROM_GRID,    // Nabíjet baterii ze sítě
+    INVERTER_MODE_DISCHARGE_TO_GRID,   // Vybíjet baterii do sítě (prodej)
+    INVERTER_MODE_HOLD_BATTERY,        // Držet baterii - nepoužívat ani nenabíjet
+} InverterMode_t;
+
 typedef struct
 {
     DongleStatus_t status = DONGLE_STATUS_UNKNOWN;
@@ -35,6 +46,8 @@ typedef struct
     double gridSellToday = 0;
     double gridBuyTotal = 0;
     double gridSellTotal = 0;
+    uint16_t maxChargePowerW = 0;     // Maximální nabíjecí výkon baterie ve W
+    uint16_t maxDischargePowerW = 0;
     int inverterOutpuPowerL1 = 0;
     int inverterOutpuPowerL2 = 0;
     int inverterOutpuPowerL3 = 0;
@@ -49,6 +62,8 @@ typedef struct
     double pvToday = 0;
     double pvTotal = 0;
     bool hasBattery = true;
+    InverterMode_t inverterMode = INVERTER_MODE_UNKNOWN;  // Aktuální režim střídače (inteligence)
+    time_t inverterTime = 0;  // RTC čas ze střídače (0 = neplatný)
 } InverterData_t;
 
 void logInverterData(InverterData_t& inverterData) {
@@ -83,5 +98,13 @@ void logInverterData(InverterData_t& inverterData) {
     log_d("PV Today: %f", inverterData.pvToday);
     log_d("PV Total: %f", inverterData.pvTotal);
     log_d("Has Battery: %d", inverterData.hasBattery);
-
+    log_d("Max Charge Power: %d W", inverterData.maxChargePowerW);
+    log_d("Max Discharge Power: %d W", inverterData.maxDischargePowerW);
+    if (inverterData.inverterTime > 0) {
+        struct tm timeinfo;
+        localtime_r(&inverterData.inverterTime, &timeinfo);
+        log_d("Inverter Time: %04d-%02d-%02d %02d:%02d:%02d", 
+              timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
+              timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+    }
 } 

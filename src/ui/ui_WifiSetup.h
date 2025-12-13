@@ -30,6 +30,7 @@ extern lv_obj_t *ui_Container21;
 extern lv_obj_t *ui_Label2;
 extern lv_obj_t *ui_spotProviderDropdown;
 extern lv_obj_t *ui_timeZoneDropdown;
+extern lv_obj_t *ui_languageDropdown;
 extern lv_obj_t *ui_keyboard;
 // CUSTOM VARIABLES
 

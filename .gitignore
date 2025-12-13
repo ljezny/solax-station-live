@@ -4,4 +4,4 @@ build/
 managed_components/
 dependencies.lock
 SquareLine/autosave/
-SquareLine/backup/
+SquareLine/backup/node_modules/

@@ -7,6 +7,7 @@
 
 #include "WiFiResult.hpp"
 #include "utils/SoftAP.hpp"
+#include "utils/NVSMutex.hpp"
 #include "Shelly/Shelly.hpp"
 
 #define DONGLE_DISCOVERY_MAX_RESULTS 32
@@ -224,6 +225,12 @@ public:
 
     String loadLastConnectedSSID()
     {
+        NVSGuard guard;
+        if (!guard.isLocked()) {
+            log_e("Failed to lock NVS mutex for loading last connected SSID");
+            return "";
+        }
+        
         Preferences preferences;
         preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, true);
         String ssid = preferences.getString("ssid", "");
@@ -233,6 +240,12 @@ public:
 
     void storeLastConnectedSSID(const String &ssid)
     {
+        NVSGuard guard;
+        if (!guard.isLocked()) {
+            log_e("Failed to lock NVS mutex for storing SSID");
+            return;
+        }
+        
         Preferences preferences;
         preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, false);
         String storedssid = preferences.getString("ssid", "");
@@ -396,6 +409,12 @@ private:
         log_d("Dongle IP: %s", info.dongleIp);
         log_d("Connection Type: %d", info.connectionType);
 
+        NVSGuard guard;
+        if (!guard.isLocked()) {
+            log_e("Failed to lock NVS mutex for saving dongle info");
+            return;
+        }
+
         Preferences preferences;
         preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, false);
         preferences.putBytes(hashString(ssid).c_str(), (void *)&info, sizeof(DongleInfo_t));
@@ -404,6 +423,12 @@ private:
 
     bool loadDongleInfo(String ssid, DongleInfo_t &info)
     {
+        NVSGuard guard;
+        if (!guard.isLocked()) {
+            log_e("Failed to lock NVS mutex for loading dongle info");
+            return false;
+        }
+        
         Preferences preferences;
         preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, true);
         String key = hashString(ssid);
