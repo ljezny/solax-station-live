@@ -354,12 +354,6 @@ void ui_WifiSetup_screen_init(void)
     lv_obj_add_flag(ui_spotProviderDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     style_dropdown(ui_spotProviderDropdown);
     
-    // Info text
-    lv_obj_t* infoLabel = lv_label_create(ui_Container21);
-    lv_label_set_text(infoLabel, "Enable spot prices for\nintelligent battery control");
-    lv_obj_set_style_text_color(infoLabel, COLOR_TEXT_DIM, 0);
-    lv_obj_set_style_text_font(infoLabel, &ui_font_OpenSansExtraSmall, 0);
-    
     // ===== KEYBOARD =====
     ui_keyboard = lv_keyboard_create(ui_WifiSetup);
     lv_obj_set_height(ui_keyboard, 200);

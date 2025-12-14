@@ -110,7 +110,6 @@ typedef enum {
     STR_SETUP,
     STR_IP_ADDRESS,
     STR_SERIAL_NUMBER,
-    STR_SPOT_INFO,
     
     // Intelligence Setup - Card titles
     STR_BATTERY,
@@ -360,7 +359,6 @@ const char* const Localization::stringsEN[] = {
     "Setup",                // STR_SETUP
     "IP Address:",          // STR_IP_ADDRESS
     "Serial Number:",       // STR_SERIAL_NUMBER
-    "Enable spot prices for\nintelligent battery control", // STR_SPOT_INFO
     
     // Intelligence Setup - Card titles
     "Battery",              // STR_BATTERY
@@ -498,7 +496,6 @@ const char* const Localization::stringsDE[] = {
     "Einrichtung",          // STR_SETUP
     "IP-Adresse:",          // STR_IP_ADDRESS
     "Seriennummer:",        // STR_SERIAL_NUMBER
-    "Spotpreise aktivieren für\nintelligente Batteriesteuerung", // STR_SPOT_INFO
     
     // Intelligence Setup - Card titles
     "Batterie",             // STR_BATTERY
@@ -636,7 +633,7 @@ const char* const Localization::stringsCS[] = {
     "Nastavení",            // STR_SETUP
     "IP adresa:",           // STR_IP_ADDRESS
     "Sériové číslo:",       // STR_SERIAL_NUMBER
-    "Povolit spotové ceny pro\ninteligentní řízení baterie", // STR_SPOT_INFO
+
     
     // Intelligence Setup - Card titles
     "Baterie",              // STR_BATTERY

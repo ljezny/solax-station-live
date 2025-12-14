@@ -175,15 +175,6 @@ public:
             if (generalTitle) lv_label_set_text(generalTitle, TR(STR_GENERAL));
         }
         
-        // Spot info label - last child of Spot Price card (ui_Container21)
-        if (ui_Container21) {
-            uint32_t childCount = lv_obj_get_child_cnt(ui_Container21);
-            if (childCount > 0) {
-                lv_obj_t* infoLabel = lv_obj_get_child(ui_Container21, childCount - 1);
-                if (infoLabel) lv_label_set_text(infoLabel, TR(STR_SPOT_INFO));
-            }
-        }
-        
         // Update display timeout dropdown options with localized "Never"
         String timeoutOptions = String(TR(STR_NEVER)) + "\n5 min\n15 min\n30 min\n60 min";
         int currentSelection = lv_dropdown_get_selected(ui_displayTimeoutDropdown);
