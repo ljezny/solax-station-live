@@ -6,14 +6,20 @@
 #include "Inverters/WiFiDiscovery.hpp"
 #include "Spot/ElectricityPriceLoader.hpp"
 #include "utils/Localization.hpp"
+#include "utils/BacklightResolver.hpp"
 static void wifiSetupCompleteHandler(lv_event_t *e);
 static void wifiRollerHandler(lv_event_t *e);
 static void spotRollerHandler(lv_event_t *e);
 static void timezoneRollerHandler(lv_event_t *e);
 static void languageRollerHandler(lv_event_t *e);
+static void displayTimeoutHandler(lv_event_t *e);
 static void connectionTypeHandler(lv_event_t *e);
 static void onFocusHandler(lv_event_t *e);
 static void onTextChangedHandler(lv_event_t *e);
+
+// External reference to backlight resolver (must be provided by app.cpp)
+extern BacklightResolver backlightResolver;
+
 class WiFiSetupUI
 {
 public:
@@ -46,6 +52,7 @@ public:
         lv_obj_add_event_cb(ui_spotProviderDropdown, spotRollerHandler, LV_EVENT_ALL, this);
         lv_obj_add_event_cb(ui_timeZoneDropdown, timezoneRollerHandler, LV_EVENT_ALL, this);
         lv_obj_add_event_cb(ui_languageDropdown, languageRollerHandler, LV_EVENT_ALL, this);
+        lv_obj_add_event_cb(ui_displayTimeoutDropdown, displayTimeoutHandler, LV_EVENT_ALL, this);
         lv_obj_add_event_cb(ui_wifiPassword, onFocusHandler, LV_EVENT_FOCUSED, this);
         lv_obj_add_event_cb(ui_inverterIP, onFocusHandler, LV_EVENT_FOCUSED, this);
         lv_obj_add_event_cb(ui_inverterSN, onFocusHandler, LV_EVENT_FOCUSED, this);
@@ -126,6 +133,19 @@ public:
         lv_dropdown_set_options(ui_languageDropdown, Localization::getLanguageOptions().c_str());
         lv_dropdown_set_selected(ui_languageDropdown, Localization::getLanguage());
 
+        // Display timeout dropdown - map timeout value to index
+        // Options: "Never\n5 min\n15 min\n30 min\n60 min" -> indices 0,1,2,3,4
+        int timeoutMinutes = backlightResolver.getDisplayOffTimeout();
+        int timeoutIndex = 0;  // Default "Never"
+        switch (timeoutMinutes) {
+            case 5:  timeoutIndex = 1; break;
+            case 15: timeoutIndex = 2; break;
+            case 30: timeoutIndex = 3; break;
+            case 60: timeoutIndex = 4; break;
+            default: timeoutIndex = 0; break;  // Never
+        }
+        lv_dropdown_set_selected(ui_displayTimeoutDropdown, timeoutIndex);
+
         // Update localized texts
         updateLocalizedTexts();
         
@@ -149,6 +169,12 @@ public:
         if (ui_Label5) lv_label_set_text(ui_Label5, TR(STR_INVERTER));
         if (ui_Label2) lv_label_set_text(ui_Label2, TR(STR_SPOT_PRICE));
         
+        // General card title - first child of ui_ContainerGeneral
+        if (ui_ContainerGeneral) {
+            lv_obj_t* generalTitle = lv_obj_get_child(ui_ContainerGeneral, 0);
+            if (generalTitle) lv_label_set_text(generalTitle, TR(STR_GENERAL));
+        }
+        
         // Spot info label - last child of Spot Price card (ui_Container21)
         if (ui_Container21) {
             uint32_t childCount = lv_obj_get_child_cnt(ui_Container21);
@@ -157,6 +183,12 @@ public:
                 if (infoLabel) lv_label_set_text(infoLabel, TR(STR_SPOT_INFO));
             }
         }
+        
+        // Update display timeout dropdown options with localized "Never"
+        String timeoutOptions = String(TR(STR_NEVER)) + "\n5 min\n15 min\n30 min\n60 min";
+        int currentSelection = lv_dropdown_get_selected(ui_displayTimeoutDropdown);
+        lv_dropdown_set_options(ui_displayTimeoutDropdown, timeoutOptions.c_str());
+        lv_dropdown_set_selected(ui_displayTimeoutDropdown, currentSelection);
     }
 
     void setCompleteButtonVisibility()
@@ -389,6 +421,26 @@ static void languageRollerHandler(lv_event_t *e)
         {
             ui->onLanguageChanged();
         }
+    }
+}
+
+static void displayTimeoutHandler(lv_event_t *e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_VALUE_CHANGED)
+    {
+        int selectedIndex = lv_dropdown_get_selected(ui_displayTimeoutDropdown);
+        // Map index to minutes: 0=Never(0), 1=5, 2=15, 3=30, 4=60
+        int timeoutMinutes = 0;
+        switch (selectedIndex) {
+            case 1: timeoutMinutes = 5;  break;
+            case 2: timeoutMinutes = 15; break;
+            case 3: timeoutMinutes = 30; break;
+            case 4: timeoutMinutes = 60; break;
+            default: timeoutMinutes = 0; break;  // Never
+        }
+        log_d("Display timeout changed to: %d minutes", timeoutMinutes);
+        backlightResolver.setDisplayOffTimeout(timeoutMinutes);
     }
 }
 

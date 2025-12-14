@@ -27,10 +27,12 @@ extern lv_obj_t *ui_connectionTypeDropdown;
 extern lv_obj_t *ui_inverterIP;
 extern lv_obj_t *ui_inverterSN;
 extern lv_obj_t *ui_Container21;
+extern lv_obj_t *ui_ContainerGeneral;
 extern lv_obj_t *ui_Label2;
 extern lv_obj_t *ui_spotProviderDropdown;
 extern lv_obj_t *ui_timeZoneDropdown;
 extern lv_obj_t *ui_languageDropdown;
+extern lv_obj_t *ui_displayTimeoutDropdown;
 extern lv_obj_t *ui_keyboard;
 // CUSTOM VARIABLES
 

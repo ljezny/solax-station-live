@@ -148,6 +148,11 @@ typedef enum {
     STR_CURRENCY_PLN_GR,          // "gr" (grosze)
     STR_CURRENCY_SEK_ORE,         // "öre"
     
+    // General settings
+    STR_GENERAL,                  // "General" / "Obecné"
+    STR_DISPLAY_TIMEOUT,          // "Display off" / "Vypnutí displeje"
+    STR_NEVER,                    // "Never" / "Nikdy"
+    
     STR_COUNT  // Must be last
 } StringId_t;
 
@@ -392,6 +397,11 @@ const char* const Localization::stringsEN[] = {
     "ct",                     // STR_CURRENCY_EUR_CENT
     "gr",                     // STR_CURRENCY_PLN_GR
     "öre",                    // STR_CURRENCY_SEK_ORE
+    
+    // General settings
+    "General",                // STR_GENERAL
+    "Display off",            // STR_DISPLAY_TIMEOUT
+    "Never",                  // STR_NEVER
 };
 
 // German strings
@@ -525,6 +535,11 @@ const char* const Localization::stringsDE[] = {
     "ct",                     // STR_CURRENCY_EUR_CENT
     "gr",                     // STR_CURRENCY_PLN_GR
     "öre",                    // STR_CURRENCY_SEK_ORE
+    
+    // General settings
+    "Allgemein",              // STR_GENERAL
+    "Display aus",            // STR_DISPLAY_TIMEOUT
+    "Nie",                    // STR_NEVER
 };
 
 // Czech strings
@@ -658,6 +673,11 @@ const char* const Localization::stringsCS[] = {
     "ct",                     // STR_CURRENCY_EUR_CENT
     "gr",                     // STR_CURRENCY_PLN_GR
     "öre",                    // STR_CURRENCY_SEK_ORE
+    
+    // General settings
+    "Obecné",                 // STR_GENERAL
+    "Vypnutí displeje",       // STR_DISPLAY_TIMEOUT
+    "Nikdy",                  // STR_NEVER
 };
 
 // Convenience macro for translation
