@@ -275,6 +275,12 @@ void ui_WifiSetup_screen_init(void)
     lv_obj_set_style_text_color(generalTitle, COLOR_GREEN, 0);
     lv_obj_set_style_pad_bottom(generalTitle, 2, 0);
     
+    // Timezone label
+    lv_obj_t* tzLabelGen = lv_label_create(ui_ContainerGeneral);
+    lv_label_set_text(tzLabelGen, "Time Zone:");
+    lv_obj_set_style_text_color(tzLabelGen, COLOR_TEXT_DIM, 0);
+    lv_obj_set_style_text_font(tzLabelGen, &ui_font_OpenSansExtraSmall, 0);
+    
     // Timezone dropdown (in General)
     ui_timeZoneDropdown = lv_dropdown_create(ui_ContainerGeneral);
     lv_dropdown_set_options(ui_timeZoneDropdown, "Europe/Prague");
@@ -283,6 +289,12 @@ void ui_WifiSetup_screen_init(void)
     lv_obj_add_flag(ui_timeZoneDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     style_dropdown(ui_timeZoneDropdown);
     
+    // Language label
+    lv_obj_t* langLabelGen = lv_label_create(ui_ContainerGeneral);
+    lv_label_set_text(langLabelGen, "Language:");
+    lv_obj_set_style_text_color(langLabelGen, COLOR_TEXT_DIM, 0);
+    lv_obj_set_style_text_font(langLabelGen, &ui_font_OpenSansExtraSmall, 0);
+    
     // Language dropdown (in General)
     ui_languageDropdown = lv_dropdown_create(ui_ContainerGeneral);
     lv_dropdown_set_options(ui_languageDropdown, "English\nDeutsch\nČeština");
@@ -290,6 +302,12 @@ void ui_WifiSetup_screen_init(void)
     lv_obj_set_height(ui_languageDropdown, LV_SIZE_CONTENT);
     lv_obj_add_flag(ui_languageDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     style_dropdown(ui_languageDropdown);
+    
+    // Display timeout label
+    lv_obj_t* timeoutLabel = lv_label_create(ui_ContainerGeneral);
+    lv_label_set_text(timeoutLabel, "Display off:");
+    lv_obj_set_style_text_color(timeoutLabel, COLOR_TEXT_DIM, 0);
+    lv_obj_set_style_text_font(timeoutLabel, &ui_font_OpenSansExtraSmall, 0);
     
     // Display timeout dropdown (in General)
     ui_displayTimeoutDropdown = lv_dropdown_create(ui_ContainerGeneral);
