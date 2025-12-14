@@ -169,10 +169,30 @@ public:
         if (ui_Label5) lv_label_set_text(ui_Label5, TR(STR_INVERTER));
         if (ui_Label2) lv_label_set_text(ui_Label2, TR(STR_SPOT_PRICE));
         
-        // General card title - first child of ui_ContainerGeneral
+        // WiFi card labels: child 0=title, 1=dropdown, 2=pwdLabel, 3=input
+        if (ui_Container16) {
+            lv_obj_t* pwdLabel = lv_obj_get_child(ui_Container16, 2);
+            if (pwdLabel) lv_label_set_text(pwdLabel, TR(STR_PASSWORD));
+        }
+        
+        // Inverter card labels: child 0=title, 1=dropdown, 2=ipLabel, 3=input, 4=snLabel, 5=input
+        if (ui_Container15) {
+            lv_obj_t* ipLabel = lv_obj_get_child(ui_Container15, 2);
+            if (ipLabel) lv_label_set_text(ipLabel, TR(STR_IP_ADDRESS));
+            lv_obj_t* snLabel = lv_obj_get_child(ui_Container15, 4);
+            if (snLabel) lv_label_set_text(snLabel, TR(STR_SERIAL_NUMBER));
+        }
+        
+        // General card: child 0=title, 1=tzLabel, 2=tz dropdown, 3=langLabel, 4=lang dropdown, 5=timeoutLabel, 6=timeout dropdown
         if (ui_ContainerGeneral) {
             lv_obj_t* generalTitle = lv_obj_get_child(ui_ContainerGeneral, 0);
             if (generalTitle) lv_label_set_text(generalTitle, TR(STR_GENERAL));
+            lv_obj_t* tzLabel = lv_obj_get_child(ui_ContainerGeneral, 1);
+            if (tzLabel) lv_label_set_text(tzLabel, TR(STR_TIMEZONE));
+            lv_obj_t* langLabel = lv_obj_get_child(ui_ContainerGeneral, 3);
+            if (langLabel) lv_label_set_text(langLabel, TR(STR_LANGUAGE));
+            lv_obj_t* timeoutLabel = lv_obj_get_child(ui_ContainerGeneral, 5);
+            if (timeoutLabel) lv_label_set_text(timeoutLabel, TR(STR_DISPLAY_TIMEOUT));
         }
         
         // Update display timeout dropdown options with localized "Never"

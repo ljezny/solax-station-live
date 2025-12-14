@@ -306,13 +306,13 @@ const char* const Localization::stringsEN[] = {
     // WiFi Setup
     "WiFi Setup",           // STR_WIFI_SETUP
     "Select WiFi",          // STR_SELECT_WIFI
-    "Password",             // STR_PASSWORD
+    "Password:",            // STR_PASSWORD
     "Inverter IP",          // STR_INVERTER_IP
     "Inverter S/N",         // STR_INVERTER_SN
     "Connection Type",      // STR_CONNECTION_TYPE
     "Spot Provider",        // STR_SPOT_PROVIDER
-    "Timezone",             // STR_TIMEZONE
-    "Language",             // STR_LANGUAGE
+    "Time Zone:",           // STR_TIMEZONE
+    "Language:",            // STR_LANGUAGE
     "Connect",              // STR_CONNECT
     
     // Intelligence Setup
@@ -443,13 +443,13 @@ const char* const Localization::stringsDE[] = {
     // WiFi Setup
     "WLAN-Einrichtung",     // STR_WIFI_SETUP
     "WLAN auswählen",       // STR_SELECT_WIFI
-    "Passwort",             // STR_PASSWORD
+    "Passwort:",            // STR_PASSWORD
     "Wechselrichter IP",    // STR_INVERTER_IP
     "Wechselrichter S/N",   // STR_INVERTER_SN
     "Verbindungstyp",       // STR_CONNECTION_TYPE
     "Spot-Anbieter",        // STR_SPOT_PROVIDER
-    "Zeitzone",             // STR_TIMEZONE
-    "Sprache",              // STR_LANGUAGE
+    "Zeitzone:",            // STR_TIMEZONE
+    "Sprache:",             // STR_LANGUAGE
     "Verbinden",            // STR_CONNECT
     
     // Intelligence Setup
@@ -580,13 +580,13 @@ const char* const Localization::stringsCS[] = {
     // WiFi Setup
     "Nastavení WiFi",       // STR_WIFI_SETUP
     "Vybrat WiFi",          // STR_SELECT_WIFI
-    "Heslo",                // STR_PASSWORD
+    "Heslo:",               // STR_PASSWORD
     "IP střídače",          // STR_INVERTER_IP
     "S/N střídače",         // STR_INVERTER_SN
     "Typ připojení",        // STR_CONNECTION_TYPE
     "Poskytovatel cen",     // STR_SPOT_PROVIDER
-    "Časová zóna",          // STR_TIMEZONE
-    "Jazyk",                // STR_LANGUAGE
+    "Časová zóna:",         // STR_TIMEZONE
+    "Jazyk:",               // STR_LANGUAGE
     "Připojit",             // STR_CONNECT
     
     // Intelligence Setup
