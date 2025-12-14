@@ -152,6 +152,9 @@ typedef enum {
     STR_DISPLAY_TIMEOUT,          // "Display off" / "Vypnutí displeje"
     STR_NEVER,                    // "Never" / "Nikdy"
     
+    // Beta warning
+    STR_BETA_WARNING,             // Beta feature warning text
+    
     STR_COUNT  // Must be last
 } StringId_t;
 
@@ -400,6 +403,9 @@ const char* const Localization::stringsEN[] = {
     "General",                // STR_GENERAL
     "Display off",            // STR_DISPLAY_TIMEOUT
     "Never",                  // STR_NEVER
+    
+    // Beta warning
+    "BETA: This feature is experimental and may affect your inverter settings. Use at your own risk. The author is not responsible for any damage.",  // STR_BETA_WARNING
 };
 
 // German strings
@@ -537,6 +543,9 @@ const char* const Localization::stringsDE[] = {
     "Allgemein",              // STR_GENERAL
     "Display aus",            // STR_DISPLAY_TIMEOUT
     "Nie",                    // STR_NEVER
+    
+    // Beta warning
+    "BETA: Diese Funktion ist experimentell und kann Ihre Wechselrichter-Einstellungen beeinflussen. Nutzung auf eigene Gefahr. Der Autor übernimmt keine Haftung.",  // STR_BETA_WARNING
 };
 
 // Czech strings
@@ -675,6 +684,9 @@ const char* const Localization::stringsCS[] = {
     "Obecné",                 // STR_GENERAL
     "Vypnutí displeje",       // STR_DISPLAY_TIMEOUT
     "Nikdy",                  // STR_NEVER
+    
+    // Beta warning
+    "BETA: Tato funkce je experimentální a může ovlivnit nastavení střídače. Používáte na vlastní nebezpečí. Autor nenese odpovědnost za případné škody.",  // STR_BETA_WARNING
 };
 
 // Convenience macro for translation

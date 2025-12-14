@@ -70,6 +70,9 @@ lv_obj_t *ui_intelligenceCancelLabel = NULL;
 // Keyboard
 lv_obj_t *ui_intelligenceKeyboard = NULL;
 
+// Beta warning
+lv_obj_t *ui_intelligenceBetaWarning = NULL;
+
 // Helper function to style a textarea input
 static void style_input(lv_obj_t* input) {
     lv_obj_set_style_bg_color(input, COLOR_INPUT_BG, LV_PART_MAIN);
@@ -197,6 +200,28 @@ void ui_IntelligenceSetup_screen_init(void)
     lv_obj_set_style_bg_color(ui_intelligenceEnableSwitch, COLOR_INPUT_BG, LV_PART_MAIN);
     lv_obj_set_style_bg_color(ui_intelligenceEnableSwitch, COLOR_GREEN, LV_PART_INDICATOR | LV_STATE_CHECKED);
     lv_obj_set_style_bg_color(ui_intelligenceEnableSwitch, COLOR_GREEN, LV_PART_KNOB | LV_STATE_CHECKED);
+    
+    // ===== BETA WARNING BOX =====
+    ui_intelligenceBetaWarning = lv_obj_create(ui_IntelligenceSetup);
+    lv_obj_set_width(ui_intelligenceBetaWarning, lv_pct(100));
+    lv_obj_set_height(ui_intelligenceBetaWarning, LV_SIZE_CONTENT);
+    lv_obj_clear_flag(ui_intelligenceBetaWarning, LV_OBJ_FLAG_SCROLLABLE);
+    // Orange background with border
+    lv_obj_set_style_bg_color(ui_intelligenceBetaWarning, lv_color_hex(0x4A3000), LV_PART_MAIN);  // Dark orange/brown
+    lv_obj_set_style_bg_opa(ui_intelligenceBetaWarning, LV_OPA_COVER, LV_PART_MAIN);
+    lv_obj_set_style_border_color(ui_intelligenceBetaWarning, COLOR_ACCENT, LV_PART_MAIN);  // Orange border
+    lv_obj_set_style_border_width(ui_intelligenceBetaWarning, 2, LV_PART_MAIN);
+    lv_obj_set_style_border_opa(ui_intelligenceBetaWarning, LV_OPA_COVER, LV_PART_MAIN);
+    lv_obj_set_style_radius(ui_intelligenceBetaWarning, 6, LV_PART_MAIN);
+    lv_obj_set_style_pad_all(ui_intelligenceBetaWarning, 8, LV_PART_MAIN);
+    
+    // Warning text label
+    lv_obj_t* warningLabel = lv_label_create(ui_intelligenceBetaWarning);
+    lv_label_set_text(warningLabel, "BETA: This feature is experimental and may affect your inverter settings. Use at your own risk.");
+    lv_obj_set_width(warningLabel, lv_pct(100));
+    lv_label_set_long_mode(warningLabel, LV_LABEL_LONG_WRAP);
+    lv_obj_set_style_text_color(warningLabel, COLOR_ACCENT, 0);  // Orange text
+    lv_obj_set_style_text_font(warningLabel, &ui_font_OpenSansExtraSmall, 0);
     
     // Main container with 3 columns
     ui_intelligenceMainContainer = lv_obj_create(ui_IntelligenceSetup);
