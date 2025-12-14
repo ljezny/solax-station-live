@@ -52,6 +52,15 @@ static void style_dropdown(lv_obj_t* dropdown) {
     lv_obj_set_style_pad_all(dropdown, 10, LV_PART_MAIN);
     // Disable default symbol (would show square because our font doesn't have it)
     lv_dropdown_set_symbol(dropdown, NULL);
+    
+    // Open dropdown to create list, style it, then close
+    lv_dropdown_open(dropdown);
+    lv_obj_t* list = lv_dropdown_get_list(dropdown);
+    if (list) {
+        lv_obj_set_style_text_font(list, &ui_font_OpenSansExtraSmall, LV_PART_MAIN);
+        lv_obj_set_style_text_font(list, &ui_font_OpenSansExtraSmall, LV_PART_SELECTED);
+    }
+    lv_dropdown_close(dropdown);
 }
 
 // Helper function to style a textarea input
