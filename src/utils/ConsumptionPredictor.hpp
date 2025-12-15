@@ -1,11 +1,10 @@
 #pragma once
 
 #include <Arduino.h>
-#include <Preferences.h>
+#include <SPIFFS.h>
 #include <esp_heap_caps.h>
 #include <cmath>  // Pro exp()
 #include "../Spot/ElectricityPriceResult.hpp"  // Pro QUARTERS_OF_DAY
-#include "NVSMutex.hpp"
 #include "RemoteLogger.hpp"
 
 /**
@@ -26,7 +25,7 @@
 
 class ConsumptionPredictor {
 private:
-    static const char* NAMESPACE;
+    static constexpr const char* STORAGE_FILE = "/consumption.bin";
     
     // Spotřeba [Wh] pro každou čtvrthodinu, pro každý den v týdnu, pro poslední 2 týdny
     // consumption[týden][den][čtvrthodina] kde den 0=neděle, 1=pondělí, ...
@@ -584,110 +583,129 @@ public:
         currentQuarterAccumulator = 0;
         currentQuarterSampleCount = 0;
         
-        // Smazání z NVS
-        NVSGuard guard;
-        if (guard.isLocked()) {
-            Preferences preferences;
-            if (preferences.begin(NAMESPACE, false)) {
-                preferences.clear();
-                preferences.end();
-                LOGD("Consumption prediction NVS data cleared");
-            }
+        // Smazání ze SPIFFS
+        if (SPIFFS.begin(true)) {
+            SPIFFS.remove(STORAGE_FILE);
+            LOGD("Consumption prediction SPIFFS data cleared");
         }
     }
     
     /**
-     * Uloží historii do NVS
+     * Uloží historii do SPIFFS
      */
     void saveToPreferences() {
-        // NVSGuard is expected to be held by caller (app.cpp)
-        // This allows batching multiple saves under one lock
-        
-        Preferences preferences;
-        if (preferences.begin(NAMESPACE, false)) {
-            // Komprimovaná data: uint16_t místo float (úspora 50%)
-            // hasData jako bitfield (12 bytes místo 96)
-            uint16_t compressedData[QUARTERS_OF_DAY];
-            uint8_t hasDataBits[12];  // 96 bitů = 12 bytes
-            
-            for (int week = 0; week < WEEKS_HISTORY; week++) {
-                for (int day = 0; day < DAYS_PER_WEEK; day++) {
-                    // Komprimace consumption na uint16_t
-                    for (int q = 0; q < QUARTERS_OF_DAY; q++) {
-                        float val = consumptionAt(week, day, q);
-                        compressedData[q] = (uint16_t)constrain(val, 0.0f, 65535.0f);
-                    }
-                    
-                    // Komprimace hasData na bitfield
-                    memset(hasDataBits, 0, sizeof(hasDataBits));
-                    for (int q = 0; q < QUARTERS_OF_DAY; q++) {
-                        if (hasDataAt(week, day, q)) {
-                            hasDataBits[q / 8] |= (1 << (q % 8));
-                        }
-                    }
-                    
-                    char key[16];
-                    snprintf(key, sizeof(key), "c%d%d", week, day);
-                    preferences.putBytes(key, compressedData, sizeof(compressedData));
-                    
-                    snprintf(key, sizeof(key), "h%d%d", week, day);
-                    preferences.putBytes(key, hasDataBits, sizeof(hasDataBits));
-                }
-            }
-            preferences.putInt("lastWeek", lastRecordedWeek);
-            preferences.end();
-            LOGD("Consumption history saved (compressed)");
-        }
-    }
-    
-    /**
-     * Načte historii z NVS
-     */
-    void loadFromPreferences() {
-        NVSGuard guard;
-        if (!guard.isLocked()) {
-            LOGE("Failed to lock NVS mutex for loading consumption history");
+        if (!SPIFFS.begin(true)) {
+            LOGE("Failed to mount SPIFFS for saving consumption");
             return;
         }
         
-        Preferences preferences;
-        if (preferences.begin(NAMESPACE, true)) {
-            uint16_t compressedData[QUARTERS_OF_DAY];
-            uint8_t hasDataBits[12];
-            
-            for (int week = 0; week < WEEKS_HISTORY; week++) {
-                for (int day = 0; day < DAYS_PER_WEEK; day++) {
-                    char key[16];
-                    
-                    // Načtení komprimovaných dat
-                    snprintf(key, sizeof(key), "c%d%d", week, day);
-                    if (preferences.getBytes(key, compressedData, sizeof(compressedData)) > 0) {
-                        for (int q = 0; q < QUARTERS_OF_DAY; q++) {
-                            consumptionAt(week, day, q) = (float)compressedData[q];
-                        }
-                    } else {
-                        for (int quarter = 0; quarter < QUARTERS_OF_DAY; quarter++) {
-                            consumptionAt(week, day, quarter) = getDefaultConsumption(quarter / 4);
-                        }
-                    }
-                    
-                    // Načtení hasData bitfield
-                    snprintf(key, sizeof(key), "h%d%d", week, day);
-                    if (preferences.getBytes(key, hasDataBits, sizeof(hasDataBits)) > 0) {
-                        for (int q = 0; q < QUARTERS_OF_DAY; q++) {
-                            hasDataAt(week, day, q) = (hasDataBits[q / 8] & (1 << (q % 8))) != 0;
-                        }
-                    } else {
-                        for (int quarter = 0; quarter < QUARTERS_OF_DAY; quarter++) {
-                            hasDataAt(week, day, quarter) = false;
-                        }
+        File file = SPIFFS.open(STORAGE_FILE, "w");
+        if (!file) {
+            LOGE("Failed to open consumption file for writing");
+            return;
+        }
+        
+        // Header: magic + version + lastRecordedWeek + reserved
+        uint32_t magic = 0x434F4E53;  // "CONS"
+        uint8_t version = 1;
+        uint8_t headerReserved[16] = {0};  // Reserved pro budoucí rozšíření headeru
+        file.write((uint8_t*)&magic, sizeof(magic));
+        file.write(&version, sizeof(version));
+        file.write((uint8_t*)&lastRecordedWeek, sizeof(lastRecordedWeek));
+        file.write(headerReserved, sizeof(headerReserved));
+        
+        // Komprimovaná data: uint16_t místo float (úspora 50%)
+        // hasData jako bitfield (12 bytes místo 96)
+        uint16_t compressedData[QUARTERS_OF_DAY];
+        uint8_t hasDataBits[12];  // 96 bitů = 12 bytes
+        uint8_t itemReserved[16] = {0};  // Reserved pro budoucí rozšíření každého dne
+        
+        for (int week = 0; week < WEEKS_HISTORY; week++) {
+            for (int day = 0; day < DAYS_PER_WEEK; day++) {
+                // Komprimace consumption na uint16_t
+                for (int q = 0; q < QUARTERS_OF_DAY; q++) {
+                    float val = consumptionAt(week, day, q);
+                    compressedData[q] = (uint16_t)constrain(val, 0.0f, 65535.0f);
+                }
+                
+                // Komprimace hasData na bitfield
+                memset(hasDataBits, 0, sizeof(hasDataBits));
+                for (int q = 0; q < QUARTERS_OF_DAY; q++) {
+                    if (hasDataAt(week, day, q)) {
+                        hasDataBits[q / 8] |= (1 << (q % 8));
                     }
                 }
+                
+                file.write((uint8_t*)compressedData, sizeof(compressedData));
+                file.write(hasDataBits, sizeof(hasDataBits));
+                file.write(itemReserved, sizeof(itemReserved));  // Reserved pro budoucí data
             }
-            lastRecordedWeek = preferences.getInt("lastWeek", -1);
-            preferences.end();
-            LOGD("Consumption history loaded, lastWeek=%d", lastRecordedWeek);
         }
+        
+        file.close();
+        LOGD("Consumption history saved to SPIFFS");
+    }
+    
+    /**
+     * Načte historii ze SPIFFS
+     */
+    void loadFromPreferences() {
+        if (!SPIFFS.begin(true)) {
+            LOGE("Failed to mount SPIFFS for loading consumption");
+            return;
+        }
+        
+        if (!SPIFFS.exists(STORAGE_FILE)) {
+            LOGD("No consumption history file, using defaults");
+            return;
+        }
+        
+        File file = SPIFFS.open(STORAGE_FILE, "r");
+        if (!file) {
+            LOGE("Failed to open consumption file for reading");
+            return;
+        }
+        
+        // Kontrola magic a verze
+        uint32_t magic;
+        uint8_t version;
+        uint8_t headerReserved[16];
+        file.read((uint8_t*)&magic, sizeof(magic));
+        file.read(&version, sizeof(version));
+        
+        if (magic != 0x434F4E53 || version != 1) {
+            LOGW("Invalid consumption file format (magic=0x%08X, ver=%d)", magic, version);
+            file.close();
+            return;
+        }
+        
+        file.read((uint8_t*)&lastRecordedWeek, sizeof(lastRecordedWeek));
+        file.read(headerReserved, sizeof(headerReserved));  // Přeskočit reserved
+        
+        uint16_t compressedData[QUARTERS_OF_DAY];
+        uint8_t hasDataBits[12];
+        uint8_t itemReserved[16];
+        
+        for (int week = 0; week < WEEKS_HISTORY; week++) {
+            for (int day = 0; day < DAYS_PER_WEEK; day++) {
+                if (file.read((uint8_t*)compressedData, sizeof(compressedData)) == sizeof(compressedData)) {
+                    for (int q = 0; q < QUARTERS_OF_DAY; q++) {
+                        consumptionAt(week, day, q) = (float)compressedData[q];
+                    }
+                }
+                
+                if (file.read(hasDataBits, sizeof(hasDataBits)) == sizeof(hasDataBits)) {
+                    for (int q = 0; q < QUARTERS_OF_DAY; q++) {
+                        hasDataAt(week, day, q) = (hasDataBits[q / 8] & (1 << (q % 8))) != 0;
+                    }
+                }
+                
+                file.read(itemReserved, sizeof(itemReserved));  // Přeskočit reserved
+            }
+        }
+        
+        file.close();
+        LOGD("Consumption history loaded from SPIFFS, lastWeek=%d", lastRecordedWeek);
     }
     
     /**
@@ -774,6 +792,3 @@ public:
         return hasDataAt(0, day, quarter) || hasDataAt(1, day, quarter);
     }
 };
-
-// Definice static členské proměnné
-const char* ConsumptionPredictor::NAMESPACE = "conspred";

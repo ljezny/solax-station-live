@@ -1,9 +1,8 @@
 #pragma once
 
 #include <Arduino.h>
-#include <Preferences.h>
+#include <SPIFFS.h>
 #include <cmath>
-#include "NVSMutex.hpp"
 #include "RemoteLogger.hpp"
 
 /**
@@ -24,7 +23,7 @@
 
 class ProductionPredictor {
 private:
-    static const char* NAMESPACE;
+    static constexpr const char* STORAGE_FILE = "/production.bin";
     
     // Průměrná výroba [Wh] pro každou čtvrthodinu
     // production[čtvrthodina] kde čtvrthodina 0-95
@@ -407,107 +406,117 @@ public:
         currentQuarterAccumulator = 0;
         currentQuarterSampleCount = 0;
         
-        // Smazání z NVS
-        NVSGuard guard;
-        if (guard.isLocked()) {
-            Preferences preferences;
-            if (preferences.begin(NAMESPACE, false)) {
-                preferences.clear();
-                preferences.end();
-                LOGD("Production prediction NVS data cleared");
-            }
+        // Smazání ze SPIFFS
+        if (SPIFFS.begin(true)) {
+            SPIFFS.remove(STORAGE_FILE);
+            LOGD("Production prediction SPIFFS data cleared");
         }
     }
     
     /**
-     * Uloží historii do NVS
+     * Uloží historii do SPIFFS
      */
     void saveToPreferences() {
-        NVSGuard guard;
-        if (!guard.isLocked()) {
-            LOGE("Failed to lock NVS mutex for saving production history");
+        if (!SPIFFS.begin(true)) {
+            LOGE("Failed to mount SPIFFS for saving production");
             return;
         }
         
-        Preferences preferences;
-        if (preferences.begin(NAMESPACE, false)) {
-            preferences.putInt("instPwr", installedPowerWp);
-            
-            // Komprimovaná data: uint16_t místo float
-            uint16_t compressedProd[QUARTERS_PER_DAY];
-            uint8_t compressedCnt[QUARTERS_PER_DAY];
-            
-            for (int q = 0; q < QUARTERS_PER_DAY; q++) {
-                compressedProd[q] = (uint16_t)constrain(production[q], 0.0f, 65535.0f);
-                compressedCnt[q] = (uint8_t)min(sampleCount[q], 255);
-            }
-            
-            preferences.putBytes("prod", compressedProd, sizeof(compressedProd));
-            preferences.putBytes("cnt", compressedCnt, sizeof(compressedCnt));
-            
-            preferences.end();
-            LOGD("Production history saved (simplified format)");
+        File file = SPIFFS.open(STORAGE_FILE, "w");
+        if (!file) {
+            LOGE("Failed to open production file for writing");
+            return;
         }
+        
+        // Header: magic + version + installedPowerWp + reserved
+        uint32_t magic = 0x50524F44;  // "PROD"
+        uint8_t version = 1;
+        uint8_t headerReserved[16] = {0};  // Reserved pro budoucí rozšíření headeru
+        file.write((uint8_t*)&magic, sizeof(magic));
+        file.write(&version, sizeof(version));
+        file.write((uint8_t*)&installedPowerWp, sizeof(installedPowerWp));
+        file.write(headerReserved, sizeof(headerReserved));
+        
+        // Komprimovaná data: uint16_t místo float
+        uint16_t compressedProd[QUARTERS_PER_DAY];
+        uint8_t compressedCnt[QUARTERS_PER_DAY];
+        
+        for (int q = 0; q < QUARTERS_PER_DAY; q++) {
+            compressedProd[q] = (uint16_t)constrain(production[q], 0.0f, 65535.0f);
+            compressedCnt[q] = (uint8_t)min(sampleCount[q], 255);
+        }
+        
+        file.write((uint8_t*)compressedProd, sizeof(compressedProd));
+        file.write(compressedCnt, sizeof(compressedCnt));
+        
+        // Reserved pro budoucí data (např. sézonnost, korekce, atd.)
+        uint8_t dataReserved[32] = {0};
+        file.write(dataReserved, sizeof(dataReserved));
+        
+        file.close();
+        LOGD("Production history saved to SPIFFS");
     }
     
     /**
-     * Načte historii z NVS
+     * Načte historii ze SPIFFS
      */
     void loadFromPreferences() {
-        NVSGuard guard;
-        if (!guard.isLocked()) {
-            LOGE("Failed to lock NVS mutex for loading production history");
+        if (!SPIFFS.begin(true)) {
+            LOGE("Failed to mount SPIFFS for loading production");
             return;
         }
         
-        Preferences preferences;
-        if (preferences.begin(NAMESPACE, true)) {
-            installedPowerWp = preferences.getInt("instPwr", installedPowerWp);
-            
-            uint16_t compressedProd[QUARTERS_PER_DAY];
-            uint8_t compressedCnt[QUARTERS_PER_DAY];
-            
-            // Zkusíme načíst nový formát
-            if (preferences.getBytes("prod", compressedProd, sizeof(compressedProd)) > 0) {
-                for (int q = 0; q < QUARTERS_PER_DAY; q++) {
-                    production[q] = (float)compressedProd[q];
-                }
-                LOGD("Production loaded from new format");
-            } else {
-                // Zkusíme starý formát (měsíční) - načteme aktuální měsíc
-                time_t now = time(nullptr);
-                struct tm* timeinfo = localtime(&now);
-                int month = timeinfo->tm_mon;
-                
-                char key[16];
-                snprintf(key, sizeof(key), "p%d", month);
-                if (preferences.getBytes(key, compressedProd, sizeof(compressedProd)) > 0) {
-                    for (int q = 0; q < QUARTERS_PER_DAY; q++) {
-                        production[q] = (float)compressedProd[q];
-                    }
-                    LOGD("Production migrated from old format (month %d)", month);
-                } else {
-                    // Žádná data - použijeme výchozí hodnoty
-                    for (int q = 0; q < QUARTERS_PER_DAY; q++) {
-                        production[q] = getDefaultProduction(q);
-                    }
-                    LOGD("Production initialized with defaults");
-                }
+        if (!SPIFFS.exists(STORAGE_FILE)) {
+            LOGD("No production history file, using defaults");
+            for (int q = 0; q < QUARTERS_PER_DAY; q++) {
+                production[q] = getDefaultProduction(q);
             }
-            
-            // Načtení sample count
-            if (preferences.getBytes("cnt", compressedCnt, sizeof(compressedCnt)) > 0) {
-                for (int q = 0; q < QUARTERS_PER_DAY; q++) {
-                    sampleCount[q] = (int)compressedCnt[q];
-                }
-            } else {
-                for (int q = 0; q < QUARTERS_PER_DAY; q++) {
-                    sampleCount[q] = 0;
-                }
-            }
-            
-            preferences.end();
+            return;
         }
+        
+        File file = SPIFFS.open(STORAGE_FILE, "r");
+        if (!file) {
+            LOGE("Failed to open production file for reading");
+            return;
+        }
+        
+        // Kontrola magic a verze
+        uint32_t magic;
+        uint8_t version;
+        file.read((uint8_t*)&magic, sizeof(magic));
+        file.read(&version, sizeof(version));
+        
+        if (magic != 0x50524F44 || version != 1) {
+            LOGW("Invalid production file format (magic=0x%08X, ver=%d)", magic, version);
+            file.close();
+            return;
+        }
+        
+        file.read((uint8_t*)&installedPowerWp, sizeof(installedPowerWp));
+        
+        // Přeskočit header reserved
+        uint8_t headerReserved[16];
+        file.read(headerReserved, sizeof(headerReserved));
+        
+        uint16_t compressedProd[QUARTERS_PER_DAY];
+        uint8_t compressedCnt[QUARTERS_PER_DAY];
+        
+        if (file.read((uint8_t*)compressedProd, sizeof(compressedProd)) == sizeof(compressedProd)) {
+            for (int q = 0; q < QUARTERS_PER_DAY; q++) {
+                production[q] = (float)compressedProd[q];
+            }
+        }
+        
+        if (file.read(compressedCnt, sizeof(compressedCnt)) == sizeof(compressedCnt)) {
+            for (int q = 0; q < QUARTERS_PER_DAY; q++) {
+                sampleCount[q] = (int)compressedCnt[q];
+            }
+        }
+        
+        // Přeskočit data reserved (nemusíme číst, jsme na konci)
+        
+        file.close();
+        LOGD("Production history loaded from SPIFFS, instPwr=%d", installedPowerWp);
     }
     
     /**
@@ -551,5 +560,3 @@ public:
         return getQuarter(timeinfo);
     }
 };
-
-const char* ProductionPredictor::NAMESPACE = "prodpred";
