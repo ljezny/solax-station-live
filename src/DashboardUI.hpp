@@ -880,6 +880,17 @@ public:
             DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
             self->showButtonsOnTouch();
         }, LV_EVENT_PRESSED, this);
+        
+        // Make PV strings container more compact - reduce row spacing
+        lv_obj_set_style_pad_row(ui_pvStringsContainer, 0, LV_PART_MAIN);   // Was 4
+        lv_obj_set_style_pad_row(ui_pvStringsContainer1, 0, LV_PART_MAIN);  // Was 4
+        // Reduce gap between the two string columns
+        lv_obj_set_style_pad_column(ui_Container1, 2, LV_PART_MAIN);  // Was 4
+        // Use smaller font for PV string labels
+        lv_obj_set_style_text_font(ui_pv1Label, &ui_font_OpenSansSmall, 0);
+        lv_obj_set_style_text_font(ui_pv2Label, &ui_font_OpenSansSmall, 0);
+        lv_obj_set_style_text_font(ui_pv3Label, &ui_font_OpenSansSmall, 0);
+        lv_obj_set_style_text_font(ui_pv4Label, &ui_font_OpenSansSmall, 0);
     }
     
     /**
