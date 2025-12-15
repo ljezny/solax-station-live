@@ -81,7 +81,7 @@ public:
             }
             else if (pvPower > 0)
             {
-                brightness = 192;
+                brightness = 128;
             }
             else
             {
@@ -168,7 +168,9 @@ public:
         if (i2cScanForAddress(0x30)) // new V1.2
         {
             Wire.beginTransmission(0x30);
-            Wire.write(brightness == 255 ? 0x10 : 0x07);
+            //needs to recompute brightness from 0-255 to 0-16
+            uint8_t pwmValue = map(brightness, 0, 255, 0, 16);
+            Wire.write(pwmValue);
             Wire.endTransmission();
         }
 #else
