@@ -1425,18 +1425,19 @@ public:
         lv_label_set_text(intelligenceSummaryBadge, modeName);
         lv_obj_set_style_bg_color(intelligenceSummaryBadge, badgeColor, 0);
         
-        // Update savings value
+        // Update savings value - only show if positive
         if (intelligenceSummarySavings != nullptr) {
-            char savingsText[32];
-            const char* currencyStr = currency ? currency : TR(STR_CURRENCY_CZK);
-            if (savings >= 0) {
+            if (savings > 0) {
+                char savingsText[32];
+                const char* currencyStr = currency ? currency : TR(STR_CURRENCY_CZK);
                 snprintf(savingsText, sizeof(savingsText), "+%.0f %s", savings, currencyStr);
                 lv_obj_set_style_text_color(intelligenceSummarySavings, lv_color_hex(0x00AA00), 0);  // Green for positive
+                lv_label_set_text(intelligenceSummarySavings, savingsText);
+                lv_obj_clear_flag(intelligenceSummarySavings, LV_OBJ_FLAG_HIDDEN);
             } else {
-                snprintf(savingsText, sizeof(savingsText), "%.0f %s", savings, currencyStr);
-                lv_obj_set_style_text_color(intelligenceSummarySavings, lv_color_hex(0xAA0000), 0);  // Red for negative
+                // Hide savings if zero or negative
+                lv_obj_add_flag(intelligenceSummarySavings, LV_OBJ_FLAG_HIDDEN);
             }
-            lv_label_set_text(intelligenceSummarySavings, savingsText);
         }
     }
     
