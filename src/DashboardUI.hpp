@@ -958,7 +958,7 @@ public:
         // Title
         lv_obj_t* title = lv_label_create(inverterModeMenu);
         lv_label_set_text(title, TR(STR_INVERTER_MODE));
-        lv_obj_set_style_text_font(title, &lv_font_montserrat_16, 0);
+        lv_obj_set_style_text_font(title, &ui_font_OpenSansMedium, 0);
         lv_obj_set_width(title, lv_pct(100));
         lv_obj_set_style_text_align(title, LV_TEXT_ALIGN_CENTER, 0);
 
@@ -991,6 +991,7 @@ public:
             
             lv_obj_t* label = lv_label_create(btn);
             lv_label_set_text(label, items[i].text);
+            lv_obj_set_style_text_font(label, &ui_font_OpenSansSmall, 0);
             lv_obj_set_style_text_color(label, lv_color_white(), 0);
             lv_obj_center(label);
 
