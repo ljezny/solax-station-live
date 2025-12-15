@@ -6,29 +6,29 @@
 #include <freertos/semphr.h>
 
 /**
- * Singleton třída pro synchronizaci zápisu do NVS (flash)
+ * Singleton třída pro synchronizaci zápisu do Flash (NVS, SPIFFS)
  * 
  * Na ESP32-S3 sdílí flash a PSRAM stejnou SPI sběrnici.
- * Při zápisu do flash (NVS) se může přerušit přístup k PSRAM,
+ * Při zápisu do flash se může přerušit přístup k PSRAM,
  * což způsobuje probliknutí displeje pokud je framebuffer v PSRAM.
  * 
  * Tato třída zajišťuje:
  * 1. Před zápisem počká na dokončení DMA přenosu displeje
- * 2. Zamkne mutex aby se nepřekrývaly NVS operace
+ * 2. Zamkne mutex aby se nepřekrývaly flash operace
  * 3. Po zápisu uvolní mutex
  * 
  * Použití:
- *   NVSMutex::lock();
- *   // ... NVS operace ...
- *   NVSMutex::unlock();
+ *   FlashMutex::lock();
+ *   // ... flash operace (NVS, SPIFFS) ...
+ *   FlashMutex::unlock();
  * 
  * Nebo pomocí RAII guard:
  *   {
- *       NVSGuard guard;
- *       // ... NVS operace ...
+ *       FlashGuard guard;
+ *       // ... flash operace ...
  *   } // automatický unlock
  */
-class NVSMutex {
+class FlashMutex {
 private:
     static SemaphoreHandle_t mutex;
     static bool initialized;
@@ -40,7 +40,7 @@ private:
         if (!initialized) {
             mutex = xSemaphoreCreateRecursiveMutex();  // Rekurzivní mutex - umožňuje vnořené zamykání
             initialized = true;
-            LOGD("NVSMutex initialized (recursive)");
+            LOGD("FlashMutex initialized (recursive)");
         }
     }
     
@@ -52,11 +52,11 @@ public:
     static void setWaitDMACallback(void (*callback)()) {
         init();
         waitDMACallback = callback;
-        LOGD("NVSMutex DMA callback set");
+        LOGD("FlashMutex DMA callback set");
     }
     
     /**
-     * Zamkne mutex pro NVS operace
+     * Zamkne mutex pro flash operace
      * Před zamknutím počká na dokončení DMA přenosu displeje
      * 
      * @param timeoutMs timeout v ms, 0 = nekonečno
@@ -76,7 +76,7 @@ public:
             return true;
         }
         
-        LOGW("NVSMutex lock timeout!");
+        LOGW("FlashMutex lock timeout!");
         return false;
     }
     
@@ -106,39 +106,39 @@ public:
 };
 
 // Statické členy
-SemaphoreHandle_t NVSMutex::mutex = nullptr;
-bool NVSMutex::initialized = false;
-void (*NVSMutex::waitDMACallback)() = nullptr;
+SemaphoreHandle_t FlashMutex::mutex = nullptr;
+bool FlashMutex::initialized = false;
+void (*FlashMutex::waitDMACallback)() = nullptr;
 
 /**
- * RAII guard pro automatické zamykání/odemykání NVS mutexu
+ * RAII guard pro automatické zamykání/odemykání Flash mutexu
  * 
  * Použití:
  *   {
- *       NVSGuard guard;
+ *       FlashGuard guard;
  *       if (guard.isLocked()) {
- *           // ... NVS operace ...
+ *           // ... flash operace (NVS, SPIFFS) ...
  *       }
  *   } // automatický unlock
  */
-class NVSGuard {
+class FlashGuard {
 private:
     bool locked;
     
 public:
-    explicit NVSGuard(uint32_t timeoutMs = 5000) {
-        locked = NVSMutex::lock(timeoutMs);
+    explicit FlashGuard(uint32_t timeoutMs = 5000) {
+        locked = FlashMutex::lock(timeoutMs);
     }
     
-    ~NVSGuard() {
+    ~FlashGuard() {
         if (locked) {
-            NVSMutex::unlock();
+            FlashMutex::unlock();
         }
     }
     
     // Zakázat kopírování
-    NVSGuard(const NVSGuard&) = delete;
-    NVSGuard& operator=(const NVSGuard&) = delete;
+    FlashGuard(const FlashGuard&) = delete;
+    FlashGuard& operator=(const FlashGuard&) = delete;
     
     /**
      * Vrátí true pokud se podařilo zamknout mutex
@@ -152,7 +152,7 @@ public:
      */
     void unlock() {
         if (locked) {
-            NVSMutex::unlock();
+            FlashMutex::unlock();
             locked = false;
         }
     }

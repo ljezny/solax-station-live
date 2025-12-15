@@ -8,7 +8,7 @@
 
 #include "WiFiResult.hpp"
 #include "utils/SoftAP.hpp"
-#include "utils/NVSMutex.hpp"
+#include "utils/FlashMutex.hpp"
 #include "Shelly/Shelly.hpp"
 
 #define DONGLE_DISCOVERY_MAX_RESULTS 32
@@ -216,7 +216,7 @@ public:
 
     String loadLastConnectedSSID()
     {
-        NVSGuard guard;
+        FlashGuard guard;
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for loading last connected SSID");
             return "";
@@ -231,7 +231,7 @@ public:
 
     void storeLastConnectedSSID(const String &ssid)
     {
-        NVSGuard guard;
+        FlashGuard guard;
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for storing SSID");
             return;
@@ -391,7 +391,7 @@ private:
 
     void saveDongleInfo(String ssid, DongleInfo_t &info)
     {
-        NVSGuard guard;
+        FlashGuard guard;
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for saving dongle info");
             return;
@@ -405,7 +405,7 @@ private:
 
     bool loadDongleInfo(String ssid, DongleInfo_t &info)
     {
-        NVSGuard guard;
+        FlashGuard guard;
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for loading dongle info");
             return false;

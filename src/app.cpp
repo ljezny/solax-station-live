@@ -34,7 +34,7 @@
 #include "utils/ConsumptionPredictor.hpp"
 #include "utils/ProductionPredictor.hpp"
 #include "utils/WebServer.hpp"
-#include "utils/NVSMutex.hpp"
+#include "utils/FlashMutex.hpp"
 #include "utils/RemoteLogger.hpp"
 
 #define UI_REFRESH_INTERVAL 5000            // Define the UI refresh interval in milliseconds
@@ -400,7 +400,7 @@ void setupLVGL()
     lv_indev_drv_register(&indev_drv);
 
     // Set up NVS mutex to wait for display DMA before flash writes
-    NVSMutex::setWaitDMACallback([]()
+    FlashMutex::setWaitDMACallback([]()
                                  { tft.waitDMA(); });
 
     ui_init();
@@ -648,7 +648,7 @@ bool loadInverterDataTask()
                 if (consumptionQuarterChanged || productionQuarterChanged)
                 {
                     LOGD("Quarter changed, saving predictors to flash");
-                    NVSGuard guard;
+                    FlashGuard guard;
                     if (guard.isLocked())
                     {
                         consumptionPredictor.saveToPreferences();

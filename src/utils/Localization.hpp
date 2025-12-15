@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include "RemoteLogger.hpp"
 #include <Preferences.h>
-#include "NVSMutex.hpp"
+#include "FlashMutex.hpp"
 
 /**
  * Supported languages
@@ -181,7 +181,7 @@ public:
     static void init() {
         if (initialized) return;
         
-        NVSGuard guard;
+        FlashGuard guard;
         if (guard.isLocked()) {
             Preferences prefs;
             if (prefs.begin("locale", true)) {
@@ -211,7 +211,7 @@ public:
         if (lang >= LANG_COUNT) return;
         currentLanguage = lang;
         
-        NVSGuard guard;
+        FlashGuard guard;
         if (guard.isLocked()) {
             Preferences prefs;
             if (prefs.begin("locale", false)) {
@@ -293,7 +293,7 @@ const char* const Localization::stringsEN[] = {
     "No WiFi",              // STR_NO_WIFI
     
     // Dashboard - Intelligence
-    "Intelligence",         // STR_INTELLIGENCE
+    "Intelligence (BETA)",  // STR_INTELLIGENCE
     "Inverter Mode",        // STR_INVERTER_MODE
     "NORMAL",               // STR_NORMAL
     "CHARGE",               // STR_CHARGE
@@ -320,8 +320,8 @@ const char* const Localization::stringsEN[] = {
     "Connect",              // STR_CONNECT
     
     // Intelligence Setup
-    "Intelligence Setup",   // STR_INTELLIGENCE_SETUP
-    "Enable Intelligence",  // STR_ENABLE_INTELLIGENCE
+    "Intelligence (BETA) Setup", // STR_INTELLIGENCE_SETUP
+    "Enable Intelligence (BETA)", // STR_ENABLE_INTELLIGENCE
     "Battery Cost",         // STR_BATTERY_COST
     "Min SOC",              // STR_MIN_SOC
     "Max SOC",              // STR_MAX_SOC
@@ -368,7 +368,7 @@ const char* const Localization::stringsEN[] = {
     "Battery",              // STR_BATTERY
     "Buy Price",            // STR_BUY_PRICE
     "Sell Price",           // STR_SELL_PRICE
-    "Intelligence Settings", // STR_INTELLIGENCE_SETTINGS
+    "Intelligence (BETA) Settings", // STR_INTELLIGENCE_SETTINGS
     "Enable",               // STR_ENABLE
     "Cost per kWh:",        // STR_COST_PER_KWH
     "Min SOC %:",           // STR_MIN_SOC_PERCENT
@@ -433,7 +433,7 @@ const char* const Localization::stringsDE[] = {
     "Kein WLAN",            // STR_NO_WIFI
     
     // Dashboard - Intelligence
-    "Intelligenz",          // STR_INTELLIGENCE
+    "Intelligenz (BETA)",   // STR_INTELLIGENCE
     "Wechselrichter-Modus", // STR_INVERTER_MODE
     "NORMAL",               // STR_NORMAL
     "LADEN",                // STR_CHARGE
@@ -460,8 +460,8 @@ const char* const Localization::stringsDE[] = {
     "Verbinden",            // STR_CONNECT
     
     // Intelligence Setup
-    "Intelligenz-Setup",    // STR_INTELLIGENCE_SETUP
-    "Intelligenz aktivieren", // STR_ENABLE_INTELLIGENCE
+    "Intelligenz (BETA) Setup", // STR_INTELLIGENCE_SETUP
+    "Intelligenz (BETA) aktivieren", // STR_ENABLE_INTELLIGENCE
     "Batteriekosten",       // STR_BATTERY_COST
     "Min SOC",              // STR_MIN_SOC
     "Max SOC",              // STR_MAX_SOC
@@ -508,7 +508,7 @@ const char* const Localization::stringsDE[] = {
     "Batterie",             // STR_BATTERY
     "Kaufpreis",            // STR_BUY_PRICE
     "Verkaufspreis",        // STR_SELL_PRICE
-    "Intelligenz-Einstellungen", // STR_INTELLIGENCE_SETTINGS
+    "Intelligenz (BETA) Einstellungen", // STR_INTELLIGENCE_SETTINGS
     "Aktivieren",           // STR_ENABLE
     "Kosten pro kWh:",      // STR_COST_PER_KWH
     "Min SOC %:",           // STR_MIN_SOC_PERCENT
@@ -573,7 +573,7 @@ const char* const Localization::stringsCS[] = {
     "Bez WiFi",             // STR_NO_WIFI
     
     // Dashboard - Intelligence
-    "Inteligence",          // STR_INTELLIGENCE
+    "Inteligence (BETA)",   // STR_INTELLIGENCE
     "Režim střídače",       // STR_INVERTER_MODE
     "NORMÁLNÍ",             // STR_NORMAL
     "NABÍJENÍ",             // STR_CHARGE
@@ -600,8 +600,8 @@ const char* const Localization::stringsCS[] = {
     "Připojit",             // STR_CONNECT
     
     // Intelligence Setup
-    "Nastavení inteligence", // STR_INTELLIGENCE_SETUP
-    "Povolit inteligenci",  // STR_ENABLE_INTELLIGENCE
+    "Nastavení inteligence (BETA)", // STR_INTELLIGENCE_SETUP
+    "Povolit inteligenci (BETA)", // STR_ENABLE_INTELLIGENCE
     "Cena baterie",         // STR_BATTERY_COST
     "Min SOC",              // STR_MIN_SOC
     "Max SOC",              // STR_MAX_SOC
@@ -649,7 +649,7 @@ const char* const Localization::stringsCS[] = {
     "Baterie",              // STR_BATTERY
     "Nákupní cena",         // STR_BUY_PRICE
     "Prodejní cena",        // STR_SELL_PRICE
-    "Nastavení inteligence", // STR_INTELLIGENCE_SETTINGS
+    "Nastavení inteligence (BETA)", // STR_INTELLIGENCE_SETTINGS
     "Povolit",              // STR_ENABLE
     "Cena za kWh:",         // STR_COST_PER_KWH
     "Min SOC %:",           // STR_MIN_SOC_PERCENT

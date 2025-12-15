@@ -4,7 +4,7 @@
 #include "RemoteLogger.hpp"
 #include <Preferences.h>
 #include <esp_heap_caps.h>
-#include "NVSMutex.hpp"
+#include "FlashMutex.hpp"
 #include "../Spot/ElectricityPriceResult.hpp"  // Pro QUARTERS_OF_DAY, QUARTERS_TWO_DAYS
 
 /**
@@ -288,7 +288,7 @@ public:
         }
         lastSavedQuarter = currentQuarter;
         
-        NVSGuard guard;
+        FlashGuard guard;
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for saving solar chart data");
             return;
@@ -338,7 +338,7 @@ public:
      * Načte pouze pokud je to stejný den
      */
     void loadFromPreferences() {
-        NVSGuard guard;
+        FlashGuard guard;
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for loading solar chart data");
             return;

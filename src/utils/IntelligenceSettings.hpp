@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include "RemoteLogger.hpp"
 #include <Preferences.h>
-#include "NVSMutex.hpp"
+#include "FlashMutex.hpp"
 
 /**
  * Nastavení inteligentního řízení střídače
@@ -73,7 +73,7 @@ public:
     static IntelligenceSettings_t load() {
         IntelligenceSettings_t settings = IntelligenceSettings_t::getDefault();
         
-        NVSGuard guard;
+        FlashGuard guard;
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for loading intelligence settings");
             return settings;
@@ -108,7 +108,7 @@ public:
      * Uloží nastavení do NVS
      */
     static void save(const IntelligenceSettings_t& settings) {
-        NVSGuard guard;
+        FlashGuard guard;
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for saving intelligence settings");
             return;

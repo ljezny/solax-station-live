@@ -4,7 +4,7 @@
 #include "../utils/RemoteLogger.hpp"
 #include <esp_heap_caps.h>
 #include "ElectricityPriceResult.hpp"
-#include "utils/NVSMutex.hpp"
+#include "utils/FlashMutex.hpp"
 #include "utils/Localization.hpp"
 
 #include "Spot/Providers/OTE_CZ_API.hpp"
@@ -273,7 +273,7 @@ private:
 public:
     ElectricityPriceProvider_t getStoredElectricityPriceProvider()
     {
-        NVSGuard guard;
+        FlashGuard guard;
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for reading provider");
             return NONE;
@@ -288,7 +288,7 @@ public:
 
     void storeElectricityPriceProvider(ElectricityPriceProvider_t provider)
     {
-        NVSGuard guard;
+        FlashGuard guard;
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for storing provider");
             return;
@@ -302,7 +302,7 @@ public:
 
     String getStoredTimeZone()
     {
-        NVSGuard guard;
+        FlashGuard guard;
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for reading timezone");
             return "CET-1CEST,M3.5.0/2,M10.5.0/3";
@@ -317,7 +317,7 @@ public:
 
     void storeTimeZone(String timeZone)
     {
-        NVSGuard guard;
+        FlashGuard guard;
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for storing timezone");
             return;
