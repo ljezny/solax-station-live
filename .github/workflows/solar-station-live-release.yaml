@@ -52,4 +52,4 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           localDir: 'tempFirmware'
-          remoteDir: 'solar-station-live-intelligence/bin'
+          remoteDir: 'solar-station-live/bin'
