@@ -160,6 +160,12 @@ private:
             }
         }
         
+        // Beta warning - update text from localization
+        if (ui_intelligenceBetaWarning) {
+            lv_obj_t* warningLabel = lv_obj_get_child(ui_intelligenceBetaWarning, 0);
+            if (warningLabel) lv_label_set_text(warningLabel, TR(STR_BETA_WARNING));
+        }
+        
         // Left column (Battery) - card title is first child
         if (ui_intelligenceLeftColumn) {
             lv_obj_t* cardTitle = lv_obj_get_child(ui_intelligenceLeftColumn, 0);

@@ -22,8 +22,23 @@ private:
     InverterData_t readData(String ipAddress, String dongleSN)
     {
         InverterData_t inverterData{};
+        
+        // Validate SN length - should be max 10 digits for uint32_t
+        if (dongleSN.length() > 10) {
+            log_e("Dongle SN '%s' is too long (%d chars). Max 10 digits allowed. Truncating.", 
+                  dongleSN.c_str(), dongleSN.length());
+            dongleSN = dongleSN.substring(0, 10);
+        }
+        
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
-        inverterData.sn = sn;
+        
+        // Check for overflow
+        if (sn == ULONG_MAX || sn == 0) {
+            log_e("Invalid SN conversion: '%s' -> %lu. Check SN format.", dongleSN.c_str(), sn);
+        }
+        
+        log_d("SN: %lu (from string: '%s')", sn, dongleSN.c_str());
+        inverterData.sn = dongleSN;
         byte packetBuffer[1024];
 
         channel.ensureIPAddress(ipAddress);
@@ -32,10 +47,11 @@ private:
         if (!channel.tryReadWithRetries(0x586, 0x58F - 0x586 + 1, sn, packetBuffer, [&]()
                                 {
             inverterData.millis = millis();
-            inverterData.pv1Power = channel.readUInt16(packetBuffer, 0) * 10;
-            inverterData.pv2Power = channel.readUInt16(packetBuffer, 3) * 10;
-            inverterData.pv3Power = channel.readUInt16(packetBuffer, 5) * 10;
-            inverterData.pv4Power = channel.readUInt16(packetBuffer, 9) * 10; }))
+            inverterData.pv1Power = channel.readUInt16(packetBuffer, 0) * 10;  // 0x586
+            inverterData.pv2Power = channel.readUInt16(packetBuffer, 3) * 10;  // 0x589
+            inverterData.pv3Power = channel.readUInt16(packetBuffer, 6) * 10;  // 0x58C
+            inverterData.pv4Power = channel.readUInt16(packetBuffer, 9) * 10;  // 0x58F
+            }))
             return inverterData;
 
         // Battery Input
@@ -93,13 +109,14 @@ private:
 
     void readInverterRTC(uint32_t sn, InverterData_t &inverterData)
     {
-        // SofarSolar RTC registers: 0x410-0x415 (holding registers)
-        // 0x410: Year, 0x411: Month, 0x412: Day, 0x413: Hour, 0x414: Minute, 0x415: Second
+        // SofarSolar RTC registers: 0x42C-0x431 (holding registers)
+        // Format: Year (% 100), Month, Day, Hour, Minute, Second
         byte packetBuffer[16];
-        channel.tryReadWithRetries(0x410, 6, sn, packetBuffer, [&]()
+        channel.tryReadWithRetries(0x42C, 6, sn, packetBuffer, [&]()
                                    {
                                        struct tm timeinfo = {};
-                                       timeinfo.tm_year = channel.readUInt16(packetBuffer, 0) - 1900;  // Year - 1900
+                                       // Rok je uložen jako year % 100 (např. 25 pro 2025)
+                                       timeinfo.tm_year = channel.readUInt16(packetBuffer, 0) + 100;  // +100 protože tm_year je od 1900
                                        timeinfo.tm_mon = channel.readUInt16(packetBuffer, 1) - 1;     // Month 1-12 to 0-11
                                        timeinfo.tm_mday = channel.readUInt16(packetBuffer, 2);
                                        timeinfo.tm_hour = channel.readUInt16(packetBuffer, 3);

@@ -111,7 +111,6 @@ typedef enum {
     STR_SETUP,
     STR_IP_ADDRESS,
     STR_SERIAL_NUMBER,
-    STR_SPOT_INFO,
     
     // Intelligence Setup - Card titles
     STR_BATTERY,
@@ -148,6 +147,14 @@ typedef enum {
     STR_CURRENCY_EUR_CENT,        // "ct" (euro cents)
     STR_CURRENCY_PLN_GR,          // "gr" (grosze)
     STR_CURRENCY_SEK_ORE,         // "öre"
+    
+    // General settings
+    STR_GENERAL,                  // "General" / "Obecné"
+    STR_DISPLAY_TIMEOUT,          // "Display off" / "Vypnutí displeje"
+    STR_NEVER,                    // "Never" / "Nikdy"
+    
+    // Beta warning
+    STR_BETA_WARNING,             // Beta feature warning text
     
     STR_COUNT  // Must be last
 } StringId_t;
@@ -303,13 +310,13 @@ const char* const Localization::stringsEN[] = {
     // WiFi Setup
     "WiFi Setup",           // STR_WIFI_SETUP
     "Select WiFi",          // STR_SELECT_WIFI
-    "Password",             // STR_PASSWORD
+    "Password:",            // STR_PASSWORD
     "Inverter IP",          // STR_INVERTER_IP
     "Inverter S/N",         // STR_INVERTER_SN
     "Connection Type",      // STR_CONNECTION_TYPE
     "Spot Provider",        // STR_SPOT_PROVIDER
-    "Timezone",             // STR_TIMEZONE
-    "Language",             // STR_LANGUAGE
+    "Time Zone:",           // STR_TIMEZONE
+    "Language:",            // STR_LANGUAGE
     "Connect",              // STR_CONNECT
     
     // Intelligence Setup
@@ -356,7 +363,6 @@ const char* const Localization::stringsEN[] = {
     "Setup",                // STR_SETUP
     "IP Address:",          // STR_IP_ADDRESS
     "Serial Number:",       // STR_SERIAL_NUMBER
-    "Enable spot prices for\nintelligent battery control", // STR_SPOT_INFO
     
     // Intelligence Setup - Card titles
     "Battery",              // STR_BATTERY
@@ -393,6 +399,14 @@ const char* const Localization::stringsEN[] = {
     "ct",                     // STR_CURRENCY_EUR_CENT
     "gr",                     // STR_CURRENCY_PLN_GR
     "öre",                    // STR_CURRENCY_SEK_ORE
+    
+    // General settings
+    "General",                // STR_GENERAL
+    "Display off",            // STR_DISPLAY_TIMEOUT
+    "Never",                  // STR_NEVER
+    
+    // Beta warning
+    "BETA: This feature is experimental and may affect your inverter settings. Use at your own risk. The author is not responsible for any damage.",  // STR_BETA_WARNING
 };
 
 // German strings
@@ -436,13 +450,13 @@ const char* const Localization::stringsDE[] = {
     // WiFi Setup
     "WLAN-Einrichtung",     // STR_WIFI_SETUP
     "WLAN auswählen",       // STR_SELECT_WIFI
-    "Passwort",             // STR_PASSWORD
+    "Passwort:",            // STR_PASSWORD
     "Wechselrichter IP",    // STR_INVERTER_IP
     "Wechselrichter S/N",   // STR_INVERTER_SN
     "Verbindungstyp",       // STR_CONNECTION_TYPE
     "Spot-Anbieter",        // STR_SPOT_PROVIDER
-    "Zeitzone",             // STR_TIMEZONE
-    "Sprache",              // STR_LANGUAGE
+    "Zeitzone:",            // STR_TIMEZONE
+    "Sprache:",             // STR_LANGUAGE
     "Verbinden",            // STR_CONNECT
     
     // Intelligence Setup
@@ -489,7 +503,6 @@ const char* const Localization::stringsDE[] = {
     "Einrichtung",          // STR_SETUP
     "IP-Adresse:",          // STR_IP_ADDRESS
     "Seriennummer:",        // STR_SERIAL_NUMBER
-    "Spotpreise aktivieren für\nintelligente Batteriesteuerung", // STR_SPOT_INFO
     
     // Intelligence Setup - Card titles
     "Batterie",             // STR_BATTERY
@@ -526,6 +539,14 @@ const char* const Localization::stringsDE[] = {
     "ct",                     // STR_CURRENCY_EUR_CENT
     "gr",                     // STR_CURRENCY_PLN_GR
     "öre",                    // STR_CURRENCY_SEK_ORE
+    
+    // General settings
+    "Allgemein",              // STR_GENERAL
+    "Display aus",            // STR_DISPLAY_TIMEOUT
+    "Nie",                    // STR_NEVER
+    
+    // Beta warning
+    "BETA: Diese Funktion ist experimentell und kann Ihre Wechselrichter-Einstellungen beeinflussen. Nutzung auf eigene Gefahr. Der Autor übernimmt keine Haftung.",  // STR_BETA_WARNING
 };
 
 // Czech strings
@@ -569,13 +590,13 @@ const char* const Localization::stringsCS[] = {
     // WiFi Setup
     "Nastavení WiFi",       // STR_WIFI_SETUP
     "Vybrat WiFi",          // STR_SELECT_WIFI
-    "Heslo",                // STR_PASSWORD
+    "Heslo:",               // STR_PASSWORD
     "IP střídače",          // STR_INVERTER_IP
     "S/N střídače",         // STR_INVERTER_SN
     "Typ připojení",        // STR_CONNECTION_TYPE
     "Poskytovatel cen",     // STR_SPOT_PROVIDER
-    "Časová zóna",          // STR_TIMEZONE
-    "Jazyk",                // STR_LANGUAGE
+    "Časová zóna:",         // STR_TIMEZONE
+    "Jazyk:",               // STR_LANGUAGE
     "Připojit",             // STR_CONNECT
     
     // Intelligence Setup
@@ -622,7 +643,7 @@ const char* const Localization::stringsCS[] = {
     "Nastavení",            // STR_SETUP
     "IP adresa:",           // STR_IP_ADDRESS
     "Sériové číslo:",       // STR_SERIAL_NUMBER
-    "Povolit spotové ceny pro\ninteligentní řízení baterie", // STR_SPOT_INFO
+
     
     // Intelligence Setup - Card titles
     "Baterie",              // STR_BATTERY
@@ -659,6 +680,14 @@ const char* const Localization::stringsCS[] = {
     "ct",                     // STR_CURRENCY_EUR_CENT
     "gr",                     // STR_CURRENCY_PLN_GR
     "öre",                    // STR_CURRENCY_SEK_ORE
+    
+    // General settings
+    "Obecné",                 // STR_GENERAL
+    "Vypnutí displeje",       // STR_DISPLAY_TIMEOUT
+    "Nikdy",                  // STR_NEVER
+    
+    // Beta warning
+    "BETA: Tato funkce je experimentální a může ovlivnit nastavení střídače. Používáte na vlastní nebezpečí. Autor nenese odpovědnost za případné škody.",  // STR_BETA_WARNING
 };
 
 // Convenience macro for translation

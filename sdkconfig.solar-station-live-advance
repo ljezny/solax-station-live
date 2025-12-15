@@ -3095,6 +3095,7 @@ CONFIG_LITTLEFS_ASSERTS=y
 # end of LittleFS
 # end of Component config
 
+# default:
 CONFIG_IDF_EXPERIMENTAL_FEATURES=y
 
 # Deprecated options for backward compatibility

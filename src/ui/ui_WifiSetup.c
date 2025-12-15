@@ -31,10 +31,12 @@ lv_obj_t *ui_connectionTypeDropdown = NULL;
 lv_obj_t *ui_inverterIP = NULL;
 lv_obj_t *ui_inverterSN = NULL;
 lv_obj_t *ui_Container21 = NULL;
+lv_obj_t *ui_ContainerGeneral = NULL;
 lv_obj_t *ui_Label2 = NULL;
 lv_obj_t *ui_spotProviderDropdown = NULL;
 lv_obj_t *ui_timeZoneDropdown = NULL;
 lv_obj_t *ui_languageDropdown = NULL;
+lv_obj_t *ui_displayTimeoutDropdown = NULL;
 lv_obj_t *ui_keyboard = NULL;
 
 // Helper function to style a dropdown
@@ -50,6 +52,15 @@ static void style_dropdown(lv_obj_t* dropdown) {
     lv_obj_set_style_pad_all(dropdown, 10, LV_PART_MAIN);
     // Disable default symbol (would show square because our font doesn't have it)
     lv_dropdown_set_symbol(dropdown, NULL);
+    
+    // Open dropdown to create list, style it, then close
+    lv_dropdown_open(dropdown);
+    lv_obj_t* list = lv_dropdown_get_list(dropdown);
+    if (list) {
+        lv_obj_set_style_text_font(list, &ui_font_OpenSansExtraSmall, LV_PART_MAIN);
+        lv_obj_set_style_text_font(list, &ui_font_OpenSansExtraSmall, LV_PART_SELECTED);
+    }
+    lv_dropdown_close(dropdown);
 }
 
 // Helper function to style a textarea input
@@ -234,17 +245,115 @@ void ui_WifiSetup_screen_init(void)
     lv_textarea_set_one_line(ui_inverterSN, true);
     style_textarea(ui_inverterSN);
     
-    // ===== RIGHT COLUMN - Spot Price (Purple accent) =====
-    ui_Container21 = create_card(ui_Container12, "Spot Price", COLOR_PURPLE);
+    // ===== RIGHT COLUMN - Container for two cards =====
+    lv_obj_t* rightColumn = lv_obj_create(ui_Container12);
+    lv_obj_remove_style_all(rightColumn);
+    lv_obj_set_flex_grow(rightColumn, 1);
+    lv_obj_set_height(rightColumn, lv_pct(100));
+    lv_obj_set_flex_flow(rightColumn, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(rightColumn, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_clear_flag(rightColumn, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_pad_row(rightColumn, 8, LV_PART_MAIN);
     
-    // Keep reference
-    ui_Label2 = lv_obj_get_child(ui_Container21, 0);
+    // ===== GENERAL CARD (Green accent) =====
+    ui_ContainerGeneral = lv_obj_create(rightColumn);
+    lv_obj_set_width(ui_ContainerGeneral, lv_pct(100));
+    lv_obj_set_height(ui_ContainerGeneral, LV_SIZE_CONTENT);
+    lv_obj_set_flex_flow(ui_ContainerGeneral, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(ui_ContainerGeneral, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_clear_flag(ui_ContainerGeneral, LV_OBJ_FLAG_SCROLLABLE);
     
-    // Provider label
-    lv_obj_t* providerLabel = lv_label_create(ui_Container21);
-    lv_label_set_text(providerLabel, "Price Provider:");
-    lv_obj_set_style_text_color(providerLabel, COLOR_TEXT_DIM, 0);
-    lv_obj_set_style_text_font(providerLabel, &ui_font_OpenSansExtraSmall, 0);
+    // Card styling for General
+    lv_obj_set_style_bg_color(ui_ContainerGeneral, COLOR_CARD_BG, LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(ui_ContainerGeneral, LV_OPA_COVER, LV_PART_MAIN);
+    lv_obj_set_style_border_color(ui_ContainerGeneral, COLOR_GREEN, LV_PART_MAIN);
+    lv_obj_set_style_border_width(ui_ContainerGeneral, 3, LV_PART_MAIN);
+    lv_obj_set_style_border_side(ui_ContainerGeneral, LV_BORDER_SIDE_TOP, LV_PART_MAIN);
+    lv_obj_set_style_radius(ui_ContainerGeneral, 8, LV_PART_MAIN);
+    lv_obj_set_style_pad_all(ui_ContainerGeneral, 10, LV_PART_MAIN);
+    lv_obj_set_style_pad_row(ui_ContainerGeneral, 4, LV_PART_MAIN);
+    lv_obj_set_style_shadow_width(ui_ContainerGeneral, 15, LV_PART_MAIN);
+    lv_obj_set_style_shadow_color(ui_ContainerGeneral, lv_color_hex(0x000000), LV_PART_MAIN);
+    lv_obj_set_style_shadow_opa(ui_ContainerGeneral, LV_OPA_30, LV_PART_MAIN);
+    lv_obj_set_style_shadow_ofs_y(ui_ContainerGeneral, 4, LV_PART_MAIN);
+    
+    // General title
+    lv_obj_t* generalTitle = lv_label_create(ui_ContainerGeneral);
+    lv_label_set_text(generalTitle, "General");
+    lv_obj_set_style_text_font(generalTitle, &ui_font_OpenSansSmall, 0);
+    lv_obj_set_style_text_color(generalTitle, COLOR_GREEN, 0);
+    lv_obj_set_style_pad_bottom(generalTitle, 2, 0);
+    
+    // Timezone label
+    lv_obj_t* tzLabelGen = lv_label_create(ui_ContainerGeneral);
+    lv_label_set_text(tzLabelGen, "Time Zone:");
+    lv_obj_set_style_text_color(tzLabelGen, COLOR_TEXT_DIM, 0);
+    lv_obj_set_style_text_font(tzLabelGen, &ui_font_OpenSansExtraSmall, 0);
+    
+    // Timezone dropdown (in General)
+    ui_timeZoneDropdown = lv_dropdown_create(ui_ContainerGeneral);
+    lv_dropdown_set_options(ui_timeZoneDropdown, "Europe/Prague");
+    lv_obj_set_width(ui_timeZoneDropdown, lv_pct(100));
+    lv_obj_set_height(ui_timeZoneDropdown, LV_SIZE_CONTENT);
+    lv_obj_add_flag(ui_timeZoneDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    style_dropdown(ui_timeZoneDropdown);
+    
+    // Language label
+    lv_obj_t* langLabelGen = lv_label_create(ui_ContainerGeneral);
+    lv_label_set_text(langLabelGen, "Language:");
+    lv_obj_set_style_text_color(langLabelGen, COLOR_TEXT_DIM, 0);
+    lv_obj_set_style_text_font(langLabelGen, &ui_font_OpenSansExtraSmall, 0);
+    
+    // Language dropdown (in General)
+    ui_languageDropdown = lv_dropdown_create(ui_ContainerGeneral);
+    lv_dropdown_set_options(ui_languageDropdown, "English\nDeutsch\nČeština");
+    lv_obj_set_width(ui_languageDropdown, lv_pct(100));
+    lv_obj_set_height(ui_languageDropdown, LV_SIZE_CONTENT);
+    lv_obj_add_flag(ui_languageDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    style_dropdown(ui_languageDropdown);
+    
+    // Display timeout label
+    lv_obj_t* timeoutLabel = lv_label_create(ui_ContainerGeneral);
+    lv_label_set_text(timeoutLabel, "Display off:");
+    lv_obj_set_style_text_color(timeoutLabel, COLOR_TEXT_DIM, 0);
+    lv_obj_set_style_text_font(timeoutLabel, &ui_font_OpenSansExtraSmall, 0);
+    
+    // Display timeout dropdown (in General)
+    ui_displayTimeoutDropdown = lv_dropdown_create(ui_ContainerGeneral);
+    lv_dropdown_set_options(ui_displayTimeoutDropdown, "Never\n5 min\n15 min\n30 min\n60 min");
+    lv_obj_set_width(ui_displayTimeoutDropdown, lv_pct(100));
+    lv_obj_set_height(ui_displayTimeoutDropdown, LV_SIZE_CONTENT);
+    lv_obj_add_flag(ui_displayTimeoutDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+    style_dropdown(ui_displayTimeoutDropdown);
+    
+    // ===== SPOT PRICE CARD (Purple accent) =====
+    ui_Container21 = lv_obj_create(rightColumn);
+    lv_obj_set_width(ui_Container21, lv_pct(100));
+    lv_obj_set_height(ui_Container21, LV_SIZE_CONTENT);
+    lv_obj_set_flex_flow(ui_Container21, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(ui_Container21, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
+    lv_obj_clear_flag(ui_Container21, LV_OBJ_FLAG_SCROLLABLE);
+    
+    // Card styling for Spot Price
+    lv_obj_set_style_bg_color(ui_Container21, COLOR_CARD_BG, LV_PART_MAIN);
+    lv_obj_set_style_bg_opa(ui_Container21, LV_OPA_COVER, LV_PART_MAIN);
+    lv_obj_set_style_border_color(ui_Container21, COLOR_PURPLE, LV_PART_MAIN);
+    lv_obj_set_style_border_width(ui_Container21, 3, LV_PART_MAIN);
+    lv_obj_set_style_border_side(ui_Container21, LV_BORDER_SIDE_TOP, LV_PART_MAIN);
+    lv_obj_set_style_radius(ui_Container21, 8, LV_PART_MAIN);
+    lv_obj_set_style_pad_all(ui_Container21, 10, LV_PART_MAIN);
+    lv_obj_set_style_pad_row(ui_Container21, 4, LV_PART_MAIN);
+    lv_obj_set_style_shadow_width(ui_Container21, 15, LV_PART_MAIN);
+    lv_obj_set_style_shadow_color(ui_Container21, lv_color_hex(0x000000), LV_PART_MAIN);
+    lv_obj_set_style_shadow_opa(ui_Container21, LV_OPA_30, LV_PART_MAIN);
+    lv_obj_set_style_shadow_ofs_y(ui_Container21, 4, LV_PART_MAIN);
+    
+    // Spot Price title
+    ui_Label2 = lv_label_create(ui_Container21);
+    lv_label_set_text(ui_Label2, "Spot Price");
+    lv_obj_set_style_text_font(ui_Label2, &ui_font_OpenSansSmall, 0);
+    lv_obj_set_style_text_color(ui_Label2, COLOR_PURPLE, 0);
+    lv_obj_set_style_pad_bottom(ui_Label2, 2, 0);
     
     // Spot provider dropdown
     ui_spotProviderDropdown = lv_dropdown_create(ui_Container21);
@@ -253,40 +362,6 @@ void ui_WifiSetup_screen_init(void)
     lv_obj_set_height(ui_spotProviderDropdown, LV_SIZE_CONTENT);
     lv_obj_add_flag(ui_spotProviderDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     style_dropdown(ui_spotProviderDropdown);
-    
-    // Timezone label
-    lv_obj_t* tzLabel = lv_label_create(ui_Container21);
-    lv_label_set_text(tzLabel, "Time Zone:");
-    lv_obj_set_style_text_color(tzLabel, COLOR_TEXT_DIM, 0);
-    lv_obj_set_style_text_font(tzLabel, &ui_font_OpenSansExtraSmall, 0);
-    
-    // Timezone dropdown
-    ui_timeZoneDropdown = lv_dropdown_create(ui_Container21);
-    lv_dropdown_set_options(ui_timeZoneDropdown, "Europe/Prague");
-    lv_obj_set_width(ui_timeZoneDropdown, lv_pct(100));
-    lv_obj_set_height(ui_timeZoneDropdown, LV_SIZE_CONTENT);
-    lv_obj_add_flag(ui_timeZoneDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
-    style_dropdown(ui_timeZoneDropdown);
-    
-    // Language label
-    lv_obj_t* langLabel = lv_label_create(ui_Container21);
-    lv_label_set_text(langLabel, "Language:");
-    lv_obj_set_style_text_color(langLabel, COLOR_TEXT_DIM, 0);
-    lv_obj_set_style_text_font(langLabel, &ui_font_OpenSansExtraSmall, 0);
-    
-    // Language dropdown
-    ui_languageDropdown = lv_dropdown_create(ui_Container21);
-    lv_dropdown_set_options(ui_languageDropdown, "English\nDeutsch\nČeština");
-    lv_obj_set_width(ui_languageDropdown, lv_pct(100));
-    lv_obj_set_height(ui_languageDropdown, LV_SIZE_CONTENT);
-    lv_obj_add_flag(ui_languageDropdown, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
-    style_dropdown(ui_languageDropdown);
-    
-    // Info text
-    lv_obj_t* infoLabel = lv_label_create(ui_Container21);
-    lv_label_set_text(infoLabel, "Enable spot prices for\nintelligent battery control");
-    lv_obj_set_style_text_color(infoLabel, COLOR_TEXT_DIM, 0);
-    lv_obj_set_style_text_font(infoLabel, &ui_font_OpenSansExtraSmall, 0);
     
     // ===== KEYBOARD =====
     ui_keyboard = lv_keyboard_create(ui_WifiSetup);
@@ -324,9 +399,11 @@ void ui_WifiSetup_screen_destroy(void)
     ui_inverterIP = NULL;
     ui_inverterSN = NULL;
     ui_Container21 = NULL;
+    ui_ContainerGeneral = NULL;
     ui_Label2 = NULL;
     ui_spotProviderDropdown = NULL;
     ui_timeZoneDropdown = NULL;
     ui_languageDropdown = NULL;
+    ui_displayTimeoutDropdown = NULL;
     ui_keyboard = NULL;
 }

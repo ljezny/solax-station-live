@@ -1,24 +1,84 @@
 #pragma once
 
 #include <Arduino.h>
-#include "../utils/RemoteLogger.hpp"
 #include <WiFi.h>
 #include <CRC.h>
 #include <CRC16.h>
 #include "utils/CustomNetworkClient.hpp"
 #include "Inverters/InverterResult.hpp"
 
-#define READ_TIMEOUT 2000
+// Increased timeout - dongles can be slow when busy with cloud communication
+#define V5TCP_READ_TIMEOUT_MS 5000
+
+// Maximum read attempts when receiving wrong sequence (cloud response)
+#define V5TCP_MAX_READ_RETRIES 5
+
+// Error codes for V5TCP communication
+enum class V5Error {
+    OK = 0,
+    CONNECTION_FAILED = -1,
+    SEND_FAILED = -2,
+    TIMEOUT = -3,
+    INVALID_HEADER = -4,
+    BUFFER_TOO_SMALL = -5,
+    INVALID_RESPONSE = -6,
+    INVALID_SENSOR = -7,
+    INCOMPLETE_READ = -8,
+    INVALID_SN = -9,
+    CRC_ERROR = -10,
+    SEQUENCE_MISMATCH = -11,
+    SN_MISMATCH = -12,
+    V5_CHECKSUM_ERROR = -13,
+    HEARTBEAT_ONLY = -14
+};
 
 class V5TCP
 {
 private:
     CustomNetworkClient client;
     uint8_t sequenceNumber = 0;
+    uint8_t lastSentSequence = 0;  // Track sent sequence for validation
+    uint32_t expectedSN = 0;        // Track expected SN for validation
     static constexpr int MAX_RETRIES = 3;
+    V5Error lastError = V5Error::OK;
+    String lastErrorMessage;
+    
+    // Calculate V5 frame checksum (sum of bytes from index 1 to len-2) & 0xFF
+    uint8_t calculateV5Checksum(const byte* frame, size_t frameLength) {
+        uint8_t checksum = 0;
+        for (size_t i = 1; i < frameLength - 2; i++) {
+            checksum += frame[i];
+        }
+        return checksum & 0xFF;
+    }
 
 public:
     IPAddress ip;
+    
+    V5Error getLastError() const { return lastError; }
+    String getLastErrorMessage() const { return lastErrorMessage; }
+    
+    const char* errorToString(V5Error err) {
+        switch(err) {
+            case V5Error::OK: return "OK";
+            case V5Error::CONNECTION_FAILED: return "Connection failed";
+            case V5Error::SEND_FAILED: return "Send failed";
+            case V5Error::TIMEOUT: return "Read timeout - dongle not responding";
+            case V5Error::INVALID_HEADER: return "Invalid header (expected 0xA5)";
+            case V5Error::BUFFER_TOO_SMALL: return "Buffer too small";
+            case V5Error::INVALID_RESPONSE: return "Invalid response packet type";
+            case V5Error::INVALID_SENSOR: return "Invalid sensor in response";
+            case V5Error::INCOMPLETE_READ: return "Incomplete read";
+            case V5Error::INVALID_SN: return "Invalid serial number";
+            case V5Error::CRC_ERROR: return "CRC verification failed";
+            case V5Error::SEQUENCE_MISMATCH: return "Sequence number mismatch (cloud response?)";
+            case V5Error::SN_MISMATCH: return "Serial number mismatch in response";
+            case V5Error::V5_CHECKSUM_ERROR: return "V5 frame checksum error";
+            case V5Error::HEARTBEAT_ONLY: return "Only heartbeat frames received";
+            default: return "Unknown error";
+        }
+    }
+
     uint16_t readUInt16(byte *buf, byte reg)
     {
         return (buf[3 + reg * 2] << 8 | buf[3 + reg * 2 + 1]);
@@ -83,10 +143,21 @@ public:
     {
         if (sn == 0)
         {
-            LOGD("SN is zero, cannot send request");
+            lastError = V5Error::INVALID_SN;
+            lastErrorMessage = "SN is zero";
+            LOGE("SN is zero, cannot send request");
+            return false;
+        }
+        if (sn == 0xFFFFFFFF)
+        {
+            lastError = V5Error::INVALID_SN;
+            lastErrorMessage = "SN overflow (0xFFFFFFFF) - check SN length";
+            LOGE("SN is 0xFFFFFFFF (overflow), cannot send request. Check if SN has correct length (10 digits).");
             return false;
         }
         sequenceNumber++;
+        lastSentSequence = sequenceNumber;  // Store for validation
+        expectedSN = sn;                     // Store for validation
 
         uint8_t modbusRTURequest[] = {0x1, 0x03, 0, 0, 0, 0, 0, 0};
         modbusRTURequest[2] = addr >> 8;
@@ -153,118 +224,251 @@ public:
         LOGD("Request: %s", dump.c_str());
 
         bool result = client.write(request, requestSize) == requestSize;
+        
+        // Small delay after sending request - some dongles need time to process
+        if (result) {
+            delay(50);
+        }
+        
         return result;
     }
 
     int readModbusRTUResponse(byte *packetBuffer, size_t bufferLength)
     {
-        if (client.read(packetBuffer, 1) != 1)
+        // Try multiple reads in case we receive cloud responses or heartbeats
+        for (int readAttempt = 0; readAttempt < V5TCP_MAX_READ_RETRIES; readAttempt++)
         {
-            LOGD("Unable to read client.");
-            return -1;
-        }
-        if (packetBuffer[0] != 0xA5)
-        {
-            LOGD("Invalid header");
-            return -1;
-        }
-        if (client.read(packetBuffer, 2) != 2)
-        {
-            LOGD("Unable to read client.");
-            return -1;
-        }
-        uint16_t length = packetBuffer[0] | (packetBuffer[1] << 8);
-        if (length > bufferLength)
-        {
-            LOGD("Buffer too small");
-            return -1;
-        }
+            if (readAttempt > 0) {
+                LOGD("Read retry %d/%d (previous frame was not for us)", readAttempt + 1, V5TCP_MAX_READ_RETRIES);
+            }
+            
+            // Read start byte
+            int bytesRead = client.read(packetBuffer, 1);
+            if (bytesRead <= 0)
+            {
+                lastError = V5Error::TIMEOUT;
+                lastErrorMessage = String("No response from dongle (read returned ") + bytesRead + "). Dongle may be offline, busy, or SN mismatch.";
+                LOGE("Read timeout waiting for response. Dongle at %s not responding. Check: 1) Dongle is online 2) SN matches dongle 3) Dongle not busy with cloud", ip.toString().c_str());
+                return -1;
+            }
+            if (packetBuffer[0] != 0xA5)
+            {
+                lastError = V5Error::INVALID_HEADER;
+                lastErrorMessage = String("Expected 0xA5, got 0x") + String(packetBuffer[0], HEX);
+                LOGE("Invalid header: expected 0xA5, got 0x%02X", packetBuffer[0]);
+                return -1;
+            }
+            
+            // Read length (2 bytes)
+            if (client.read(packetBuffer, 2) != 2)
+            {
+                lastError = V5Error::INCOMPLETE_READ;
+                lastErrorMessage = "Failed to read packet length";
+                LOGE("Failed to read packet length");
+                return -1;
+            }
+            uint16_t length = packetBuffer[0] | (packetBuffer[1] << 8);
+            
+            // Read rest of header (8 bytes: control code 2B + sequence 2B + SN 4B)
+            byte headerBuffer[8];
+            if (client.read(headerBuffer, 8) != 8)
+            {
+                lastError = V5Error::INCOMPLETE_READ;
+                lastErrorMessage = "Failed to read header";
+                LOGE("Failed to read header (8 bytes)");
+                return -1;
+            }
+            
+            uint8_t controlCode1 = headerBuffer[0];  // Should be 0x10
+            uint8_t controlCode2 = headerBuffer[1];  // 0x15 for response, 0x47 for heartbeat
+            uint8_t respSequence = headerBuffer[2];
+            // headerBuffer[3] is second seq byte (dongle's counter)
+            uint32_t respSN = headerBuffer[4] | (headerBuffer[5] << 8) | (headerBuffer[6] << 16) | (headerBuffer[7] << 24);
+            
+            LOGD("Frame: ctrl=0x%02X%02X seq=%d respSN=%lu (expected seq=%d, SN=%lu)", 
+                  controlCode1, controlCode2, respSequence, respSN, lastSentSequence, expectedSN);
+            
+            // Check for heartbeat frame (0x47) - skip and continue reading
+            if (controlCode2 == 0x47)
+            {
+                LOGD("Received heartbeat frame (0x47), skipping and reading next frame");
+                // Read and discard rest of heartbeat frame (just checksum + end = 2 bytes since length is typically 1)
+                byte discardBuffer[32];
+                int remainingBytes = length + 2;  // payload + checksum + end
+                if (remainingBytes > 0 && remainingBytes < 32) {
+                    client.read(discardBuffer, remainingBytes);
+                }
+                continue;  // Try reading next frame
+            }
+            
+            // Validate control code for Modbus response (0x10 0x15)
+            if (controlCode1 != 0x10 || controlCode2 != 0x15)
+            {
+                lastError = V5Error::INVALID_RESPONSE;
+                lastErrorMessage = String("Expected 0x10 0x15, got 0x") + String(controlCode1, HEX) + " 0x" + String(controlCode2, HEX);
+                LOGE("Invalid response type: 0x%02X 0x%02X (expected 0x10 0x15)", controlCode1, controlCode2);
+                return -1;
+            }
+            
+            // Validate sequence number - if mismatch, this might be response to cloud request
+            if (respSequence != lastSentSequence)
+            {
+                LOGW("Sequence mismatch: got %d, expected %d. This may be a response meant for cloud. Trying next frame...", 
+                      respSequence, lastSentSequence);
+                // Read and discard rest of this frame
+                byte discardBuffer[256];
+                int remainingBytes = length + 2;  // payload + checksum + end
+                while (remainingBytes > 0) {
+                    int toRead = min(remainingBytes, 256);
+                    int read = client.read(discardBuffer, toRead);
+                    if (read <= 0) break;
+                    remainingBytes -= read;
+                }
+                continue;  // Try reading next frame
+            }
+            
+            // Validate serial number
+            if (respSN != expectedSN)
+            {
+                lastError = V5Error::SN_MISMATCH;
+                lastErrorMessage = String("SN mismatch: got ") + respSN + ", expected " + expectedSN;
+                LOGE("Serial number mismatch in response: got %lu, expected %lu", respSN, expectedSN);
+                return -1;
+            }
+            
+            if (length > bufferLength)
+            {
+                lastError = V5Error::BUFFER_TOO_SMALL;
+                lastErrorMessage = String("Packet length ") + length + " exceeds buffer " + bufferLength;
+                LOGE("Buffer too small: packet %d, buffer %d", length, bufferLength);
+                return -1;
+            }
 
-        LOGD("Payload length: %d", length);
-        if (client.read(packetBuffer, 8) != 8)
-        { // read rest of header
-            LOGD("Unable to read client.");
-            return -1;
+            LOGD("Payload length: %d, sequence OK, SN OK", length);
+            
+            // Read payload header (14 bytes for response: frametype 1B + status 1B + times 12B)
+            int PAYLOAD_HEADER = 14;
+            byte payloadHeader[14];
+            if (client.read(payloadHeader, PAYLOAD_HEADER) != PAYLOAD_HEADER)
+            {
+                lastError = V5Error::INCOMPLETE_READ;
+                lastErrorMessage = "Failed to read payload header";
+                LOGE("Failed to read payload header (%d bytes)", PAYLOAD_HEADER);
+                return -1;
+            }
+
+            // Check frame type (0x02 = inverter) and status (0x01 = OK)
+            if (payloadHeader[0] != 0x02 || payloadHeader[1] != 0x01)
+            {
+                lastError = V5Error::INVALID_SENSOR;
+                lastErrorMessage = String("Invalid frame type/status: 0x") + String(payloadHeader[0], HEX) + " 0x" + String(payloadHeader[1], HEX);
+                LOGE("Invalid frame type/status: 0x%02X 0x%02X (expected 0x02 0x01)", payloadHeader[0], payloadHeader[1]);
+                return -1;
+            }
+
+            // Read Modbus RTU frame
+            int MODBUS_RTU_FRAME_LENGTH = length - PAYLOAD_HEADER;
+            if (MODBUS_RTU_FRAME_LENGTH <= 0 || MODBUS_RTU_FRAME_LENGTH > (int)bufferLength)
+            {
+                lastError = V5Error::INVALID_RESPONSE;
+                lastErrorMessage = String("Invalid Modbus frame length: ") + MODBUS_RTU_FRAME_LENGTH;
+                LOGE("Invalid Modbus frame length: %d", MODBUS_RTU_FRAME_LENGTH);
+                return -1;
+            }
+            
+            if (client.read(packetBuffer, MODBUS_RTU_FRAME_LENGTH) != MODBUS_RTU_FRAME_LENGTH)
+            {
+                lastError = V5Error::INCOMPLETE_READ;
+                lastErrorMessage = "Failed to read Modbus RTU frame";
+                LOGE("Failed to read Modbus RTU frame (%d bytes)", MODBUS_RTU_FRAME_LENGTH);
+                return -1;
+            }
+
+            // Read trailer (checksum + end byte)
+            byte trailerBuffer[2];
+            if (client.read(trailerBuffer, 2) != 2)
+            {
+                LOGW("Failed to read trailer (2 bytes)");
+            }
+            else
+            {
+                // Verify V5 checksum (optional - just log warning if mismatch)
+                // We would need to reconstruct the full frame to verify, which is complex
+                // For now, just verify end byte
+                if (trailerBuffer[1] != 0x15)
+                {
+                    LOGW("Invalid end byte: 0x%02X (expected 0x15)", trailerBuffer[1]);
+                }
+            }
+            
+            lastError = V5Error::OK;
+            lastErrorMessage = "";
+            
+            String dump = "";
+            for (int i = 0; i < MODBUS_RTU_FRAME_LENGTH; i++)
+            {
+                dump += String(packetBuffer[i], HEX) + " ";
+            }
+            LOGD("Response: %s", dump.c_str());
+            return MODBUS_RTU_FRAME_LENGTH;
         }
-
-        if (packetBuffer[0] != 0x10 || packetBuffer[1] != 0x15)
-        {
-            LOGD("Invalid response");
-            return -1;
-        }
-
-        int PAYLOAD_HEADER = 14;
-
-        if (client.read(packetBuffer, PAYLOAD_HEADER) != PAYLOAD_HEADER)
-        { // payload header
-            LOGD("Unable to read client.");
-            return -1;
-        }
-
-        if (packetBuffer[0] != 0x02 || packetBuffer[1] != 0x01)
-        {
-
-            LOGD("Invalid sensor in response");
-            return -1;
-        }
-
-        int MODBUS_RTU_FRAME_LENGTH = length - PAYLOAD_HEADER;
-        if (client.read(packetBuffer, MODBUS_RTU_FRAME_LENGTH) != MODBUS_RTU_FRAME_LENGTH)
-        { // modbus rtu packet
-            LOGD("Unable to read client.");
-            return -1;
-        }
-
-        // for (int i = 0; i < MODBUS_RTU_FRAME_LENGTH; i++)
-        // {
-        //     LOGD("%02X ", packetBuffer[i]);
-        // }
-
-        byte trailerBuffer[2];
-        if (client.read(trailerBuffer, 2) != 2)
-        {
-            // read trailer
-            LOGD("Unable to read client.");
-        }
-        String dump = "";
-        for (int i = 0; i < MODBUS_RTU_FRAME_LENGTH; i++)
-        {
-            dump += String(packetBuffer[i], HEX) + " ";
-        }
-        LOGD("Request: %s", dump.c_str());
-        return MODBUS_RTU_FRAME_LENGTH;
+        
+        // If we get here, we exhausted all read retries without getting our response
+        lastError = V5Error::SEQUENCE_MISMATCH;
+        lastErrorMessage = "Exhausted read retries - only received cloud/heartbeat frames";
+        LOGE("Failed to receive matching response after %d read attempts", V5TCP_MAX_READ_RETRIES);
+        return -1;
     }
 
     bool tryReadWithRetries(uint16_t startReg, uint16_t length, uint32_t sn, byte *buffer, std::function<void()> onSuccess)
     {
+        lastError = V5Error::OK;
+        
         for (int i = 0; i < MAX_RETRIES; ++i)
         {
+            LOGD("Attempt %d/%d for register 0x%04X (SN: %lu)", i + 1, MAX_RETRIES, startReg, sn);
+            
             if (connect(ip))
             {
                 if (sendReadDataRequest(startReg, length, sn))
                 {
-                    if (readModbusRTUResponse(buffer, 1024) > 0)
+                    int result = readModbusRTUResponse(buffer, 1024);
+                    if (result > 0)
                     {
+                        LOGI("Successfully read %d bytes from register 0x%04X", result, startReg);
                         onSuccess();
                         disconnect();
                         return true;
                     }
                     else
                     {
-                        LOGD("Read failed for 0x%04X", startReg);
+                        LOGW("Read failed for 0x%04X (attempt %d/%d): %s", 
+                              startReg, i + 1, MAX_RETRIES, errorToString(lastError));
                     }
                 }
                 else
                 {
-                    LOGD("Send request failed for 0x%04X", startReg);
+                    LOGW("Send request failed for 0x%04X (attempt %d/%d): %s", 
+                          startReg, i + 1, MAX_RETRIES, errorToString(lastError));
                 }
                 disconnect();
+                
+                // Small delay between retries
+                if (i < MAX_RETRIES - 1) {
+                    delay(100);
+                }
             }
             else
             {
-                LOGD("Failed to connect to dongle at %s", ip.toString().c_str());
+                lastError = V5Error::CONNECTION_FAILED;
+                lastErrorMessage = String("Cannot connect to ") + ip.toString() + ":8899";
+                LOGW("Failed to connect to dongle at %s (attempt %d/%d)", 
+                      ip.toString().c_str(), i + 1, MAX_RETRIES);
             }
         }
+        
+        LOGE("All %d attempts failed for register 0x%04X. Last error: %s - %s", 
+              MAX_RETRIES, startReg, errorToString(lastError), lastErrorMessage.c_str());
         return false;
     }
 

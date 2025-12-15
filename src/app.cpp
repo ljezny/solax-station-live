@@ -444,7 +444,7 @@ void setupLVGL()
 
 void setup()
 {
-    Serial.begin(921600);
+    Serial.begin(115200);
 
     // Initialize localization system (load language from NVS)
     Localization::init();
@@ -1690,6 +1690,5 @@ void updateState()
 void loop()
 {
     updateState();
-
-    vTaskDelay(pdMS_TO_TICKS(1));
+    delay(50);
 }

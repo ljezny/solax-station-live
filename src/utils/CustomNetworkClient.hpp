@@ -1,7 +1,6 @@
 #pragma once
 
 #include <string.h>
-#include "RemoteLogger.hpp"
 #include <unistd.h>
 #include <sys/socket.h>
 #include <errno.h>
@@ -59,6 +58,7 @@ public:
             sock = -1;
             return false;
         }
+        LOGI("Successfully connected");
         return true;
     }
 
@@ -77,6 +77,7 @@ public:
             LOGE("Unable to create socket: errno %d", errno);
             return false;
         }
+        LOGI("Socket created %d, connecting to %s:%d", sock, ip.toString().c_str(), port);
 
         struct linger ling;
         ling.l_onoff = 1;
@@ -97,6 +98,7 @@ public:
             sock = -1;
             return false;
         }
+        LOGI("Successfully connected");
         return true;
     }
 
@@ -107,11 +109,13 @@ public:
 
     void stop()
     {
+        LOGI("Stopping socket %d", sock);
         if (sock != -1)
         {
             shutdown(sock, SHUT_RDWR);
             close(sock);
             sock = -1;
+            LOGI("Socket closed");
         }
     }
 
@@ -128,13 +132,28 @@ public:
 
     int read(uint8_t *buf, size_t size)
     {
+        if (sock < 0) {
+            LOGE("Cannot read: socket not connected");
+            return -1;
+        }
+        
         int bytesRead = recv(sock, buf, size, 0);
         if (bytesRead < 0)
         {
-            LOGE("Error occurred during receiving: errno %d", errno);
+            if (errno == EAGAIN || errno == EWOULDBLOCK) {
+                LOGW("Read timeout (errno %d: %s) - remote not responding within 10s", errno, strerror(errno));
+            } else {
+                LOGE("Error during receiving: errno %d (%s)", errno, strerror(errno));
+            }
             return -1;
         }
-        buf[bytesRead] = '\0'; // Null-terminate the buffer
+        if (bytesRead == 0) {
+            LOGW("Connection closed by remote");
+            return 0;
+        }
+        if ((size_t)bytesRead < size) {
+            buf[bytesRead] = '\0'; // Null-terminate only if there's space
+        }
         return bytesRead;
     }
 

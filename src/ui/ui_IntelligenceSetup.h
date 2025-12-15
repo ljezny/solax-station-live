@@ -69,6 +69,9 @@ extern lv_obj_t *ui_intelligenceCancelLabel;
 // Keyboard
 extern lv_obj_t *ui_intelligenceKeyboard;
 
+// Beta warning
+extern lv_obj_t *ui_intelligenceBetaWarning;
+
 #ifdef __cplusplus
 } /*extern "C"*/
 #endif

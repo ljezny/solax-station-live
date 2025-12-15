@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../../Protocol/V5TCP.hpp"
-#include "../../utils/RemoteLogger.hpp"
 
 class DeyeDongleAPI
 {
@@ -25,7 +24,23 @@ private:
         int powerMultiplier = 1;
         uint16_t deviceType = 0;
         InverterData_t inverterData;
+        LOGD("Connecting to dongle...");
+        
+        // Validate SN length - should be max 10 digits for uint32_t
+        if (dongleSN.length() > 10) {
+            LOGE("Dongle SN '%s' is too long (%d chars). Max 10 digits allowed. Truncating.", 
+                  dongleSN.c_str(), dongleSN.length());
+            dongleSN = dongleSN.substring(0, 10);
+        }
+        
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
+        
+        // Check for overflow (strtoul returns ULONG_MAX on overflow)
+        if (sn == ULONG_MAX || sn == 0) {
+            LOGE("Invalid SN conversion: '%s' -> %lu. Check SN format.", dongleSN.c_str(), sn);
+        }
+        
+        LOGD("SN: %lu (from string: '%s')", sn, dongleSN.c_str());
         byte packetBuffer[1024];
         channel.ensureIPAddress(ipAddress);
 
@@ -34,8 +49,11 @@ private:
                     inverterData.millis = millis();
                     inverterData.status = DONGLE_STATUS_OK;
                     deviceType = channel.readUInt16(packetBuffer, 0);
+                    LOGD("Device type: %s", String(deviceType, HEX));
                     uint16_t commProtoVer = channel.readUInt16(packetBuffer, 2);
+                    LOGD("Comm protocol version: %s", String(commProtoVer, HEX));
                     String inverterSN = channel.readString(packetBuffer, 3, 10);
+                    LOGD("Inverter SN: %s", inverterSN.c_str());
                     inverterData.sn = inverterSN; }))
             return inverterData;
 
@@ -50,13 +68,14 @@ private:
         readInverterRTC(sn, inverterData);
 
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
-        logInverterData(inverterData, millis() - inverterData.millis);
+        logInverterData(inverterData);
 
         return inverterData;
     }
 
     void loadMicroInverter(uint32_t sn, InverterData_t &inverterData)
     {
+        LOGD("Loading micro inverter data...");
         byte packetBuffer[1024];
         if (!channel.tryReadWithRetries(150, 197 - 150 + 1, sn, packetBuffer, [&]()
                                         {
@@ -104,11 +123,15 @@ private:
                                        timeinfo.tm_isdst = -1;
 
                                        inverterData.inverterTime = mktime(&timeinfo);
+                                       LOGD("Deye RTC: %04d-%02d-%02d %02d:%02d:%02d",
+                                             timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
+                                             timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
                                    });
     }
 
     void load3PhaseInverter(int deviceType, uint32_t sn, InverterData_t &inverterData)
     {
+        LOGD("Loading 3-phase inverter data...");
         int powerMultiplier = (deviceType == 6) ? 10 : 1;
         byte packetBuffer[1024];
         if (!channel.tryReadWithRetries(672, 675 - 672 + 1, sn, packetBuffer, [&]()
@@ -137,6 +160,8 @@ private:
                                        float batteryVoltage = 50.0f; // Default for HV batteries
                                        inverterData.maxChargePowerW = (uint16_t)(maxChargeCurrent * batteryVoltage);
                                        inverterData.maxDischargePowerW = (uint16_t)(maxDischargeCurrent * batteryVoltage);
+                                       LOGD("Deye max charge current: %.1f A, max discharge current: %.1f A", maxChargeCurrent, maxDischargeCurrent);
+                                       LOGD("Max charge power: %d W, max discharge power: %d W", inverterData.maxChargePowerW, inverterData.maxDischargePowerW);
                                    });
 
         if (!channel.tryReadWithRetries(598, 655 - 598 + 1, sn, packetBuffer, [&]()
@@ -195,10 +220,12 @@ private:
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
         if (sn == 0)
         {
+            LOGD("Invalid dongle SN for setWorkMode");
             return false;
         }
 
         channel.ensureIPAddress(ipAddress);
+        LOGD("Setting Deye work mode to %d", mode);
 
         bool success = false;
 
@@ -230,6 +257,7 @@ private:
             break;
 
         default:
+            LOGD("Unknown mode: %d", mode);
             break;
         }
 
@@ -239,6 +267,7 @@ private:
     // Overload for compatibility - without dongleSN parameter
     bool setWorkMode(const String& ipAddress, InverterMode_t mode)
     {
+        LOGD("setWorkMode called without dongleSN - not supported for Deye");
         return false;
     }
 
@@ -261,9 +290,11 @@ private:
      */
     bool writeRegister(uint32_t sn, uint16_t addr, uint16_t value)
     {
+        LOGD("Writing Deye register %d = %d", addr, value);
         
         if (!channel.connect(channel.ip))
         {
+            LOGD("Failed to connect for write");
             return false;
         }
         
@@ -277,6 +308,7 @@ private:
      */
     bool setGridCharging(uint32_t sn, bool enable, uint8_t targetSoc)
     {
+        LOGD("Setting grid charge: enable=%d, targetSoc=%d", enable, targetSoc);
         
         // First set Time of Use mode
         if (!writeRegister(sn, DEYE_REG_WORK_MODE, DEYE_MODE_TIME_OF_USE))
