@@ -506,18 +506,25 @@ public:
 
     void ensureIPAddress(const String &ipAddress)
     {
+        // Always prefer user-specified IP address over cached one
+        if (!ipAddress.isEmpty())
+        {
+            IPAddress newIp;
+            if (newIp.fromString(ipAddress))
+            {
+                if (ip != newIp)
+                {
+                    LOGD("Using IP from settings: %s (was: %s)", ipAddress.c_str(), ip.toString().c_str());
+                }
+                ip = newIp;
+            }
+        }
+
         if (ip == IPAddress(0, 0, 0, 0))
         {
-            if (!ipAddress.isEmpty())
-            {
-                ip.fromString(ipAddress);
-            }
+            ip = discoverDongleIP();
             if (ip == IPAddress(0, 0, 0, 0))
-            {
-                ip = discoverDongleIP();
-                if (ip == IPAddress(0, 0, 0, 0))
-                    ip = IPAddress(10, 10, 100, 254); // fallback
-            }
+                ip = IPAddress(10, 10, 100, 254); // fallback
         }
     }
 

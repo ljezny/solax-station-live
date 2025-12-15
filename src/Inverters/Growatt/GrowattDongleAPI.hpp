@@ -239,12 +239,17 @@ private:
 
     IPAddress getIp(const String &ipAddress)
     {
-        if (ip == IPAddress(0, 0, 0, 0))
+        // Always prefer user-specified IP address over cached one
+        if (!ipAddress.isEmpty())
         {
-            if (!ipAddress.isEmpty())
+            IPAddress newIp;
+            if (newIp.fromString(ipAddress))
             {
-                ip = IPAddress();
-                ip.fromString(ipAddress);
+                if (ip != newIp)
+                {
+                    LOGD("Using IP from settings: %s (was: %s)", ipAddress.c_str(), ip.toString().c_str());
+                }
+                ip = newIp;
             }
         }
 
@@ -253,6 +258,7 @@ private:
             ip = IPAddress(192, 168, 10, 100); // this is default for Growatt dongle when in AP mode
         }
 
+        LOGD("Using IP: %s", ip.toString().c_str());
         return ip;
     }
 
