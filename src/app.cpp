@@ -431,10 +431,9 @@ void setupLVGL()
         lastProcessedQuarter = -1;
         lastIntelligenceAttempt = 0; });
 
-    // Load predictors from storage
-    // NOTE: Predictors use day-of-week (0-6), so they work even without correct time
-    consumptionPredictor.loadFromPreferences();
-    productionPredictor.loadFromPreferences();
+    // NOTE: loadFromPreferences() for predictors is called later in STATE_SPLASH
+    // after splash screen is displayed, because SPIFFS.begin() with formatOnFail=true
+    // can take up to a minute if storage needs formatting (after factory reset)
 
     // NOTE: solarChartDataProvider.loadFromPreferences() is called after syncTime()
     // because it needs correct day-of-year to match saved data
@@ -1381,6 +1380,24 @@ void onEntering(state_t newState)
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         splashUI->show();
         xSemaphoreGive(lvgl_mutex);
+        
+        // Initialize SPIFFS and load predictors here (after splash is visible)
+        // This is done here because SPIFFS.begin(true) can take up to a minute
+        // to format the storage after factory reset
+        {
+            static bool predictorsLoaded = false;
+            if (!predictorsLoaded) {
+                xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+                splashUI->updateText(TR(STR_PREPARING_STORAGE));
+                xSemaphoreGive(lvgl_mutex);
+                
+                LOGD("Initializing SPIFFS and loading predictors...");
+                consumptionPredictor.loadFromPreferences();
+                productionPredictor.loadFromPreferences();
+                predictorsLoaded = true;
+                LOGD("Predictors loaded successfully");
+            }
+        }
         break;
     case STATE_WIFI_SETUP:
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);

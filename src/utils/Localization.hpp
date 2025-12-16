@@ -88,6 +88,7 @@ typedef enum {
     STR_LOADING_DATA,
     STR_FAILED_LOAD_DATA,
     STR_FAILED_CONNECT,
+    STR_PREPARING_STORAGE,
     
     // Days of week
     STR_MONDAY,
@@ -340,6 +341,7 @@ const char* const Localization::stringsEN[] = {
     "Loading data...",      // STR_LOADING_DATA
     "Failed to load data :-(", // STR_FAILED_LOAD_DATA
     "Failed to connect :-(", // STR_FAILED_CONNECT
+    "Preparing storage...", // STR_PREPARING_STORAGE
     
     // Days of week
     "Monday",               // STR_MONDAY
@@ -480,6 +482,7 @@ const char* const Localization::stringsDE[] = {
     "Daten laden...",       // STR_LOADING_DATA
     "Daten laden fehlgeschlagen :-(", // STR_FAILED_LOAD_DATA
     "Verbindung fehlgeschlagen :-(", // STR_FAILED_CONNECT
+    "Speicher vorbereiten...", // STR_PREPARING_STORAGE
     
     // Days of week
     "Montag",               // STR_MONDAY
@@ -620,6 +623,7 @@ const char* const Localization::stringsCS[] = {
     "Načítám data...",      // STR_LOADING_DATA
     "Nepodařilo se načíst data :-(", // STR_FAILED_LOAD_DATA
     "Připojení selhalo :-(", // STR_FAILED_CONNECT
+    "Příprava úložiště...", // STR_PREPARING_STORAGE
     
     // Days of week
     "Pondělí",              // STR_MONDAY
