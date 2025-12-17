@@ -273,7 +273,7 @@ private:
 public:
     ElectricityPriceProvider_t getStoredElectricityPriceProvider()
     {
-        FlashGuard guard;
+        FlashGuard guard("SpotProvider:get");
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for reading provider");
             return NONE;
@@ -288,7 +288,7 @@ public:
 
     void storeElectricityPriceProvider(ElectricityPriceProvider_t provider)
     {
-        FlashGuard guard;
+        FlashGuard guard("SpotProvider:set");
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for storing provider");
             return;
@@ -302,7 +302,7 @@ public:
 
     String getStoredTimeZone()
     {
-        FlashGuard guard;
+        FlashGuard guard("TimeZone:get");
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for reading timezone");
             return "CET-1CEST,M3.5.0/2,M10.5.0/3";
@@ -317,7 +317,7 @@ public:
 
     void storeTimeZone(String timeZone)
     {
-        FlashGuard guard;
+        FlashGuard guard("TimeZone:set");
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for storing timezone");
             return;

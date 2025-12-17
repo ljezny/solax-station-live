@@ -288,7 +288,7 @@ public:
         }
         lastSavedQuarter = currentQuarter;
         
-        FlashGuard guard;
+        FlashGuard guard("ChartData:save");
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for saving solar chart data");
             return;
@@ -338,7 +338,7 @@ public:
      * Načte pouze pokud je to stejný den
      */
     void loadFromPreferences() {
-        FlashGuard guard;
+        FlashGuard guard("ChartData:load");
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for loading solar chart data");
             return;

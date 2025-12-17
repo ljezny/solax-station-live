@@ -65,6 +65,7 @@ typedef struct IntelligenceSettings {
 class IntelligenceSettingsStorage {
 private:
     static const char* NAMESPACE;
+    static uint16_t lastKnownCapacityWh;  // Cache pro poslední známou kapacitu
     
 public:
     /**
@@ -73,7 +74,7 @@ public:
     static IntelligenceSettings_t load() {
         IntelligenceSettings_t settings = IntelligenceSettings_t::getDefault();
         
-        FlashGuard guard;
+        FlashGuard guard("Intelligence:load");
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for loading intelligence settings");
             return settings;
@@ -108,7 +109,7 @@ public:
      * Uloží nastavení do NVS
      */
     static void save(const IntelligenceSettings_t& settings) {
-        FlashGuard guard;
+        FlashGuard guard("Intelligence:save");
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for saving intelligence settings");
             return;
@@ -164,13 +165,18 @@ public:
      * @return true pokud byly hodnoty aktualizovány
      */
     static bool updateFromInverter(uint16_t batteryCapacityWh) {
-        LOGD("updateFromInverter called: capacity=%d Wh", batteryCapacityWh);
-        
         // Pouze pokud máme nějakou hodnotu kapacity ze střídače
         if (batteryCapacityWh == 0) {
-            LOGD("No inverter capacity available, skipping update");
             return false;
         }
+        
+        // Rychlá kontrola cache - pokud je kapacita stejná, nemusíme nic dělat
+        if (lastKnownCapacityWh == batteryCapacityWh) {
+            return false;  // Kapacita se nezměnila
+        }
+        
+        LOGD("updateFromInverter: capacity changed %d -> %d Wh", lastKnownCapacityWh, batteryCapacityWh);
+        lastKnownCapacityWh = batteryCapacityWh;
         
         IntelligenceSettings_t settings = load();
         bool changed = false;
@@ -210,5 +216,6 @@ public:
     }
 };
 
-// Definice static členské proměnné
+// Definice static členských proměnných
 const char* IntelligenceSettingsStorage::NAMESPACE = "intel";
+uint16_t IntelligenceSettingsStorage::lastKnownCapacityWh = 0;

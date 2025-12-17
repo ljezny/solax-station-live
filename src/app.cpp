@@ -399,10 +399,6 @@ void setupLVGL()
     indev_drv.read_cb = my_touchpad_read;
     lv_indev_drv_register(&indev_drv);
 
-    // Set up NVS mutex to wait for display DMA before flash writes
-    FlashMutex::setWaitDMACallback([]()
-                                 { tft.waitDMA(); });
-
     ui_init();
     splashUI = new SplashUI();
     dashboardUI = new DashboardUI(onSettingsShow, onIntelligenceShow);
@@ -647,7 +643,7 @@ bool loadInverterDataTask()
                 if (consumptionQuarterChanged || productionQuarterChanged)
                 {
                     LOGD("Quarter changed, saving predictors to flash");
-                    FlashGuard guard;
+                    FlashGuard guard("Predictors:save");
                     if (guard.isLocked())
                     {
                         consumptionPredictor.saveToPreferences();

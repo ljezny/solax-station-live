@@ -5,6 +5,7 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include <Preferences.h>
+#include <map>
 
 #include "WiFiResult.hpp"
 #include "utils/SoftAP.hpp"
@@ -15,6 +16,10 @@
 
 #define DONGLE_DISCOVERY_PREFERENCES_KEY "discovery"
 
+// Cache pro poslední uložené SSID - aby se nemuselo číst z flash
+static String lastStoredSSIDCache = "";
+static bool lastStoredSSIDCacheValid = false;
+
 typedef struct
 {
     char password[32] = {0};
@@ -22,6 +27,10 @@ typedef struct
     char sn[32] = {0};                                      // Serial number of the dongle, if available
     ConnectionType_t connectionType = CONNECTION_TYPE_NONE; // Type of the dongle
 } DongleInfo_t;
+
+// Cache pro DongleInfo - write-through cache
+static std::map<String, DongleInfo_t> dongleInfoCache;
+static bool dongleInfoCacheLoaded = false;
 
 class WiFiDiscovery
 {
@@ -32,6 +41,10 @@ public:
     {
         int found = WiFi.scanNetworks(false, false, false, fast ? 100 : 300);
         int j = 0;
+        
+        // Načíst cache z NVS pokud ještě nebyla načtena
+        ensureCacheLoaded();
+        
         for (int i = 0; i < found; i++)
         {
             String ssid = WiFi.SSID(i);
@@ -55,7 +68,7 @@ public:
             }
 
             DongleInfo_t dongleInfo;
-            loadDongleInfo(ssid, dongleInfo);
+            getDongleInfoFromCache(ssid, dongleInfo);
             discoveries[j].type = dongleInfo.connectionType;
             if (discoveries[j].type == CONNECTION_TYPE_NONE)
             {
@@ -216,7 +229,7 @@ public:
 
     String loadLastConnectedSSID()
     {
-        FlashGuard guard;
+        FlashGuard guard("WiFi:loadSSID");
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for loading last connected SSID");
             return "";
@@ -231,7 +244,12 @@ public:
 
     void storeLastConnectedSSID(const String &ssid)
     {
-        FlashGuard guard;
+        // Rychlá kontrola cache - pokud je SSID stejné, nemusíme nic dělat
+        if (lastStoredSSIDCacheValid && lastStoredSSIDCache == ssid) {
+            return;  // Už máme uložené stejné SSID
+        }
+        
+        FlashGuard guard("WiFi:storeSSID");
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for storing SSID");
             return;
@@ -243,8 +261,13 @@ public:
         if (storedssid != ssid)
         {
             preferences.putString("ssid", ssid);
+            LOGD("Stored last connected SSID: %s", ssid.c_str());
         }
         preferences.end();
+        
+        // Aktualizace cache
+        lastStoredSSIDCache = ssid;
+        lastStoredSSIDCacheValid = true;
     }
 
     String getDongleTypeName(ConnectionType_t type)
@@ -389,23 +412,39 @@ private:
         return String(hash, HEX);
     }
 
-    void saveDongleInfo(String ssid, DongleInfo_t &info)
+    /**
+     * Načte všechny DongleInfo z NVS do cache (volá se jednou)
+     */
+    void ensureCacheLoaded()
     {
-        FlashGuard guard;
+        if (dongleInfoCacheLoaded) return;
+        
+        FlashGuard guard("Dongle:loadAll");
         if (!guard.isLocked()) {
-            LOGE("Failed to lock NVS mutex for saving dongle info");
+            LOGE("Failed to lock NVS mutex for loading dongle cache");
             return;
         }
-
-        Preferences preferences;
-        preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, false);
-        preferences.putBytes(hashString(ssid).c_str(), (void *)&info, sizeof(DongleInfo_t));
-        preferences.end();
+        
+        // NVS nepodporuje iteraci přes klíče, takže cache se naplní postupně
+        // při prvním přístupu ke každému SSID
+        dongleInfoCacheLoaded = true;
+        LOGD("DongleInfo cache initialized");
     }
 
-    bool loadDongleInfo(String ssid, DongleInfo_t &info)
+    /**
+     * Získá DongleInfo z cache (nebo načte z NVS pokud není v cache)
+     */
+    bool getDongleInfoFromCache(const String &ssid, DongleInfo_t &info)
     {
-        FlashGuard guard;
+        // Zkusit cache
+        auto it = dongleInfoCache.find(ssid);
+        if (it != dongleInfoCache.end()) {
+            info = it->second;
+            return true;
+        }
+        
+        // Není v cache - načíst z NVS
+        FlashGuard guard("Dongle:load");
         if (!guard.isLocked()) {
             LOGE("Failed to lock NVS mutex for loading dongle info");
             return false;
@@ -421,10 +460,42 @@ private:
             if (len == sizeof(DongleInfo_t))
             {
                 preferences.getBytes(key.c_str(), (void *)&info, sizeof(DongleInfo_t));
+                dongleInfoCache[ssid] = info;  // Uložit do cache
                 result = true;
             }
         }
         preferences.end();
+        
+        if (!result) {
+            // Uložit prázdný záznam do cache aby se příště nehledalo v NVS
+            dongleInfoCache[ssid] = DongleInfo_t();
+        }
+        
         return result;
+    }
+
+    void saveDongleInfo(String ssid, DongleInfo_t &info)
+    {
+        // Write-through: uložit do cache
+        dongleInfoCache[ssid] = info;
+        
+        FlashGuard guard("Dongle:save");
+        if (!guard.isLocked()) {
+            LOGE("Failed to lock NVS mutex for saving dongle info");
+            return;
+        }
+
+        Preferences preferences;
+        preferences.begin(DONGLE_DISCOVERY_PREFERENCES_KEY, false);
+        preferences.putBytes(hashString(ssid).c_str(), (void *)&info, sizeof(DongleInfo_t));
+        preferences.end();
+    }
+
+    /**
+     * Načte DongleInfo - používá cache
+     */
+    bool loadDongleInfo(String ssid, DongleInfo_t &info)
+    {
+        return getDongleInfoFromCache(ssid, info);
     }
 };
