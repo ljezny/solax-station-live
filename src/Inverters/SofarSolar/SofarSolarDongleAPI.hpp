@@ -9,7 +9,7 @@ public:
     /**
      * Returns true if this inverter supports intelligence mode control
      */
-    bool supportsIntelligence() { return false; }
+    bool supportsIntelligence() { return true; }
 
     InverterData_t loadData(String ipAddress, String sn)
     {
@@ -111,7 +111,8 @@ private:
     {
         // SofarSolar RTC registers: 0x42C-0x431 (holding registers)
         // Format: Year (% 100), Month, Day, Hour, Minute, Second
-        byte packetBuffer[16];
+        // Buffer: 3 header + 12 data (6 regs * 2 bytes) + 2 CRC = 17 bytes min
+        byte packetBuffer[32];
         channel.tryReadWithRetries(0x42C, 6, sn, packetBuffer, [&]()
                                    {
                                        struct tm timeinfo = {};
