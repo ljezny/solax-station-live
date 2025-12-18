@@ -2,6 +2,7 @@
 
 #include "../../Protocol/V5TCP.hpp"
 #include "../../utils/RemoteLogger.hpp"
+#include "../../utils/IntelligenceSettings.hpp"
 
 class SofarSolarDongleAPI
 {
@@ -61,18 +62,28 @@ public:
             break;
 
         case INVERTER_MODE_CHARGE_FROM_GRID:
+        {
             // Passive Mode: positive grid power = buy from grid (charge battery)
             // Based on Sofar docs: GridPower > 0 = buy from grid, Bat > 0 = charge
-            LOGD("Setting Charge from Grid mode (Passive + GridPower=+5000W, Bat +1000 to +5000W)");
-            success = setPassiveMode(sn, 5000, 1000, 5000);  // GridPower=+5kW (buy), Bat charge 1-5kW
+            // Load power from Intelligence settings
+            IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
+            int32_t chargePowerW = (int32_t)(settings.maxChargePowerKw * 1000);
+            LOGD("Setting Charge from Grid mode (Passive + GridPower=+%dW, Bat +1000 to +%dW)", chargePowerW, chargePowerW);
+            success = setPassiveMode(sn, chargePowerW, 1000, chargePowerW);
             break;
+        }
 
         case INVERTER_MODE_DISCHARGE_TO_GRID:
+        {
             // Passive Mode: negative grid power = sell to grid (discharge battery)
             // Based on Sofar docs: GridPower < 0 = sell to grid, Bat < 0 = discharge
-            LOGD("Setting Discharge to Grid mode (Passive + GridPower=-5000W, Bat -5000 to -1000W)");
-            success = setPassiveMode(sn, -5000, -5000, -1000);  // GridPower=-5kW (sell), Bat discharge 1-5kW
+            // Load power from Intelligence settings
+            IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
+            int32_t dischargePowerW = (int32_t)(settings.maxDischargePowerKw * 1000);
+            LOGD("Setting Discharge to Grid mode (Passive + GridPower=-%dW, Bat -%d to -1000W)", dischargePowerW, dischargePowerW);
+            success = setPassiveMode(sn, -dischargePowerW, -dischargePowerW, -1000);
             break;
+        }
 
         default:
             LOGW("Unknown mode requested: %d", mode);
