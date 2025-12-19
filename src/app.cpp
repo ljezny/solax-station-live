@@ -979,6 +979,11 @@ bool runIntelligenceTask()
                             success = goodweAPI.setWorkMode(wifiDiscoveryResult.inverterIP, lastIntelligenceResult.command,
                                                             settings.minSocPercent, settings.maxSocPercent);
                         }
+                        else if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOFAR)
+                        {
+                            static SofarSolarDongleAPI sofarAPI;
+                            success = sofarAPI.setWorkMode(wifiDiscoveryResult.inverterIP, wifiDiscoveryResult.sn, lastIntelligenceResult.command);
+                        }
                         else
                         {
                             LOGD("Work mode control not implemented for inverter type %d", wifiDiscoveryResult.type);
@@ -1639,13 +1644,18 @@ void updateState()
                     // Use default SOC values for manual mode changes (10% min, 100% max)
                     success = goodweAPI.setWorkMode(wifiDiscoveryResult.inverterIP, mode, 10, 100);
                 }
+                else if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOFAR)
+                {
+                    static SofarSolarDongleAPI sofarAPI;
+                    success = sofarAPI.setWorkMode(wifiDiscoveryResult.inverterIP, wifiDiscoveryResult.sn, mode);
+                }
                 
                 if (success)
                 {
                     LOGD("Successfully sent work mode %d to inverter", mode);
                     lastSentMode = mode;
                 }
-                else if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX || wifiDiscoveryResult.type == CONNECTION_TYPE_GOODWE)
+                else if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX || wifiDiscoveryResult.type == CONNECTION_TYPE_GOODWE || wifiDiscoveryResult.type == CONNECTION_TYPE_SOFAR)
                 {
                     LOGW("Failed to send work mode %d to inverter", mode);
                 }
