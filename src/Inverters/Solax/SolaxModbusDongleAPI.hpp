@@ -6,15 +6,50 @@
 #include <HTTPClient.h>
 #include "../InverterResult.hpp"
 
+/**
+ * Kategorie střídače Solax - určuje sadu Modbus registrů
+ */
+enum SolaxInverterCategory
+{
+    SOLAX_CATEGORY_UNKNOWN = 0,
+    SOLAX_CATEGORY_HYBRID,  // X1/X3-Hybrid, X3-Ultra, X1/X3-IES - má baterii
+    SOLAX_CATEGORY_MIC      // X1-Boost, X1-Mini, X3-MIC - pouze PV, bez baterie
+};
+
+/**
+ * Generace střídače Solax - ovlivňuje škálování některých hodnot
+ */
+enum SolaxInverterGeneration
+{
+    SOLAX_GEN_UNKNOWN = 0,
+    SOLAX_GEN2,
+    SOLAX_GEN3,
+    SOLAX_GEN4,
+    SOLAX_GEN5,
+    SOLAX_GEN6
+};
+
 class SolaxModbusDongleAPI
 {
 public:
-    SolaxModbusDongleAPI() : isSupportedDongle(true), ip(0, 0, 0, 0), consecutiveTimeoutErrors(0) {}
+    SolaxModbusDongleAPI() : isSupportedDongle(true), ip(0, 0, 0, 0), consecutiveTimeoutErrors(0), 
+                             inverterCategory(SOLAX_CATEGORY_UNKNOWN), inverterGeneration(SOLAX_GEN_UNKNOWN) {}
 
     /**
-     * Returns true if this inverter supports intelligence mode control
+     * Returns true if this inverter supports intelligence mode control.
+     * MIC inverters (X1-Boost, X1-Mini, X3-MIC) don't have battery, so no intelligence.
+     * Note: This should be called after loadData() to ensure SN is cached and type detected.
      */
-    bool supportsIntelligence() { return true; }
+    bool supportsIntelligence() 
+    { 
+        // Pokud ještě neznáme kategorii, předpokládáme HYBRID (pro zpětnou kompatibilitu)
+        if (inverterCategory == SOLAX_CATEGORY_UNKNOWN)
+        {
+            LOGW("supportsIntelligence() called before inverter type detection, assuming HYBRID");
+            return true;
+        }
+        return inverterCategory == SOLAX_CATEGORY_HYBRID; 
+    }
 
     InverterData_t loadData(const String &ipAddress)
     {
@@ -33,35 +68,65 @@ public:
             return inverterData;
         }
         
-        // Read data and track modbus timeouts
-        // Connection succeeded, but if reads fail it might be a stuck dongle
-        bool readSuccess = readInverterInfo(inverterData) &&
-                          readMainInverterData(inverterData) &&
-                          readPowerData(inverterData) &&
-                          readPhaseData(inverterData) &&
-                          readPV3Power(inverterData);
-        
-        if (!handleModbusResult(ipAddress, readSuccess))
+        // Nejprve načteme info o střídači (SN) - tím se detekuje typ
+        if (!readInverterInfo(inverterData))
         {
+            LOGW("Failed to read inverter info");
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             channel.disconnect();
             return inverterData;
         }
         
-        // Read run mode first - if inverter is idle/standby, assume Self-Use mode
-        // (reading work mode registers fails when inverter is sleeping)
-        uint16_t runMode = readRunMode();
-        if (runMode == RUN_MODE_IDLE || runMode == RUN_MODE_STANDBY)
+        bool readSuccess;
+        
+        // Větvení podle kategorie střídače
+        if (inverterCategory == SOLAX_CATEGORY_MIC)
         {
+            // MIC střídač (X1-Boost, X1-Mini, X3-MIC) - jiná registrová mapa, bez baterie
+            LOGD("Loading data for MIC inverter");
+            readSuccess = readMicInverterData(inverterData);
+            
+            if (!handleModbusResult(ipAddress, readSuccess))
+            {
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                channel.disconnect();
+                return inverterData;
+            }
+            
+            // MIC nemá work mode řízení baterie
             inverterData.inverterMode = INVERTER_MODE_SELF_USE;
         }
         else
         {
-            if (!readWorkMode(inverterData))
-            { 
+            // HYBRID střídač - původní logika
+            LOGD("Loading data for HYBRID inverter");
+            readSuccess = readMainInverterData(inverterData) &&
+                          readPowerData(inverterData) &&
+                          readPhaseData(inverterData) &&
+                          readPV3Power(inverterData);
+            
+            if (!handleModbusResult(ipAddress, readSuccess))
+            {
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
                 channel.disconnect();
                 return inverterData;
+            }
+            
+            // Read run mode first - if inverter is idle/standby, assume Self-Use mode
+            // (reading work mode registers fails when inverter is sleeping)
+            uint16_t runMode = readRunMode();
+            if (runMode == RUN_MODE_IDLE || runMode == RUN_MODE_STANDBY)
+            {
+                inverterData.inverterMode = INVERTER_MODE_SELF_USE;
+            }
+            else
+            {
+                if (!readWorkMode(inverterData))
+                { 
+                    inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                    channel.disconnect();
+                    return inverterData;
+                }
             }
         }
 
@@ -345,6 +410,8 @@ protected:
     ModbusTCP channel;
     int consecutiveTimeoutErrors;              // Counter for consecutive modbus timeout errors
     static constexpr int MAX_TIMEOUT_ERRORS_BEFORE_RESET = 3;  // Reset dongle after this many consecutive timeouts
+    SolaxInverterCategory inverterCategory;    // Detected inverter category (HYBRID/MIC)
+    SolaxInverterGeneration inverterGeneration; // Detected inverter generation (GEN2-GEN6)
 
 private:
     static constexpr uint16_t MODBUS_PORT = 502;
@@ -598,6 +665,17 @@ private:
         data.sn = sn;
         String factoryName = response.readString(0x07, 14);
         String moduleName = response.readString(0x0E, 14);
+        
+        // Detekce typu střídače z SN
+        detectInverterType(sn);
+        
+        // Nastav hasBattery podle kategorie
+        if (inverterCategory == SOLAX_CATEGORY_MIC)
+        {
+            data.hasBattery = false;
+            LOGD("MIC inverter detected - setting hasBattery=false");
+        }
+        
         return true;
     }
 
@@ -622,6 +700,129 @@ private:
         timeinfo.tm_isdst = -1;  // Let mktime determine DST
 
         data.inverterTime = mktime(&timeinfo);
+        return true;
+    }
+
+    /**
+     * Čte data z MIC střídače (X1-Boost, X1-Mini, X3-MIC) - bez baterie.
+     * Registrová mapa podle dokumentace X1-Boost-G4 & X1-MINI-G4 Modbus-RTU V3.6
+     * 
+     * MIC registry jsou jiné než HYBRID:
+     * - 0x00-0x06: PV1 voltage, current, power, PV2 voltage, current, power, Grid frequency
+     * - 0x07: Inverter temperature (°C)
+     * - 0x08-0x0A: Run mode, Power Factor, Output power
+     * - 0x0B-0x0D: Grid voltage, Grid current, Grid power (single phase pro X1)
+     * - Pro X3-MIC: 0x0B-0x1C obsahuje data pro všechny 3 fáze
+     * - 0x46-0x49: Total yield, Today yield
+     */
+    bool readMicInverterData(InverterData_t &data)
+    {
+        // Čteme registry 0x00-0x60 pro získání všech potřebných dat
+        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x00, 0x50);
+        if (!response.isValid)
+        {
+            LOGW("MIC: Failed to read input registers 0x00-0x4F");
+            return false;
+        }
+        
+        data.status = DONGLE_STATUS_OK;
+        data.hasBattery = false;  // MIC nemá baterii
+        
+        // PV1 data (registry 0x00-0x02)
+        uint16_t pv1Voltage = response.readUInt16(0x00);  // 0.1V scale
+        uint16_t pv1Current = response.readUInt16(0x01);  // 0.1A scale
+        data.pv1Power = response.readUInt16(0x02);        // W
+        
+        // PV2 data (registry 0x03-0x05)
+        uint16_t pv2Voltage = response.readUInt16(0x03);  // 0.1V scale
+        uint16_t pv2Current = response.readUInt16(0x04);  // 0.1A scale
+        data.pv2Power = response.readUInt16(0x05);        // W
+        
+        LOGD("MIC PV1: %dW (%.1fV, %.1fA), PV2: %dW (%.1fV, %.1fA)", 
+             data.pv1Power, pv1Voltage/10.0f, pv1Current/10.0f,
+             data.pv2Power, pv2Voltage/10.0f, pv2Current/10.0f);
+        
+        // Grid frequency (0x06)
+        uint16_t gridFrequency = response.readUInt16(0x06);  // 0.01Hz scale
+        
+        // Inverter temperature (0x07)
+        data.inverterTemperature = response.readInt16(0x07);  // °C
+        
+        // Run mode (0x08)
+        uint16_t runMode = response.readUInt16(0x08);
+        LOGD("MIC Run mode: %d, Temperature: %d°C, Grid freq: %.2fHz", 
+             runMode, data.inverterTemperature, gridFrequency/100.0f);
+        
+        // Output power (0x0A) - celkový výkon střídače
+        int16_t outputPower = response.readInt16(0x0A);
+        
+        // Grid data - záleží jestli je to X1 (single phase) nebo X3 (three phase)
+        // Pro X1: 0x0B = Grid voltage, 0x0C = Grid current, 0x0D = Grid power
+        // Pro X3: registry 0x0B-0x1C obsahují data pro 3 fáze
+        
+        // Zatím předpokládáme single-phase (X1), pro X3-MIC bude potřeba rozšířit
+        uint16_t gridVoltageL1 = response.readUInt16(0x0B);  // 0.1V scale
+        uint16_t gridCurrentL1 = response.readUInt16(0x0C);  // 0.1A scale
+        data.gridPowerL1 = response.readInt16(0x0D);         // W
+        
+        // Pro 3-fázový X3-MIC čteme i další fáze
+        // Registry se liší podle dokumentace, ale typicky:
+        // L2: 0x0E-0x10, L3: 0x11-0x13
+        uint16_t gridVoltageL2 = response.readUInt16(0x0E);  // 0.1V scale
+        uint16_t gridCurrentL2 = response.readUInt16(0x0F);  // 0.1A scale
+        data.gridPowerL2 = response.readInt16(0x10);         // W
+        
+        uint16_t gridVoltageL3 = response.readUInt16(0x11);  // 0.1V scale
+        uint16_t gridCurrentL3 = response.readUInt16(0x12);  // 0.1A scale
+        data.gridPowerL3 = response.readInt16(0x13);         // W
+        
+        LOGD("MIC Grid L1: %dW (%.1fV), L2: %dW (%.1fV), L3: %dW (%.1fV)", 
+             data.gridPowerL1, gridVoltageL1/10.0f,
+             data.gridPowerL2, gridVoltageL2/10.0f,
+             data.gridPowerL3, gridVoltageL3/10.0f);
+        
+        // Inverter output power per phase - pro MIC je to stejné jako grid
+        data.inverterOutpuPowerL1 = data.gridPowerL1;
+        data.inverterOutpuPowerL2 = data.gridPowerL2;
+        data.inverterOutpuPowerL3 = data.gridPowerL3;
+        
+        // Total yield (0x46-0x47) - U32 LSB, 0.1kWh scale
+        data.pvTotal = response.readUInt32LSB(0x46) / 10.0f;  // kWh
+        
+        // Today yield (0x48-0x49) - U32 LSB nebo U16 na 0x48, 0.1kWh scale
+        data.pvToday = response.readUInt16(0x48) / 10.0f;  // kWh
+        
+        LOGD("MIC Total: %.1fkWh, Today: %.1fkWh, Output power: %dW", 
+             data.pvTotal, data.pvToday, outputPower);
+        
+        // MIC nemá baterii - nastavíme nulové hodnoty
+        data.soc = 0;
+        data.batteryPower = 0;
+        data.batteryVoltage = 0;
+        data.batteryTemperature = 0;
+        data.batteryChargedToday = 0;
+        data.batteryDischargedToday = 0;
+        data.batteryCapacityWh = 0;
+        data.maxChargePowerW = 0;
+        data.maxDischargePowerW = 0;
+        data.minSoc = 0;
+        data.maxSoc = 0;
+        
+        // Grid buy/sell - MIC střídače typicky mají jen sell (prodej do sítě)
+        // Registry se mohou lišit, logujeme pro analýzu
+        data.gridSellTotal = data.pvTotal;  // Aproximace - většina výroby jde do sítě
+        data.gridBuyTotal = 0;
+        data.gridSellToday = data.pvToday;
+        data.gridBuyToday = 0;
+        
+        // Load - pro MIC bez baterie je spotřeba = výroba - export
+        data.loadPower = (data.pv1Power + data.pv2Power) - (data.gridPowerL1 + data.gridPowerL2 + data.gridPowerL3);
+        if (data.loadPower < 0) data.loadPower = 0;
+        data.loadToday = 0;  // Nemáme přesná data
+        
+        // Inverter mode - MIC nemá řízení baterie
+        data.inverterMode = INVERTER_MODE_SELF_USE;
+        
         return true;
     }
 
@@ -836,8 +1037,182 @@ private:
         return foundIp;
     }
 
-    bool isGen5(const String &sn)
+    /**
+     * Detekuje typ střídače z SN a nastaví inverterCategory a inverterGeneration.
+     * Volá se automaticky v readInverterInfo() po načtení SN.
+     * Prefixy podle: https://github.com/wills106/homeassistant-solax-modbus/blob/main/custom_components/solax_modbus/plugin_solax.py
+     */
+    void detectInverterType(const String &serialNumber)
     {
-        return sn.startsWith("H35") || sn.startsWith("H3B");
+        if (serialNumber.length() < 3)
+        {
+            LOGW("SN too short for type detection: %s", serialNumber.c_str());
+            inverterCategory = SOLAX_CATEGORY_HYBRID;  // Default
+            inverterGeneration = SOLAX_GEN4;
+            return;
+        }
+        
+        String prefix3 = serialNumber.substring(0, 3);
+        String prefix2 = serialNumber.substring(0, 2);
+        LOGD("Detecting inverter type from SN: %s (prefix3=%s, prefix2=%s)", 
+             serialNumber.c_str(), prefix3.c_str(), prefix2.c_str());
+        
+        // === MIC X1 (single-phase, no battery) ===
+        
+        // MIC GEN4: X1-Boost G4 (XB4, ZA4), X1-Mini G4 (XM4), X1-SMART-G2 (XST)
+        if (prefix3 == "XB4" || prefix3 == "ZA4" || prefix3 == "XM4" || prefix3 == "XST")
+        {
+            inverterCategory = SOLAX_CATEGORY_MIC;
+            inverterGeneration = SOLAX_GEN4;
+            LOGI("Detected MIC GEN4 X1 inverter: %s", serialNumber.c_str());
+            return;
+        }
+        
+        // MIC GEN2: X1-Boost (XAU, XB3, XBE, XBU), X1-Mini (XMA, XM3, XAT)
+        if (prefix3 == "XAU" || prefix3 == "XB3" || prefix3 == "XBE" || prefix3 == "XBU" ||
+            prefix3 == "XMA" || prefix3 == "XM3" || prefix3 == "XAT")
+        {
+            inverterCategory = SOLAX_CATEGORY_MIC;
+            inverterGeneration = SOLAX_GEN2;
+            LOGI("Detected MIC GEN2 X1 inverter: %s", serialNumber.c_str());
+            return;
+        }
+        
+        // === MIC X3 (three-phase, no battery) ===
+        // X3-MIC má prefixy: MC..., MU..., MP...
+        if (prefix2 == "MC" || prefix2 == "MU" || prefix2 == "MP")
+        {
+            inverterCategory = SOLAX_CATEGORY_MIC;
+            // GEN2 pro MC806T, MC106T, MC204T, MC205T, MC206T, MC208T, MC210T, MC212T, MC215T, MP156T, MPT...
+            // GEN1 pro ostatní (MC103T, MC203T, MC402T, MC502T, MC602T, MC702T, MC802T, MC803T, MC902T...)
+            if (serialNumber.length() >= 5)
+            {
+                String prefix5 = serialNumber.substring(0, 5);
+                if (prefix5 == "MC806" || prefix5 == "MU806" || prefix5 == "MC106" || 
+                    prefix5 == "MC204" || prefix5 == "MC205" || prefix5 == "MC206" || 
+                    prefix5 == "MC208" || prefix5 == "MC210" || prefix5 == "MC212" || 
+                    prefix5 == "MC215" || prefix5 == "MP156" || prefix3 == "MPT")
+                {
+                    inverterGeneration = SOLAX_GEN2;
+                }
+                else
+                {
+                    inverterGeneration = SOLAX_GEN_UNKNOWN;  // GEN1 nebo neznámý
+                }
+            }
+            else
+            {
+                inverterGeneration = SOLAX_GEN_UNKNOWN;
+            }
+            LOGI("Detected MIC X3 inverter: %s", serialNumber.c_str());
+            return;
+        }
+        
+        // === HYBRID (with battery) ===
+        
+        // HYBRID GEN5: X3-Ultra, X3-IES (H35..., H3B...)
+        if (prefix3 == "H35" || prefix3 == "H3B")
+        {
+            inverterCategory = SOLAX_CATEGORY_HYBRID;
+            inverterGeneration = SOLAX_GEN5;
+            LOGI("Detected HYBRID GEN5 inverter (X3-Ultra/IES): %s", serialNumber.c_str());
+            return;
+        }
+        
+        // HYBRID GEN5: X1-IES (H53, H55, H56, H58)
+        if (prefix3 == "H53" || prefix3 == "H55" || prefix3 == "H56" || prefix3 == "H58")
+        {
+            inverterCategory = SOLAX_CATEGORY_HYBRID;
+            inverterGeneration = SOLAX_GEN5;
+            LOGI("Detected HYBRID GEN5 X1-IES inverter: %s", serialNumber.c_str());
+            return;
+        }
+        
+        // HYBRID GEN6: X3-HYB-G4 PRO (10K...), X1-VAST (10M...)
+        if (prefix3 == "10K" || prefix3 == "10M")
+        {
+            inverterCategory = SOLAX_CATEGORY_HYBRID;
+            inverterGeneration = SOLAX_GEN6;
+            LOGI("Detected HYBRID GEN6 inverter: %s", serialNumber.c_str());
+            return;
+        }
+        
+        // HYBRID GEN4: X1-Hybrid G4 (H43, H44, H45, H46, H47)
+        if (prefix3 == "H43" || prefix3 == "H44" || prefix3 == "H45" || prefix3 == "H46" || prefix3 == "H47")
+        {
+            inverterCategory = SOLAX_CATEGORY_HYBRID;
+            inverterGeneration = SOLAX_GEN4;
+            LOGI("Detected HYBRID GEN4 X1 inverter: %s", serialNumber.c_str());
+            return;
+        }
+        
+        // HYBRID GEN4: X3-Hybrid G4 (H31, H34)
+        if (prefix3 == "H31" || prefix3 == "H34")
+        {
+            inverterCategory = SOLAX_CATEGORY_HYBRID;
+            inverterGeneration = SOLAX_GEN4;
+            LOGI("Detected HYBRID GEN4 X3 inverter: %s", serialNumber.c_str());
+            return;
+        }
+        
+        // HYBRID GEN3: X1-Hybrid G3 (H1E, H1I, HCC, HUE, XRE)
+        if (prefix3 == "H1E" || prefix3 == "H1I" || prefix3 == "HCC" || prefix3 == "HUE" || prefix3 == "XRE")
+        {
+            inverterCategory = SOLAX_CATEGORY_HYBRID;
+            inverterGeneration = SOLAX_GEN3;
+            LOGI("Detected HYBRID GEN3 X1 inverter: %s", serialNumber.c_str());
+            return;
+        }
+        
+        // HYBRID GEN3: X3-Hybrid G3 (H3D, H3E, H3L, H3P, H3U)
+        if (prefix3 == "H3D" || prefix3 == "H3E" || prefix3 == "H3L" || prefix3 == "H3P" || prefix3 == "H3U")
+        {
+            inverterCategory = SOLAX_CATEGORY_HYBRID;
+            inverterGeneration = SOLAX_GEN3;
+            LOGI("Detected HYBRID GEN3 X3 inverter: %s", serialNumber.c_str());
+            return;
+        }
+        
+        // HYBRID GEN2: X1-Hybrid G2 (L30, L37, L50, U30, U50)
+        if (prefix3 == "L30" || prefix3 == "L37" || prefix3 == "L50" || prefix3 == "U30" || prefix3 == "U50")
+        {
+            inverterCategory = SOLAX_CATEGORY_HYBRID;
+            inverterGeneration = SOLAX_GEN2;
+            LOGI("Detected HYBRID GEN2 X1 inverter: %s", serialNumber.c_str());
+            return;
+        }
+        
+        // AC/RetroFit (F43, F45, F46, F47, PRI, PRE, XAC)
+        if (prefix3 == "F43" || prefix3 == "F45" || prefix3 == "F46" || prefix3 == "F47" || 
+            prefix3 == "PRI" || prefix3 == "PRE" || prefix3 == "XAC")
+        {
+            // AC coupled, ale má baterii
+            inverterCategory = SOLAX_CATEGORY_HYBRID;
+            inverterGeneration = (prefix3.startsWith("F") || prefix3 == "PRE") ? SOLAX_GEN4 : SOLAX_GEN3;
+            LOGI("Detected AC/RetroFit inverter: %s", serialNumber.c_str());
+            return;
+        }
+        
+        // Ostatní H3x prefixy - pravděpodobně HYBRID
+        if (prefix2 == "H3" || prefix2 == "H4" || prefix2 == "H5")
+        {
+            inverterCategory = SOLAX_CATEGORY_HYBRID;
+            inverterGeneration = SOLAX_GEN4;
+            LOGI("Detected HYBRID inverter (H-prefix): %s", serialNumber.c_str());
+            return;
+        }
+        
+        // Default: HYBRID GEN4 (původní chování)
+        inverterCategory = SOLAX_CATEGORY_HYBRID;
+        inverterGeneration = SOLAX_GEN4;
+        LOGI("Unknown SN prefix, defaulting to HYBRID GEN4: %s", serialNumber.c_str());
+    }
+    
+    /**
+     * Kontrola jestli je střídač GEN5 (pro škálování teploty)
+     */
+    bool isGen5(const String &serialNumber)
+    {
+        return inverterGeneration == SOLAX_GEN5;
     }
 };
