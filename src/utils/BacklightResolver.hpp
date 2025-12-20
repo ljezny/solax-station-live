@@ -18,7 +18,7 @@ class BacklightResolver
 private:
     long lastTouchTime = 0;
     unsigned long lastActivityTime = 0;
-    int displayOffTimeout = 0;  // 0 = never, otherwise minutes (5, 15, 30, 60)
+    int displayOffTimeout = 0; // 0 = never, otherwise minutes (5, 15, 30, 60)
     bool displayIsOff = false;
     Preferences preferences;
 
@@ -36,9 +36,9 @@ public:
         displayOffTimeout = preferences.getInt(PREF_DISPLAY_TIMEOUT, 0);
         preferences.end();
         log_d("Display off timeout loaded: %d minutes", displayOffTimeout);
-        
+
         lastActivityTime = millis();
-        
+
 #if CROW_PANEL_ADVANCE
         Wire.begin(15, 16);
         delay(500);
@@ -62,7 +62,6 @@ public:
 
             io.pinMode(1, OUTPUT);
             io.digitalWrite(1, 1);
-
         }
 
 #endif
@@ -119,17 +118,17 @@ public:
     {
         this->lastTouchTime = millis();
         this->lastActivityTime = millis();
-        
+
         // Wake up display if it was off
         if (displayIsOff)
         {
             log_d("Display waking up from touch");
             displayIsOff = false;
         }
-        
+
         setBacklightAnimated(255);
     }
-    
+
     /**
      * Set display off timeout in minutes
      * @param minutes 0 = never, 5/15/30/60 = timeout in minutes
@@ -137,15 +136,15 @@ public:
     void setDisplayOffTimeout(int minutes)
     {
         displayOffTimeout = minutes;
-        lastActivityTime = millis();  // Reset timer when changing setting
+        lastActivityTime = millis(); // Reset timer when changing setting
         displayIsOff = false;
-        
+
         preferences.begin("backlight", false);
         preferences.putInt(PREF_DISPLAY_TIMEOUT, displayOffTimeout);
         preferences.end();
         log_d("Display off timeout saved: %d minutes", displayOffTimeout);
     }
-    
+
     /**
      * Get current display off timeout in minutes
      */
@@ -153,7 +152,7 @@ public:
     {
         return displayOffTimeout;
     }
-    
+
     /**
      * Check if display is currently off
      */
@@ -168,11 +167,16 @@ public:
         if (i2cScanForAddress(0x30)) // new V1.2
         {
             Wire.beginTransmission(0x30);
-            //needs to recompute brightness from 0-255 to 0-16
+            // needs to recompute brightness from 0-255 to 0-16
             uint8_t pwmValue = map(brightness, 0, 255, 0, 16);
             Wire.write(pwmValue);
             Wire.endTransmission();
         }
+        else if (i2cScanForAddress(0x18)) // old V1.0
+        {
+            io.digitalWrite(1, brightness > 0 ? 1 : 0);
+        }
+
 #else
         for (int i = tft.getBrightness(); i != brightness; i += (brightness > tft.getBrightness()) ? 1 : -1)
         {
