@@ -654,17 +654,57 @@ private:
             data.sn = sn;
             return true;
         }
+        
+        // Zkusit primární adresu 0x00 pro SN (standardní Solax střídače)
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, 0x00, 0x14);
         if (!response.isValid)
         {
-            return false;
+            // Fallback: alternativní adresa 0x300 (některé MIC střídače)
+            LOGD("SN read failed at 0x00, trying fallback address 0x300");
+            response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, 0x300, 0x07);
+            if (!response.isValid)
+            {
+                // Fallback 2: adresa 0x1A10 (některé starší MIC střídače)
+                LOGD("SN read failed at 0x300, trying fallback address 0x1A10");
+                response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, 0x1A10, 0x07);
+                if (!response.isValid)
+                {
+                    LOGW("Failed to read SN from all known addresses (0x00, 0x300, 0x1A10)");
+                    return false;
+                }
+                sn = response.readString(0x1A10, 14);
+            }
+            else
+            {
+                sn = response.readString(0x300, 14);
+            }
+        }
+        else
+        {
+            sn = response.readString(0x00, 14);
+        }
+        
+        // Některé střídače vrací SN s prohozením bytů - opravit pokud nezačíná na M nebo X
+        if (!sn.isEmpty() && !sn.startsWith("M") && !sn.startsWith("X") && !sn.startsWith("H") && !sn.startsWith("L"))
+        {
+            // Swap bytes - některé starší střídače mají prohozené byty v SN
+            String swapped = "";
+            for (int pos = 0; pos < sn.length() - 1; pos += 2)
+            {
+                swapped += sn[pos + 1];
+                swapped += sn[pos];
+            }
+            if (sn.length() % 2 == 1)
+            {
+                swapped += sn[sn.length() - 1];
+            }
+            LOGD("SN byte swap: %s -> %s", sn.c_str(), swapped.c_str());
+            sn = swapped;
         }
 
         data.status = DONGLE_STATUS_OK;
-        sn = response.readString(0x00, 14);
         data.sn = sn;
-        String factoryName = response.readString(0x07, 14);
-        String moduleName = response.readString(0x0E, 14);
+        LOGD("Inverter SN: %s", sn.c_str());
         
         // Detekce typu střídače z SN
         detectInverterType(sn);
