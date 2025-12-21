@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 #include "MedianPowerSampler.hpp"
 typedef enum
 {

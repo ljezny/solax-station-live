@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../Protocol/V5TCP.hpp"
-#include "../../utils/RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 #include "../../utils/IntelligenceSettings.hpp"
 
 class SofarSolarDongleAPI

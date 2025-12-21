@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "../utils/RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 #include "ModbusResponse.hpp"
 #include "utils/CustomNetworkClient.hpp"
 

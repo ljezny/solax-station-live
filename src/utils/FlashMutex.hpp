@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 
 /**
  * Jednoduchý logger pro sledování přístupů k Flash (NVS, SPIFFS)

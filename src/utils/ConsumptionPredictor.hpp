@@ -5,7 +5,7 @@
 #include <esp_heap_caps.h>
 #include <cmath>  // Pro exp()
 #include "../Spot/ElectricityPriceResult.hpp"  // Pro QUARTERS_OF_DAY
-#include "RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 
 /**
  * Predikce spotřeby na základě historie

@@ -8,7 +8,7 @@
 #include "../Inverters/InverterResult.hpp"
 #include "../Spot/ElectricityPriceResult.hpp"
 #include "../webserver/icons.h"
-#include "RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 
 // Forward declarations
 extern LGFX tft;

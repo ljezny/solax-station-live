@@ -35,7 +35,7 @@
 #include "utils/ProductionPredictor.hpp"
 #include "utils/WebServer.hpp"
 #include "utils/FlashMutex.hpp"
-#include "utils/RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 
 #define UI_REFRESH_INTERVAL 5000            // Define the UI refresh interval in milliseconds
 #define INVERTER_DATA_REFRESH_INTERVAL 5000 // Seems that 3s is problematic for some dongles (GoodWe), so we use 5s

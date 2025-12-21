@@ -2,7 +2,7 @@
 #define PSE_PL_API_h
 
 #include <WiFi.h>
-#include "../../utils/RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 #include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>

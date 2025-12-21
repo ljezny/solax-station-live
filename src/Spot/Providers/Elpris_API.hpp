@@ -1,7 +1,7 @@
 #pragma once
 
 #include <WiFi.h>
-#include "../../utils/RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h>

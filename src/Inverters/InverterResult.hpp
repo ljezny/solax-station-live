@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../utils/RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 
 typedef enum DongleStatus {
     DONGLE_STATUS_OK = 1,

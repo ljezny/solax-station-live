@@ -3,7 +3,7 @@
 #define ShellyAPI_h
 
 #include <WiFi.h>
-#include "../utils/RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 #include <Preferences.h>
 #include <HTTPClient.h>
 #include <WiFiClient.h>

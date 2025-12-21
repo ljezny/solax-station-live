@@ -8,7 +8,7 @@
 #include "ProductionPredictor.hpp"
 #include "../Inverters/InverterResult.hpp"
 #include "../Spot/ElectricityPriceResult.hpp"
-#include "RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 
 /**
  * Výsledek simulace pro jednu čtvrthodinu

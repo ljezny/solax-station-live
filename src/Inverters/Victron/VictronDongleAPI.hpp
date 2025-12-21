@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "../../utils/RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 #include "../../Protocol/ModbusTCP.hpp"
 
 class VictronDongleAPI

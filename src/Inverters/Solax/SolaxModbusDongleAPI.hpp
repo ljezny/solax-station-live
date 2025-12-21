@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../../Protocol/ModbusTCP.hpp"
-#include "../../utils/RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 #include <WiFi.h>
 #include <HTTPClient.h>
 #include "../InverterResult.hpp"

@@ -1,7 +1,6 @@
 #include "WallboxResult.hpp"
-#include "../utils/RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 #include <Arduino.h>
-#include "../utils/RemoteLogger.hpp"
 
 void logWallboxResult(WallboxResult_t &result)
 {

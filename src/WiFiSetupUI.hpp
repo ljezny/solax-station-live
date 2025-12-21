@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "utils/RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 #include <lvgl.h>
 #include "ui/ui.h"
 #include "Inverters/WiFiDiscovery.hpp"

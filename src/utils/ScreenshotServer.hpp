@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 #include <esp_http_server.h>
 #include <lvgl.h>
 #include "../gfx_conf.h"

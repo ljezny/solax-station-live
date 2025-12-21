@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include "../utils/RemoteLogger.hpp"
+#include <RemoteLogger.hpp>
 #include <esp_heap_caps.h>
 #include "ElectricityPriceResult.hpp"
 #include "utils/FlashMutex.hpp"
