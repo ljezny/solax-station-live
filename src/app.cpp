@@ -328,6 +328,20 @@ void setupLVGL()
     tft.fillScreen(TFT_BLACK);
     tft.setRotation(2);
     delay(200);
+    
+    // Inicializace VSYNC synchronizace pro flash operace
+    // Patchnutý Bus_RGB volá náš callback při každém VSYNC
+#if CROW_PANEL_ADVANCE
+    if (VSyncManager::getInstance().begin()) {
+        // Zaregistrovat VSYNC callback na patchnutý Bus_RGB
+        VSyncManager::getInstance().registerVSyncCallback(tft._bus_instance);
+        // Nastavit callback pro čekání na DMA - flash operace počkají na dokončení LVGL renderingu
+        VSyncManager::getInstance().setWaitDMACallback([]() {
+            tft.waitDMA();
+        });
+        LOGI("VSYNC synchronization enabled (patched Bus_RGB)");
+    }
+#endif
 
     lv_init();
     delay(100);
@@ -1391,6 +1405,18 @@ void onEntering(state_t newState)
                 xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
                 splashUI->updateText(TR(STR_PREPARING_STORAGE));
                 xSemaphoreGive(lvgl_mutex);
+                
+                // TEST: Explicitní formátování pro simulaci blikání displeje
+                // Odkomentovat pro test VSYNC synchronizace
+                // #define TEST_FLASH_FORMAT 1
+                #if defined(TEST_FLASH_FORMAT) && TEST_FLASH_FORMAT
+                LOGW("TEST: Starting SPIFFS format to simulate flash contention...");
+                if (SPIFFS.begin(false)) {
+                    SPIFFS.end();
+                }
+                SPIFFS.format();  // Toto zabere cca 10-30 sekund a intenzivně používá flash
+                LOGW("TEST: SPIFFS format complete");
+                #endif
                 
                 LOGD("Initializing SPIFFS and loading predictors...");
                 consumptionPredictor.loadFromPreferences();

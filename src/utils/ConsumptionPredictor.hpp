@@ -595,14 +595,12 @@ public:
      */
     void saveToPreferences() {
         if (!SPIFFS.begin(true)) {
-            LOGE("Failed to mount SPIFFS for saving consumption");
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         File file = SPIFFS.open(STORAGE_FILE, "w");
         if (!file) {
-            LOGE("Failed to open consumption file for writing");
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         // Header: magic + version + lastRecordedWeek + reserved
@@ -643,7 +641,7 @@ public:
         }
         
         file.close();
-        LOGD("Consumption history saved to SPIFFS");
+        // Nelogovat - jsme v kritické sekci
     }
     
     /**
@@ -651,19 +649,16 @@ public:
      */
     void loadFromPreferences() {
         if (!SPIFFS.begin(true)) {
-            LOGE("Failed to mount SPIFFS for loading consumption");
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         if (!SPIFFS.exists(STORAGE_FILE)) {
-            LOGD("No consumption history file, using defaults");
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         File file = SPIFFS.open(STORAGE_FILE, "r");
         if (!file) {
-            LOGE("Failed to open consumption file for reading");
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         // Kontrola magic a verze
@@ -674,9 +669,8 @@ public:
         file.read(&version, sizeof(version));
         
         if (magic != 0x434F4E53 || version != 1) {
-            LOGW("Invalid consumption file format (magic=0x%08X, ver=%d)", magic, version);
             file.close();
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         file.read((uint8_t*)&lastRecordedWeek, sizeof(lastRecordedWeek));
@@ -705,7 +699,7 @@ public:
         }
         
         file.close();
-        LOGD("Consumption history loaded from SPIFFS, lastWeek=%d", lastRecordedWeek);
+        // Nelogovat - jsme v kritické sekci
     }
     
     /**

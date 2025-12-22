@@ -76,8 +76,7 @@ public:
         
         FlashGuard guard("Intelligence:load");
         if (!guard.isLocked()) {
-            LOGE("Failed to lock NVS mutex for loading intelligence settings");
-            return settings;
+            return settings;  // Nelogovat - jsme v kritické sekci
         }
         
         Preferences preferences;
@@ -97,10 +96,7 @@ public:
             preferences.end();
         }
         
-        LOGD("Intelligence settings loaded: enabled=%d, batCost=%.2f, buyK=%.2f, buyQ=%.2f, sellK=%.2f, sellQ=%.2f, minSoc=%d, maxSoc=%d, cap=%.1f, chg=%.1f, dis=%.1f",
-              settings.enabled, settings.batteryCostPerKwh, settings.buyK, settings.buyQ, 
-              settings.sellK, settings.sellQ, settings.minSocPercent, settings.maxSocPercent,
-              settings.batteryCapacityKwh, settings.maxChargePowerKw, settings.maxDischargePowerKw);
+        // Nelogovat - jsme v kritické sekci
         
         return settings;
     }
@@ -111,8 +107,7 @@ public:
     static void save(const IntelligenceSettings_t& settings) {
         FlashGuard guard("Intelligence:save");
         if (!guard.isLocked()) {
-            LOGE("Failed to lock NVS mutex for saving intelligence settings");
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         Preferences preferences;
@@ -121,27 +116,19 @@ public:
             preferences.clear();
             
             // Use shorter keys to save space
-            bool ok = true;
-            ok &= preferences.putBool("en", settings.enabled);
-            ok &= preferences.putFloat("bc", settings.batteryCostPerKwh);
-            ok &= preferences.putFloat("bk", settings.buyK);
-            ok &= preferences.putFloat("bq", settings.buyQ);
-            ok &= preferences.putFloat("sk", settings.sellK);
-            ok &= preferences.putFloat("sq", settings.sellQ);
-            ok &= preferences.putInt("mn", settings.minSocPercent);
-            ok &= preferences.putInt("mx", settings.maxSocPercent);
-            ok &= preferences.putFloat("cap", settings.batteryCapacityKwh);
-            ok &= preferences.putFloat("mcp", settings.maxChargePowerKw);
-            ok &= preferences.putFloat("mdp", settings.maxDischargePowerKw);
+            preferences.putBool("en", settings.enabled);
+            preferences.putFloat("bc", settings.batteryCostPerKwh);
+            preferences.putFloat("bk", settings.buyK);
+            preferences.putFloat("bq", settings.buyQ);
+            preferences.putFloat("sk", settings.sellK);
+            preferences.putFloat("sq", settings.sellQ);
+            preferences.putInt("mn", settings.minSocPercent);
+            preferences.putInt("mx", settings.maxSocPercent);
+            preferences.putFloat("cap", settings.batteryCapacityKwh);
+            preferences.putFloat("mcp", settings.maxChargePowerKw);
+            preferences.putFloat("mdp", settings.maxDischargePowerKw);
             preferences.end();
-            
-            if (ok) {
-                LOGD("Intelligence settings saved");
-            } else {
-                LOGE("Failed to save some intelligence settings");
-            }
-        } else {
-            LOGE("Failed to open preferences for writing");
+            // Nelogovat - jsme v kritické sekci
         }
     }
     

@@ -418,14 +418,12 @@ public:
      */
     void saveToPreferences() {
         if (!SPIFFS.begin(true)) {
-            LOGE("Failed to mount SPIFFS for saving production");
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         File file = SPIFFS.open(STORAGE_FILE, "w");
         if (!file) {
-            LOGE("Failed to open production file for writing");
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         // Header: magic + version + installedPowerWp + reserved
@@ -454,7 +452,7 @@ public:
         file.write(dataReserved, sizeof(dataReserved));
         
         file.close();
-        LOGD("Production history saved to SPIFFS");
+        // Nelogovat - jsme v kritické sekci
     }
     
     /**
@@ -462,12 +460,10 @@ public:
      */
     void loadFromPreferences() {
         if (!SPIFFS.begin(true)) {
-            LOGE("Failed to mount SPIFFS for loading production");
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         if (!SPIFFS.exists(STORAGE_FILE)) {
-            LOGD("No production history file, using defaults");
             for (int q = 0; q < QUARTERS_PER_DAY; q++) {
                 production[q] = getDefaultProduction(q);
             }
@@ -476,8 +472,7 @@ public:
         
         File file = SPIFFS.open(STORAGE_FILE, "r");
         if (!file) {
-            LOGE("Failed to open production file for reading");
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         // Kontrola magic a verze
@@ -487,9 +482,8 @@ public:
         file.read(&version, sizeof(version));
         
         if (magic != 0x50524F44 || version != 1) {
-            LOGW("Invalid production file format (magic=0x%08X, ver=%d)", magic, version);
             file.close();
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         file.read((uint8_t*)&installedPowerWp, sizeof(installedPowerWp));
@@ -516,7 +510,7 @@ public:
         // Přeskočit data reserved (nemusíme číst, jsme na konci)
         
         file.close();
-        LOGD("Production history loaded from SPIFFS, instPwr=%d", installedPowerWp);
+        // Nelogovat - jsme v kritické sekci
     }
     
     /**

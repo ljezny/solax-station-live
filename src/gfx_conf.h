@@ -2,7 +2,8 @@
 
 #include <LovyanGFX.hpp>
 #include <lgfx/v1/platforms/esp32s3/Panel_RGB.hpp>
-#include <lgfx/v1/platforms/esp32s3/Bus_RGB.hpp>
+// Použij patchnutou verzi Bus_RGB s VSYNC callbackem
+#include "lgfx_patch/Bus_RGB.hpp"
 #include <driver/i2c.h>
 
 /*******************************************************************************
@@ -17,7 +18,8 @@
 class LGFX : public lgfx::LGFX_Device
 {
 public:
-    lgfx::Bus_RGB _bus_instance;
+    // Použít patchnutou verzi Bus_RGB s VSYNC callbackem
+    lgfx::Bus_RGB_Patched _bus_instance;
     lgfx::Panel_RGB _panel_instance;
     lgfx::Light_PWM _light_instance;
     LGFX(void)

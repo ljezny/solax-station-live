@@ -290,14 +290,12 @@ public:
         
         FlashGuard guard("ChartData:save");
         if (!guard.isLocked()) {
-            LOGE("Failed to lock NVS mutex for saving solar chart data");
-            return;
+            return;  // Nelogovat - můžeme být volaní z jiné kritické sekce
         }
         
         Preferences preferences;
         if (!preferences.begin(NAMESPACE, false)) {
-            LOGE("Failed to open NVS for SolarChartData");
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         // Uložíme den v roce pro kontrolu při načítání
@@ -330,7 +328,7 @@ public:
         preferences.putBytes("has", hasData, sizeof(hasData));
         
         preferences.end();
-        LOGD("SolarChartData saved for quarter %d", currentQuarter);
+        // Nelogovat - jsme v kritické sekci
     }
     
     /**
@@ -340,14 +338,12 @@ public:
     void loadFromPreferences() {
         FlashGuard guard("ChartData:load");
         if (!guard.isLocked()) {
-            LOGE("Failed to lock NVS mutex for loading solar chart data");
-            return;
+            return;  // Nelogovat - můžeme být volaní z jiné kritické sekce
         }
         
         Preferences preferences;
         if (!preferences.begin(NAMESPACE, true)) {
-            LOGD("No SolarChartData in NVS");
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         // Kontrola zda je to stejný den
@@ -355,9 +351,8 @@ public:
         int currentDay = getCurrentDayOfYear();
         
         if (savedDay != currentDay) {
-            LOGD("SolarChartData from different day (saved: %d, current: %d), ignoring", savedDay, currentDay);
             preferences.end();
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         // Načtení dat
@@ -374,8 +369,7 @@ public:
         preferences.end();
         
         if (pvLen == 0 || loadLen == 0 || socLen == 0 || hasLen == 0) {
-            LOGD("SolarChartData incomplete in NVS");
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         // Obnovení dat
@@ -392,7 +386,7 @@ public:
         }
         
         lastRecordedDay = currentDay;
-        LOGI("SolarChartData restored: %d quarters for day %d", restoredCount, currentDay);
+        // Nelogovat - jsme v kritické sekci
     }
 };
 

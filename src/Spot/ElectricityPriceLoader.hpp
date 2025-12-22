@@ -275,8 +275,7 @@ public:
     {
         FlashGuard guard("SpotProvider:get");
         if (!guard.isLocked()) {
-            LOGE("Failed to lock NVS mutex for reading provider");
-            return NONE;
+            return NONE;  // Nelogovat - jsme v kritické sekci
         }
         
         Preferences preferences;
@@ -290,8 +289,7 @@ public:
     {
         FlashGuard guard("SpotProvider:set");
         if (!guard.isLocked()) {
-            LOGE("Failed to lock NVS mutex for storing provider");
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         Preferences preferences;
@@ -304,8 +302,7 @@ public:
     {
         FlashGuard guard("TimeZone:get");
         if (!guard.isLocked()) {
-            LOGE("Failed to lock NVS mutex for reading timezone");
-            return "CET-1CEST,M3.5.0/2,M10.5.0/3";
+            return "CET-1CEST,M3.5.0/2,M10.5.0/3";  // Nelogovat - jsme v kritické sekci
         }
         
         Preferences preferences;
@@ -319,8 +316,7 @@ public:
     {
         FlashGuard guard("TimeZone:set");
         if (!guard.isLocked()) {
-            LOGE("Failed to lock NVS mutex for storing timezone");
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         Preferences preferences;

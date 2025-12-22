@@ -231,8 +231,7 @@ public:
     {
         FlashGuard guard("WiFi:loadSSID");
         if (!guard.isLocked()) {
-            LOGE("Failed to lock NVS mutex for loading last connected SSID");
-            return "";
+            return "";  // Nelogovat - jsme v kritické sekci
         }
         
         Preferences preferences;
@@ -251,8 +250,7 @@ public:
         
         FlashGuard guard("WiFi:storeSSID");
         if (!guard.isLocked()) {
-            LOGE("Failed to lock NVS mutex for storing SSID");
-            return;
+            return;  // Nelogovat - jsme v kritické sekci
         }
         
         Preferences preferences;
@@ -261,7 +259,7 @@ public:
         if (storedssid != ssid)
         {
             preferences.putString("ssid", ssid);
-            LOGD("Stored last connected SSID: %s", ssid.c_str());
+            // Nelogovat - jsme v kritické sekci
         }
         preferences.end();
         

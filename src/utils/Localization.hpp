@@ -194,6 +194,7 @@ public:
             }
         }
         initialized = true;
+        // Log až po uvolnění FlashGuard (destruktor guard již provedl)
         LOGD("Localization initialized, language: %d", currentLanguage);
     }
     
@@ -212,14 +213,17 @@ public:
         if (lang >= LANG_COUNT) return;
         currentLanguage = lang;
         
-        FlashGuard guard;
-        if (guard.isLocked()) {
-            Preferences prefs;
-            if (prefs.begin("locale", false)) {
-                prefs.putInt("lang", (int)lang);
-                prefs.end();
+        {
+            FlashGuard guard;
+            if (guard.isLocked()) {
+                Preferences prefs;
+                if (prefs.begin("locale", false)) {
+                    prefs.putInt("lang", (int)lang);
+                    prefs.end();
+                }
             }
         }
+        // Log až po uvolnění FlashGuard
         LOGD("Language set to: %d", lang);
     }
     
