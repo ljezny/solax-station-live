@@ -36,6 +36,7 @@
 #include "utils/WebServer.hpp"
 #include "utils/FlashMutex.hpp"
 #include <RemoteLogger.hpp>
+#include <LittleFS.h>
 
 #define UI_REFRESH_INTERVAL 5000            // Define the UI refresh interval in milliseconds
 #define INVERTER_DATA_REFRESH_INTERVAL 5000 // Seems that 3s is problematic for some dongles (GoodWe), so we use 5s
@@ -442,8 +443,8 @@ void setupLVGL()
         lastIntelligenceAttempt = 0; });
 
     // NOTE: loadFromPreferences() for predictors is called later in STATE_SPLASH
-    // after splash screen is displayed, because SPIFFS.begin() with formatOnFail=true
-    // can take up to a minute if storage needs formatting (after factory reset)
+    // after splash screen is displayed, because LittleFS.begin() with formatOnFail=true
+    // can take time if storage needs formatting (after factory reset)
 
     // NOTE: solarChartDataProvider.loadFromPreferences() is called after syncTime()
     // because it needs correct day-of-year to match saved data
@@ -657,13 +658,10 @@ bool loadInverterDataTask()
                 if (consumptionQuarterChanged || productionQuarterChanged)
                 {
                     LOGD("Quarter changed, saving predictors to flash");
-                    FlashGuard guard("Predictors:save");
-                    if (guard.isLocked())
-                    {
-                        consumptionPredictor.saveToPreferences();
-                        productionPredictor.saveToPreferences();
-                        solarChartDataProvider.saveToPreferences();
-                    }
+                    // Každá operace má vlastní zámek - kratší držení = menší šance na kolizi s VSYNC
+                    { FlashGuard g("save:cons"); consumptionPredictor.saveToPreferences(); }
+                    { FlashGuard g("save:prod"); productionPredictor.saveToPreferences(); }
+                    { FlashGuard g("save:chart"); solarChartDataProvider.saveToPreferences(); }
                 }
 
                 // Sync system time from inverter RTC if NTP failed
@@ -1373,7 +1371,7 @@ void syncTimeFromInverter(const InverterData_t &data)
     // Load chart data now that we have valid time (if not already loaded)
     if (!chartDataLoaded)
     {
-        solarChartDataProvider.loadFromPreferences();
+        { FlashGuard g("load:chart"); solarChartDataProvider.loadFromPreferences(); }
         chartDataLoaded = true;
     }
 }
@@ -1396,8 +1394,8 @@ void onEntering(state_t newState)
         splashUI->show();
         xSemaphoreGive(lvgl_mutex);
         
-        // Initialize SPIFFS and load predictors here (after splash is visible)
-        // This is done here because SPIFFS.begin(true) can take up to a minute
+        // Initialize LittleFS and load predictors here (after splash is visible)
+        // This is done here because LittleFS.begin(true) can take time
         // to format the storage after factory reset
         {
             static bool predictorsLoaded = false;
@@ -1410,17 +1408,17 @@ void onEntering(state_t newState)
                 // Odkomentovat pro test VSYNC synchronizace
                 // #define TEST_FLASH_FORMAT 1
                 #if defined(TEST_FLASH_FORMAT) && TEST_FLASH_FORMAT
-                LOGW("TEST: Starting SPIFFS format to simulate flash contention...");
-                if (SPIFFS.begin(false)) {
-                    SPIFFS.end();
+                LOGW("TEST: Starting LittleFS format to simulate flash contention...");
+                if (LittleFS.begin(false)) {
+                    LittleFS.end();
                 }
-                SPIFFS.format();  // Toto zabere cca 10-30 sekund a intenzivně používá flash
-                LOGW("TEST: SPIFFS format complete");
+                LittleFS.format();  // Toto zabere cca 10-30 sekund a intenzivně používá flash
+                LOGW("TEST: LittleFS format complete");
                 #endif
                 
-                LOGD("Initializing SPIFFS and loading predictors...");
-                consumptionPredictor.loadFromPreferences();
-                productionPredictor.loadFromPreferences();
+                LOGD("Initializing LittleFS and loading predictors...");
+                { FlashGuard g("load:cons"); consumptionPredictor.loadFromPreferences(); }
+                { FlashGuard g("load:prod"); productionPredictor.loadFromPreferences(); }
                 predictorsLoaded = true;
                 LOGD("Predictors loaded successfully");
             }
@@ -1537,7 +1535,7 @@ void updateState()
                 // Only load if NTP succeeded (valid time available)
                 if (ntpTimeSynced && !chartDataLoaded)
                 {
-                    solarChartDataProvider.loadFromPreferences();
+                    { FlashGuard g("load:chart"); solarChartDataProvider.loadFromPreferences(); }
                     chartDataLoaded = true;
                 }
 

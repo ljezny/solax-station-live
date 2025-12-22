@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #include <esp_heap_caps.h>
 #include <cmath>  // Pro exp()
 #include "../Spot/ElectricityPriceResult.hpp"  // Pro QUARTERS_OF_DAY
@@ -18,14 +18,19 @@
  * a upravuje budoucí predikce podle aktuálního vzoru spotřeby.
  * 
  * Velká pole jsou alokována v PSRAM pro úsporu interní RAM.
+ * 
+ * Data jsou ukládána do LittleFS jako jednotlivé soubory pro každý den.
+ * Ukládají se pouze změněné dny (dirty flag).
  */
 
 #define DAYS_PER_WEEK 7
 #define WEEKS_HISTORY 2   // Počet týdnů historie
+#define TOTAL_DAYS (WEEKS_HISTORY * DAYS_PER_WEEK)  // 14 dnů
 
 class ConsumptionPredictor {
 private:
-    static constexpr const char* STORAGE_FILE = "/consumption.bin";
+    static constexpr const char* STORAGE_DIR = "/cons";
+    static constexpr const char* HEADER_FILE = "/cons/header.bin";
     
     // Spotřeba [Wh] pro každou čtvrthodinu, pro každý den v týdnu, pro poslední 2 týdny
     // consumption[týden][den][čtvrthodina] kde den 0=neděle, 1=pondělí, ...
@@ -35,6 +40,10 @@ private:
     
     // Zda máme platná data pro daný slot - alokováno v PSRAM
     bool* hasData;  // [WEEKS_HISTORY * DAYS_PER_WEEK * QUARTERS_OF_DAY]
+    
+    // Dirty flag pro každý den (week * DAYS_PER_WEEK + day)
+    bool dirtyDay[TOTAL_DAYS];  // true = den má neuložené změny
+    bool filesystemMounted;  // Cache pro mount stav
     
     // Akumulátor pro aktuální čtvrthodinu
     float currentQuarterAccumulator;
@@ -118,6 +127,12 @@ public:
         lastRecordedQuarter = -1;
         lastRecordedDay = -1;
         lastRecordedWeek = -1;
+        
+        // Inicializace dirty flagů
+        for (int i = 0; i < TOTAL_DAYS; i++) {
+            dirtyDay[i] = false;
+        }
+        filesystemMounted = false;
         
         // Inicializace adaptivní korekce
         cumulativeError = 0;
@@ -237,6 +252,25 @@ public:
     }
     
     /**
+     * Označí den jako dirty (ke změně došlo)
+     */
+    void markDayDirty(int week, int day) {
+        int idx = week * DAYS_PER_WEEK + day;
+        if (idx >= 0 && idx < TOTAL_DAYS) {
+            dirtyDay[idx] = true;
+        }
+    }
+    
+    /**
+     * Vrátí název souboru pro daný den
+     */
+    String getDayFilePath(int week, int day) const {
+        char path[32];
+        snprintf(path, sizeof(path), "/cons/w%d_d%d.bin", week, day);
+        return String(path);
+    }
+    
+    /**
      * Aktualizuje spotřebu pro danou čtvrthodinu aktuálního týdne
      * a propaguje hodnotu i na ostatní dny (pro opakující se vzorce)
      */
@@ -251,6 +285,7 @@ public:
         // === PRIMÁRNÍ AKTUALIZACE (aktuální den) ===
         consumptionAt(0, day, quarter) = consumptionWh;
         hasDataAt(0, day, quarter) = true;
+        markDayDirty(0, day);  // Označit den jako dirty
         
         // === CROSS-DAY PROPAGACE ===
         // Propagujeme hodnotu na ostatní dny s menší vahou
@@ -339,6 +374,7 @@ public:
             float oldValue = consumptionAt(1, day, quarter);
             float newValue = LAST_WEEK_ALPHA * consumptionWh + (1.0f - LAST_WEEK_ALPHA) * oldValue;
             consumptionAt(1, day, quarter) = newValue;
+            markDayDirty(1, day);  // Označit minulý týden jako dirty
             
             LOGD("Last week propagation: week 0 -> week 1, day %d, q%d: %.1f -> %.1f Wh",
                   day, quarter, oldValue, newValue);
@@ -346,6 +382,7 @@ public:
             // Pokud data pro minulý týden neexistují, vytvoříme je
             consumptionAt(1, day, quarter) = consumptionWh;
             hasDataAt(1, day, quarter) = true;
+            markDayDirty(1, day);  // Označit minulý týden jako dirty
             
             LOGD("Last week created: day %d, q%d: %.1f Wh", day, quarter, consumptionWh);
         }
@@ -583,123 +620,204 @@ public:
         currentQuarterAccumulator = 0;
         currentQuarterSampleCount = 0;
         
-        // Smazání ze SPIFFS
-        if (SPIFFS.begin(true)) {
-            SPIFFS.remove(STORAGE_FILE);
-            LOGD("Consumption prediction SPIFFS data cleared");
+        // Reset dirty flags
+        for (int i = 0; i < TOTAL_DAYS; i++) {
+            dirtyDay[i] = false;
+        }
+        
+        // Smazání z LittleFS - všechny soubory v adresáři
+        if (ensureFilesystemMounted()) {
+            for (int week = 0; week < WEEKS_HISTORY; week++) {
+                for (int day = 0; day < DAYS_PER_WEEK; day++) {
+                    String path = getDayFilePath(week, day);
+                    LittleFS.remove(path);
+                }
+            }
+            LittleFS.remove(HEADER_FILE);
+            LOGD("Consumption prediction LittleFS data cleared");
         }
     }
     
     /**
-     * Uloží historii do SPIFFS
+     * Zajistí, že LittleFS je připojen
+     */
+    bool ensureFilesystemMounted() {
+        if (filesystemMounted) {
+            return true;
+        }
+        if (LittleFS.begin(true)) {
+            filesystemMounted = true;
+            // Vytvoření adresáře pokud neexistuje
+            if (!LittleFS.exists(STORAGE_DIR)) {
+                LittleFS.mkdir(STORAGE_DIR);
+            }
+            return true;
+        }
+        return false;
+    }
+    
+    /**
+     * Uloží jeden den do LittleFS
+     * Formát: magic(4) + compressedData(192) + hasDataBits(12) = 208 bytes
+     */
+    bool saveDayToFile(int week, int day) {
+        String path = getDayFilePath(week, day);
+        File file = LittleFS.open(path, "w");
+        if (!file) {
+            return false;
+        }
+        
+        // Magic pro kontrolu integrity
+        uint32_t magic = 0x44415900 + (week << 4) + day;  // DAY + week + day
+        file.write((uint8_t*)&magic, sizeof(magic));
+        
+        // Komprimovaná data
+        uint16_t compressedData[QUARTERS_OF_DAY];
+        for (int q = 0; q < QUARTERS_OF_DAY; q++) {
+            float val = consumptionAt(week, day, q);
+            compressedData[q] = (uint16_t)constrain(val, 0.0f, 65535.0f);
+        }
+        file.write((uint8_t*)compressedData, sizeof(compressedData));
+        
+        // hasData jako bitfield
+        uint8_t hasDataBits[12];
+        memset(hasDataBits, 0, sizeof(hasDataBits));
+        for (int q = 0; q < QUARTERS_OF_DAY; q++) {
+            if (hasDataAt(week, day, q)) {
+                hasDataBits[q / 8] |= (1 << (q % 8));
+            }
+        }
+        file.write(hasDataBits, sizeof(hasDataBits));
+        
+        file.close();
+        return true;
+    }
+    
+    /**
+     * Načte jeden den z LittleFS
+     */
+    bool loadDayFromFile(int week, int day) {
+        String path = getDayFilePath(week, day);
+        if (!LittleFS.exists(path)) {
+            return false;
+        }
+        
+        File file = LittleFS.open(path, "r");
+        if (!file) {
+            return false;
+        }
+        
+        // Kontrola magic
+        uint32_t magic;
+        file.read((uint8_t*)&magic, sizeof(magic));
+        uint32_t expectedMagic = 0x44415900 + (week << 4) + day;
+        if (magic != expectedMagic) {
+            file.close();
+            return false;
+        }
+        
+        // Načtení compressedData
+        uint16_t compressedData[QUARTERS_OF_DAY];
+        if (file.read((uint8_t*)compressedData, sizeof(compressedData)) != sizeof(compressedData)) {
+            file.close();
+            return false;
+        }
+        for (int q = 0; q < QUARTERS_OF_DAY; q++) {
+            consumptionAt(week, day, q) = (float)compressedData[q];
+        }
+        
+        // Načtení hasDataBits
+        uint8_t hasDataBits[12];
+        if (file.read(hasDataBits, sizeof(hasDataBits)) != sizeof(hasDataBits)) {
+            file.close();
+            return false;
+        }
+        for (int q = 0; q < QUARTERS_OF_DAY; q++) {
+            hasDataAt(week, day, q) = (hasDataBits[q / 8] & (1 << (q % 8))) != 0;
+        }
+        
+        file.close();
+        return true;
+    }
+    
+    /**
+     * Uloží pouze změněné dny do LittleFS
      */
     void saveToPreferences() {
-        if (!SPIFFS.begin(true)) {
-            return;  // Nelogovat - jsme v kritické sekci
+        if (!ensureFilesystemMounted()) {
+            return;
         }
         
-        File file = SPIFFS.open(STORAGE_FILE, "w");
-        if (!file) {
-            return;  // Nelogovat - jsme v kritické sekci
-        }
-        
-        // Header: magic + version + lastRecordedWeek + reserved
-        uint32_t magic = 0x434F4E53;  // "CONS"
-        uint8_t version = 1;
-        uint8_t headerReserved[16] = {0};  // Reserved pro budoucí rozšíření headeru
-        file.write((uint8_t*)&magic, sizeof(magic));
-        file.write(&version, sizeof(version));
-        file.write((uint8_t*)&lastRecordedWeek, sizeof(lastRecordedWeek));
-        file.write(headerReserved, sizeof(headerReserved));
-        
-        // Komprimovaná data: uint16_t místo float (úspora 50%)
-        // hasData jako bitfield (12 bytes místo 96)
-        uint16_t compressedData[QUARTERS_OF_DAY];
-        uint8_t hasDataBits[12];  // 96 bitů = 12 bytes
-        uint8_t itemReserved[16] = {0};  // Reserved pro budoucí rozšíření každého dne
-        
+        int savedCount = 0;
         for (int week = 0; week < WEEKS_HISTORY; week++) {
             for (int day = 0; day < DAYS_PER_WEEK; day++) {
-                // Komprimace consumption na uint16_t
-                for (int q = 0; q < QUARTERS_OF_DAY; q++) {
-                    float val = consumptionAt(week, day, q);
-                    compressedData[q] = (uint16_t)constrain(val, 0.0f, 65535.0f);
-                }
-                
-                // Komprimace hasData na bitfield
-                memset(hasDataBits, 0, sizeof(hasDataBits));
-                for (int q = 0; q < QUARTERS_OF_DAY; q++) {
-                    if (hasDataAt(week, day, q)) {
-                        hasDataBits[q / 8] |= (1 << (q % 8));
+                int idx = week * DAYS_PER_WEEK + day;
+                if (dirtyDay[idx]) {
+                    if (saveDayToFile(week, day)) {
+                        dirtyDay[idx] = false;
+                        savedCount++;
                     }
                 }
-                
-                file.write((uint8_t*)compressedData, sizeof(compressedData));
-                file.write(hasDataBits, sizeof(hasDataBits));
-                file.write(itemReserved, sizeof(itemReserved));  // Reserved pro budoucí data
             }
         }
         
-        file.close();
-        // Nelogovat - jsme v kritické sekci
+        // Uložení header souboru pokud byly nějaké změny
+        if (savedCount > 0) {
+            File headerFile = LittleFS.open(HEADER_FILE, "w");
+            if (headerFile) {
+                uint32_t magic = 0x434F4E53;  // "CONS"
+                uint8_t version = 2;  // Verze 2 = per-day soubory
+                headerFile.write((uint8_t*)&magic, sizeof(magic));
+                headerFile.write(&version, sizeof(version));
+                headerFile.write((uint8_t*)&lastRecordedWeek, sizeof(lastRecordedWeek));
+                headerFile.close();
+            }
+            LOGD("Consumption saved %d days to LittleFS", savedCount);
+        }
     }
     
     /**
-     * Načte historii ze SPIFFS
+     * Načte všechny dny z LittleFS
      */
     void loadFromPreferences() {
-        if (!SPIFFS.begin(true)) {
-            return;  // Nelogovat - jsme v kritické sekci
+        if (!ensureFilesystemMounted()) {
+            return;
         }
         
-        if (!SPIFFS.exists(STORAGE_FILE)) {
-            return;  // Nelogovat - jsme v kritické sekci
-        }
-        
-        File file = SPIFFS.open(STORAGE_FILE, "r");
-        if (!file) {
-            return;  // Nelogovat - jsme v kritické sekci
-        }
-        
-        // Kontrola magic a verze
-        uint32_t magic;
-        uint8_t version;
-        uint8_t headerReserved[16];
-        file.read((uint8_t*)&magic, sizeof(magic));
-        file.read(&version, sizeof(version));
-        
-        if (magic != 0x434F4E53 || version != 1) {
-            file.close();
-            return;  // Nelogovat - jsme v kritické sekci
-        }
-        
-        file.read((uint8_t*)&lastRecordedWeek, sizeof(lastRecordedWeek));
-        file.read(headerReserved, sizeof(headerReserved));  // Přeskočit reserved
-        
-        uint16_t compressedData[QUARTERS_OF_DAY];
-        uint8_t hasDataBits[12];
-        uint8_t itemReserved[16];
-        
-        for (int week = 0; week < WEEKS_HISTORY; week++) {
-            for (int day = 0; day < DAYS_PER_WEEK; day++) {
-                if (file.read((uint8_t*)compressedData, sizeof(compressedData)) == sizeof(compressedData)) {
-                    for (int q = 0; q < QUARTERS_OF_DAY; q++) {
-                        consumptionAt(week, day, q) = (float)compressedData[q];
-                    }
-                }
+        // Načtení header souboru
+        if (LittleFS.exists(HEADER_FILE)) {
+            File headerFile = LittleFS.open(HEADER_FILE, "r");
+            if (headerFile) {
+                uint32_t magic;
+                uint8_t version;
+                headerFile.read((uint8_t*)&magic, sizeof(magic));
+                headerFile.read(&version, sizeof(version));
                 
-                if (file.read(hasDataBits, sizeof(hasDataBits)) == sizeof(hasDataBits)) {
-                    for (int q = 0; q < QUARTERS_OF_DAY; q++) {
-                        hasDataAt(week, day, q) = (hasDataBits[q / 8] & (1 << (q % 8))) != 0;
-                    }
+                if (magic == 0x434F4E53 && version == 2) {
+                    headerFile.read((uint8_t*)&lastRecordedWeek, sizeof(lastRecordedWeek));
                 }
-                
-                file.read(itemReserved, sizeof(itemReserved));  // Přeskočit reserved
+                headerFile.close();
             }
         }
         
-        file.close();
-        // Nelogovat - jsme v kritické sekci
+        // Načtení všech dnů
+        int loadedCount = 0;
+        for (int week = 0; week < WEEKS_HISTORY; week++) {
+            for (int day = 0; day < DAYS_PER_WEEK; day++) {
+                if (loadDayFromFile(week, day)) {
+                    loadedCount++;
+                }
+            }
+        }
+        
+        // Reset dirty flags - právě načteno, nic není změněno
+        for (int i = 0; i < TOTAL_DAYS; i++) {
+            dirtyDay[i] = false;
+        }
+        
+        if (loadedCount > 0) {
+            LOGD("Consumption loaded %d days from LittleFS", loadedCount);
+        }
     }
     
     /**

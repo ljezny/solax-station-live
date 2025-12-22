@@ -2,9 +2,8 @@
 
 #include <Arduino.h>
 #include <RemoteLogger.hpp>
-#include <Preferences.h>
+#include <LittleFS.h>
 #include <esp_heap_caps.h>
-#include "FlashMutex.hpp"
 #include "../Spot/ElectricityPriceResult.hpp"  // Pro QUARTERS_OF_DAY, QUARTERS_TWO_DAYS
 
 /**
@@ -36,7 +35,7 @@ typedef struct SolarChartDataItem
 class SolarChartDataProvider
 {
 private:
-    static const char* NAMESPACE;
+    static constexpr const char* STORAGE_FILE = "/chartdata.bin";
     
     // Data pro 2 dny - alokováno v PSRAM
     SolarChartDataItem_t* chartData;
@@ -48,7 +47,7 @@ private:
     int currentSampleCount = 0;
     int lastRecordedQuarter = -1;
     int lastRecordedDay = -1;
-    int lastSavedQuarter = -1;  // Pro ukládání jen po změně čtvrthodiny
+    bool dirty = false;  // true = data byla změněna od posledního uložení
     
     // Příznak dostupnosti zítřejších predikcí
     bool hasTomorrowPredictions = false;
@@ -146,6 +145,7 @@ public:
                 chartData[lastRecordedQuarter].soc = socAccumulator / currentSampleCount;
                 chartData[lastRecordedQuarter].samples = currentSampleCount;
                 chartData[lastRecordedQuarter].isPrediction = false;
+                dirty = true;  // Data byla změněna
             }
             
             // Reset akumulátorů
@@ -276,118 +276,130 @@ public:
     }
     
     /**
-     * Uloží intraday data do NVS (volat jen po změně čtvrthodiny)
+     * Uloží intraday data do LittleFS
      * Ukládá pouze reálná data pro dnešek (ne predikce)
+     * Zodpovědnost za volání (kdy ukládat) je na volajícím
      */
     void saveToPreferences() {
-        int currentQuarter = getCurrentQuarter();
-        
-        // Ukládáme jen když se změnila čtvrthodina
-        if (currentQuarter == lastSavedQuarter) {
+        // Ukládáme jen když jsou změny
+        if (!dirty) {
             return;
         }
-        lastSavedQuarter = currentQuarter;
         
-        FlashGuard guard("ChartData:save");
-        if (!guard.isLocked()) {
-            return;  // Nelogovat - můžeme být volaní z jiné kritické sekce
+        if (!LittleFS.begin(true)) {
+            return;
         }
         
-        Preferences preferences;
-        if (!preferences.begin(NAMESPACE, false)) {
-            return;  // Nelogovat - jsme v kritické sekci
+        File file = LittleFS.open(STORAGE_FILE, "w");
+        if (!file) {
+            return;
         }
         
-        // Uložíme den v roce pro kontrolu při načítání
-        preferences.putInt("day", getCurrentDayOfYear());
+        // Header: magic + version + day
+        uint32_t magic = 0x43485254;  // "CHRT"
+        uint8_t version = 1;
+        int16_t savedDay = (int16_t)getCurrentDayOfYear();
+        file.write((uint8_t*)&magic, sizeof(magic));
+        file.write(&version, sizeof(version));
+        file.write((uint8_t*)&savedDay, sizeof(savedDay));
         
         // Komprimovaná data: uint16_t pro Wh hodnoty, uint8_t pro SOC
         // Ukládáme jen reálná data (ne predikce) pro dnešek
         uint16_t pvData[CHART_QUARTERS_PER_DAY];
         uint16_t loadData[CHART_QUARTERS_PER_DAY];
         uint8_t socData[CHART_QUARTERS_PER_DAY];
-        uint8_t hasData[CHART_QUARTERS_PER_DAY];  // Bitová mapa - má slot data?
+        uint8_t hasData[12];  // Bitfield - 96 bits = 12 bytes
         
+        memset(hasData, 0, sizeof(hasData));
         for (int i = 0; i < CHART_QUARTERS_PER_DAY; i++) {
             if (chartData[i].samples > 0 && !chartData[i].isPrediction) {
                 pvData[i] = (uint16_t)constrain(chartData[i].pvPowerWh, 0.0f, 65535.0f);
                 loadData[i] = (uint16_t)constrain(chartData[i].loadPowerWh, 0.0f, 65535.0f);
                 socData[i] = (uint8_t)constrain(chartData[i].soc, 0, 100);
-                hasData[i] = 1;
+                hasData[i / 8] |= (1 << (i % 8));
             } else {
                 pvData[i] = 0;
                 loadData[i] = 0;
                 socData[i] = 0;
-                hasData[i] = 0;
             }
         }
         
-        preferences.putBytes("pv", pvData, sizeof(pvData));
-        preferences.putBytes("load", loadData, sizeof(loadData));
-        preferences.putBytes("soc", socData, sizeof(socData));
-        preferences.putBytes("has", hasData, sizeof(hasData));
+        file.write((uint8_t*)pvData, sizeof(pvData));
+        file.write((uint8_t*)loadData, sizeof(loadData));
+        file.write(socData, sizeof(socData));
+        file.write(hasData, sizeof(hasData));
         
-        preferences.end();
-        // Nelogovat - jsme v kritické sekci
+        file.close();
+        dirty = false;
+        LOGD("Chart data saved to LittleFS");
     }
     
     /**
-     * Načte intraday data z NVS (volat při startu)
+     * Načte intraday data z LittleFS (volat při startu)
      * Načte pouze pokud je to stejný den
      */
     void loadFromPreferences() {
-        FlashGuard guard("ChartData:load");
-        if (!guard.isLocked()) {
-            return;  // Nelogovat - můžeme být volaní z jiné kritické sekce
+        if (!LittleFS.begin(true)) {
+            return;
         }
         
-        Preferences preferences;
-        if (!preferences.begin(NAMESPACE, true)) {
-            return;  // Nelogovat - jsme v kritické sekci
+        if (!LittleFS.exists(STORAGE_FILE)) {
+            return;
+        }
+        
+        File file = LittleFS.open(STORAGE_FILE, "r");
+        if (!file) {
+            return;
+        }
+        
+        // Kontrola magic a verze
+        uint32_t magic;
+        uint8_t version;
+        int16_t savedDay;
+        file.read((uint8_t*)&magic, sizeof(magic));
+        file.read(&version, sizeof(version));
+        file.read((uint8_t*)&savedDay, sizeof(savedDay));
+        
+        if (magic != 0x43485254 || version != 1) {
+            file.close();
+            return;
         }
         
         // Kontrola zda je to stejný den
-        int savedDay = preferences.getInt("day", -1);
         int currentDay = getCurrentDayOfYear();
-        
         if (savedDay != currentDay) {
-            preferences.end();
-            return;  // Nelogovat - jsme v kritické sekci
+            file.close();
+            return;
         }
         
         // Načtení dat
         uint16_t pvData[CHART_QUARTERS_PER_DAY];
         uint16_t loadData[CHART_QUARTERS_PER_DAY];
         uint8_t socData[CHART_QUARTERS_PER_DAY];
-        uint8_t hasData[CHART_QUARTERS_PER_DAY];
+        uint8_t hasData[12];
         
-        size_t pvLen = preferences.getBytes("pv", pvData, sizeof(pvData));
-        size_t loadLen = preferences.getBytes("load", loadData, sizeof(loadData));
-        size_t socLen = preferences.getBytes("soc", socData, sizeof(socData));
-        size_t hasLen = preferences.getBytes("has", hasData, sizeof(hasData));
+        file.read((uint8_t*)pvData, sizeof(pvData));
+        file.read((uint8_t*)loadData, sizeof(loadData));
+        file.read(socData, sizeof(socData));
+        file.read(hasData, sizeof(hasData));
         
-        preferences.end();
-        
-        if (pvLen == 0 || loadLen == 0 || socLen == 0 || hasLen == 0) {
-            return;  // Nelogovat - jsme v kritické sekci
-        }
+        file.close();
         
         // Obnovení dat
         int restoredCount = 0;
         for (int i = 0; i < CHART_QUARTERS_PER_DAY; i++) {
-            if (hasData[i]) {
+            if (hasData[i / 8] & (1 << (i % 8))) {
                 chartData[i].pvPowerWh = (float)pvData[i];
                 chartData[i].loadPowerWh = (float)loadData[i];
                 chartData[i].soc = socData[i];
-                chartData[i].samples = 1;  // Označíme jako platná data
+                chartData[i].samples = 1;
                 chartData[i].isPrediction = false;
                 restoredCount++;
             }
         }
         
         lastRecordedDay = currentDay;
-        // Nelogovat - jsme v kritické sekci
+        dirty = false;
+        LOGD("Chart data loaded from LittleFS, %d quarters restored", restoredCount);
     }
 };
-
-const char* SolarChartDataProvider::NAMESPACE = "chartdata";

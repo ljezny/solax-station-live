@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #include <cmath>
 #include <RemoteLogger.hpp>
 
@@ -43,6 +43,9 @@ private:
     
     // Instalovaný výkon FVE pro škálování výchozích hodnot
     int installedPowerWp;
+    
+    // Dirty flag - data byla změněna od posledního uložení
+    bool dirty;
     
     // === ADAPTIVNÍ KOREKCE ===
     // Kumulativní chyba pro korekci budoucích predikcí (aktuální den)
@@ -130,6 +133,9 @@ public:
         cumulativeError = 0;
         lastCorrectionQuarter = -1;
         
+        // Dirty flag - žádné změny po inicializaci
+        dirty = false;
+        
         LOGD("ProductionPredictor initialized with %d Wp, using %d bytes", 
               installedPowerWp, sizeof(production) + sizeof(sampleCount));
     }
@@ -203,6 +209,7 @@ public:
         }
         
         sampleCount[quarter]++;
+        dirty = true;  // Označit jako změněno
         
         LOGD("Updated production for quarter %d: %.1f Wh (samples: %d, correction: %.1f)", 
               quarter, production[quarter], sampleCount[quarter], cumulativeError);
@@ -405,23 +412,28 @@ public:
         lastRecordedQuarter = -1;
         currentQuarterAccumulator = 0;
         currentQuarterSampleCount = 0;
+        dirty = false;  // Reset dirty flag
         
-        // Smazání ze SPIFFS
-        if (SPIFFS.begin(true)) {
-            SPIFFS.remove(STORAGE_FILE);
-            LOGD("Production prediction SPIFFS data cleared");
+        // Smazání z LittleFS
+        if (LittleFS.begin(true)) {
+            LittleFS.remove(STORAGE_FILE);
+            LOGD("Production prediction LittleFS data cleared");
         }
     }
     
     /**
-     * Uloží historii do SPIFFS
+     * Uloží historii do LittleFS (pouze pokud jsou změny)
      */
     void saveToPreferences() {
-        if (!SPIFFS.begin(true)) {
+        if (!dirty) {
+            return;  // Žádné změny - nic neukládat
+        }
+        
+        if (!LittleFS.begin(true)) {
             return;  // Nelogovat - jsme v kritické sekci
         }
         
-        File file = SPIFFS.open(STORAGE_FILE, "w");
+        File file = LittleFS.open(STORAGE_FILE, "w");
         if (!file) {
             return;  // Nelogovat - jsme v kritické sekci
         }
@@ -452,25 +464,26 @@ public:
         file.write(dataReserved, sizeof(dataReserved));
         
         file.close();
-        // Nelogovat - jsme v kritické sekci
+        dirty = false;  // Data uložena
+        LOGD("Production data saved to LittleFS");
     }
     
     /**
-     * Načte historii ze SPIFFS
+     * Načte historii z LittleFS
      */
     void loadFromPreferences() {
-        if (!SPIFFS.begin(true)) {
+        if (!LittleFS.begin(true)) {
             return;  // Nelogovat - jsme v kritické sekci
         }
         
-        if (!SPIFFS.exists(STORAGE_FILE)) {
+        if (!LittleFS.exists(STORAGE_FILE)) {
             for (int q = 0; q < QUARTERS_PER_DAY; q++) {
                 production[q] = getDefaultProduction(q);
             }
             return;
         }
         
-        File file = SPIFFS.open(STORAGE_FILE, "r");
+        File file = LittleFS.open(STORAGE_FILE, "r");
         if (!file) {
             return;  // Nelogovat - jsme v kritické sekci
         }
@@ -510,7 +523,8 @@ public:
         // Přeskočit data reserved (nemusíme číst, jsme na konci)
         
         file.close();
-        // Nelogovat - jsme v kritické sekci
+        dirty = false;  // Právě načteno - nic není změněno
+        LOGD("Production data loaded from LittleFS");
     }
     
     /**
