@@ -5,3 +5,4 @@ managed_components/
 dependencies.lock
 SquareLine/autosave/
 SquareLine/backup/node_modules/
+.DS_Store
