@@ -18,8 +18,8 @@ typedef struct ElectricityPriceItem
     PriceLevel_t priceLevel;
 } ElectricityPriceItem_t;
 
-#define CURRENCY_LENGTH 4
-#define ENERGY_UNIT_LENGTH 4
+#define CURRENCY_LENGTH 12
+#define ENERGY_UNIT_LENGTH 8
 
 // Základní struktura pro jeden den (96 čtvrthodin) - používá se v API providerech
 typedef struct ElectricityPriceResult

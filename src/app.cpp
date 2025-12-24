@@ -1440,21 +1440,21 @@ void onEntering(state_t newState)
         // Split into smaller mutex locks to avoid blocking LVGL timer
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         dashboardUI->setIntelligenceSupported(supportsIntelligenceForCurrentInverter(wifiDiscoveryResult));
-        dashboardUI->show();
-        xSemaphoreGive(lvgl_mutex);
-
+        
+        // Nejdřív update s daty, pak show - aby se dashboard zobrazil již s reálnými daty
         if (inverterData.status == DONGLE_STATUS_OK && electricityPriceResult && previousElectricityPriceResult)
         {
-            xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
             dashboardUI->update(inverterData, inverterData, uiMedianPowerSampler, shellyResult, shellyResult, wallboxData, wallboxData, solarChartDataProvider, *electricityPriceResult, *previousElectricityPriceResult, wifiSignalPercent());
-            xSemaphoreGive(lvgl_mutex);
-
+            
             previousShellyResult = shellyResult;
             previousInverterData = inverterData;
             previousWallboxData = wallboxData;
             *previousElectricityPriceResult = *electricityPriceResult;
             previousInverterData.millis = 0;
         }
+        
+        dashboardUI->show();
+        xSemaphoreGive(lvgl_mutex);
 
         softAP.start();
  
@@ -1553,6 +1553,18 @@ void updateState()
 
                 if (inverterData.status == DONGLE_STATUS_OK)
                 {
+                    // Načteme spotové ceny před zobrazením dashboardu
+                    xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+                    splashUI->updateText(TR(STR_LOADING_PRICES));
+                    xSemaphoreGive(lvgl_mutex);
+                    
+                    ElectricityPriceLoader priceLoader;
+                    ElectricityPriceProvider_t provider = priceLoader.getStoredElectricityPriceProvider();
+                    if (provider != BZN_NONE && electricityPriceResult)
+                    {
+                        priceLoader.loadTodayPrices(provider, electricityPriceResult);
+                    }
+                    
                     moveToState(STATE_DASHBOARD);
                 }
                 else

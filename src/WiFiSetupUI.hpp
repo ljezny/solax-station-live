@@ -107,7 +107,7 @@ public:
 
         ElectricityPriceLoader priceLoader;
         String spotProviders = "";
-        for (int i = NONE; i < NORDPOOL_PL; i++)
+        for (int i = BZN_NONE; i < BZN_COUNT; i++)
         {
             spotProviders += priceLoader.getProviderCaption((ElectricityPriceProvider_t)i) + "\n";
         }
