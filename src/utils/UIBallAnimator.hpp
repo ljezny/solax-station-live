@@ -32,7 +32,7 @@ public:
             int opa = 255;             // - i * (128 / ballsCount);
             lv_obj_set_width(items[i].ball, radius);
             lv_obj_set_height(items[i].ball, radius);
-            lv_obj_clear_flag(items[i].ball, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE); /// Flags
+            lv_obj_remove_flag(items[i].ball, (lv_obj_flag_t)(LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE)); /// Flags
             lv_obj_set_style_radius(items[i].ball, radius / 2, LV_STYLE_SELECTOR_DEFAULT);
             ui_object_set_themeable_style_property(items[i].ball, LV_STYLE_SELECTOR_DEFAULT, LV_STYLE_BG_COLOR, color);
             // Shadows disabled for performance - they are very CPU intensive
@@ -70,12 +70,12 @@ public:
     {
         for (int i = 0; i < MAX_BALLS_COUNT; i++)
         {
-            lv_anim_del(&items[i].posXAnimation, (lv_anim_exec_xcb_t)lv_obj_set_x);
-            lv_anim_del(&items[i].posYAnimation, (lv_anim_exec_xcb_t)lv_obj_set_y);
-            lv_obj_del(items[i].ball);
+            lv_anim_delete(&items[i].posXAnimation, (lv_anim_exec_xcb_t)lv_obj_set_x);
+            lv_anim_delete(&items[i].posYAnimation, (lv_anim_exec_xcb_t)lv_obj_set_y);
+            lv_obj_delete(items[i].ball);
         }
-        lv_obj_del(vLine);
-        lv_obj_del(hLine);
+        lv_obj_delete(vLine);
+        lv_obj_delete(hLine);
     }
 
     void run(lv_obj_t *start, lv_obj_t *destination, int duration, int delay, bool direction, int ballsCount, int xOffset = 0, int yOffset = 0)

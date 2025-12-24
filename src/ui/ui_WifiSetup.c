@@ -144,7 +144,7 @@ void ui_WifiSetup_screen_init(void)
     lv_obj_set_style_text_color(title, COLOR_ACCENT, 0);
     
     // OK button in header
-    ui_wifiSetupCompleteButton = lv_btn_create(header);
+    ui_wifiSetupCompleteButton = lv_button_create(header);
     lv_obj_set_width(ui_wifiSetupCompleteButton, 120);
     lv_obj_set_height(ui_wifiSetupCompleteButton, 40);
     lv_obj_add_flag(ui_wifiSetupCompleteButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);

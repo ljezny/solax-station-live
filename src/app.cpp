@@ -50,11 +50,11 @@
 #include <mutex>
 
 SemaphoreHandle_t lvgl_mutex = xSemaphoreCreateMutex();
-static lv_disp_draw_buf_t draw_buf;
 // Full-screen double buffers allocated in PSRAM for best FPS
-static lv_color_t *disp_draw_buf1 = nullptr;
-static lv_color_t *disp_draw_buf2 = nullptr;
-static lv_disp_drv_t disp_drv;
+static uint8_t *disp_draw_buf1 = nullptr;
+static uint8_t *disp_draw_buf2 = nullptr;
+static lv_display_t *disp = nullptr;
+static lv_indev_t *indev = nullptr;
 
 static long lastElectricityPriceAttempt = 0;
 static long lastWallboxDiscoveryAttempt = 0;
@@ -141,39 +141,28 @@ state_t previousState;
 bool showSettings = false;
 bool showIntelligenceSettings = false;
 
-/* Display flushing */
-static lv_disp_drv_t *flush_disp_drv = nullptr;
-
-void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
+/* Display flushing - LVGL 9 API */
+void my_disp_flush(lv_display_t *display, const lv_area_t *area, uint8_t *px_map)
 {
     uint32_t w = (area->x2 - area->x1 + 1);
     uint32_t h = (area->y2 - area->y1 + 1);
 
     // For double buffering with DMA: wait for previous transfer, then start new one
     // and signal ready immediately (LVGL can draw into other buffer)
-    if (disp->draw_buf->buf1 && disp->draw_buf->buf2) {
-        // Double buffering - wait for previous DMA, start new one, signal ready
-        tft.waitDMA();
-        tft.pushImageDMA(area->x1, area->y1, w, h, (lgfx::rgb565_t *)&color_p->full);
-        lv_disp_flush_ready(disp);
-    } else {
-        // Single buffering - must wait for DMA to complete before signaling ready
-        tft.waitDMA();
-        tft.pushImageDMA(area->x1, area->y1, w, h, (lgfx::rgb565_t *)&color_p->full);
-        tft.waitDMA();
-        lv_disp_flush_ready(disp);
-    }
+    tft.waitDMA();
+    tft.pushImageDMA(area->x1, area->y1, w, h, (lgfx::rgb565_t *)px_map);
+    lv_display_flush_ready(display);
 }
 
-void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
+void my_touchpad_read(lv_indev_t *indev_drv, lv_indev_data_t *data)
 {
     if (!touch.hasTouch())
     {
-        data->state = LV_INDEV_STATE_REL;
+        data->state = LV_INDEV_STATE_RELEASED;
     }
     else
     {
-        data->state = LV_INDEV_STATE_PR;
+        data->state = LV_INDEV_STATE_PRESSED;
         data->point.x = touch.touchX;
         data->point.y = touch.touchY;
 
@@ -344,6 +333,10 @@ void setupLVGL()
 #endif
 
     lv_init();
+    
+    // LVGL 9 requires tick callback to be set
+    lv_tick_set_cb([]() -> uint32_t { return millis(); });
+    
     delay(100);
 
     // touch setup
@@ -357,13 +350,17 @@ void setupLVGL()
     size_t bufferLines = screenHeight / 4; // 120 lines = ~192KB per buffer
     size_t bufferSize = screenWidth * bufferLines * sizeof(lv_color_t);
     
-    disp_draw_buf1 = (lv_color_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
-    disp_draw_buf2 = (lv_color_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
+    disp_draw_buf1 = (uint8_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
+    disp_draw_buf2 = (uint8_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
     
     if (!disp_draw_buf1 || !disp_draw_buf2) {
         LOGE("Failed to allocate display buffers in PSRAM!");
     }
-    lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * bufferLines);
+    
+    // LVGL 9 display setup
+    disp = lv_display_create(screenWidth, screenHeight);
+    lv_display_set_flush_cb(disp, my_disp_flush);
+    lv_display_set_buffers(disp, disp_draw_buf1, disp_draw_buf2, bufferSize, LV_DISPLAY_RENDER_MODE_PARTIAL);
     LOGD("Display buffers in PSRAM: 2x %.1f KB (%d lines)", bufferSize / 1024.0f, bufferLines);
 #else
     // Standard CrowPanel - try internal DMA RAM first for better performance
@@ -371,8 +368,8 @@ void setupLVGL()
     size_t bufferSize = screenWidth * bufferLines * sizeof(lv_color_t);
 
     // Try to allocate in internal DMA-capable RAM first
-    disp_draw_buf1 = (lv_color_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
-    disp_draw_buf2 = (lv_color_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    disp_draw_buf1 = (uint8_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
+    disp_draw_buf2 = (uint8_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_DMA | MALLOC_CAP_INTERNAL);
 
     if (!disp_draw_buf1 || !disp_draw_buf2)
     {
@@ -385,33 +382,27 @@ void setupLVGL()
 
         // Fallback to PSRAM with full screen buffers
         bufferSize = screenWidth * screenHeight * sizeof(lv_color_t);
-        disp_draw_buf1 = (lv_color_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
-        disp_draw_buf2 = (lv_color_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
-        lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * screenHeight);
+        disp_draw_buf1 = (uint8_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
+        disp_draw_buf2 = (uint8_t *)heap_caps_malloc(bufferSize, MALLOC_CAP_SPIRAM);
+        
+        disp = lv_display_create(screenWidth, screenHeight);
+        lv_display_set_flush_cb(disp, my_disp_flush);
+        lv_display_set_buffers(disp, disp_draw_buf1, disp_draw_buf2, bufferSize, LV_DISPLAY_RENDER_MODE_PARTIAL);
         LOGD("Display buffers in PSRAM: 2x %.1f KB", bufferSize / 1024.0f);
     }
     else
     {
-        lv_disp_draw_buf_init(&draw_buf, disp_draw_buf1, disp_draw_buf2, screenWidth * bufferLines);
+        disp = lv_display_create(screenWidth, screenHeight);
+        lv_display_set_flush_cb(disp, my_disp_flush);
+        lv_display_set_buffers(disp, disp_draw_buf1, disp_draw_buf2, bufferSize, LV_DISPLAY_RENDER_MODE_PARTIAL);
         LOGD("Display buffers in internal DMA RAM: 2x %.1f KB (%d lines)", bufferSize / 1024.0f, bufferLines);
     }
 #endif
-    /* Initialize the display */
-    lv_disp_drv_init(&disp_drv);
-    /* Change the following line to your display resolution */
-    disp_drv.hor_res = screenWidth;
-    disp_drv.ver_res = screenHeight;
-    disp_drv.flush_cb = my_disp_flush;
-    disp_drv.full_refresh = 0; // Only redraw dirty areas for better FPS
-    disp_drv.draw_buf = &draw_buf;
-    lv_disp_drv_register(&disp_drv);
 
-    /* Initialize the (dummy) input device driver */
-    static lv_indev_drv_t indev_drv;
-    lv_indev_drv_init(&indev_drv);
-    indev_drv.type = LV_INDEV_TYPE_POINTER;
-    indev_drv.read_cb = my_touchpad_read;
-    lv_indev_drv_register(&indev_drv);
+    /* Initialize the touchpad input device - LVGL 9 API */
+    indev = lv_indev_create();
+    lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
+    lv_indev_set_read_cb(indev, my_touchpad_read);
 
     ui_init();
     splashUI = new SplashUI();

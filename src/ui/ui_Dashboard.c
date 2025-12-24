@@ -1417,9 +1417,7 @@ lv_chart_set_type( ui_Chart1, LV_CHART_TYPE_LINE);
 lv_chart_set_point_count( ui_Chart1, 96);
 lv_chart_set_range( ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, 15);
 lv_chart_set_div_line_count( ui_Chart1, 5, 5);
-lv_chart_set_axis_tick( ui_Chart1, LV_CHART_AXIS_PRIMARY_X, 0, 0, 5, 24, true, 32);
-lv_chart_set_axis_tick( ui_Chart1, LV_CHART_AXIS_PRIMARY_Y, 0, 0, 5, 2, true, 32);
-lv_chart_set_axis_tick( ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, 0, 3, 2, true, 32);
+// Note: lv_chart_set_axis_tick removed in LVGL 9 - chart ticks are handled differently
 lv_chart_series_t* ui_Chart1_series_1 = lv_chart_add_series(ui_Chart1, lv_color_hex(0x2EB5FF), LV_CHART_AXIS_PRIMARY_Y);
 static lv_coord_t ui_Chart1_series_1_array[] = { 15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,16,18,19,21,22,24,25,27,29,32,35,38,42,45,50,54,59,63,68,72,75,78,81,84,86,88,90,91,92,93,94,94,95,95,96,96,96,96,96,95,95,94,94,93,92,91,90,89,88,87,85,83,81,79,77,75,72,69,66,63,60,57,54,51,48,45,43,41,39,37,35,33,31,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,5,5,5,5,15,15 };
 lv_chart_set_ext_y_array(ui_Chart1, ui_Chart1_series_1, ui_Chart1_series_1_array);
@@ -1431,11 +1429,9 @@ lv_obj_set_style_line_width(ui_Chart1, 1, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_line_width(ui_Chart1, 3, LV_PART_ITEMS| LV_STATE_DEFAULT);
 lv_obj_set_style_line_rounded(ui_Chart1, true, LV_PART_ITEMS| LV_STATE_DEFAULT);
 
-lv_obj_set_style_size(ui_Chart1, 0, LV_PART_INDICATOR| LV_STATE_DEFAULT);
+lv_obj_set_style_size(ui_Chart1, 0, 0, LV_PART_INDICATOR| LV_STATE_DEFAULT);
 
-lv_obj_set_style_text_color(ui_Chart1, lv_color_hex(0x000000), LV_PART_TICKS | LV_STATE_DEFAULT );
-lv_obj_set_style_text_opa(ui_Chart1, 255, LV_PART_TICKS| LV_STATE_DEFAULT);
-lv_obj_set_style_text_font(ui_Chart1, &ui_font_OpenSansExtraSmall, LV_PART_TICKS| LV_STATE_DEFAULT);
+// Note: LV_PART_TICKS removed in LVGL 9
 
 ui_spotPriceContainer = lv_obj_create(ui_RightContainer);
 lv_obj_remove_style_all(ui_spotPriceContainer);
@@ -1478,7 +1474,7 @@ lv_obj_set_style_pad_right(ui_currentPriceLabel, 8, LV_PART_MAIN| LV_STATE_DEFAU
 lv_obj_set_style_pad_top(ui_currentPriceLabel, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
 lv_obj_set_style_pad_bottom(ui_currentPriceLabel, 4, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-ui_settingsButton = lv_btn_create(ui_Dashboard);
+ui_settingsButton = lv_button_create(ui_Dashboard);
 lv_obj_set_width( ui_settingsButton, 64);
 lv_obj_set_height( ui_settingsButton, 64);
 lv_obj_set_x( ui_settingsButton, lv_pct(-2) );

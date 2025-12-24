@@ -463,7 +463,7 @@ static void onFocusHandler(lv_event_t *e)
     {
         // Handle focus event if needed
         // This can be used to show/hide password or inverter IP fields based on focus
-        lv_obj_t *obj = lv_event_get_target(e);
+        lv_obj_t *obj = (lv_obj_t *)lv_event_get_target(e);
         WiFiSetupUI *ui = (WiFiSetupUI *)lv_event_get_user_data(e);
         if (ui)
         {
@@ -477,7 +477,7 @@ static void onTextChangedHandler(lv_event_t *e)
     lv_event_code_t code = lv_event_get_code(e);
     if (code == LV_EVENT_VALUE_CHANGED)
     {
-        lv_obj_t *obj = lv_event_get_target(e);
+        lv_obj_t *obj = (lv_obj_t *)lv_event_get_target(e);
         WiFiSetupUI *ui = (WiFiSetupUI *)lv_event_get_user_data(e);
         if (ui)
         {

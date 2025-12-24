@@ -52,285 +52,205 @@ static lv_color_t getPriceLevelColor(PriceLevel_t level)
     }
 }
 
+/**
+ * LVGL 9 draw callback for electricity price chart
+ * Uses new draw task API
+ */
 static void electricity_price_draw_event_cb(lv_event_t *e)
 {
-    lv_obj_draw_part_dsc_t *dsc = lv_event_get_draw_part_dsc(e);
-    lv_obj_t *obj = lv_event_get_target(e);
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code != LV_EVENT_DRAW_MAIN) return;
+    
+    lv_obj_t *obj = (lv_obj_t *)lv_event_get_target(e);
     SpotChartData_t *chartData = (SpotChartData_t *)lv_obj_get_user_data(obj);
     
     if (chartData == nullptr || chartData->priceResult == nullptr) return;
     ElectricityPriceTwoDays_t *electricityPriceResult = chartData->priceResult;
 
-    if (dsc->part == LV_PART_MAIN)
+    lv_layer_t *layer = lv_event_get_layer(e);
+    
+    lv_area_t coords;
+    lv_obj_get_coords(obj, &coords);
+    
+    lv_coord_t pad_left = lv_obj_get_style_pad_left(obj, LV_PART_MAIN);
+    lv_coord_t pad_right = lv_obj_get_style_pad_right(obj, LV_PART_MAIN);
+    lv_coord_t pad_top = lv_obj_get_style_pad_top(obj, LV_PART_MAIN);
+    lv_coord_t pad_bottom = lv_obj_get_style_pad_bottom(obj, LV_PART_MAIN);
+    lv_coord_t w = (int32_t)lv_obj_get_content_width(obj);
+    lv_coord_t h = (int32_t)lv_obj_get_content_height(obj);
+    
+    // Determine if showing 1 or 2 days
+    bool showTwoDays = electricityPriceResult->hasTomorrowData;
+    uint32_t segmentCount = showTwoDays ? QUARTERS_TWO_DAYS : QUARTERS_OF_DAY;
+    
+    // Calculate segment width dynamically based on available width
+    int32_t segmentWidth = w / segmentCount;
+    if (segmentWidth < 1) segmentWidth = 1;
+    int32_t offset_x = (w - (segmentCount * segmentWidth)) / 2;  // Center the chart
+
+    // Use pre-calculated max from the price result, calculate min on the fly (it's fast)
+    float minPrice = 0.0f;
+    float maxPrice = electricityPriceResult->scaleMaxValue;
+    for (uint32_t i = 0; i < segmentCount; i++) {
+        float price = electricityPriceResult->prices[i].electricityPrice;
+        if (price < minPrice) minPrice = price;
+        if (price > maxPrice) maxPrice = price;
+    }
+    float priceRange = maxPrice - minPrice;
+    if (priceRange < 0.1f) priceRange = 0.1f;  // Avoid division by zero
+    lv_coord_t chartHeight = h;
+
+    // Current quarter
+    time_t now = time(nullptr);
+    struct tm *timeinfo = localtime(&now);
+    int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
+
+    // Draw current quarter highlight
+    lv_draw_rect_dsc_t current_quarter_dsc;
+    lv_draw_rect_dsc_init(&current_quarter_dsc);
+    current_quarter_dsc.bg_opa = LV_OPA_50;
+    current_quarter_dsc.bg_color = isDarkMode ? lv_color_hex(0x555555) : lv_color_hex(0xAAAAAA);
+    lv_area_t cq_a;
+    cq_a.x1 = coords.x1 + pad_left + offset_x + currentQuarter * segmentWidth;
+    cq_a.x2 = cq_a.x1 + segmentWidth - 1;
+    cq_a.y1 = coords.y1 + pad_top;
+    cq_a.y2 = coords.y2 - pad_bottom;
+    lv_draw_rect(layer, &current_quarter_dsc, &cq_a);
+
+    // Draw price segments
+    lv_draw_rect_dsc_t draw_rect_dsc;
+    lv_draw_rect_dsc_init(&draw_rect_dsc);
+    draw_rect_dsc.bg_opa = LV_OPA_30;
+    draw_rect_dsc.border_opa = LV_OPA_80;
+    draw_rect_dsc.border_width = 1;
+    
+    uint32_t i = 0;
+    while (i < segmentCount)
     {
-        lv_coord_t pad_left = lv_obj_get_style_pad_left(obj, LV_PART_MAIN);
-        lv_coord_t pad_right = lv_obj_get_style_pad_right(obj, LV_PART_MAIN);
-        lv_coord_t pad_top = lv_obj_get_style_pad_top(obj, LV_PART_MAIN);
-        lv_coord_t pad_bottom = lv_obj_get_style_pad_bottom(obj, LV_PART_MAIN);
-        lv_coord_t w = (int32_t)lv_obj_get_content_width(obj);
-        lv_coord_t h = (int32_t)lv_obj_get_content_height(obj);
+        PriceLevel_t currentLevel = electricityPriceResult->prices[i].priceLevel;
+        uint32_t runStart = i;
         
-        // Determine if showing 1 or 2 days
-        bool showTwoDays = electricityPriceResult->hasTomorrowData;
-        uint32_t segmentCount = showTwoDays ? QUARTERS_TWO_DAYS : QUARTERS_OF_DAY;
-        
-        // Calculate segment width dynamically based on available width
-        int32_t segmentWidth = w / segmentCount;
-        if (segmentWidth < 1) segmentWidth = 1;
-        int32_t offset_x = (w - (segmentCount * segmentWidth)) / 2;  // Center the chart
-
-        // Use pre-calculated max from the price result, calculate min on the fly (it's fast)
-        float minPrice = 0.0f;
-        float maxPrice = electricityPriceResult->scaleMaxValue;
-        for (uint32_t i = 0; i < segmentCount; i++) {
-            float price = electricityPriceResult->prices[i].electricityPrice;
-            if (price < minPrice) minPrice = price;
-            if (price > maxPrice) maxPrice = price;
+        // Find run of same price level (for merging)
+        while (i < segmentCount && electricityPriceResult->prices[i].priceLevel == currentLevel) {
+            i++;
         }
-        float priceRange = maxPrice - minPrice;
-        if (priceRange < 0.1f) priceRange = 0.1f;  // Avoid division by zero
-        lv_coord_t chartHeight = h;
-
-        // Current quarter
-        time_t now = time(nullptr);
-        struct tm *timeinfo = localtime(&now);
-        int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
-
-        // Draw current quarter highlight
-        lv_draw_rect_dsc_t current_quarter_dsc;
-        lv_draw_rect_dsc_init(&current_quarter_dsc);
-        current_quarter_dsc.bg_opa = LV_OPA_50;
-        current_quarter_dsc.bg_color = isDarkMode ? lv_color_hex(0x555555) : lv_color_hex(0xAAAAAA);
-        lv_area_t cq_a;
-        cq_a.x1 = obj->coords.x1 + offset_x + currentQuarter * segmentWidth;
-        cq_a.x2 = cq_a.x1 + segmentWidth - 1;
-        cq_a.y1 = obj->coords.y1 + pad_top;
-        cq_a.y2 = obj->coords.y2 - pad_bottom;
-        lv_draw_rect(dsc->draw_ctx, &current_quarter_dsc, &cq_a);
-
-        // Draw price segments - merge consecutive segments with same price level
-        lv_draw_rect_dsc_t draw_rect_dsc;
-        lv_draw_rect_dsc_init(&draw_rect_dsc);
-        draw_rect_dsc.bg_opa = LV_OPA_30;
-        draw_rect_dsc.border_opa = LV_OPA_80;
-        draw_rect_dsc.border_width = 1;
         
-        uint32_t i = 0;
-        while (i < segmentCount)
-        {
-            PriceLevel_t currentLevel = electricityPriceResult->prices[i].priceLevel;
-            float price = electricityPriceResult->prices[i].electricityPrice;
-            uint32_t runStart = i;
-            
-            // Find run of same price level (for merging)
-            while (i < segmentCount && electricityPriceResult->prices[i].priceLevel == currentLevel) {
-                i++;
-            }
-            
-            // Draw merged segment (but individual bars for price accuracy)
-            lv_color_t color = getPriceLevelColor(currentLevel);
-            draw_rect_dsc.bg_color = color;
-            draw_rect_dsc.border_color = color;
-            
-            for (uint32_t j = runStart; j < i; j++) {
-                float segPrice = electricityPriceResult->prices[j].electricityPrice;
-                lv_area_t a;
-                a.x1 = obj->coords.x1 + offset_x + j * segmentWidth;
-                a.x2 = a.x1 + segmentWidth - 1;
-                lv_coord_t barTopY = obj->coords.y1 + pad_top + (priceRange - segPrice + minPrice) * chartHeight / priceRange;
-                lv_coord_t barBottomY = obj->coords.y1 + pad_top + (priceRange + minPrice) * chartHeight / priceRange - 1;
-                a.y1 = barTopY;
-                a.y2 = barBottomY;
-                if (a.y1 > a.y2) {
-                    lv_coord_t temp = a.y1;
-                    a.y1 = a.y2;
-                    a.y2 = temp;
-                }
-                lv_draw_rect(dsc->draw_ctx, &draw_rect_dsc, &a);
-            }
-        }
-
-        // Draw x-axis time labels
-        lv_draw_label_dsc_t label_dsc;
-        label_dsc.font = &ui_font_OpenSansExtraSmall;
-        lv_draw_label_dsc_init(&label_dsc);
-        lv_obj_init_draw_label_dsc(obj, LV_PART_MAIN, &label_dsc);
-        lv_area_t la;
-        la.y1 = obj->coords.y2 - pad_bottom + 2;
-        la.y2 = la.y1 + lv_font_get_line_height(label_dsc.font);
+        // Draw merged segment (but individual bars for price accuracy)
+        lv_color_t color = getPriceLevelColor(currentLevel);
+        draw_rect_dsc.bg_color = color;
+        draw_rect_dsc.border_color = color;
         
-        if (showTwoDays)
-        {
-            // For 2 days: show 12:00, 00:00 (midnight separator), 12:00
-            int hours[] = {12, 24, 36};  // 12:00 today, 00:00 tomorrow, 12:00 tomorrow
-            for (int i = 0; i < 3; i++)
-            {
-                int quarter = hours[i] * 4;
-                int displayHour = hours[i] % 24;
-                String text = (displayHour < 10 ? "0" : "") + String(displayHour) + ":00";
-                lv_point_t size;
-                lv_txt_get_size(&size, text.c_str(), label_dsc.font, label_dsc.letter_space, label_dsc.line_space, LV_COORD_MAX, label_dsc.flag);
-                la.x1 = obj->coords.x1 + offset_x + quarter * segmentWidth + (segmentWidth - size.x) / 2;
-                la.x2 = la.x1 + size.x;
-                lv_draw_label(dsc->draw_ctx, &label_dsc, &la, text.c_str(), NULL);
+        for (uint32_t j = runStart; j < i; j++) {
+            float segPrice = electricityPriceResult->prices[j].electricityPrice;
+            lv_area_t a;
+            a.x1 = coords.x1 + pad_left + offset_x + j * segmentWidth;
+            a.x2 = a.x1 + segmentWidth - 1;
+            lv_coord_t barTopY = coords.y1 + pad_top + (priceRange - segPrice + minPrice) * chartHeight / priceRange;
+            lv_coord_t barBottomY = coords.y1 + pad_top + (priceRange + minPrice) * chartHeight / priceRange - 1;
+            a.y1 = barTopY;
+            a.y2 = barBottomY;
+            if (a.y1 > a.y2) {
+                lv_coord_t temp = a.y1;
+                a.y1 = a.y2;
+                a.y2 = temp;
             }
+            lv_draw_rect(layer, &draw_rect_dsc, &a);
         }
-        else
+    }
+
+    // Draw x-axis time labels
+    lv_draw_label_dsc_t label_dsc;
+    lv_draw_label_dsc_init(&label_dsc);
+    label_dsc.font = &ui_font_OpenSansExtraSmall;
+    label_dsc.color = isDarkMode ? lv_color_white() : lv_color_black();
+    
+    if (showTwoDays)
+    {
+        // For 2 days: show 12:00, 00:00 (midnight separator), 12:00
+        int hours[] = {12, 24, 36};
+        for (int idx = 0; idx < 3; idx++)
         {
-            // For 1 day: show 06:00, 12:00, 18:00
-            for (int hour = 6; hour <= 18; hour += 6)
-            {
-                int quarter = hour * 4;
-                String text = (hour < 10 ? "0" : "") + String(hour) + ":00";
-                lv_point_t size;
-                lv_txt_get_size(&size, text.c_str(), label_dsc.font, label_dsc.letter_space, label_dsc.line_space, LV_COORD_MAX, label_dsc.flag);
-                la.x1 = obj->coords.x1 + offset_x + quarter * segmentWidth + (segmentWidth - size.x) / 2;
-                la.x2 = la.x1 + size.x;
-                lv_draw_label(dsc->draw_ctx, &label_dsc, &la, text.c_str(), NULL);
-            }
+            int quarter = hours[idx] * 4;
+            int displayHour = hours[idx] % 24;
+            char text[8];
+            lv_snprintf(text, sizeof(text), "%02d:00", displayHour);
+            lv_point_t size;
+            lv_text_get_size(&size, text, label_dsc.font, label_dsc.letter_space, label_dsc.line_space, LV_COORD_MAX, LV_TEXT_FLAG_NONE);
+            lv_area_t la;
+            la.x1 = coords.x1 + pad_left + offset_x + quarter * segmentWidth + (segmentWidth - size.x) / 2;
+            la.x2 = la.x1 + size.x;
+            la.y1 = coords.y2 - pad_bottom + 2;
+            la.y2 = la.y1 + size.y;
+            label_dsc.text = text;
+            lv_draw_label(layer, &label_dsc, &la);
+        }
+    }
+    else
+    {
+        // For 1 day: show 06:00, 12:00, 18:00
+        for (int hour = 6; hour <= 18; hour += 6)
+        {
+            int quarter = hour * 4;
+            char text[8];
+            lv_snprintf(text, sizeof(text), "%02d:00", hour);
+            lv_point_t size;
+            lv_text_get_size(&size, text, label_dsc.font, label_dsc.letter_space, label_dsc.line_space, LV_COORD_MAX, LV_TEXT_FLAG_NONE);
+            lv_area_t la;
+            la.x1 = coords.x1 + pad_left + offset_x + quarter * segmentWidth + (segmentWidth - size.x) / 2;
+            la.x2 = la.x1 + size.x;
+            la.y1 = coords.y2 - pad_bottom + 2;
+            la.y2 = la.y1 + size.y;
+            label_dsc.text = text;
+            lv_draw_label(layer, &label_dsc, &la);
         }
     }
 }
 
+/**
+ * LVGL 9 draw callback for solar chart - draws current time indicator
+ * The fade effect under chart lines is removed for LVGL 9 compatibility
+ */
 static void solar_chart_draw_event_cb(lv_event_t *e)
 {
-    lv_obj_t *obj = lv_event_get_target(e);
-    /*Add the faded area before the lines are drawn*/
-    lv_obj_draw_part_dsc_t *dsc = lv_event_get_draw_part_dsc(e);
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code != LV_EVENT_DRAW_MAIN) return;
+    
+    lv_obj_t *obj = (lv_obj_t *)lv_event_get_target(e);
+    lv_layer_t *layer = lv_event_get_layer(e);
     
     // Zjistíme počet bodů v grafu (96 = 1 den, 192 = 2 dny)
     uint16_t pointCount = lv_chart_get_point_count(obj);
-    bool showTwoDays = (pointCount > QUARTERS_OF_DAY);
     
-    // Vykreslení vertikální čáry aktuálního času
-    if (dsc->part == LV_PART_MAIN)
-    {
-        lv_coord_t pad_left = lv_obj_get_style_pad_left(obj, LV_PART_MAIN);
-        lv_coord_t pad_right = lv_obj_get_style_pad_right(obj, LV_PART_MAIN);
-        lv_coord_t pad_top = lv_obj_get_style_pad_top(obj, LV_PART_MAIN);
-        lv_coord_t pad_bottom = lv_obj_get_style_pad_bottom(obj, LV_PART_MAIN);
-        lv_coord_t w = lv_obj_get_content_width(obj);
-        
-        // Aktuální čtvrthodina
-        time_t now = time(nullptr);
-        struct tm *timeinfo = localtime(&now);
-        int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
-        
-        // Pozice čáry
-        float quarterWidth = (float)w / (float)pointCount;
-        lv_coord_t lineX = obj->coords.x1 + pad_left + (lv_coord_t)(currentQuarter * quarterWidth + quarterWidth / 2);
-        
-        // Vykreslení čáry aktuálního času
-        lv_draw_rect_dsc_t line_dsc;
-        lv_draw_rect_dsc_init(&line_dsc);
-        line_dsc.bg_opa = LV_OPA_70;
-        line_dsc.bg_color = lv_color_hex(0xFF4444);  // Červená barva pro lepší viditelnost
-        
-        lv_area_t line_a;
-        line_a.x1 = lineX - 1;
-        line_a.x2 = lineX + 1;
-        line_a.y1 = obj->coords.y1 + pad_top;
-        line_a.y2 = obj->coords.y2 - pad_bottom;
-        
-        lv_draw_rect(dsc->draw_ctx, &line_dsc, &line_a);
-    }
-    else if (dsc->part == LV_PART_ITEMS)
-    {
-        if (!dsc->p1 || !dsc->p2)
-            return;
-        const lv_chart_series_t *ser = (const lv_chart_series_t *)dsc->sub_part_ptr;
-        if (ser->y_axis_sec == 0)
-        {
-            return;
-        }
-        
-        /*Add a line mask that keeps the area below the line*/
-        lv_draw_mask_line_param_t line_mask_param;
-        lv_draw_mask_line_points_init(&line_mask_param, dsc->p1->x, dsc->p1->y, dsc->p2->x, dsc->p2->y,
-                                      LV_DRAW_MASK_LINE_SIDE_BOTTOM);
-        int16_t line_mask_id = lv_draw_mask_add(&line_mask_param, NULL);
-
-        /*Add a fade effect: transparent bottom covering top*/
-        lv_coord_t h = lv_obj_get_height(obj);
-        lv_draw_mask_fade_param_t fade_mask_param;
-        lv_draw_mask_fade_init(&fade_mask_param, &obj->coords, LV_OPA_COVER, obj->coords.y1 + h / 8, LV_OPA_TRANSP,
-                               obj->coords.y2);
-        int16_t fade_mask_id = lv_draw_mask_add(&fade_mask_param, NULL);
-
-        /*Draw a rectangle that will be affected by the mask*/
-        lv_draw_rect_dsc_t draw_rect_dsc;
-        lv_draw_rect_dsc_init(&draw_rect_dsc);
-        draw_rect_dsc.bg_opa = LV_OPA_50;
-        draw_rect_dsc.bg_color = dsc->line_dsc->color;
-
-        lv_area_t a;
-        a.x1 = dsc->p1->x;
-        a.x2 = dsc->p2->x - 1;
-        a.y1 = LV_MIN(dsc->p1->y, dsc->p2->y);
-        a.y2 = obj->coords.y2;
-        lv_draw_rect(dsc->draw_ctx, &draw_rect_dsc, &a);
-
-        /*Remove the masks*/
-        lv_draw_mask_free_param(&line_mask_param);
-        lv_draw_mask_free_param(&fade_mask_param);
-        lv_draw_mask_remove_id(line_mask_id);
-        lv_draw_mask_remove_id(fade_mask_id);
-    }
-    else if (dsc->part == LV_PART_TICKS)
-    {
-        uint16_t pointCount = lv_chart_get_point_count(obj);
-        bool showTwoDays = (pointCount > QUARTERS_OF_DAY);
-        
-        if (dsc->id == LV_CHART_AXIS_PRIMARY_Y)
-        {
-            lv_snprintf(dsc->text, dsc->text_length, "%d%%", (int)dsc->value);
-        }
-        else if (dsc->id == LV_CHART_AXIS_SECONDARY_Y)
-        {
-            lv_snprintf(dsc->text, dsc->text_length, "%d\nkW", (int)round(dsc->value / 1000.0f));
-        }
-        else if (dsc->id == LV_CHART_AXIS_PRIMARY_X)
-        {
-            // Osa X - tick popisky
-            int tickCount = 5;
-            int quartersPerTick = pointCount / (tickCount - 1);
-            int quarter = dsc->value * quartersPerTick;
-            
-            if (showTwoDays)
-            {
-                // Pro 2 dny: ukaž hodiny s označením dne
-                int day = quarter / QUARTERS_OF_DAY;
-                int hourInDay = (quarter % QUARTERS_OF_DAY) / 4;
-                
-                if (quarter == 0 || quarter >= pointCount)
-                {
-                    memset(dsc->text, 0, dsc->text_length);
-                }
-                else if (quarter == QUARTERS_OF_DAY)
-                {
-                    lv_snprintf(dsc->text, dsc->text_length, "00:00");
-                }
-                else
-                {
-                    lv_snprintf(dsc->text, dsc->text_length, "%02d:00", hourInDay);
-                }
-            }
-            else
-            {
-                // Pro 1 den
-                int hour = quarter / 4;
-                
-                if (hour == 0 || hour == 24)
-                {
-                    memset(dsc->text, 0, dsc->text_length);
-                }
-                else
-                {
-                    lv_snprintf(dsc->text, dsc->text_length, "%02d:00", hour);
-                }
-            }
-        }
-    }
+    lv_area_t coords;
+    lv_obj_get_coords(obj, &coords);
+    
+    lv_coord_t pad_left = lv_obj_get_style_pad_left(obj, LV_PART_MAIN);
+    lv_coord_t pad_top = lv_obj_get_style_pad_top(obj, LV_PART_MAIN);
+    lv_coord_t pad_bottom = lv_obj_get_style_pad_bottom(obj, LV_PART_MAIN);
+    lv_coord_t w = lv_obj_get_content_width(obj);
+    
+    // Aktuální čtvrthodina
+    time_t now = time(nullptr);
+    struct tm *timeinfo = localtime(&now);
+    int currentQuarter = (timeinfo->tm_hour * 60 + timeinfo->tm_min) / 15;
+    
+    // Pozice čáry
+    float quarterWidth = (float)w / (float)pointCount;
+    lv_coord_t lineX = coords.x1 + pad_left + (lv_coord_t)(currentQuarter * quarterWidth + quarterWidth / 2);
+    
+    // Vykreslení čáry aktuálního času
+    lv_draw_rect_dsc_t line_dsc;
+    lv_draw_rect_dsc_init(&line_dsc);
+    line_dsc.bg_opa = LV_OPA_70;
+    line_dsc.bg_color = lv_color_hex(0xFF4444);  // Červená barva pro lepší viditelnost
+    
+    lv_area_t line_a;
+    line_a.x1 = lineX - 1;
+    line_a.x2 = lineX + 1;
+    line_a.y1 = coords.y1 + pad_top;
+    line_a.y2 = coords.y2 - pad_bottom;
+    
+    lv_draw_rect(layer, &line_dsc, &line_a);
 }
 
 class DashboardUI
@@ -391,8 +311,9 @@ public:
         spotChartData.hasIntelligencePlan = false;
         spotChartData.hasValidPrices = false;
         
-        lv_obj_add_event_cb(ui_Chart1, solar_chart_draw_event_cb, LV_EVENT_DRAW_PART_BEGIN, NULL);
-        lv_obj_add_event_cb(ui_spotPriceContainer, electricity_price_draw_event_cb, LV_EVENT_DRAW_PART_END, NULL);
+        // LVGL 9: Use LV_EVENT_DRAW_MAIN for custom drawing
+        lv_obj_add_event_cb(ui_Chart1, solar_chart_draw_event_cb, LV_EVENT_DRAW_MAIN, NULL);
+        lv_obj_add_event_cb(ui_spotPriceContainer, electricity_price_draw_event_cb, LV_EVENT_DRAW_MAIN, NULL);
         lv_obj_add_event_cb(ui_settingsButton, onSettingsShow, LV_EVENT_RELEASED, NULL);
         
         // Add click handlers for chart expand/collapse
@@ -436,7 +357,7 @@ public:
         lv_obj_set_style_pad_right(intelligencePlanTile, 8, 0);
         lv_obj_set_style_pad_top(intelligencePlanTile, 8, 0);
         lv_obj_set_style_pad_bottom(intelligencePlanTile, 8, 0);
-        lv_obj_clear_flag(intelligencePlanTile, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_remove_flag(intelligencePlanTile, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_add_flag(intelligencePlanTile, LV_OBJ_FLAG_CLICKABLE);
         lv_obj_set_flex_flow(intelligencePlanTile, LV_FLEX_FLOW_COLUMN);
         lv_obj_set_flex_align(intelligencePlanTile, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -451,7 +372,7 @@ public:
         lv_obj_set_flex_align(intelligencePlanSummary, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
         lv_obj_set_style_pad_gap(intelligencePlanSummary, 8, 0);
         lv_obj_set_style_pad_hor(intelligencePlanSummary, 12, 0);
-        lv_obj_clear_flag(intelligencePlanSummary, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_remove_flag(intelligencePlanSummary, (lv_obj_flag_t)(LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE));
         lv_obj_add_flag(intelligencePlanSummary, LV_OBJ_FLAG_EVENT_BUBBLE);
         
         // "Inteligence" title label
@@ -487,7 +408,7 @@ public:
         lv_obj_set_flex_align(intelligencePlanDetail, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
         lv_obj_set_style_pad_row(intelligencePlanDetail, 12, 0);
         lv_obj_set_style_pad_top(intelligencePlanDetail, 8, 0);
-        lv_obj_clear_flag(intelligencePlanDetail, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_remove_flag(intelligencePlanDetail, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_add_flag(intelligencePlanDetail, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(intelligencePlanDetail, LV_OBJ_FLAG_CLICKABLE);
         // Event handler will be added after tile is fully created
@@ -518,7 +439,7 @@ public:
             lv_obj_set_flex_align(intelligenceUpcomingRows[i], LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
             lv_obj_set_style_pad_all(intelligenceUpcomingRows[i], 4, 0);
             lv_obj_set_style_pad_gap(intelligenceUpcomingRows[i], 6, 0);
-            lv_obj_clear_flag(intelligenceUpcomingRows[i], LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_remove_flag(intelligenceUpcomingRows[i], (lv_obj_flag_t)(LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE));
             lv_obj_add_flag(intelligenceUpcomingRows[i], LV_OBJ_FLAG_EVENT_BUBBLE);
             
             // Timeline container (bullet + line)
@@ -528,7 +449,7 @@ public:
             lv_obj_set_height(timelineContainer, lv_pct(100));
             lv_obj_set_flex_flow(timelineContainer, LV_FLEX_FLOW_COLUMN);
             lv_obj_set_flex_align(timelineContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-            lv_obj_clear_flag(timelineContainer, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_remove_flag(timelineContainer, (lv_obj_flag_t)(LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE));
             lv_obj_add_flag(timelineContainer, LV_OBJ_FLAG_EVENT_BUBBLE);
             
             // Bullet (circle) - smaller
@@ -538,7 +459,7 @@ public:
             lv_obj_set_style_radius(intelligenceUpcomingBullets[i], LV_RADIUS_CIRCLE, 0);
             lv_obj_set_style_bg_opa(intelligenceUpcomingBullets[i], LV_OPA_COVER, 0);
             lv_obj_set_style_bg_color(intelligenceUpcomingBullets[i], lv_color_hex(0x333333), 0);
-            lv_obj_clear_flag(intelligenceUpcomingBullets[i], LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_remove_flag(intelligenceUpcomingBullets[i], (lv_obj_flag_t)(LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE));
             
             // Vertical line (below bullet) - thinner
             intelligenceUpcomingLines[i] = lv_obj_create(timelineContainer);
@@ -547,7 +468,7 @@ public:
             lv_obj_set_flex_grow(intelligenceUpcomingLines[i], 1);
             lv_obj_set_style_bg_opa(intelligenceUpcomingLines[i], LV_OPA_COVER, 0);
             lv_obj_set_style_bg_color(intelligenceUpcomingLines[i], lv_color_hex(0x333333), 0);
-            lv_obj_clear_flag(intelligenceUpcomingLines[i], LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_remove_flag(intelligenceUpcomingLines[i], (lv_obj_flag_t)(LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE));
             // Hide line for last visible item
             if (i == VISIBLE_PLAN_ROWS - 1) {
                 lv_obj_add_flag(intelligenceUpcomingLines[i], LV_OBJ_FLAG_HIDDEN);
@@ -594,7 +515,7 @@ public:
         lv_obj_set_style_border_width(intelligenceStatsContainer, 1, 0);
         lv_obj_set_style_border_color(intelligenceStatsContainer, lv_color_hex(0xE0E0E0), 0);
         lv_obj_set_style_border_side(intelligenceStatsContainer, LV_BORDER_SIDE_TOP, 0);
-        lv_obj_clear_flag(intelligenceStatsContainer, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_remove_flag(intelligenceStatsContainer, (lv_obj_flag_t)(LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE));
         lv_obj_add_flag(intelligenceStatsContainer, LV_OBJ_FLAG_EVENT_BUBBLE);
         
         // --- Production stat (like pvStatsContainer) ---
@@ -605,7 +526,7 @@ public:
         lv_obj_set_flex_flow(productionStatContainer, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(productionStatContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
         lv_obj_set_style_pad_gap(productionStatContainer, 4, 0);
-        lv_obj_clear_flag(productionStatContainer, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_remove_flag(productionStatContainer, (lv_obj_flag_t)(LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE));
         lv_obj_add_flag(productionStatContainer, LV_OBJ_FLAG_EVENT_BUBBLE);
         
         // Sun icon
@@ -620,7 +541,7 @@ public:
         lv_obj_set_flex_flow(prodValueContainer, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(prodValueContainer, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
         lv_obj_set_style_pad_column(prodValueContainer, 2, 0);
-        lv_obj_clear_flag(prodValueContainer, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_remove_flag(prodValueContainer, (lv_obj_flag_t)(LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE));
         
         intelligenceStatsProduction = lv_label_create(prodValueContainer);
         lv_label_set_text(intelligenceStatsProduction, "~--");
@@ -638,7 +559,7 @@ public:
         lv_obj_set_size(intelligenceStatsSeparator, 1, 24);
         lv_obj_set_style_bg_color(intelligenceStatsSeparator, lv_color_hex(0xE0E0E0), 0);
         lv_obj_set_style_bg_opa(intelligenceStatsSeparator, LV_OPA_COVER, 0);
-        lv_obj_clear_flag(intelligenceStatsSeparator, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_remove_flag(intelligenceStatsSeparator, (lv_obj_flag_t)(LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE));
         
         // --- Consumption stat (like loadStatsContainer) ---
         lv_obj_t *consumptionStatContainer = lv_obj_create(intelligenceStatsContainer);
@@ -648,7 +569,7 @@ public:
         lv_obj_set_flex_flow(consumptionStatContainer, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(consumptionStatContainer, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
         lv_obj_set_style_pad_gap(consumptionStatContainer, 4, 0);
-        lv_obj_clear_flag(consumptionStatContainer, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_remove_flag(consumptionStatContainer, (lv_obj_flag_t)(LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE));
         lv_obj_add_flag(consumptionStatContainer, LV_OBJ_FLAG_EVENT_BUBBLE);
         
         // Load icon
@@ -663,7 +584,7 @@ public:
         lv_obj_set_flex_flow(consValueContainer, LV_FLEX_FLOW_ROW);
         lv_obj_set_flex_align(consValueContainer, LV_FLEX_ALIGN_END, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
         lv_obj_set_style_pad_column(consValueContainer, 2, 0);
-        lv_obj_clear_flag(consValueContainer, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_remove_flag(consValueContainer, (lv_obj_flag_t)(LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE));
         
         intelligenceStatsConsumption = lv_label_create(consValueContainer);
         lv_label_set_text(intelligenceStatsConsumption, "~--");
@@ -728,14 +649,14 @@ public:
         
         // Create intelligence button (next to settings button)
         if (onIntelligenceShow != nullptr) {
-            intelligenceButton = lv_btn_create(ui_Dashboard);
+            intelligenceButton = lv_button_create(ui_Dashboard);
             lv_obj_set_width(intelligenceButton, 64);
             lv_obj_set_height(intelligenceButton, 64);
             lv_obj_set_x(intelligenceButton, lv_pct(-2));
             lv_obj_set_y(intelligenceButton, lv_pct(-18));  // Above settings button
             lv_obj_set_align(intelligenceButton, LV_ALIGN_BOTTOM_RIGHT);
-            lv_obj_add_flag(intelligenceButton, LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_SCROLL_ON_FOCUS);
-            lv_obj_clear_flag(intelligenceButton, LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_SCROLLABLE);
+            lv_obj_add_flag(intelligenceButton, (lv_obj_flag_t)(LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_SCROLL_ON_FOCUS));
+            lv_obj_remove_flag(intelligenceButton, (lv_obj_flag_t)(LV_OBJ_FLAG_CLICK_FOCUSABLE | LV_OBJ_FLAG_SCROLLABLE));
             lv_obj_set_style_bg_color(intelligenceButton, lv_color_hex(0xFFFFFF), LV_STYLE_SELECTOR_DEFAULT);
             lv_obj_set_style_bg_opa(intelligenceButton, 255, LV_STYLE_SELECTOR_DEFAULT);
             lv_obj_set_style_outline_color(intelligenceButton, lv_color_hex(0x00AAFF), LV_STYLE_SELECTOR_DEFAULT);
@@ -762,8 +683,8 @@ public:
         lv_obj_set_x(ipBadge, lv_pct(2));
         lv_obj_set_y(ipBadge, lv_pct(-2));
         lv_obj_set_align(ipBadge, LV_ALIGN_BOTTOM_LEFT);
-        lv_obj_add_flag(ipBadge, LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ipBadge, LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE);
+        lv_obj_add_flag(ipBadge, (lv_obj_flag_t)(LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_HIDDEN));
+        lv_obj_remove_flag(ipBadge, (lv_obj_flag_t)(LV_OBJ_FLAG_SCROLLABLE | LV_OBJ_FLAG_CLICKABLE));
         lv_obj_set_style_bg_color(ipBadge, lv_color_hex(0x2196F3), 0);  // Material Blue
         lv_obj_set_style_bg_opa(ipBadge, 255, 0);
         lv_obj_set_style_radius(ipBadge, 20, 0);
@@ -790,7 +711,7 @@ public:
         lv_obj_set_y(intelligenceModeLabel, -28);
         lv_obj_set_align(intelligenceModeLabel, LV_ALIGN_TOP_LEFT);
         lv_label_set_text(intelligenceModeLabel, "");
-        lv_obj_add_flag(intelligenceModeLabel, LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(intelligenceModeLabel, (lv_obj_flag_t)(LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_HIDDEN));
         lv_obj_set_style_text_align(intelligenceModeLabel, LV_TEXT_ALIGN_CENTER, 0);
         lv_obj_set_style_text_font(intelligenceModeLabel, &ui_font_OpenSansSmall, 0);
         lv_obj_set_style_text_color(intelligenceModeLabel, lv_color_white(), 0);
@@ -836,7 +757,7 @@ public:
         // add timer
         clocksTimer = lv_timer_create([](lv_timer_t *timer)
                                       {
-                                        DashboardUI* self = (DashboardUI*)timer->user_data;
+                                        DashboardUI* self = (DashboardUI*)lv_timer_get_user_data(timer);
                                         static uint8_t step = 0;
                                         step++;
                                         // update time and date labels
@@ -851,7 +772,7 @@ public:
                                         
                                         if (self->timeSynced) {
                                             // Once synced, always show clock
-                                            lv_obj_clear_flag(ui_clocksLabel, LV_OBJ_FLAG_HIDDEN);
+                                            lv_obj_remove_flag(ui_clocksLabel, LV_OBJ_FLAG_HIDDEN);
                                             char timeStr[6];
                                             lv_snprintf(timeStr, sizeof(timeStr), step % 2 == 0 ? "%02d %02d" : "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
                                             lv_label_set_text(ui_clocksLabel, timeStr);
@@ -900,17 +821,17 @@ public:
         lastTouchMillis = millis();
         
         // Show settings button
-        lv_obj_clear_flag(ui_settingsButton, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_remove_flag(ui_settingsButton, LV_OBJ_FLAG_HIDDEN);
         
         // Show intelligence button if supported
         if (intelligenceButton != nullptr && intelligenceSupported) {
-            lv_obj_clear_flag(intelligenceButton, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(intelligenceButton, LV_OBJ_FLAG_HIDDEN);
         }
         
         // Show IP badge and update IP address
         if (ipBadge != nullptr) {
             updateIpBadge();
-            lv_obj_clear_flag(ipBadge, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ipBadge, LV_OBJ_FLAG_HIDDEN);
         }
     }
     
@@ -933,7 +854,7 @@ public:
     void showInverterModeMenu() {
         // Create menu if not exists
         if (inverterModeMenu != nullptr) {
-            lv_obj_del(inverterModeMenu);
+            lv_obj_delete(inverterModeMenu);
             inverterModeMenu = nullptr;
             return;  // Toggle off
         }
@@ -942,7 +863,7 @@ public:
         inverterModeMenu = lv_obj_create(ui_Dashboard);
         lv_obj_set_size(inverterModeMenu, 220, LV_SIZE_CONTENT);
         lv_obj_align(inverterModeMenu, LV_ALIGN_CENTER, 0, 0);
-        lv_obj_add_flag(inverterModeMenu, LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_FLOATING);
+        lv_obj_add_flag(inverterModeMenu, (lv_obj_flag_t)(LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_FLOATING));
         lv_obj_set_flex_flow(inverterModeMenu, LV_FLEX_FLOW_COLUMN);
         lv_obj_set_flex_align(inverterModeMenu, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
         lv_obj_set_style_pad_all(inverterModeMenu, 12, 0);
@@ -953,7 +874,7 @@ public:
         lv_obj_set_style_border_width(inverterModeMenu, 0, 0);
         lv_obj_set_style_shadow_width(inverterModeMenu, 32, 0);
         lv_obj_set_style_shadow_opa(inverterModeMenu, LV_OPA_30, 0);
-        lv_obj_clear_flag(inverterModeMenu, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_remove_flag(inverterModeMenu, LV_OBJ_FLAG_SCROLLABLE);
 
         // Title
         lv_obj_t* title = lv_label_create(inverterModeMenu);
@@ -999,20 +920,20 @@ public:
             uint32_t userData = (items[i].mode << 8) | (items[i].enableIntelligence ? 1 : 0);
             lv_obj_add_event_cb(btn, [](lv_event_t *e) {
                 DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
-                lv_obj_t* btn = lv_event_get_target(e);
+                lv_obj_t* btn = (lv_obj_t *)lv_event_get_target(e);
                 uint32_t data = (uint32_t)(uintptr_t)lv_obj_get_user_data(btn);
                 InverterMode_t mode = (InverterMode_t)(data >> 8);
                 bool enableIntelligence = (data & 1) != 0;
                 
                 // Close overlay first
                 if (self->inverterModeOverlay != nullptr) {
-                    lv_obj_del(self->inverterModeOverlay);
+                    lv_obj_delete(self->inverterModeOverlay);
                     self->inverterModeOverlay = nullptr;
                 }
                 
                 // Close menu
                 if (self->inverterModeMenu != nullptr) {
-                    lv_obj_del(self->inverterModeMenu);
+                    lv_obj_delete(self->inverterModeMenu);
                     self->inverterModeMenu = nullptr;
                 }
                 
@@ -1036,7 +957,7 @@ public:
         lv_obj_set_pos(inverterModeOverlay, 0, 0);
         lv_obj_set_size(inverterModeOverlay, lv_disp_get_hor_res(NULL), lv_disp_get_ver_res(NULL));
         lv_obj_add_flag(inverterModeOverlay, LV_OBJ_FLAG_CLICKABLE);
-        lv_obj_clear_flag(inverterModeOverlay, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_remove_flag(inverterModeOverlay, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_set_style_bg_color(inverterModeOverlay, lv_color_black(), 0);
         lv_obj_set_style_bg_opa(inverterModeOverlay, LV_OPA_70, 0);
         lv_obj_set_style_pad_all(inverterModeOverlay, 0, 0);
@@ -1049,13 +970,13 @@ public:
         
         lv_obj_set_user_data(inverterModeOverlay, this);
         lv_obj_add_event_cb(inverterModeOverlay, [](lv_event_t *e) {
-            DashboardUI* self = (DashboardUI*)lv_obj_get_user_data(lv_event_get_target(e));
+            DashboardUI* self = (DashboardUI*)lv_obj_get_user_data((lv_obj_t *)lv_event_get_target(e));
             if (self->inverterModeMenu != nullptr) {
-                lv_obj_del(self->inverterModeMenu);
+                lv_obj_delete(self->inverterModeMenu);
                 self->inverterModeMenu = nullptr;
             }
             if (self->inverterModeOverlay != nullptr) {
-                lv_obj_del(self->inverterModeOverlay);
+                lv_obj_delete(self->inverterModeOverlay);
                 self->inverterModeOverlay = nullptr;
             }
         }, LV_EVENT_CLICKED, NULL);
@@ -1085,7 +1006,7 @@ public:
         });
         if (fadeIn) {
             // Show object before fade in
-            lv_obj_clear_flag(obj, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(obj, LV_OBJ_FLAG_HIDDEN);
             lv_obj_set_style_opa(obj, 0, 0);
         } else {
             // Hide object after fade out
@@ -1149,7 +1070,7 @@ public:
                 lv_anim_start(&a);
                 
                 // 2. Summary stays visible (always shown)
-                lv_obj_clear_flag(summary, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_remove_flag(summary, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_set_height(summary, LV_SIZE_CONTENT);
                 // 3. Tile: no flex_grow, animate to content height
                 lv_obj_set_flex_grow(chart, 0);
@@ -1165,7 +1086,7 @@ public:
                 
                 // Handle intelligence tile - already processed above if it's the one being collapsed
                 if (child == chart && isIntelligenceTile) {
-                    lv_obj_clear_flag(child, LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_remove_flag(child, LV_OBJ_FLAG_HIDDEN);
                     continue;
                 }
                 
@@ -1227,7 +1148,7 @@ public:
             if (isIntelligenceTile) {
                 LOGD("Expanding intelligence tile");
                 // Summary stays visible (always shown)
-                lv_obj_clear_flag(summary, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_remove_flag(summary, LV_OBJ_FLAG_HIDDEN);
                 lv_obj_set_height(summary, LV_SIZE_CONTENT);
                 // Fade in detail with flex_grow to fill remaining space
                 lv_obj_set_flex_grow(detail, 1);
@@ -1246,11 +1167,11 @@ public:
         lv_obj_update_layout(ui_RightContainer);
         
         // Debug: log all children heights
-        uint32_t childCount = lv_obj_get_child_cnt(ui_RightContainer);
+        uint32_t childCount = lv_obj_get_child_count(ui_RightContainer);
         for (uint32_t i = 0; i < childCount; i++) {
             lv_obj_t *child = lv_obj_get_child(ui_RightContainer, i);
             bool hidden = lv_obj_has_flag(child, LV_OBJ_FLAG_HIDDEN);
-            LOGD("Child %d: height=%d, flex_grow=%d, hidden=%d", i, lv_obj_get_height(child), lv_obj_get_style_flex_grow(child, 0), hidden);
+            LOGD("Child %d: height=%d, flex_grow=%d, hidden=%d", i, lv_obj_get_height(child), lv_obj_get_style_flex_grow(child, LV_PART_MAIN), hidden);
         }
         LOGD("Toggle chart: layout updated, chart height=%d", lv_obj_get_height(chart));
     }
@@ -1270,7 +1191,7 @@ public:
         if (supported) {
             lv_obj_add_flag(ui_inverterContainer, LV_OBJ_FLAG_CLICKABLE);
         } else {
-            lv_obj_clear_flag(ui_inverterContainer, LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_remove_flag(ui_inverterContainer, LV_OBJ_FLAG_CLICKABLE);
             // Hide intelligence tile if inverter doesn't support intelligence
             lv_obj_add_flag(intelligencePlanTile, LV_OBJ_FLAG_HIDDEN);
         }
@@ -1287,8 +1208,8 @@ public:
         modeChangeSpinner = lv_obj_create(ui_Dashboard);
         lv_obj_remove_style_all(modeChangeSpinner);
         lv_obj_set_size(modeChangeSpinner, LV_PCT(100), LV_PCT(100));
-        lv_obj_add_flag(modeChangeSpinner, LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_FLOATING);
-        lv_obj_clear_flag(modeChangeSpinner, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_add_flag(modeChangeSpinner, (lv_obj_flag_t)(LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_FLOATING));
+        lv_obj_remove_flag(modeChangeSpinner, LV_OBJ_FLAG_SCROLLABLE);
         lv_obj_set_style_bg_color(modeChangeSpinner, lv_color_black(), 0);
         lv_obj_set_style_bg_opa(modeChangeSpinner, LV_OPA_50, 0);
         lv_obj_move_foreground(modeChangeSpinner);
@@ -1303,10 +1224,11 @@ public:
         lv_obj_set_style_border_width(container, 0, 0);
         lv_obj_set_style_shadow_width(container, 32, 0);
         lv_obj_set_style_shadow_opa(container, LV_OPA_30, 0);
-        lv_obj_clear_flag(container, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_remove_flag(container, LV_OBJ_FLAG_SCROLLABLE);
         
-        // Create spinner
-        lv_obj_t* spinner = lv_spinner_create(container, 1000, 60);
+        // Create spinner - LVGL 9 uses separate functions for arc time and arc length
+        lv_obj_t* spinner = lv_spinner_create(container);
+        lv_spinner_set_anim_params(spinner, 1000, 60);
         lv_obj_set_size(spinner, 60, 60);
         lv_obj_center(spinner);
         lv_obj_set_style_arc_width(spinner, 6, LV_PART_MAIN);
@@ -1317,7 +1239,7 @@ public:
 
     void hideModeChangeSpinner() {
         if (modeChangeSpinner != nullptr) {
-            lv_obj_del(modeChangeSpinner);
+            lv_obj_delete(modeChangeSpinner);
             modeChangeSpinner = nullptr;
         }
     }
@@ -1356,7 +1278,7 @@ public:
             return;
         }
         
-        lv_obj_clear_flag(intelligenceModeLabel, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_remove_flag(intelligenceModeLabel, LV_OBJ_FLAG_HIDDEN);
         
         const char* labelText = "";
         lv_color_t bgColor;
@@ -1445,7 +1367,7 @@ public:
                 snprintf(savingsText, sizeof(savingsText), "+%.0f %s", savings, currencyStr);
                 lv_obj_set_style_text_color(intelligenceSummarySavings, lv_color_hex(0x00AA00), 0);  // Green for positive
                 lv_label_set_text(intelligenceSummarySavings, savingsText);
-                lv_obj_clear_flag(intelligenceSummarySavings, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_remove_flag(intelligenceSummarySavings, LV_OBJ_FLAG_HIDDEN);
             } else {
                 // Hide savings if zero or negative
                 lv_obj_add_flag(intelligenceSummarySavings, LV_OBJ_FLAG_HIDDEN);
@@ -1561,10 +1483,10 @@ public:
                 
                 // Show/hide connecting line (hide for last visible item)
                 if (intelligenceUpcomingLines[foundChanges] != nullptr) {
-                    lv_obj_clear_flag(intelligenceUpcomingLines[foundChanges], LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_remove_flag(intelligenceUpcomingLines[foundChanges], LV_OBJ_FLAG_HIDDEN);
                 }
                 
-                lv_obj_clear_flag(intelligenceUpcomingRows[foundChanges], LV_OBJ_FLAG_HIDDEN);
+                lv_obj_remove_flag(intelligenceUpcomingRows[foundChanges], LV_OBJ_FLAG_HIDDEN);
                 
                 lastMode = plan[q];
                 foundChanges++;
@@ -1681,7 +1603,7 @@ public:
         if (hasPhases)
         {
             // show inverter phase container
-            lv_obj_clear_flag(ui_inverterPhasesContainer, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_inverterPhasesContainer, LV_OBJ_FLAG_HIDDEN);
         }
         else
         {
@@ -1692,12 +1614,12 @@ public:
         if (hasGridPhases)
         {
             // show grid phase container
-            lv_obj_clear_flag(ui_meterPowerBarL1, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_meterPowerBarL2, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_meterPowerBarL3, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_meterPowerLabelL1, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_meterPowerLabelL2, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_meterPowerLabelL3, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_meterPowerBarL1, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_meterPowerBarL2, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_meterPowerBarL3, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_meterPowerLabelL1, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_meterPowerLabelL2, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_meterPowerLabelL3, LV_OBJ_FLAG_HIDDEN);
         }
         else
         {
@@ -1730,7 +1652,7 @@ public:
         }
         else
         {
-            lv_obj_clear_flag(ui_pvStringsContainer, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_pvStringsContainer, LV_OBJ_FLAG_HIDDEN);
         }
         if (inverterData.pv3Power == 0 && inverterData.pv4Power == 0)
         {
@@ -1738,7 +1660,7 @@ public:
         }
         else
         {
-            lv_obj_clear_flag(ui_pvStringsContainer1, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_pvStringsContainer1, LV_OBJ_FLAG_HIDDEN);
         }
 
         lv_label_set_text_fmt(ui_inverterTemperatureLabel, "%d°C", inverterData.inverterTemperature);
@@ -1767,7 +1689,7 @@ public:
         }
         else
         {
-            lv_obj_clear_flag(ui_inverterTemperatureLabel, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_inverterTemperatureLabel, LV_OBJ_FLAG_HIDDEN);
         }
 
         inverterPowerTextAnimator.animate(ui_inverterPowerLabel, previousInverterPower, inverterPower);
@@ -1920,8 +1842,8 @@ public:
 
         if (inverterData.hasBattery)
         {
-            lv_obj_clear_flag(ui_batteryContainer, LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_batteryStatsContainer, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_batteryContainer, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_batteryStatsContainer, LV_OBJ_FLAG_HIDDEN);
         }
         else
         {
@@ -1931,7 +1853,7 @@ public:
 
         if (shellyResult.pairedCount > 0)
         {
-            lv_obj_clear_flag(ui_shellyContainer, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_shellyContainer, LV_OBJ_FLAG_HIDDEN);
         }
         else
         {
@@ -1967,7 +1889,7 @@ public:
         if (wallboxResult.chargingControlEnabled)
         {
             // show charging control
-            lv_obj_clear_flag(ui_wallboxSmartCheckbox, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_wallboxSmartCheckbox, LV_OBJ_FLAG_HIDDEN);
         }
         else
         {
@@ -1975,13 +1897,13 @@ public:
         }
         if (wallboxResult.evConnected)
         {
-            lv_obj_clear_flag(ui_wallboxPowerContainer, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_wallboxPowerContainer, LV_OBJ_FLAG_HIDDEN);
 
             // charged energy
             if (wallboxResult.chargedEnergy > 0)
             {
                 lv_label_set_text(ui_wallboxEnergyLabel, format(ENERGY, wallboxResult.chargedEnergy * 1000.0, 1).formatted.c_str());
-                lv_obj_clear_flag(ui_wallboxEnergyContainer, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_remove_flag(ui_wallboxEnergyContainer, LV_OBJ_FLAG_HIDDEN);
             }
             else
             {
@@ -1996,7 +1918,7 @@ public:
             if (wallboxResult.totalChargedEnergy > 0)
             {
                 lv_label_set_text(ui_wallboxEnergyLabel, format(ENERGY, wallboxResult.totalChargedEnergy * 1000.0, 1, true).formatted.c_str());
-                lv_obj_clear_flag(ui_wallboxEnergyContainer, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_remove_flag(ui_wallboxEnergyContainer, LV_OBJ_FLAG_HIDDEN);
             }
             else
             {
@@ -2007,7 +1929,7 @@ public:
         if (wallboxResult.updated > 0)
         {
             // show container
-            lv_obj_clear_flag(ui_wallboxContainer, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_wallboxContainer, LV_OBJ_FLAG_HIDDEN);
         }
         else
         {
@@ -2036,7 +1958,7 @@ public:
                 lv_obj_set_style_shadow_color(ui_wallboxTemperatureLabel, green, 0);
                 lv_obj_set_style_text_color(ui_wallboxTemperatureLabel, white, 0);
             }
-            lv_obj_clear_flag(ui_wallboxTemperatureLabel, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_wallboxTemperatureLabel, LV_OBJ_FLAG_HIDDEN);
         }
         else
         {
@@ -2051,12 +1973,12 @@ public:
         {
         case WALLBOX_TYPE_SOLAX:
             // show solax logo
-            lv_obj_clear_flag(ui_wallboxLogoSolaxImage, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_wallboxLogoSolaxImage, LV_OBJ_FLAG_HIDDEN);
             lv_obj_set_style_shadow_color(ui_wallboxContainer, lv_color_hex(_ui_theme_color_pvColor[0]), 0);
             break;
         case WALLBOX_TYPE_ECOVOLTER_PRO_V2:
             // show ecovolter logo
-            lv_obj_clear_flag(ui_wallboxLogoEcovolterImage, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(ui_wallboxLogoEcovolterImage, LV_OBJ_FLAG_HIDDEN);
             lv_obj_set_style_shadow_color(ui_wallboxContainer, lv_color_hex(_ui_theme_color_loadColor[0]), 0);
             break;
         default:
@@ -2080,7 +2002,7 @@ public:
             }
             else
             {
-                lv_obj_clear_flag(ui_dongleFWVersion, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_remove_flag(ui_dongleFWVersion, LV_OBJ_FLAG_HIDDEN);
             }
             break;
         case DONGLE_STATUS_CONNECTION_ERROR:
@@ -2110,7 +2032,7 @@ public:
             if (electricityPriceResult.updated > 0)
             {
                 // show
-                lv_obj_clear_flag(ui_spotPriceContainer, LV_OBJ_FLAG_HIDDEN);
+                lv_obj_remove_flag(ui_spotPriceContainer, LV_OBJ_FLAG_HIDDEN);
             }
             else
             {
@@ -2238,7 +2160,7 @@ public:
             lv_obj_add_flag(intelligencePlanTile, LV_OBJ_FLAG_HIDDEN);
         } else if (!hasSpotPrices) {
             // Intelligence enabled but no spot prices - show waiting state
-            lv_obj_clear_flag(intelligencePlanTile, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(intelligencePlanTile, LV_OBJ_FLAG_HIDDEN);
             lv_label_set_text(intelligenceSummaryBadge, TR(STR_WAITING));
             lv_obj_set_style_bg_color(intelligenceSummaryBadge, lv_color_hex(0x888888), 0);
             if (intelligenceSummarySavings != nullptr) {
@@ -2246,7 +2168,7 @@ public:
             }
         } else if (active) {
             // Intelligence is working
-            lv_obj_clear_flag(intelligencePlanTile, LV_OBJ_FLAG_HIDDEN);
+            lv_obj_remove_flag(intelligencePlanTile, LV_OBJ_FLAG_HIDDEN);
             // Summary will be updated by updateIntelligenceModeLabel
         } else {
             // Intelligence enabled but not active for some reason
@@ -2340,10 +2262,7 @@ private:
             }
         }
         
-        // Reset series start points
-        pvPowerSeries->start_point = 0;
-        acPowerSeries->start_point = 0;
-        socSeries->start_point = 0;
+        // Note: In LVGL 9, chart series start_point is handled internally
         
         // Use external arrays - single LVGL call per series instead of 96+ calls
         lv_chart_set_ext_y_array(ui_Chart1, pvPowerSeries, pvPowerData);
@@ -2351,7 +2270,7 @@ private:
         lv_chart_set_ext_y_array(ui_Chart1, socSeries, socData);
         
         lv_chart_set_range(ui_Chart1, LV_CHART_AXIS_SECONDARY_Y, 0, (lv_coord_t)maxPower);
-        lv_obj_set_style_text_color(ui_Chart1, isDarkMode ? lv_color_white() : lv_color_black(), LV_PART_TICKS);
+        // Note: LV_PART_TICKS removed in LVGL 9
         lv_chart_refresh(ui_Chart1);
     }
 

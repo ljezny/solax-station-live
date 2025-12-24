@@ -319,7 +319,7 @@ void ui_IntelligenceSetup_screen_init(void)
     lv_obj_set_style_pad_top(ui_intelligenceButtonContainer, 10, LV_PART_MAIN);
     
     // Reset button
-    ui_intelligenceResetButton = lv_btn_create(ui_intelligenceButtonContainer);
+    ui_intelligenceResetButton = lv_button_create(ui_intelligenceButtonContainer);
     lv_obj_set_width(ui_intelligenceResetButton, 140);
     lv_obj_set_height(ui_intelligenceResetButton, 45);
     lv_obj_add_flag(ui_intelligenceResetButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
@@ -337,7 +337,7 @@ void ui_IntelligenceSetup_screen_init(void)
     lv_obj_set_style_text_font(ui_intelligenceResetLabel, &ui_font_OpenSansSmall, 0);
     
     // Cancel button
-    ui_intelligenceCancelButton = lv_btn_create(ui_intelligenceButtonContainer);
+    ui_intelligenceCancelButton = lv_button_create(ui_intelligenceButtonContainer);
     lv_obj_set_width(ui_intelligenceCancelButton, 140);
     lv_obj_set_height(ui_intelligenceCancelButton, 45);
     lv_obj_add_flag(ui_intelligenceCancelButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
@@ -355,7 +355,7 @@ void ui_IntelligenceSetup_screen_init(void)
     lv_obj_set_style_text_font(ui_intelligenceCancelLabel, &ui_font_OpenSansSmall, 0);
     
     // Save button
-    ui_intelligenceSaveButton = lv_btn_create(ui_intelligenceButtonContainer);
+    ui_intelligenceSaveButton = lv_button_create(ui_intelligenceButtonContainer);
     lv_obj_set_width(ui_intelligenceSaveButton, 140);
     lv_obj_set_height(ui_intelligenceSaveButton, 45);
     lv_obj_add_flag(ui_intelligenceSaveButton, LV_OBJ_FLAG_SCROLL_ON_FOCUS);

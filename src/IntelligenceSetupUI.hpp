@@ -326,6 +326,6 @@ static void intelligenceResetHandler(lv_event_t *e) {
 static void intelligenceInputFocusHandler(lv_event_t *e) {
     IntelligenceSetupUI *ui = (IntelligenceSetupUI *)lv_event_get_user_data(e);
     if (ui) {
-        ui->onInputFocus(lv_event_get_target(e), lv_event_get_code(e));
+        ui->onInputFocus((lv_obj_t *)lv_event_get_target(e), lv_event_get_code(e));
     }
 }
