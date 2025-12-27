@@ -33,7 +33,8 @@ class SolaxModbusDongleAPI
 {
 public:
     SolaxModbusDongleAPI() : isSupportedDongle(true), ip(0, 0, 0, 0), consecutiveTimeoutErrors(0), 
-                             inverterCategory(SOLAX_CATEGORY_UNKNOWN), inverterGeneration(SOLAX_GEN_UNKNOWN) {}
+                             inverterCategory(SOLAX_CATEGORY_UNKNOWN), inverterGeneration(SOLAX_GEN_UNKNOWN),
+                             isThreePhase(false) {}
 
     /**
      * Returns true if this inverter supports intelligence mode control.
@@ -412,6 +413,7 @@ protected:
     static constexpr int MAX_TIMEOUT_ERRORS_BEFORE_RESET = 3;  // Reset dongle after this many consecutive timeouts
     SolaxInverterCategory inverterCategory;    // Detected inverter category (HYBRID/MIC)
     SolaxInverterGeneration inverterGeneration; // Detected inverter generation (GEN2-GEN6)
+    bool isThreePhase;                         // True for X3 (three-phase), false for X1 (single-phase)
     
     // Půlnoční hodnoty čítačů pro výpočet denních statistik
     int lastKnownDay = -1;                     // Poslední známý den (1-31) pro detekci přechodu přes půlnoc
@@ -1366,17 +1368,28 @@ private:
         {
             return false;
         }
-        data.inverterOutpuPowerL1 = response.readInt16(0x6C);
-        data.inverterOutpuPowerL2 = response.readInt16(0x70);
-        data.inverterOutpuPowerL3 = response.readInt16(0x74);
+        
+        if (isThreePhase)
+        {
+            // X3 (třífázový) - čteme výkon z registrů 0x6C, 0x70, 0x74
+            data.inverterOutpuPowerL1 = response.readInt16(0x6C);
+            data.inverterOutpuPowerL2 = response.readInt16(0x70);
+            data.inverterOutpuPowerL3 = response.readInt16(0x74);
 
-        //backup
-        uint16_t backupL1Power = response.readInt16(0x78);
-        uint16_t backupL2Power = response.readInt16(0x7C);
-        uint16_t backupL3Power = response.readInt16(0x80);
-        data.inverterOutpuPowerL1 += backupL1Power;
-        data.inverterOutpuPowerL2 += backupL2Power;
-        data.inverterOutpuPowerL3 += backupL3Power;
+            //backup
+            uint16_t backupL1Power = response.readInt16(0x78);
+            uint16_t backupL2Power = response.readInt16(0x7C);
+            uint16_t backupL3Power = response.readInt16(0x80);
+            data.inverterOutpuPowerL1 += backupL1Power;
+            data.inverterOutpuPowerL2 += backupL2Power;
+            data.inverterOutpuPowerL3 += backupL3Power;
+        }
+        else
+        {
+            // X1 (jednofázový) - ponecháme hodnotu z registru 0x02 (vyčteno v readMainInverterData)
+            // Registry 0x6C, 0x70, 0x74 jsou pro X3 a u X1 vrací 0
+            LOGD("X1 inverter: keeping inverterOutpuPowerL1 from register 0x02 = %d", data.inverterOutpuPowerL1);
+        }
 
         data.gridPowerL1 = response.readInt16(0x82);
         data.gridPowerL2 = response.readInt16(0x84);
@@ -1534,6 +1547,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN5;
+            isThreePhase = true;
             LOGI("Detected HYBRID GEN5 inverter (X3-Ultra/IES): %s", serialNumber.c_str());
             return;
         }
@@ -1543,6 +1557,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN5;
+            isThreePhase = false;
             LOGI("Detected HYBRID GEN5 X1-IES inverter: %s", serialNumber.c_str());
             return;
         }
@@ -1552,6 +1567,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN6;
+            isThreePhase = (prefix3 == "10K");
             LOGI("Detected HYBRID GEN6 inverter: %s", serialNumber.c_str());
             return;
         }
@@ -1561,6 +1577,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN4;
+            isThreePhase = false;
             LOGI("Detected HYBRID GEN4 X1 inverter: %s", serialNumber.c_str());
             return;
         }
@@ -1570,6 +1587,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN4;
+            isThreePhase = true;
             LOGI("Detected HYBRID GEN4 X3 inverter: %s", serialNumber.c_str());
             return;
         }
@@ -1579,6 +1597,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN3;
+            isThreePhase = false;
             LOGI("Detected HYBRID GEN3 X1 inverter: %s", serialNumber.c_str());
             return;
         }
@@ -1588,6 +1607,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN3;
+            isThreePhase = true;
             LOGI("Detected HYBRID GEN3 X3 inverter: %s", serialNumber.c_str());
             return;
         }
@@ -1597,6 +1617,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN2;
+            isThreePhase = false;
             LOGI("Detected HYBRID GEN2 X1 inverter: %s", serialNumber.c_str());
             return;
         }
@@ -1608,6 +1629,7 @@ private:
             // AC coupled, ale má baterii
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = (prefix3.startsWith("F") || prefix3 == "PRE") ? SOLAX_GEN4 : SOLAX_GEN3;
+            isThreePhase = !(prefix3.startsWith("F"));  // F4x jsou X1, ostatní X3
             LOGI("Detected AC/RetroFit inverter: %s", serialNumber.c_str());
             return;
         }
@@ -1617,6 +1639,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN4;
+            isThreePhase = (prefix2 == "H3");  // H3x jsou X3, H4x/H5x jsou X1
             LOGI("Detected HYBRID inverter (H-prefix): %s", serialNumber.c_str());
             return;
         }
@@ -1624,6 +1647,7 @@ private:
         // Default: HYBRID GEN4 (původní chování)
         inverterCategory = SOLAX_CATEGORY_HYBRID;
         inverterGeneration = SOLAX_GEN4;
+        isThreePhase = false;  // Default na X1 pro bezpečnější chování
         LOGI("Unknown SN prefix, defaulting to HYBRID GEN4: %s", serialNumber.c_str());
     }
     
