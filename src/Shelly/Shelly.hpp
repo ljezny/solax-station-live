@@ -195,20 +195,30 @@ public:
     {
         mdns_result_t *results = NULL;
 
-        if (mdns_init() != ESP_OK)
+        esp_err_t err = mdns_init();
+        if (err != ESP_OK)
         {
-            LOGE("Failed starting MDNS");
+            LOGE("Failed starting MDNS: %s (0x%x)", esp_err_to_name(err), err);
             return;
         }
+        LOGD("mDNS initialized successfully");
 
-        if (mdns_query_ptr("_http", "_tcp", 3000, 20, &results) != ESP_OK)
+        err = mdns_query_ptr("_http", "_tcp", 3000, 20, &results);
+        if (err != ESP_OK)
         {
-            LOGE("Failed to query MDNS");
+            LOGE("Failed to query MDNS: %s (0x%x)", esp_err_to_name(err), err);
             mdns_free();
             return;
         }
 
-        uint8_t numResult = 0;
+        // Count results
+        int totalResults = 0;
+        mdns_result_t *counter = results;
+        while (counter) {
+            totalResults++;
+            counter = counter->next;
+        }
+        LOGD("mDNS query returned %d results", totalResults);
 
         mdns_result_t *r = results;
         LOGD("SoftAP IP: %s, Subnet: %s", softAPIP.toString().c_str(), softAPSubnet.toString().c_str());
@@ -222,26 +232,27 @@ public:
                 continue;
             }
             String hostname(rawHost);
-            LOGD("Found service: %s", hostname.c_str());
             // check null
             if (r->addr == nullptr)
             {
-                LOGW("mDNS result with null address; skipping");
+                LOGD("Found service: %s (no IP)", hostname.c_str());
                 r = r->next;
                 continue;
             }
             if (r->addr->addr.type != ESP_IPADDR_TYPE_V4)
             {
-                LOGW("mDNS result with non-IPv4 address; skipping");
+                LOGD("Found service: %s (non-IPv4)", hostname.c_str());
                 r = r->next;
                 continue;
             }
 
             IPAddress ipAddress = r->addr->addr.u_addr.ip4.addr;
+            LOGD("Found service: %s IP: %s", hostname.c_str(), ipAddress.toString().c_str());
+            
             // check if IP is in the same subnet as softAP
             if (inSameSubnet(ipAddress, softAPIP, softAPSubnet))
             {
-                LOGD("Found Shelly on softAP subnet: %s", hostname.c_str());
+                LOGD("  -> on softAP subnet, checking if Shelly...");
                 hostname.toLowerCase();
                 for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
                 {
@@ -267,6 +278,11 @@ public:
                         break;
                     }
                 }
+            }
+            else
+            {
+                LOGD("  -> NOT on softAP subnet (device: %s, softAP: %s/%s)", 
+                     ipAddress.toString().c_str(), softAPIP.toString().c_str(), softAPSubnet.toString().c_str());
             }
 
             r = r->next;

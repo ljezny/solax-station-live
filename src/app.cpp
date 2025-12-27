@@ -723,7 +723,7 @@ bool pairShellyTask()
                 }
             }
         }
-        if (softAP.isRunning() && shellyAPI.getPairedCount() < softAP.getNumberOfConnectedDevices())
+        if (softAP.isRunning())
         {
             shellyAPI.queryMDNS(WiFi.softAPIP(), WiFi.softAPSubnetMask());
         }
