@@ -1190,7 +1190,18 @@ private:
         data.soc = response.readUInt16(0x1C);
         data.batteryPower = response.readInt16(0x16);
         data.batteryVoltage = response.readInt16(0x14) / 10.0f;
-        //data.gridPower = response.readInt32LSB(0x46); //read later from phases
+        
+        // Pro X1 (jednofázový) čteme grid power z registru 0x46 (Measured Power)
+        // Pro X3 (třífázový) se čte později z registrů 0x82, 0x84, 0x86 v readPhaseData
+        if (!isThreePhase)
+        {
+            int32_t measuredPower = response.readInt32LSB(0x46);  // W (záporné = export, kladné = import)
+            data.gridPowerL1 = measuredPower;
+            data.gridPowerL2 = 0;
+            data.gridPowerL3 = 0;
+            LOGD("X1 inverter: Grid power from register 0x46 (Measured Power) = %d W", measuredPower);
+        }
+        
         data.batteryChargedToday = response.readUInt16(0x23) / 10.0f;
         data.batteryDischargedToday = response.readUInt16(0x20) / 10.0f;
         data.batteryTemperature = response.readInt16(0x18);
@@ -1383,17 +1394,23 @@ private:
             data.inverterOutpuPowerL1 += backupL1Power;
             data.inverterOutpuPowerL2 += backupL2Power;
             data.inverterOutpuPowerL3 += backupL3Power;
+            
+            // X3 - grid power z registrů 0x82, 0x84, 0x86 (vyžaduje připojený meter/CT)
+            data.gridPowerL1 = response.readInt16(0x82);
+            data.gridPowerL2 = response.readInt16(0x84);
+            data.gridPowerL3 = response.readInt16(0x86);
         }
         else
         {
             // X1 (jednofázový) - ponecháme hodnotu z registru 0x02 (vyčteno v readMainInverterData)
             // Registry 0x6C, 0x70, 0x74 jsou pro X3 a u X1 vrací 0
             LOGD("X1 inverter: keeping inverterOutpuPowerL1 from register 0x02 = %d", data.inverterOutpuPowerL1);
+            
+            // X1 - grid power bude vyčteno z registru 0x46 (Measured Power) v readMainInverterData
+            // Registry 0x82, 0x84, 0x86 vrací 0 pro X1 bez externího meteru
+            // gridPowerL1 je nastaven v readMainInverterData z registru 0x46
         }
 
-        data.gridPowerL1 = response.readInt16(0x82);
-        data.gridPowerL2 = response.readInt16(0x84);
-        data.gridPowerL3 = response.readInt16(0x86);
         //data.gridPower = data.gridPowerL1 + data.gridPowerL2 + data.gridPowerL3;
         return true;
     }
