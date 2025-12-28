@@ -46,126 +46,308 @@ public:
      */
     bool setWorkMode(const String& ipAddress, InverterMode_t mode, int minSoc = 10, int maxSoc = 100)
     {
-        IPAddress targetIp;
+        // Set IP address
         if (!ipAddress.isEmpty())
         {
-            targetIp.fromString(ipAddress);
+            IPAddress newIp;
+            if (newIp.fromString(ipAddress))
+            {
+                ip = newIp;
+            }
         }
-        else if (ip != IPAddress(0, 0, 0, 0))
+        
+        if (ip == IPAddress(0, 0, 0, 0))
         {
-            targetIp = ip;
-        }
-        else
-        {
+            LOGD("No IP address available for setWorkMode");
             return false;
         }
 
-
-        if (!rtuChannel.connect())
-        {
-            return false;
-        }
-
-        bool success = false;
-
-        switch (mode)
-        {
-        case INVERTER_MODE_SELF_USE:
-            // General Mode - work_mode = 0
-            success = writeWorkModeRegister(targetIp, GOODWE_WORK_MODE_GENERAL);
-            break;
-
-        case INVERTER_MODE_HOLD_BATTERY:
-            // Hold Battery - use Eco Mode V2 with discharge at 1% power (effectively holds battery)
-            success = setEcoModeDischarge(targetIp, 1, minSoc);  // 1% power = hold battery
-            break;
-
-        case INVERTER_MODE_CHARGE_FROM_GRID:
-            // Eco Mode V2 with 24/7 charging, target SOC = maxSoc
-            success = setEcoModeCharge(targetIp, 99, maxSoc);  // 100% power, charge to maxSoc
-            break;
-
-        case INVERTER_MODE_DISCHARGE_TO_GRID:
-            // Eco Mode V2 with 24/7 discharging, stop at minSoc
-            success = setEcoModeDischarge(targetIp, 99, minSoc);  // 100% power, discharge to minSoc
-            break;
-
-        default:
-            break;
-        }
-
-        rtuChannel.disconnect();
-        return success;
+        return executeWorkModeChange(mode, minSoc, maxSoc);
     }
 
 private:
+    /**
+     * Execute the actual work mode change using tryWrite methods
+     */
+    bool executeWorkModeChange(InverterMode_t mode, int minSoc, int maxSoc)
+    {
+        switch (mode)
+        {
+        case INVERTER_MODE_SELF_USE:
+            return tryWriteSingleRegister(REG_WORK_MODE, GOODWE_WORK_MODE_GENERAL);
+
+        case INVERTER_MODE_HOLD_BATTERY:
+            return setEcoModeDischarge(ip, 1, minSoc);
+
+        case INVERTER_MODE_CHARGE_FROM_GRID:
+            return setEcoModeCharge(ip, 99, maxSoc);
+
+        case INVERTER_MODE_DISCHARGE_TO_GRID:
+            return setEcoModeDischarge(ip, 99, minSoc);
+
+        default:
+            return false;
+        }
+    }
+
     ModbusRTU rtuChannel;
-    //ModbusTCP tcpChannel;
-    IPAddress ip = IPAddress(0, 0, 0, 0); // default IP address
+    ModbusTCP tcpChannel;
+    IPAddress ip = IPAddress(0, 0, 0, 0);
+    bool preferTcp = false; // prefer TCP after successful TCP connection
     double gridBuyTotal = 0;
     double gridSellTotal = 0;
     int day = -1;
-    const int RETRY_COUNT = 5;
-    
-    // GoodWe Modbus constants
-    static constexpr uint8_t GOODWE_UNIT_ID = 0xF7;           // GoodWe uses unit ID 247
-    static constexpr int GOODWE_UDP_PORT = 8899;              // UDP port for Modbus RTU
+    static constexpr int RETRY_COUNT = 3;
+    static constexpr int GOODWE_TCP_PORT = 502;
+    static constexpr uint8_t GOODWE_UNIT_ID = 0xF7;
+    static constexpr int GOODWE_UDP_PORT = 8899;
     
     // GoodWe Work Mode register and values
-    static constexpr uint16_t REG_WORK_MODE = 47000;          // Work Mode register
-    static constexpr uint16_t GOODWE_WORK_MODE_GENERAL = 0;   // General/Self-Use mode
-    static constexpr uint16_t GOODWE_WORK_MODE_OFFGRID = 1;   // Off-Grid mode
-    static constexpr uint16_t GOODWE_WORK_MODE_BACKUP = 2;    // Backup mode
-    static constexpr uint16_t GOODWE_WORK_MODE_ECO = 3;       // Eco mode
-    static constexpr uint16_t GOODWE_WORK_MODE_PEAKSHAVING = 4; // Peak Shaving mode
-    static constexpr uint16_t GOODWE_WORK_MODE_SELFUSE = 5;   // Self-Use mode (745 platform)
+    static constexpr uint16_t REG_WORK_MODE = 47000;
+    static constexpr uint16_t GOODWE_WORK_MODE_GENERAL = 0;
+    static constexpr uint16_t GOODWE_WORK_MODE_OFFGRID = 1;
+    static constexpr uint16_t GOODWE_WORK_MODE_BACKUP = 2;
+    static constexpr uint16_t GOODWE_WORK_MODE_ECO = 3;
+    static constexpr uint16_t GOODWE_WORK_MODE_PEAKSHAVING = 4;
+    static constexpr uint16_t GOODWE_WORK_MODE_SELFUSE = 5;
     
-    // Eco Mode V1 registers (8 bytes = 4 registers per group) - older firmware
-    static constexpr uint16_t REG_ECO_MODE_V1_1 = 47515;      // Eco Mode V1 Group 1 start
-    static constexpr uint16_t REG_ECO_MODE_V1_2 = 47519;      // Eco Mode V1 Group 2 start
-    static constexpr uint16_t REG_ECO_MODE_V1_3 = 47523;      // Eco Mode V1 Group 3 start
-    static constexpr uint16_t REG_ECO_MODE_V1_4 = 47527;      // Eco Mode V1 Group 4 start
-    static constexpr uint16_t REG_ECO_MODE_V1_REGS = 4;       // V1 uses 4 registers (8 bytes)
-    
-    // Eco Mode V2 registers (12 bytes = 6 registers per group) - ARM firmware 19+
-    static constexpr uint16_t REG_ECO_MODE_V2_1 = 47547;      // Eco Mode V2 Group 1 start
-    static constexpr uint16_t REG_ECO_MODE_V2_2 = 47553;      // Eco Mode V2 Group 2 start
-    static constexpr uint16_t REG_ECO_MODE_V2_3 = 47559;      // Eco Mode V2 Group 3 start
-    static constexpr uint16_t REG_ECO_MODE_V2_4 = 47565;      // Eco Mode V2 Group 4 start
-    static constexpr uint16_t REG_ECO_MODE_V2_REGS = 6;       // V2 uses 6 registers (12 bytes)
+    // Eco Mode V2 registers (12 bytes = 6 registers per group)
+    static constexpr uint16_t REG_ECO_MODE_V2_1 = 47547;
+    static constexpr uint16_t REG_ECO_MODE_V2_2 = 47553;
+    static constexpr uint16_t REG_ECO_MODE_V2_3 = 47559;
+    static constexpr uint16_t REG_ECO_MODE_V2_4 = 47565;
+    static constexpr uint16_t REG_ECO_MODE_V2_REGS = 6;
 
-    ModbusResponse sendSNDataRequestPacket(IPAddress ip)
+    // ==================== Core Communication Methods ====================
+
+    /**
+     * Try to read registers with retries. First tries UDP, if all retries fail, tries TCP fallback.
+     * Similar to SofarSolar's tryReadWithRetries pattern.
+     * 
+     * @param startAddr Starting register address
+     * @param count Number of registers to read
+     * @param callback Lambda to process the response data
+     * @return true if read was successful
+     */
+    template <typename Callback>
+    bool tryReadWithRetries(uint16_t startAddr, uint8_t count, Callback callback)
     {
-        return rtuChannel.sendDataRequest(ip, 8899, 35003, 8);
+        // Try preferred channel first (UDP by default, TCP if preferTcp)
+        if (preferTcp)
+        {
+            // Try TCP first
+            if (tryReadTcp(startAddr, count, callback))
+            {
+                return true;
+            }
+            // TCP failed, try UDP fallback
+            LOGD("TCP read failed, trying UDP fallback");
+            if (tryReadUdp(startAddr, count, callback))
+            {
+                preferTcp = false; // UDP works, reset preference
+                return true;
+            }
+        }
+        else
+        {
+            // Try UDP first (default)
+            if (tryReadUdp(startAddr, count, callback))
+            {
+                return true;
+            }
+            // UDP failed, try TCP fallback
+            LOGD("UDP read failed at 0x%04X, trying TCP fallback", startAddr);
+            if (tryReadTcp(startAddr, count, callback))
+            {
+                LOGD("TCP fallback successful, will prefer TCP next time");
+                preferTcp = true;
+                return true;
+            }
+        }
+        
+        LOGD("All read attempts failed for register 0x%04X", startAddr);
+        return false;
     }
 
-    ModbusResponse sendRunningDataRequestPacket(IPAddress ip)
+    /**
+     * Try to read via UDP with retries
+     */
+    template <typename Callback>
+    bool tryReadUdp(uint16_t startAddr, uint8_t count, Callback callback)
     {
-        return rtuChannel.sendDataRequest(ip, 8899, 35100, 125);
+        rtuChannel.connect();
+        for (int i = 0; i < RETRY_COUNT; i++)
+        {
+            ModbusResponse response = rtuChannel.sendDataRequest(ip, GOODWE_UDP_PORT, startAddr, count);
+            if (response.isValid)
+            {
+                callback(response);
+                rtuChannel.disconnect();
+                return true;
+            }
+            if (i < RETRY_COUNT - 1) delay(100 + i * 100);
+        }
+        rtuChannel.disconnect();
+        return false;
     }
 
-    ModbusResponse sendBMSInfoRequestPacket(IPAddress ip)
+    /**
+     * Try to read via TCP with retries
+     */
+    template <typename Callback>
+    bool tryReadTcp(uint16_t startAddr, uint8_t count, Callback callback)
     {
-        return rtuChannel.sendDataRequest(ip, 8899, 37000, 8);
+        if (!tcpChannel.connect(ip, GOODWE_TCP_PORT))
+        {
+            LOGD("TCP connection failed to %s:%d", ip.toString().c_str(), GOODWE_TCP_PORT);
+            return false;
+        }
+        
+        for (int i = 0; i < RETRY_COUNT; i++)
+        {
+            ModbusResponse response = tcpChannel.sendModbusRequest(GOODWE_UNIT_ID, 0x03, startAddr, count);
+            if (response.isValid)
+            {
+                callback(response);
+                tcpChannel.disconnect();
+                return true;
+            }
+            if (i < RETRY_COUNT - 1) delay(100 + i * 100);
+        }
+        tcpChannel.disconnect();
+        return false;
     }
 
-    ModbusResponse sendWorkModeRequestPacket(IPAddress ip)
+    /**
+     * Try to write single register with retries and fallback
+     */
+    bool tryWriteSingleRegister(uint16_t addr, uint16_t value)
     {
-        // Read work_mode register (47000) - single register, holding register uses 0x03 (default)
-        return rtuChannel.sendDataRequest(ip, 8899, 47000, 1);
+        if (preferTcp)
+        {
+            if (tryWriteSingleTcp(addr, value)) return true;
+            LOGD("TCP write failed, trying UDP fallback");
+            if (tryWriteSingleUdp(addr, value))
+            {
+                preferTcp = false;
+                return true;
+            }
+        }
+        else
+        {
+            if (tryWriteSingleUdp(addr, value)) return true;
+            LOGD("UDP write failed, trying TCP fallback");
+            if (tryWriteSingleTcp(addr, value))
+            {
+                preferTcp = true;
+                return true;
+            }
+        }
+        return false;
     }
 
-    ModbusResponse sendEcoMode1RequestPacket(IPAddress ip)
+    bool tryWriteSingleUdp(uint16_t addr, uint16_t value)
     {
-        // Read eco_mode_1 V2 registers (47547-47552) - 6 registers = 12 bytes
-        // Format V2: start_h, start_m, end_h, end_m, on_off, day_bits, power_hi, power_lo, soc_hi, soc_lo, month_hi, month_lo
-        return rtuChannel.sendDataRequest(ip, 8899, REG_ECO_MODE_V2_1, REG_ECO_MODE_V2_REGS);
+        rtuChannel.connect();
+        for (int i = 0; i < RETRY_COUNT; i++)
+        {
+            if (rtuChannel.writeSingleRegister(ip, GOODWE_UDP_PORT, GOODWE_UNIT_ID, addr, value))
+            {
+                rtuChannel.disconnect();
+                return true;
+            }
+            if (i < RETRY_COUNT - 1) delay(100 + i * 100);
+        }
+        rtuChannel.disconnect();
+        return false;
     }
 
-    ModbusResponse sendSmartMeterRequestPacket(IPAddress ip)
+    bool tryWriteSingleTcp(uint16_t addr, uint16_t value)
     {
-        return rtuChannel.sendDataRequest(ip, 8899, 36000, 44);
+        if (!tcpChannel.connect(ip, GOODWE_TCP_PORT)) return false;
+        for (int i = 0; i < RETRY_COUNT; i++)
+        {
+            if (tcpChannel.writeSingleRegister(GOODWE_UNIT_ID, addr, value))
+            {
+                tcpChannel.disconnect();
+                return true;
+            }
+            if (i < RETRY_COUNT - 1) delay(100 + i * 100);
+        }
+        tcpChannel.disconnect();
+        return false;
     }
+
+    /**
+     * Try to write multiple registers with retries and fallback
+     */
+    bool tryWriteMultipleRegisters(uint16_t startAddr, const uint8_t* data, uint8_t byteCount)
+    {
+        if (preferTcp)
+        {
+            if (tryWriteMultipleTcp(startAddr, data, byteCount)) return true;
+            LOGD("TCP write failed, trying UDP fallback");
+            if (tryWriteMultipleUdp(startAddr, data, byteCount))
+            {
+                preferTcp = false;
+                return true;
+            }
+        }
+        else
+        {
+            if (tryWriteMultipleUdp(startAddr, data, byteCount)) return true;
+            LOGD("UDP write failed, trying TCP fallback");
+            if (tryWriteMultipleTcp(startAddr, data, byteCount))
+            {
+                preferTcp = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool tryWriteMultipleUdp(uint16_t startAddr, const uint8_t* data, uint8_t byteCount)
+    {
+        rtuChannel.connect();
+        for (int i = 0; i < RETRY_COUNT; i++)
+        {
+            if (rtuChannel.writeMultipleRegisters(ip, GOODWE_UDP_PORT, GOODWE_UNIT_ID, startAddr, data, byteCount))
+            {
+                rtuChannel.disconnect();
+                return true;
+            }
+            if (i < RETRY_COUNT - 1) delay(100 + i * 100);
+        }
+        rtuChannel.disconnect();
+        return false;
+    }
+
+    bool tryWriteMultipleTcp(uint16_t startAddr, const uint8_t* data, uint8_t byteCount)
+    {
+        if (!tcpChannel.connect(ip, GOODWE_TCP_PORT)) return false;
+        
+        // Convert uint8_t array to uint16_t array for TCP channel
+        uint8_t regCount = byteCount / 2;
+        uint16_t values[32];
+        for (int i = 0; i < regCount; i++)
+        {
+            values[i] = (data[i * 2] << 8) | data[i * 2 + 1];
+        }
+        
+        for (int i = 0; i < RETRY_COUNT; i++)
+        {
+            if (tcpChannel.writeMultipleRegisters(GOODWE_UNIT_ID, startAddr, values, regCount))
+            {
+                tcpChannel.disconnect();
+                return true;
+            }
+            if (i < RETRY_COUNT - 1) delay(100 + i * 100);
+        }
+        tcpChannel.disconnect();
+        return false;
+    }
+
+    // ==================== Mode Conversion ====================
 
     /**
      * Converts GoodWe work_mode register value to InverterMode_t
@@ -184,192 +366,92 @@ private:
             return INVERTER_MODE_HOLD_BATTERY;
         
         case GOODWE_WORK_MODE_ECO:
-            // Eco mode - determine charge/discharge from eco_mode_1 power value
             if (!ecoModeEnabled || ecoModePower == 0)
-            {
                 return INVERTER_MODE_SELF_USE;
-            }
             else if (ecoModePower < 0)
-            {
-                // Negative power = charging from grid
                 return INVERTER_MODE_CHARGE_FROM_GRID;
-            }
             else if (ecoModePower <= 1)
-            {
-                // Power = 1% = hold battery mode
                 return INVERTER_MODE_HOLD_BATTERY;
-            }
             else
-            {
-                // Positive power > 1 = discharging to grid
                 return INVERTER_MODE_DISCHARGE_TO_GRID;
-            }
         
         default:
             return INVERTER_MODE_UNKNOWN;
         }
     }
 
-    /**
-     * Write to the work_mode register (47000)
-     */
-    bool writeWorkModeRegister(IPAddress targetIp, uint16_t workMode)
-    {
-        for (int retry = 0; retry < RETRY_COUNT; retry++)
-        {
-            if (rtuChannel.writeSingleRegister(targetIp, GOODWE_UDP_PORT, GOODWE_UNIT_ID, REG_WORK_MODE, workMode))
-            {
-                return true;
-            }
-            delay(retry * 200);
-        }
-        return false;
-    }
+    // ==================== Work Mode Write Methods ====================
 
     /**
      * Set Eco Mode V2 for charging from grid
-     * @param targetIp IP address of the inverter
-     * @param powerPercent Charging power percentage (0-100)
-     * @param targetSoc Target SOC percentage (0-100)
      */
     bool setEcoModeCharge(IPAddress targetIp, int powerPercent, int targetSoc)
     {
+        int16_t powerValue = -abs(powerPercent);
+        uint16_t powerEncoded = (uint16_t)powerValue;
         
-        // Power is negative for charge, encoded as signed int16
-        int16_t powerValue = -abs(powerPercent);  // Negative for charge
-        uint16_t powerEncoded = (uint16_t)powerValue;  // 2's complement
-        
-        // EcoModeV2 format (12 bytes = 6 registers):
-        // Byte 0: start_h, Byte 1: start_m
-        // Byte 2: end_h, Byte 3: end_m
-        // Byte 4: on_off (0xFF = 255-0 = ECO_MODE enabled), Byte 5: day_bits (0x7F = all days)
-        // Byte 6-7: power (signed int16, negative=charge)
-        // Byte 8-9: SOC (uint16)
-        // Byte 10-11: month_bits (0x0000 = all months)
-        // Python: "0000173b{:02x}7f{:04x}{:04x}{:04x}".format(255-schedule_type, power, soc, months)
         uint8_t ecoModeData[12] = {
             0x00, 0x00,  // Start time: 00:00
             0x17, 0x3B,  // End time: 23:59
-            0xFF,        // on_off: 255 - ECO_MODE(0) = 0xFF (enabled)
-            0x7F,        // day_bits: all 7 days (Sun-Sat)
-            (uint8_t)(powerEncoded >> 8),   // Power high byte
-            (uint8_t)(powerEncoded & 0xFF), // Power low byte
-            (uint8_t)(targetSoc >> 8),      // SOC high byte
-            (uint8_t)(targetSoc & 0xFF),    // SOC low byte
-            0x00, 0x00   // month_bits: 0 = all months
+            0xFF, 0x7F,  // on_off=enabled, day_bits=all days
+            (uint8_t)(powerEncoded >> 8), (uint8_t)(powerEncoded & 0xFF),
+            (uint8_t)(targetSoc >> 8), (uint8_t)(targetSoc & 0xFF),
+            0x00, 0x00   // month_bits: all months
         };
         
-        return writeEcoModeV2AndActivate(targetIp, ecoModeData);
+        return writeEcoModeV2AndActivate(ecoModeData);
     }
 
     /**
      * Set Eco Mode V2 for discharging to grid
-     * @param targetIp IP address of the inverter
-     * @param powerPercent Discharging power percentage (0-100)
-     * @param minSoc Minimum SOC percentage to discharge to (0-100)
      */
     bool setEcoModeDischarge(IPAddress targetIp, int powerPercent, int minSoc)
     {
-        
-        // Power is positive for discharge
         uint16_t powerEncoded = abs(powerPercent);
+        uint16_t socValue = 100;
         
-        // For discharge, SOC is set to 100 (0x0064) as target, but minSoc is the floor
-        // Actually Python uses: soc=100 fixed for discharge (0x0064)
-        uint16_t socValue = 100;  // Python uses 0x0064 = 100 for discharge
-        
-        // EcoModeV2 format (12 bytes = 6 registers):
         uint8_t ecoModeData[12] = {
             0x00, 0x00,  // Start time: 00:00
             0x17, 0x3B,  // End time: 23:59
-            0xFF,        // on_off: 255 - ECO_MODE(0) = 0xFF (enabled)
-            0x7F,        // day_bits: all 7 days (Sun-Sat)
-            (uint8_t)(powerEncoded >> 8),   // Power high byte
-            (uint8_t)(powerEncoded & 0xFF), // Power low byte
-            (uint8_t)(socValue >> 8),       // SOC high byte (0x00)
-            (uint8_t)(socValue & 0xFF),     // SOC low byte (0x64 = 100)
-            0x00, 0x00   // month_bits: 0 = all months
+            0xFF, 0x7F,  // on_off=enabled, day_bits=all days
+            (uint8_t)(powerEncoded >> 8), (uint8_t)(powerEncoded & 0xFF),
+            (uint8_t)(socValue >> 8), (uint8_t)(socValue & 0xFF),
+            0x00, 0x00   // month_bits: all months
         };
         
-        return writeEcoModeV2AndActivate(targetIp, ecoModeData);
+        return writeEcoModeV2AndActivate(ecoModeData);
     }
 
     /**
-     * Write eco_mode_1 V2 data (12 bytes) at register 47547 and switch to Eco Mode
+     * Write eco_mode_1 V2 data and switch to Eco Mode
      */
-    bool writeEcoModeV2AndActivate(IPAddress targetIp, const uint8_t* ecoModeData)
+    bool writeEcoModeV2AndActivate(const uint8_t* ecoModeData)
     {
-        // Log the eco mode data we're writing (12 bytes for V2)
-        String dataHex = "";
-        for (int i = 0; i < 12; i++) {
-            char buf[4];
-            snprintf(buf, sizeof(buf), "%02X ", ecoModeData[i]);
-            dataHex += buf;
-        }
-        
-        // Step 1: Write eco_mode_1 V2 (6 registers = 12 bytes) at register 47547
-        bool success = false;
-        for (int retry = 0; retry < RETRY_COUNT; retry++)
+        // Step 1: Write eco_mode_1 V2
+        if (!tryWriteMultipleRegisters(REG_ECO_MODE_V2_1, ecoModeData, 12))
         {
-            if (rtuChannel.writeMultipleRegisters(targetIp, GOODWE_UDP_PORT, GOODWE_UNIT_ID, 
-                                                   REG_ECO_MODE_V2_1, ecoModeData, 12))
-            {
-                success = true;
-                break;
-            }
-            delay(retry * 200);
-        }
-        
-        if (!success)
-        {
+            LOGD("Failed to write eco_mode_1");
             return false;
         }
         
-        // Step 2: Disable other eco mode V2 groups (2, 3, 4) by writing disabled schedule
-        // V2 disabled format: "30003000{schedule_type}00{power}00640000"
-        // For ECO_MODE (0): "300030000000006400640000"
-        uint8_t disabledGroupV2[12] = {
-            0x30, 0x00,  // start: 48:00 (invalid)
-            0x30, 0x00,  // end: 48:00 (invalid)
-            0x00,        // on_off=0 (disabled)
-            0x00,        // day_bits=0
-            0x00, 0x64,  // power=100 (0x0064)
-            0x00, 0x64,  // soc=100 (0x0064)
-            0x00, 0x00   // month_bits=0
+        // Step 2: Disable other eco mode groups
+        uint8_t disabledGroup[12] = {
+            0x30, 0x00, 0x30, 0x00, 0x00, 0x00,
+            0x00, 0x64, 0x00, 0x64, 0x00, 0x00
         };
-        
-        for (int retry = 0; retry < RETRY_COUNT; retry++)
-        {
-            if (rtuChannel.writeMultipleRegisters(targetIp, GOODWE_UDP_PORT, GOODWE_UNIT_ID, REG_ECO_MODE_V2_2, disabledGroupV2, 12))
-                break;
-            delay(retry * 100);
-        }
-        for (int retry = 0; retry < RETRY_COUNT; retry++)
-        {
-            if (rtuChannel.writeMultipleRegisters(targetIp, GOODWE_UDP_PORT, GOODWE_UNIT_ID, REG_ECO_MODE_V2_3, disabledGroupV2, 12))
-                break;
-            delay(retry * 100);
-        }
-        for (int retry = 0; retry < RETRY_COUNT; retry++)
-        {
-            if (rtuChannel.writeMultipleRegisters(targetIp, GOODWE_UDP_PORT, GOODWE_UNIT_ID, REG_ECO_MODE_V2_4, disabledGroupV2, 12))
-                break;
-            delay(retry * 100);
-        }
+        tryWriteMultipleRegisters(REG_ECO_MODE_V2_2, disabledGroup, 12);
+        tryWriteMultipleRegisters(REG_ECO_MODE_V2_3, disabledGroup, 12);
+        tryWriteMultipleRegisters(REG_ECO_MODE_V2_4, disabledGroup, 12);
         
         // Step 3: Set work_mode to Eco (3)
-        bool workModeSuccess = writeWorkModeRegister(targetIp, GOODWE_WORK_MODE_ECO);
-        if (!workModeSuccess)
-        {
-            return false;
-        }
-        
-        return true;
+        return tryWriteSingleRegister(REG_WORK_MODE, GOODWE_WORK_MODE_ECO);
     }
+
+    // ==================== Read Data Methods ====================
 
     InverterData_t readData(String ipAddress)
     {
-        // Always prefer user-specified IP address over cached one
+        // Set IP address
         if (!ipAddress.isEmpty())
         {
             IPAddress newIp;
@@ -377,7 +459,7 @@ private:
             {
                 if (ip != newIp)
                 {
-                    LOGD("Using IP from settings: %s (was: %s)", ipAddress.c_str(), ip.toString().c_str());
+                    LOGD("Using IP from settings: %s", ipAddress.c_str());
                 }
                 ip = newIp;
             }
@@ -393,166 +475,102 @@ private:
         }
 
         InverterData_t inverterData{};
-        if (rtuChannel.connect())
+        
+        // Read running data (critical - must succeed)
+        if (!tryReadWithRetries(35100, 125, [&](ModbusResponse& response) {
+            inverterData.status = DONGLE_STATUS_OK;
+            inverterData.millis = millis();
+            inverterData.pv1Power = response.readUInt32(35100 + 5);
+            inverterData.pv2Power = response.readUInt32(35100 + 9);
+            inverterData.pv3Power = response.readUInt32(35100 + 13);
+            inverterData.pv4Power = response.readUInt32(35100 + 17);
+            inverterData.batteryPower -= response.readInt16(35100 + 83);
+            inverterData.inverterOutpuPowerL1 = response.readInt16(35100 + 25);
+            inverterData.inverterOutpuPowerL2 = response.readInt16(35100 + 30);
+            inverterData.inverterOutpuPowerL3 = response.readInt16(35100 + 35);
+            inverterData.loadPower = inverterData.pv1Power + inverterData.pv2Power + 
+                                     inverterData.pv3Power + inverterData.pv4Power - inverterData.batteryPower;
+            inverterData.inverterTemperature = response.readInt16(35100 + 74) / 10;
+            inverterData.pvTotal = response.readUInt32(35100 + 91) / 10.0;
+            inverterData.pvToday = response.readUInt32(35100 + 93) / 10.0;
+            inverterData.loadToday = response.readUInt16(35100 + 105) / 10.0;
+            inverterData.loadTotal = response.readUInt32(35100 + 103) / 10.0;
+            inverterData.batteryChargedToday = response.readUInt16(35100 + 108) / 10.0;
+            inverterData.batteryDischargedToday = response.readUInt16(35100 + 111) / 10.0;
+            
+            int newDay = (response.readUInt16(35100 + 1) >> 8) & 0xFF;
+            if (this->day != newDay)
+            {
+                this->day = newDay;
+                gridBuyTotal = 0;
+                gridSellTotal = 0;
+            }
+
+            uint16_t reg0 = response.readUInt16(35100 + 0);
+            uint16_t reg1 = response.readUInt16(35100 + 1);
+            struct tm timeinfo = {};
+            timeinfo.tm_year = ((reg0 >> 8) & 0xFF) + 100;
+            timeinfo.tm_mon = (reg0 & 0xFF) - 1;
+            timeinfo.tm_mday = (reg1 >> 8) & 0xFF;
+            timeinfo.tm_hour = reg1 & 0xFF;
+            timeinfo.tm_min = 0;
+            timeinfo.tm_sec = 0;
+            timeinfo.tm_isdst = -1;
+            inverterData.inverterTime = mktime(&timeinfo);
+        }))
         {
-
-            for (int i = 0; i < RETRY_COUNT; i++)
-            {
-                ModbusResponse response = sendRunningDataRequestPacket(ip);
-                if (response.isValid)
-                {
-                    inverterData.status = DONGLE_STATUS_OK;
-                    inverterData.pv1Power = response.readUInt32(35100 + 5);
-                    inverterData.pv2Power = response.readUInt32(35100 + 9);
-                    inverterData.pv3Power = response.readUInt32(35100 + 13);
-                    inverterData.pv4Power = response.readUInt32(35100 + 17);
-
-                    inverterData.batteryPower -= response.readInt16(35100 + 83); // TODO: maybe sign readuw(84);
-                    
-                    // Inverter output power per phase (pgrid L1-L3: registers 35125, 35130, 35135)
-                    inverterData.inverterOutpuPowerL1 = response.readInt16(35100 + 25); // pgrid - On-grid L1 Power
-                    inverterData.inverterOutpuPowerL2 = response.readInt16(35100 + 30); // pgrid2 - On-grid L2 Power
-                    inverterData.inverterOutpuPowerL3 = response.readInt16(35100 + 35); // pgrid3 - On-grid L3 Power
-                    
-                    // Load power = on-grid load (35172) + backup load (35170)
-                    // Register 35172 (offset 72) = load_ptotal (on-grid load, backup NOT included)
-                    // Register 35170 (offset 70) = backup_ptotal (backup/EPS load)
-                    int loadOnGrid = response.readInt16(35100 + 72);   // load_ptotal - on-grid load without backup
-                    int loadBackup = response.readInt16(35100 + 70);   // backup_ptotal - backup/EPS load
-                    //inverterData.loadPower = loadOnGrid /*+ loadBackup*/;  // total house consumption
-                    inverterData.loadPower = inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power - inverterData.batteryPower;
-
-                    inverterData.inverterTemperature = response.readInt16(35100 + 74) / 10;
-                    inverterData.pvTotal = response.readUInt32(35100 + 91) / 10.0;
-                    inverterData.pvToday = response.readUInt32(35100 + 93) / 10.0;
-                    inverterData.loadToday = response.readUInt16(35100 + 105) / 10.0;
-                    inverterData.loadTotal = response.readUInt32(35100 + 103) / 10.0;
-                    inverterData.batteryChargedToday = response.readUInt16(35100 + 108) / 10.0;
-                    inverterData.batteryDischargedToday = response.readUInt16(35100 + 111) / 10.0;
-                   
-                    int day = (response.readUInt16(35100 + 1) >> 8) & 0xFF;
-                    if (this->day != day)
-                    {
-                        this->day = day;
-                        gridBuyTotal = 0;
-                        gridSellTotal = 0;
-                    }
-
-                    // Read RTC time
-                    uint16_t reg0 = response.readUInt16(35100 + 0);
-                    uint16_t reg1 = response.readUInt16(35100 + 1);
-                    struct tm timeinfo = {};
-                    timeinfo.tm_year = ((reg0 >> 8) & 0xFF) + 100;
-                    timeinfo.tm_mon = (reg0 & 0xFF) - 1;
-                    timeinfo.tm_mday = (reg1 >> 8) & 0xFF;
-                    timeinfo.tm_hour = reg1 & 0xFF;
-                    timeinfo.tm_min = 0;
-                    timeinfo.tm_sec = 0;
-                    timeinfo.tm_isdst = -1;
-                    inverterData.inverterTime = mktime(&timeinfo);
-
-                    break;
-                }
-                delay(i * 300);
-            }
-
-            for (int i = 0; i < RETRY_COUNT; i++)
-            {
-                ModbusResponse response = sendSNDataRequestPacket(ip);
-                if (response.isValid)
-                {
-                    inverterData.sn = response.readString(35003, 8);
-                    break;
-                }
-                delay(i * 300);
-            }
-
-            for (int i = 0; i < RETRY_COUNT; i++)
-            {
-                ModbusResponse response = sendSmartMeterRequestPacket(ip);
-                if (response.isValid)
-                {
-                    inverterData.gridSellTotal = response.readIEEE754(36000 + 15) / 1000.0f;
-                    inverterData.gridBuyTotal = response.readIEEE754(36000 + 17) / 1000.0f;
-
-                    inverterData.gridPowerL1 = response.readInt32(36000 + 19);
-                    inverterData.gridPowerL2 = response.readInt32(36000 + 21);
-                    inverterData.gridPowerL3 = response.readInt32(36000 + 23);
-                    
-                    inverterData.loadPower -= (inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
-                    
-                    if (gridBuyTotal == 0)
-                    {
-                        gridBuyTotal = inverterData.gridBuyTotal;
-                    }
-                    if (gridSellTotal == 0)
-                    {
-                        gridSellTotal = inverterData.gridSellTotal;
-                    }
-                    inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
-                    inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
-                    break;
-                }
-                delay(i * 300);
-            }
-
-            for (int i = 0; i < RETRY_COUNT; i++)
-            {
-                ModbusResponse response = sendBMSInfoRequestPacket(ip);
-                if (response.isValid)
-                {
-                    inverterData.batteryTemperature = response.readUInt16(37000 + 3) / 10;
-                    inverterData.soc = response.readUInt16(37000 + 7);
-                    break;
-                }
-                delay(i * 300);
-            }
-
-            // Read work mode (for intelligence support)
-            uint16_t workMode = 0;
-            int16_t ecoModePower = 0;
-            bool ecoModeEnabled = false;
-            
-            for (int i = 0; i < RETRY_COUNT; i++)
-            {
-                ModbusResponse response = sendWorkModeRequestPacket(ip);
-                if (response.isValid)
-                {
-                    workMode = response.readUInt16(47000);
-                    break;
-                }
-                delay(i * 300);
-            }
-            
-            // If Eco mode, read eco_mode_1 V2 to determine charge/discharge
-            if (workMode == GOODWE_WORK_MODE_ECO)
-            {
-                for (int i = 0; i < RETRY_COUNT; i++)
-                {
-                    ModbusResponse response = sendEcoMode1RequestPacket(ip);
-                    if (response.isValid && response.length >= REG_ECO_MODE_V2_REGS)
-                    {
-                        // V2 format (12 bytes):
-                        // Bytes 0-3: start_h, start_m, end_h, end_m
-                        // Byte 4: on_off (0xFF = enabled for ECO_MODE)
-                        // Byte 5: day_bits (0x7F = all days)
-                        // Bytes 6-7: power (signed int16, negative=charge, positive=discharge)
-                        // Bytes 8-9: SOC (uint16)
-                        // Bytes 10-11: month_bits
-                        int8_t onOff = (int8_t)response.data[4];  // Byte 4 = on_off
-                        ecoModePower = (int16_t)((response.data[6] << 8) | response.data[7]);  // Bytes 6-7 = power
-                        uint16_t soc = (response.data[8] << 8) | response.data[9];  // Bytes 8-9 = SOC
-                        ecoModeEnabled = (onOff != 0 && onOff != 85);  // 0xFF/-1 = enabled, 0 = disabled, 85 = NOT_SET
-                        break;
-                    }
-                    delay(i * 300);
-                }
-            }
-            
-            inverterData.inverterMode = goodweModeToInverterMode(workMode, ecoModePower, ecoModeEnabled);
+            LOGD("Failed to read running data");
+            logInverterData(inverterData, millis());
+            return inverterData;
         }
+
+        // Read SN (optional)
+        tryReadWithRetries(35003, 8, [&](ModbusResponse& response) {
+            inverterData.sn = response.readString(35003, 8);
+        });
+
+        // Read SmartMeter data (optional)
+        tryReadWithRetries(36000, 44, [&](ModbusResponse& response) {
+            inverterData.gridSellTotal = response.readIEEE754(36000 + 15) / 1000.0f;
+            inverterData.gridBuyTotal = response.readIEEE754(36000 + 17) / 1000.0f;
+            inverterData.gridPowerL1 = response.readInt32(36000 + 19);
+            inverterData.gridPowerL2 = response.readInt32(36000 + 21);
+            inverterData.gridPowerL3 = response.readInt32(36000 + 23);
+            inverterData.loadPower -= (inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
+            
+            if (gridBuyTotal == 0) gridBuyTotal = inverterData.gridBuyTotal;
+            if (gridSellTotal == 0) gridSellTotal = inverterData.gridSellTotal;
+            inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
+            inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
+        });
+
+        // Read BMS info (optional)
+        tryReadWithRetries(37000, 8, [&](ModbusResponse& response) {
+            inverterData.batteryTemperature = response.readUInt16(37000 + 3) / 10;
+            inverterData.soc = response.readUInt16(37000 + 7);
+        });
+
+        // Read work mode for intelligence support (optional)
+        uint16_t workMode = 0;
+        int16_t ecoModePower = 0;
+        bool ecoModeEnabled = false;
+        
+        tryReadWithRetries(REG_WORK_MODE, 1, [&](ModbusResponse& response) {
+            workMode = response.readUInt16(REG_WORK_MODE);
+        });
+        
+        if (workMode == GOODWE_WORK_MODE_ECO)
+        {
+            tryReadWithRetries(REG_ECO_MODE_V2_1, REG_ECO_MODE_V2_REGS, [&](ModbusResponse& response) {
+                int8_t onOff = (int8_t)response.data[4];
+                ecoModePower = (int16_t)((response.data[6] << 8) | response.data[7]);
+                ecoModeEnabled = (onOff != 0 && onOff != 85);
+            });
+        }
+        
+        inverterData.inverterMode = goodweModeToInverterMode(workMode, ecoModePower, ecoModeEnabled);
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
-        rtuChannel.disconnect();
+        
         logInverterData(inverterData, millis() - inverterData.millis);
 
         if (inverterData.status != DONGLE_STATUS_OK)
@@ -582,8 +600,8 @@ private:
                 udp.read(d, sizeof(d));
 
                 int indexOfComma = String(d).indexOf(',');
-                String ip = String(d).substring(0, indexOfComma);
-                dongleIP.fromString(ip);
+                String ipStr = String(d).substring(0, indexOfComma);
+                dongleIP.fromString(ipStr);
                 break;
             }
         }
