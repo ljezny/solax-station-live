@@ -168,7 +168,8 @@ void ui_WifiSetup_screen_init(void)
     lv_obj_set_flex_grow(ui_Container12, 1);
     lv_obj_set_flex_flow(ui_Container12, LV_FLEX_FLOW_ROW);
     lv_obj_set_flex_align(ui_Container12, LV_FLEX_ALIGN_SPACE_EVENLY, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-    lv_obj_clear_flag(ui_Container12, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_add_flag(ui_Container12, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_scroll_dir(ui_Container12, LV_DIR_VER);
     lv_obj_set_style_pad_column(ui_Container12, 12, LV_PART_MAIN);
     
     // ===== LEFT COLUMN - WiFi (Blue accent) =====
