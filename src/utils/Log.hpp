@@ -15,10 +15,16 @@ extern RemoteLogger remoteLogger;
  * 2. RemoteLogger (if enabled) with FlashGuard synchronization
  * 
  * FlashGuard ensures LittleFS writes don't interfere with RGB LCD DMA.
+ * FlashGuard is only used when remote logging is actually enabled.
  */
 
 // Helper function to format and send log to RemoteLogger with FlashGuard
 inline void _remoteLog(char level, const char* file, int line, const char* format, ...) {
+    // Skip if logging is not enabled (no FlashGuard overhead)
+    if (!remoteLogger.isLoggingEnabled()) {
+        return;
+    }
+    
     // Format the message
     char buffer[256];
     va_list args;
