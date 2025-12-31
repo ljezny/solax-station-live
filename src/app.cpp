@@ -668,8 +668,12 @@ bool loadInverterDataTask()
                         productionPredictor.saveToPreferences();
                         solarChartDataProvider.saveToPreferences();
                     }
-                    
-                    // Flush remote logs periodically (every quarter = 15 min)
+                }
+                
+                // Flush remote logs every 30 seconds
+                static unsigned long lastLogFlush = 0;
+                if (millis() - lastLogFlush > 30000) {
+                    lastLogFlush = millis();
                     remoteLogger.flush();
                 }
 
