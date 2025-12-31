@@ -442,7 +442,7 @@ void setupLVGL()
         lastIntelligenceAttempt = 0; });
 
     // NOTE: loadFromPreferences() for predictors is called later in STATE_SPLASH
-    // after splash screen is displayed, because SPIFFS.begin() with formatOnFail=true
+    // after splash screen is displayed, because LittleFS.begin() with formatOnFail=true
     // can take up to a minute if storage needs formatting (after factory reset)
 
     // NOTE: solarChartDataProvider.loadFromPreferences() is called after syncTime()
@@ -1396,8 +1396,8 @@ void onEntering(state_t newState)
         splashUI->show();
         xSemaphoreGive(lvgl_mutex);
         
-        // Initialize SPIFFS and load predictors here (after splash is visible)
-        // This is done here because SPIFFS.begin(true) can take up to a minute
+        // Initialize LittleFS and load predictors here (after splash is visible)
+        // This is done here because LittleFS.begin(true) can take up to a minute
         // to format the storage after factory reset
         {
             static bool predictorsLoaded = false;
@@ -1410,15 +1410,15 @@ void onEntering(state_t newState)
                 // Odkomentovat pro test VSYNC synchronizace
                 // #define TEST_FLASH_FORMAT 1
                 #if defined(TEST_FLASH_FORMAT) && TEST_FLASH_FORMAT
-                LOGW("TEST: Starting SPIFFS format to simulate flash contention...");
-                if (SPIFFS.begin(false)) {
-                    SPIFFS.end();
+                LOGW("TEST: Starting LittleFS format to simulate flash contention...");
+                if (LittleFS.begin(false)) {
+                    LittleFS.end();
                 }
-                SPIFFS.format();  // Toto zabere cca 10-30 sekund a intenzivně používá flash
-                LOGW("TEST: SPIFFS format complete");
+                LittleFS.format();  // Toto zabere cca 10-30 sekund a intenzivně používá flash
+                LOGW("TEST: LittleFS format complete");
                 #endif
                 
-                LOGD("Initializing SPIFFS and loading predictors...");
+                LOGD("Initializing LittleFS and loading predictors...");
                 consumptionPredictor.loadFromPreferences();
                 productionPredictor.loadFromPreferences();
                 predictorsLoaded = true;

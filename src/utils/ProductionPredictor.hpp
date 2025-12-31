@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#include <SPIFFS.h>
+#include <LittleFS.h>
 #include <cmath>
 #include <RemoteLogger.hpp>
 
@@ -406,22 +406,22 @@ public:
         currentQuarterAccumulator = 0;
         currentQuarterSampleCount = 0;
         
-        // Smazání ze SPIFFS
-        if (SPIFFS.begin(true)) {
-            SPIFFS.remove(STORAGE_FILE);
-            LOGD("Production prediction SPIFFS data cleared");
+        // Smazání z LittleFS
+        if (LittleFS.begin(true)) {
+            LittleFS.remove(STORAGE_FILE);
+            LOGD("Production prediction LittleFS data cleared");
         }
     }
     
     /**
-     * Uloží historii do SPIFFS
+     * Uloží historii do LittleFS
      */
     void saveToPreferences() {
-        if (!SPIFFS.begin(true)) {
+        if (!LittleFS.begin(true)) {
             return;  // Nelogovat - jsme v kritické sekci
         }
         
-        File file = SPIFFS.open(STORAGE_FILE, "w");
+        File file = LittleFS.open(STORAGE_FILE, "w");
         if (!file) {
             return;  // Nelogovat - jsme v kritické sekci
         }
@@ -456,21 +456,21 @@ public:
     }
     
     /**
-     * Načte historii ze SPIFFS
+     * Načte historii z LittleFS
      */
     void loadFromPreferences() {
-        if (!SPIFFS.begin(true)) {
+        if (!LittleFS.begin(true)) {
             return;  // Nelogovat - jsme v kritické sekci
         }
         
-        if (!SPIFFS.exists(STORAGE_FILE)) {
+        if (!LittleFS.exists(STORAGE_FILE)) {
             for (int q = 0; q < QUARTERS_PER_DAY; q++) {
                 production[q] = getDefaultProduction(q);
             }
             return;
         }
         
-        File file = SPIFFS.open(STORAGE_FILE, "r");
+        File file = LittleFS.open(STORAGE_FILE, "r");
         if (!file) {
             return;  // Nelogovat - jsme v kritické sekci
         }
