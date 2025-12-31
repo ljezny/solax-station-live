@@ -76,6 +76,7 @@ SoftAP softAP;
 Touch touch;
 WebServer webServer;
 RemoteLogger remoteLogger;
+RTC_DATA_ATTR RemoteLoggerState remoteLoggerState;  // RTC-persistent state for remote logging
 
 InverterData_t inverterData;
 InverterData_t previousInverterData;
@@ -454,6 +455,9 @@ void setupLVGL()
 void setup()
 {
     Serial.begin(115200);
+    
+    // Initialize remote logger state pointer (must be before any LOGD calls)
+    remoteLogger.setStatePointer(&remoteLoggerState);
 
     // Initialize localization system (load language from NVS)
     Localization::init();
