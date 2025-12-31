@@ -529,6 +529,29 @@ bool manageSoftAPTask()
     return softAP.manageIdleTimeout();
 }
 
+// Periodically check remote logging level and flush logs
+bool remoteLoggerTask()
+{
+    static unsigned long lastCheckLevel = 0;
+    static unsigned long lastFlush = 0;
+    bool run = false;
+    
+    // Check level every 5 minutes
+    if (millis() - lastCheckLevel > 5 * 60 * 1000) {
+        lastCheckLevel = millis();
+        remoteLogger.checkLevel();
+        run = true;
+    }
+    
+    // Flush logs every 30 seconds
+    if (millis() - lastFlush > 30 * 1000) {
+        lastFlush = millis();
+        remoteLogger.flush();
+    }
+    
+    return run;
+}
+
 bool discoverDonglesTask()
 {
     bool hasDongles = false;
@@ -668,13 +691,6 @@ bool loadInverterDataTask()
                         productionPredictor.saveToPreferences();
                         solarChartDataProvider.saveToPreferences();
                     }
-                }
-                
-                // Flush remote logs every 30 seconds
-                static unsigned long lastLogFlush = 0;
-                if (millis() - lastLogFlush > 30000) {
-                    lastLogFlush = millis();
-                    remoteLogger.flush();
                 }
 
                 // Sync system time from inverter RTC if NTP failed
@@ -1739,6 +1755,9 @@ void updateState()
             }
             // Manage SoftAP idle timeout (vypne AP po 5 minutách bez klientů)
             manageSoftAPTask();
+            
+            // RemoteLogger task (check level every 5 min, flush every 30s)
+            remoteLoggerTask();
             
             if (loadEcoVolterTask())
             {
