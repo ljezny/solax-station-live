@@ -664,6 +664,9 @@ bool loadInverterDataTask()
                         productionPredictor.saveToPreferences();
                         solarChartDataProvider.saveToPreferences();
                     }
+                    
+                    // Flush remote logs periodically (every quarter = 15 min)
+                    remoteLogger.flush();
                 }
 
                 // Sync system time from inverter RTC if NTP failed
@@ -1315,6 +1318,7 @@ void syncTime()
     // Initialize remote logger after time sync (needs WiFi and time)
     remoteLogger.begin(ESP.getEfuseMac(), String(VERSION_NUMBER));
     remoteLogger.checkLevel();
+    remoteLogger.flush();  // Flush any buffered logs after level check
     
     // === DEBUG: Override systémového času pro testování ===
     if (DEBUG_USE_FIXED_TIME) {
