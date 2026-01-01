@@ -763,7 +763,8 @@ private:
     /**
      * Čte RTC z MIC střídače.
      * MIC RTC registry: 0x318-0x31D (holding registers)
-     * 0x318: Year (e.g. 2025), 0x319: Month, 0x31A: Day, 0x31B: Hour, 0x31C: Minute, 0x31D: Second
+     * Pořadí podle HA solax-modbus pluginu (value_function_rtc):
+     * 0x318: Second, 0x319: Minute, 0x31A: Hour, 0x31B: Day, 0x31C: Month, 0x31D: Year (% 100)
      */
     bool readMicInverterRTC(InverterData_t &data)
     {
@@ -775,18 +776,19 @@ private:
         }
 
         struct tm timeinfo = {};
-        uint16_t year = response.readUInt16(0x00);     // 0x318: Year (plný rok, např. 2025)
-        timeinfo.tm_mon = response.readUInt16(0x01) - 1;   // 0x319: Month (1-12 -> 0-11)
-        timeinfo.tm_mday = response.readUInt16(0x02);  // 0x31A: Day
-        timeinfo.tm_hour = response.readUInt16(0x03);  // 0x31B: Hour
-        timeinfo.tm_min = response.readUInt16(0x04);   // 0x31C: Minute
-        timeinfo.tm_sec = response.readUInt16(0x05);   // 0x31D: Second
-        timeinfo.tm_year = year - 1900;  // tm_year = years since 1900
+        timeinfo.tm_sec = response.readUInt16(0x00);   // 0x318: Second
+        timeinfo.tm_min = response.readUInt16(0x01);   // 0x319: Minute
+        timeinfo.tm_hour = response.readUInt16(0x02);  // 0x31A: Hour
+        timeinfo.tm_mday = response.readUInt16(0x03);  // 0x31B: Day
+        timeinfo.tm_mon = response.readUInt16(0x04) - 1;   // 0x31C: Month (1-12 -> 0-11)
+        uint16_t year = response.readUInt16(0x05);     // 0x31D: Year (% 100, např. 25 nebo 26)
+        // Rok může být buď krátký (25, 26) nebo plný (2025, 2026)
+        timeinfo.tm_year = (year < 100) ? (year + 100) : (year - 1900);  // tm_year = years since 1900
         timeinfo.tm_isdst = -1;
 
         data.inverterTime = mktime(&timeinfo);
         LOGD("MIC RTC: %04d-%02d-%02d %02d:%02d:%02d", 
-             year, timeinfo.tm_mon + 1, timeinfo.tm_mday,
+             timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
              timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
         return true;
     }
@@ -903,7 +905,8 @@ private:
      * 0x404: Inverter Voltage L1 (0.1V)
      * 0x407: Inverter Frequency (0.01Hz)
      * 0x40A: Inverter Current (0.1A)
-     * 0x410: Inverter Power L1 (W)    
+     * 0x40D: Inverter Temperature (°C)
+     * 0x40E: Inverter Power (W)
      * 0x414: PV Power 1 (W)           0x415: PV Power 2 (W)
      * 0x423-0x424: Total Yield (U32, 0.1kWh)
      * 0x425-0x426: Today's Yield (U32, 0.1kWh)
@@ -934,6 +937,9 @@ private:
         // Inverter Current
         uint16_t inverterCurrent = resp1.readUInt16(0x0A);  // 0x40A: 0.1A
         
+        // Inverter Temperature (0x40D)
+        int16_t inverterTemperature = resp1.readInt16(0x0D);  // 0x40D: °C
+        
         // Inverter Power - pro X1 (jednofázový) je na 0x40E, pro X3 by bylo 0x410 (L1)
         // HA plugin: register=0x40E, allowedtypes=MIC | GEN | GEN2
         int16_t inverterPower = resp1.readInt16(0x0E);  // 0x40E: W
@@ -954,8 +960,8 @@ private:
         LOGD("MIC GEN2 PV1: %dW (%.1fV, %.1fA), PV2: %dW (%.1fV, %.1fA)", 
              data.pv1Power, pv1Voltage/10.0f, pv1Current/10.0f,
              data.pv2Power, pv2Voltage/10.0f, pv2Current/10.0f);
-        LOGD("MIC GEN2 Inverter: %dW, %.1fV, %.1fA, %.2fHz", 
-             inverterPower, inverterVoltage/10.0f, inverterCurrent/10.0f, inverterFrequency/100.0f);
+        LOGD("MIC GEN2 Inverter: %dW, %.1fV, %.1fA, %.2fHz, %d°C", 
+             inverterPower, inverterVoltage/10.0f, inverterCurrent/10.0f, inverterFrequency/100.0f, inverterTemperature);
         
         // Blok 2: 0x423-0x426 (4 registry) - Yield data
         // HA plugin: scale=0.1 pro GEN2, scale=0.001 pro GEN
@@ -1018,21 +1024,18 @@ private:
         data.inverterOutpuPowerL1 = inverterPower;
         data.inverterOutpuPowerL2 = 0;
         data.inverterOutpuPowerL3 = 0;
-        data.inverterTemperature = 0;  // MIC GEN2 nemá registr pro teplotu v input registrech
+        data.inverterTemperature = inverterTemperature;  // 0x40D
         
         // Grid power - použijeme measuredPower pokud máme měřič
-        if (measuredPower != 0)
-        {
-            // measuredPower: záporné = export, kladné = import (HA konvence)
-            data.gridPowerL1 = measuredPower;
-        }
-        else
-        {
-            // Bez měřiče předpokládáme, že veškerá výroba jde do sítě (export)
-            data.gridPowerL1 = -inverterPower;
-        }
+        // measuredPower: záporné = export, kladné = import (HA konvence)
+        data.gridPowerL1 = measuredPower;  // Bude 0 pokud není měřič
         data.gridPowerL2 = 0;
         data.gridPowerL3 = 0;
+        
+        if (measuredPower == 0 && inverterPower > 0)
+        {
+            LOGW("MIC GEN2: Grid power not available (no meter). Cannot determine grid import/export.");
+        }
         
         // Grid totals - použijeme registry pokud máme měřič, jinak aproximace z PV yield
         if (gridExportTotal > 0 || gridImportTotal > 0)
