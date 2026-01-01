@@ -983,22 +983,40 @@ private:
             LOGW("MIC GEN2: Failed to read yield registers 0x423-0x426");
         }
         
-        // Blok 3: 0x43B-0x43C (2 registry) - Measured Power (volitelné, pro měřič)
-        // HA plugin: register=0x43B, unit=REGISTER_S32, ignore_readerror=True, newblock=True
-        // Může způsobit Modbus Exception Code 2 na některých FW bez měřiče - proto ignorujeme chybu
+        // Blok 3: Measured Power - pro měřič
+        // HA plugin definuje 2 registry pro MIC GEN2 X1:
+        //   - 0x43B-0x43C (S32) - primární, ale může vracet Exception 2 na některých FW
+        //   - 0x704-0x705 (S32) - "measured_power_2", alternativní pro MIC|GEN2|X1
+        // Zkusíme primárně 0x43B, pokud selže nebo vrací 0, fallback na 0x704
         int32_t measuredPower = 0;
+        
+        // Primární: 0x43B-0x43C
         ModbusResponse resp3 = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x43B, 2);
         if (resp3.isValid)
         {
-            measuredPower = resp3.readInt32LSB(0x00);  // 0x43B-0x43C: W (záporné = export, kladné = import)
+            measuredPower = resp3.readInt32LSB(0x00);  // W (záporné = export, kladné = import)
             if (measuredPower != 0)
             {
-                LOGD("MIC GEN2 Measured Power: %dW", measuredPower);
+                LOGD("MIC GEN2 Measured Power (0x43B): %dW", measuredPower);
             }
         }
-        else
+        
+        // Fallback: 0x704-0x705 (measured_power_2) pokud 0x43B selhal nebo vrátil 0
+        if (measuredPower == 0)
         {
-            LOGD("MIC GEN2: Measured Power registers (0x43B) not available - no meter");
+            ModbusResponse resp3alt = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x704, 2);
+            if (resp3alt.isValid)
+            {
+                measuredPower = resp3alt.readInt32LSB(0x00);  // W
+                if (measuredPower != 0)
+                {
+                    LOGD("MIC GEN2 Measured Power (0x704 fallback): %dW", measuredPower);
+                }
+            }
+            else
+            {
+                LOGD("MIC GEN2: Measured Power registers (0x43B, 0x704) not available - no meter");
+            }
         }
         
         // Blok 4: 0x43D-0x440 (4 registry) - Grid Export/Import Total (volitelné)
