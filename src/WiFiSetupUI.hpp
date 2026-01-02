@@ -57,6 +57,9 @@ public:
         lv_obj_add_event_cb(ui_wifiPassword, onFocusHandler, LV_EVENT_FOCUSED, this);
         lv_obj_add_event_cb(ui_inverterIP, onFocusHandler, LV_EVENT_FOCUSED, this);
         lv_obj_add_event_cb(ui_inverterSN, onFocusHandler, LV_EVENT_FOCUSED, this);
+        lv_obj_add_event_cb(ui_wifiPassword, onFocusHandler, LV_EVENT_DEFOCUSED, this);
+        lv_obj_add_event_cb(ui_inverterIP, onFocusHandler, LV_EVENT_DEFOCUSED, this);
+        lv_obj_add_event_cb(ui_inverterSN, onFocusHandler, LV_EVENT_DEFOCUSED, this);
         lv_obj_add_event_cb(ui_wifiPassword, onTextChangedHandler, LV_EVENT_VALUE_CHANGED, this);
         lv_obj_add_event_cb(ui_inverterIP, onTextChangedHandler, LV_EVENT_VALUE_CHANGED, this);
         lv_obj_add_event_cb(ui_inverterSN, onTextChangedHandler, LV_EVENT_VALUE_CHANGED, this);
@@ -107,7 +110,7 @@ public:
 
         ElectricityPriceLoader priceLoader;
         String spotProviders = "";
-        for (int i = NONE; i < NORDPOOL_PL; i++)
+        for (int i = BZN_NONE; i < BZN_COUNT; i++)
         {
             spotProviders += priceLoader.getProviderCaption((ElectricityPriceProvider_t)i) + "\n";
         }
@@ -280,47 +283,52 @@ public:
         }
     }
 
-    void onFocusChanged(lv_obj_t *obj)
+    void onFocusChanged(lv_obj_t *obj, lv_event_code_t code)
     {
-        // Show keyboard
-        lv_obj_clear_flag(ui_keyboard, LV_OBJ_FLAG_HIDDEN);
-        lv_keyboard_set_textarea(ui_keyboard, obj);
-        
-        if (obj == ui_wifiPassword)
-        {
-            lv_keyboard_set_mode(ui_keyboard, LV_KEYBOARD_MODE_TEXT_LOWER);
-        }
-        else if (obj == ui_inverterIP)
-        {
-            lv_keyboard_set_mode(ui_keyboard, LV_KEYBOARD_MODE_NUMBER);
-        }
-        else if (obj == ui_inverterSN)
-        {
-            lv_keyboard_set_mode(ui_keyboard, LV_KEYBOARD_MODE_TEXT_LOWER);
-        }
-        
-        // Auto-scroll to keep focused input visible above keyboard
-        lv_coord_t scrHeight = lv_obj_get_height(ui_WifiSetup);
-        lv_coord_t kbHeight = lv_obj_get_height(ui_keyboard);
-        lv_coord_t inputY = lv_obj_get_y(obj);
-        lv_coord_t inputH = lv_obj_get_height(obj);
-        
-        // Get parent card's Y position
-        lv_obj_t* parent = lv_obj_get_parent(obj);
-        if (parent && parent != ui_WifiSetup) {
-            inputY += lv_obj_get_y(parent);
-            // Check for grandparent (container)
-            lv_obj_t* grandparent = lv_obj_get_parent(parent);
-            if (grandparent && grandparent != ui_WifiSetup) {
-                inputY += lv_obj_get_y(grandparent);
+        if (code == LV_EVENT_FOCUSED) {
+            // Show keyboard
+            lv_obj_clear_flag(ui_keyboard, LV_OBJ_FLAG_HIDDEN);
+            lv_keyboard_set_textarea(ui_keyboard, obj);
+            lv_obj_align(ui_keyboard, LV_ALIGN_BOTTOM_MID, 0, 0);
+            
+            if (obj == ui_wifiPassword)
+            {
+                lv_keyboard_set_mode(ui_keyboard, LV_KEYBOARD_MODE_TEXT_LOWER);
             }
-        }
-        
-        lv_coord_t visibleBottom = scrHeight - kbHeight - 20;
-        
-        if (inputY + inputH > visibleBottom) {
-            lv_coord_t scrollAmount = (inputY + inputH) - visibleBottom + 10;
-            lv_obj_scroll_by(ui_Container12, 0, -scrollAmount, LV_ANIM_ON);
+            else if (obj == ui_inverterIP)
+            {
+                lv_keyboard_set_mode(ui_keyboard, LV_KEYBOARD_MODE_NUMBER);
+            }
+            else if (obj == ui_inverterSN)
+            {
+                lv_keyboard_set_mode(ui_keyboard, LV_KEYBOARD_MODE_TEXT_LOWER);
+            }
+            
+            // Auto-scroll to keep focused input visible above keyboard
+            lv_coord_t kbHeight = 220;  // Keyboard height + margin
+            
+            // Get input position relative to main container
+            lv_area_t inputArea;
+            lv_obj_get_coords(obj, &inputArea);
+            
+            lv_area_t containerArea;
+            lv_obj_get_coords(ui_Container12, &containerArea);
+            
+            // Calculate visible area (screen height minus keyboard)
+            lv_coord_t scrHeight = lv_obj_get_height(ui_WifiSetup);
+            lv_coord_t visibleBottom = scrHeight - kbHeight;
+            
+            // If input bottom is below visible area, scroll
+            if (inputArea.y2 > visibleBottom) {
+                lv_coord_t scrollY = inputArea.y2 - visibleBottom + 30;  // 30px extra margin
+                lv_obj_scroll_by(ui_Container12, 0, -scrollY, LV_ANIM_ON);
+            }
+        } else if (code == LV_EVENT_DEFOCUSED) {
+            // Hide keyboard
+            lv_obj_add_flag(ui_keyboard, LV_OBJ_FLAG_HIDDEN);
+            
+            // Scroll back to top
+            lv_obj_scroll_to_y(ui_Container12, 0, LV_ANIM_ON);
         }
         
         setCompleteButtonVisibility();
@@ -459,15 +467,13 @@ static void displayTimeoutHandler(lv_event_t *e)
 static void onFocusHandler(lv_event_t *e)
 {
     lv_event_code_t code = lv_event_get_code(e);
-    if (code == LV_EVENT_FOCUSED)
+    if (code == LV_EVENT_FOCUSED || code == LV_EVENT_DEFOCUSED)
     {
-        // Handle focus event if needed
-        // This can be used to show/hide password or inverter IP fields based on focus
         lv_obj_t *obj = lv_event_get_target(e);
         WiFiSetupUI *ui = (WiFiSetupUI *)lv_event_get_user_data(e);
         if (ui)
         {
-            ui->onFocusChanged(obj);
+            ui->onFocusChanged(obj, code);
         }
     }
 }

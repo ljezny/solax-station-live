@@ -86,6 +86,7 @@ typedef enum {
     STR_DISCOVERING_DONGLES,
     STR_CONNECTING,
     STR_LOADING_DATA,
+    STR_LOADING_PRICES,
     STR_FAILED_LOAD_DATA,
     STR_FAILED_CONNECT,
     STR_PREPARING_STORAGE,
@@ -343,6 +344,7 @@ const char* const Localization::stringsEN[] = {
     "Discovering dongles...", // STR_DISCOVERING_DONGLES
     "Connecting...",        // STR_CONNECTING
     "Loading data...",      // STR_LOADING_DATA
+    "Loading prices...",    // STR_LOADING_PRICES
     "Failed to load data :-(", // STR_FAILED_LOAD_DATA
     "Failed to connect :-(", // STR_FAILED_CONNECT
     "Preparing storage...", // STR_PREPARING_STORAGE
@@ -484,6 +486,7 @@ const char* const Localization::stringsDE[] = {
     "Dongles werden gesucht...", // STR_DISCOVERING_DONGLES
     "Verbinden...",         // STR_CONNECTING
     "Daten laden...",       // STR_LOADING_DATA
+    "Preise laden...",      // STR_LOADING_PRICES
     "Daten laden fehlgeschlagen :-(", // STR_FAILED_LOAD_DATA
     "Verbindung fehlgeschlagen :-(", // STR_FAILED_CONNECT
     "Speicher vorbereiten...", // STR_PREPARING_STORAGE
@@ -625,6 +628,7 @@ const char* const Localization::stringsCS[] = {
     "Hledám zařízení...",   // STR_DISCOVERING_DONGLES
     "Připojuji...",         // STR_CONNECTING
     "Načítám data...",      // STR_LOADING_DATA
+    "Načítám ceny...",      // STR_LOADING_PRICES
     "Nepodařilo se načíst data :-(", // STR_FAILED_LOAD_DATA
     "Připojení selhalo :-(", // STR_FAILED_CONNECT
     "Příprava úložiště...", // STR_PREPARING_STORAGE

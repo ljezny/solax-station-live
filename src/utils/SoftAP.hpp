@@ -31,7 +31,7 @@ public:
         LOGD("SoftAP channel: %d", channel);
         //do NOT use a hidden SSID, it will not work for Shelly, some devices has connection issues with hidden SSID
         WiFi.softAP(getSSID().c_str(), getPassword().c_str(), channel, 0, MAX_SHELLY_PAIRS);
-        _isRunning = true;
+        _isRunning = true; 
         _lastClientConnectedTime = millis();
     }
 

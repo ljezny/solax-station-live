@@ -154,18 +154,46 @@ private:
         channel.tryReadWithRetries(0x418, 1, sn, packetBuffer, [&]()
                            { inverterData.inverterTemperature = channel.readInt16(packetBuffer, 0); });
 
-        // Grid Input
+        // Grid Input - registry z dokumentace Sofar (0x0480-0x04FF)
+        // 0x485 = ActivePower_Output_Total, 0x488 = ActivePower_PCC_Total (SmartMeter)
+        // 0x48F/0x49A/0x4A5 = ActivePower_Output per phase (L1/L2/L3)
+        // 0x493/0x49E/0x4A9 = ActivePower_PCC per phase (SmartMeter L1/L2/L3)
         if (!channel.tryReadWithRetries(0x484, 0x4BC - 0x484 + 1, sn, packetBuffer, [&]()
                                 {
-            inverterData.inverterOutpuPowerL1 = channel.readInt16(packetBuffer, 0x485 - 0x484) * 10;
-            inverterData.loadPower = channel.readInt16(packetBuffer, 0x04AF - 0x484) * 10;
-            //inverterData.gridPower = channel.readInt16(packetBuffer, 0x0488 - 0x484) * 10;
-            inverterData.gridPowerL1 = channel.readInt16(packetBuffer, 0x493 - 0x484) * 10;
-            inverterData.gridPowerL2 = channel.readInt16(packetBuffer, 0x49E - 0x484) * 10;
-            inverterData.gridPowerL3 = channel.readInt16(packetBuffer, 0x4A9 - 0x484) * 10;
-            inverterData.inverterOutpuPowerL1 = channel.readInt16(packetBuffer, 0x48F - 0x484) * 10;
-            inverterData.inverterOutpuPowerL2 = channel.readInt16(packetBuffer, 0x49A - 0x484) * 10;
-            inverterData.inverterOutpuPowerL3 = channel.readInt16(packetBuffer, 0x4A9 - 0x484) * 10; }))
+            // Celkový výkon střídače (0x485) - pro jednofázové střídače je to hlavní hodnota
+            int16_t inverterOutputTotal = channel.readInt16(packetBuffer, 0x485 - 0x484) * 10;
+            
+            // Výkon po fázích
+            inverterData.inverterOutpuPowerL1 = channel.readInt16(packetBuffer, 0x48F - 0x484) * 10;  // Output L1
+            inverterData.inverterOutpuPowerL2 = channel.readInt16(packetBuffer, 0x49A - 0x484) * 10;  // Output L2
+            inverterData.inverterOutpuPowerL3 = channel.readInt16(packetBuffer, 0x4A5 - 0x484) * 10;  // Output L3 (opraveno z 0x4A9)
+            
+            // SmartMeter (PCC) výkony - celkový a po fázích
+            int16_t gridPowerTotal = channel.readInt16(packetBuffer, 0x488 - 0x484) * 10;  // PCC Total
+            inverterData.gridPowerL1 = channel.readInt16(packetBuffer, 0x493 - 0x484) * 10;  // PCC L1
+            inverterData.gridPowerL2 = channel.readInt16(packetBuffer, 0x49E - 0x484) * 10;  // PCC L2
+            inverterData.gridPowerL3 = channel.readInt16(packetBuffer, 0x4A9 - 0x484) * 10;  // PCC L3
+            
+            // Detekce jednofázového střídače: L2 a L3 jsou 0
+            bool isSinglePhase = (inverterData.inverterOutpuPowerL2 == 0 && inverterData.inverterOutpuPowerL3 == 0);
+            
+            if (isSinglePhase) {
+                // Jednofázový střídač: celkový výkon do L1
+                if (inverterOutputTotal != 0) {
+                    inverterData.inverterOutpuPowerL1 = inverterOutputTotal;
+                }
+                if (gridPowerTotal != 0) {
+                    inverterData.gridPowerL1 = gridPowerTotal;
+                }
+                LOGD("Single-phase inverter: Output=%dW, Grid=%dW", inverterOutputTotal, gridPowerTotal);
+            } else {
+                LOGD("Three-phase inverter: Output L1=%d L2=%d L3=%d, Grid L1=%d L2=%d L3=%d",
+                     inverterData.inverterOutpuPowerL1, inverterData.inverterOutpuPowerL2, inverterData.inverterOutpuPowerL3,
+                     inverterData.gridPowerL1, inverterData.gridPowerL2, inverterData.gridPowerL3);
+            }
+            
+            // Load power
+            inverterData.loadPower = channel.readInt16(packetBuffer, 0x04AF - 0x484) * 10; }))
             return inverterData;
 
         // Stats

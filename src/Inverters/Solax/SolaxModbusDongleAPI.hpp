@@ -33,7 +33,8 @@ class SolaxModbusDongleAPI
 {
 public:
     SolaxModbusDongleAPI() : isSupportedDongle(true), ip(0, 0, 0, 0), consecutiveTimeoutErrors(0), 
-                             inverterCategory(SOLAX_CATEGORY_UNKNOWN), inverterGeneration(SOLAX_GEN_UNKNOWN) {}
+                             inverterCategory(SOLAX_CATEGORY_UNKNOWN), inverterGeneration(SOLAX_GEN_UNKNOWN),
+                             isThreePhase(false) {}
 
     /**
      * Returns true if this inverter supports intelligence mode control.
@@ -412,6 +413,7 @@ protected:
     static constexpr int MAX_TIMEOUT_ERRORS_BEFORE_RESET = 3;  // Reset dongle after this many consecutive timeouts
     SolaxInverterCategory inverterCategory;    // Detected inverter category (HYBRID/MIC)
     SolaxInverterGeneration inverterGeneration; // Detected inverter generation (GEN2-GEN6)
+    bool isThreePhase;                         // True for X3 (three-phase), false for X1 (single-phase)
     
     // Půlnoční hodnoty čítačů pro výpočet denních statistik
     int lastKnownDay = -1;                     // Poslední známý den (1-31) pro detekci přechodu přes půlnoc
@@ -761,7 +763,8 @@ private:
     /**
      * Čte RTC z MIC střídače.
      * MIC RTC registry: 0x318-0x31D (holding registers)
-     * 0x318: Year (e.g. 2025), 0x319: Month, 0x31A: Day, 0x31B: Hour, 0x31C: Minute, 0x31D: Second
+     * Pořadí podle HA solax-modbus pluginu (value_function_rtc):
+     * 0x318: Second, 0x319: Minute, 0x31A: Hour, 0x31B: Day, 0x31C: Month, 0x31D: Year (% 100)
      */
     bool readMicInverterRTC(InverterData_t &data)
     {
@@ -773,18 +776,19 @@ private:
         }
 
         struct tm timeinfo = {};
-        uint16_t year = response.readUInt16(0x00);     // 0x318: Year (plný rok, např. 2025)
-        timeinfo.tm_mon = response.readUInt16(0x01) - 1;   // 0x319: Month (1-12 -> 0-11)
-        timeinfo.tm_mday = response.readUInt16(0x02);  // 0x31A: Day
-        timeinfo.tm_hour = response.readUInt16(0x03);  // 0x31B: Hour
-        timeinfo.tm_min = response.readUInt16(0x04);   // 0x31C: Minute
-        timeinfo.tm_sec = response.readUInt16(0x05);   // 0x31D: Second
-        timeinfo.tm_year = year - 1900;  // tm_year = years since 1900
+        timeinfo.tm_sec = response.readUInt16(0x00);   // 0x318: Second
+        timeinfo.tm_min = response.readUInt16(0x01);   // 0x319: Minute
+        timeinfo.tm_hour = response.readUInt16(0x02);  // 0x31A: Hour
+        timeinfo.tm_mday = response.readUInt16(0x03);  // 0x31B: Day
+        timeinfo.tm_mon = response.readUInt16(0x04) - 1;   // 0x31C: Month (1-12 -> 0-11)
+        uint16_t year = response.readUInt16(0x05);     // 0x31D: Year (% 100, např. 25 nebo 26)
+        // Rok může být buď krátký (25, 26) nebo plný (2025, 2026)
+        timeinfo.tm_year = (year < 100) ? (year + 100) : (year - 1900);  // tm_year = years since 1900
         timeinfo.tm_isdst = -1;
 
         data.inverterTime = mktime(&timeinfo);
         LOGD("MIC RTC: %04d-%02d-%02d %02d:%02d:%02d", 
-             year, timeinfo.tm_mon + 1, timeinfo.tm_mday,
+             timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
              timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
         return true;
     }
@@ -895,111 +899,183 @@ private:
     /**
      * Čte data z MIC GEN2 střídače (X1-Boost XB3/XAU/XBE/XBU, X1-Mini XM3/XMA/XAT)
      * 
-     * Registrová mapa MIC GEN2 (input registry od 0x400):
+     * Registrová mapa MIC GEN2 (input registry od 0x400) - podle HA solax_modbus:
      * 0x400: PV Voltage 1 (0.1V)      0x401: PV Voltage 2 (0.1V)
      * 0x402: PV Current 1 (0.1A)      0x403: PV Current 2 (0.1A)
-     * 0x404: Inverter Voltage (0.1V)  0x405-0x406: L2/L3 Voltage pro X3
+     * 0x404: Inverter Voltage L1 (0.1V)
      * 0x407: Inverter Frequency (0.01Hz)
      * 0x40A: Inverter Current (0.1A)
      * 0x40D: Inverter Temperature (°C)
      * 0x40E: Inverter Power (W)
-     * 0x40F: Run Mode
      * 0x414: PV Power 1 (W)           0x415: PV Power 2 (W)
      * 0x423-0x424: Total Yield (U32, 0.1kWh)
      * 0x425-0x426: Today's Yield (U32, 0.1kWh)
-     * 0x43B-0x43C: Measured Power / Export (S32, W) - pro GEN2 s měřičem
+     * 0x43B-0x43C: Measured Power (S32, W) - pro GEN2 s měřičem
      * 0x43D-0x43E: Total Grid Export (U32, 0.01kWh)
      * 0x43F-0x440: Total Grid Import (U32, 0.01kWh)
      */
     bool readMicGen2InverterData(InverterData_t &data)
     {
-        // GEN2 MIC má registry od 0x400, čteme 0x400-0x450 (80 registrů)
-        const uint16_t BASE_ADDR = 0x400;
-        const uint16_t REG_COUNT = 0x50;  // 80 registrů
-        
-        ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, BASE_ADDR, REG_COUNT);
-        if (!response.isValid)
+        // Blok 1: 0x400-0x415 (22 registrů) - PV data, Inverter data, Power
+        ModbusResponse resp1 = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x400, 22);
+        if (!resp1.isValid)
         {
-            LOGW("MIC GEN2: Failed to read input registers 0x400-0x44F");
+            LOGW("MIC GEN2: Failed to read input registers 0x400-0x415");
             return false;
         }
         
-        // PV Voltage & Current (registry 0x400-0x403, offset 0x00-0x03)
-        uint16_t pv1Voltage = response.readUInt16(0x00);  // 0x400: 0.1V scale
-        uint16_t pv2Voltage = response.readUInt16(0x01);  // 0x401: 0.1V scale
-        uint16_t pv1Current = response.readUInt16(0x02);  // 0x402: 0.1A scale
-        uint16_t pv2Current = response.readUInt16(0x03);  // 0x403: 0.1A scale
+        // PV Voltage & Current (registry 0x400-0x403)
+        uint16_t pv1Voltage = resp1.readUInt16(0x00);  // 0x400: 0.1V
+        uint16_t pv2Voltage = resp1.readUInt16(0x01);  // 0x401: 0.1V
+        uint16_t pv1Current = resp1.readUInt16(0x02);  // 0x402: 0.1A
+        uint16_t pv2Current = resp1.readUInt16(0x03);  // 0x403: 0.1A
         
-        // Inverter Voltage & Frequency (registry 0x404, 0x407)
-        uint16_t inverterVoltage = response.readUInt16(0x04);  // 0x404: 0.1V scale
-        uint16_t inverterFrequency = response.readUInt16(0x07);  // 0x407: 0.01Hz scale
+        // Inverter Voltage & Frequency
+        uint16_t inverterVoltage = resp1.readUInt16(0x04);  // 0x404: 0.1V
+        uint16_t inverterFrequency = resp1.readUInt16(0x07);  // 0x407: 0.01Hz
         
-        // Inverter Current (0x40A, offset 0x0A)
-        uint16_t inverterCurrent = response.readUInt16(0x0A);  // 0.1A scale
+        // Inverter Current
+        uint16_t inverterCurrent = resp1.readUInt16(0x0A);  // 0x40A: 0.1A
         
-        // Inverter Temperature (0x40D, offset 0x0D)
-        data.inverterTemperature = response.readInt16(0x0D);  // °C
+        // Inverter Temperature (0x40D)
+        int16_t inverterTemperature = resp1.readInt16(0x0D);  // 0x40D: °C
         
-        // Inverter Power (0x40E, offset 0x0E)
-        int16_t inverterPower = response.readInt16(0x0E);  // W
+        // Inverter Power - pro X1 (jednofázový) je na 0x40E, pro X3 by bylo 0x410 (L1)
+        // HA plugin: register=0x40E, allowedtypes=MIC | GEN | GEN2
+        int16_t inverterPower = resp1.readInt16(0x0E);  // 0x40E: W
         
-        // Run Mode (0x40F, offset 0x0F)
-        uint16_t runMode = response.readUInt16(0x0F);
+        // PV Power (registry 0x414-0x415)
+        data.pv1Power = resp1.readUInt16(0x14);  // 0x414: W
+        data.pv2Power = resp1.readUInt16(0x15);  // 0x415: W
         
-        // PV Power (registry 0x414-0x415, offset 0x14-0x15)
-        data.pv1Power = response.readUInt16(0x14);  // 0x414: W
-        data.pv2Power = response.readUInt16(0x15);  // 0x415: W
+        // Pokud inverterPower je 0, vypočítáme z PV (MIC je PV-only inverter)
+        int totalPvPower = data.pv1Power + data.pv2Power;
+        if (inverterPower == 0 && totalPvPower > 0)
+        {
+            // Fallback: použijeme součet PV výkonů (pro PV-only inverter je to přibližně rovno)
+            inverterPower = totalPvPower;
+            LOGD("MIC GEN2: Inverter power fallback from PV total: %dW", inverterPower);
+        }
         
         LOGD("MIC GEN2 PV1: %dW (%.1fV, %.1fA), PV2: %dW (%.1fV, %.1fA)", 
              data.pv1Power, pv1Voltage/10.0f, pv1Current/10.0f,
              data.pv2Power, pv2Voltage/10.0f, pv2Current/10.0f);
-        LOGD("MIC GEN2 Inverter: %dW, %.1fV, %.1fA, %.2fHz, %d°C, RunMode: %d", 
-             inverterPower, inverterVoltage/10.0f, inverterCurrent/10.0f,
-             inverterFrequency/100.0f, data.inverterTemperature, runMode);
+        LOGD("MIC GEN2 Inverter: %dW, %.1fV, %.1fA, %.2fHz, %d°C", 
+             inverterPower, inverterVoltage/10.0f, inverterCurrent/10.0f, inverterFrequency/100.0f, inverterTemperature);
         
-        // Total Yield (0x423-0x424, offset 0x23-0x24) - U32 LSB, 0.1kWh scale
-        data.pvTotal = response.readUInt32LSB(0x23) / 10.0f;  // kWh
+        // Blok 2: 0x423-0x426 (4 registry) - Yield data
+        // HA plugin: scale=0.1 pro GEN2, scale=0.001 pro GEN
+        ModbusResponse resp2 = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x423, 4);
+        if (resp2.isValid)
+        {
+            data.pvTotal = resp2.readUInt32LSB(0x00) / 10.0f;  // 0x423-0x424: kWh (scale 0.1 pro GEN2)
+            data.pvToday = resp2.readUInt32LSB(0x02) / 10.0f;  // 0x425-0x426: kWh (scale 0.1 pro GEN2)
+            LOGD("MIC GEN2 Yield: Total=%.1fkWh, Today=%.1fkWh", data.pvTotal, data.pvToday);
+            
+            // Pokud jsou yield hodnoty 0, ale PV vyrábí, logujeme warning
+            if (data.pvTotal == 0 && data.pvToday == 0 && totalPvPower > 0)
+            {
+                LOGW("MIC GEN2: Yield registre vrací 0, ale PV vyrábí %dW - možný problém s registry", totalPvPower);
+            }
+        }
+        else
+        {
+            LOGW("MIC GEN2: Failed to read yield registers 0x423-0x426");
+        }
         
-        // Today's Yield (0x425-0x426, offset 0x25-0x26) - U32 LSB, 0.1kWh scale
-        data.pvToday = response.readUInt32LSB(0x25) / 10.0f;  // kWh
+        // Blok 3: Measured Power - pro měřič
+        // HA plugin definuje 2 registry pro MIC GEN2 X1:
+        //   - 0x43B-0x43C (S32) - primární, ale může vracet Exception 2 na některých FW
+        //   - 0x704-0x705 (S32) - "measured_power_2", alternativní pro MIC|GEN2|X1
+        // Zkusíme primárně 0x43B, pokud selže nebo vrací 0, fallback na 0x704
+        int32_t measuredPower = 0;
         
-        LOGD("MIC GEN2 Yield: Total=%.1fkWh, Today=%.1fkWh", data.pvTotal, data.pvToday);
+        // Primární: 0x43B-0x43C
+        ModbusResponse resp3 = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x43B, 2);
+        if (resp3.isValid)
+        {
+            measuredPower = resp3.readInt32LSB(0x00);  // W (záporné = export, kladné = import)
+            if (measuredPower != 0)
+            {
+                LOGD("MIC GEN2 Measured Power (0x43B): %dW", measuredPower);
+            }
+        }
         
-        // Pro X1 (single-phase): inverter power = grid power L1
-        // MIC bez měřiče nemá přesné grid buy/sell data
-        data.gridPowerL1 = inverterPower;  // Výkon do sítě = výkon střídače
-        data.gridPowerL2 = 0;
-        data.gridPowerL3 = 0;
+        // Fallback: 0x704-0x705 (measured_power_2) pokud 0x43B selhal nebo vrátil 0
+        if (measuredPower == 0)
+        {
+            ModbusResponse resp3alt = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x704, 2);
+            if (resp3alt.isValid)
+            {
+                measuredPower = resp3alt.readInt32LSB(0x00);  // W
+                if (measuredPower != 0)
+                {
+                    LOGD("MIC GEN2 Measured Power (0x704 fallback): %dW", measuredPower);
+                }
+            }
+            else
+            {
+                LOGD("MIC GEN2: Measured Power registers (0x43B, 0x704) not available - no meter");
+            }
+        }
         
+        // Blok 4: 0x43D-0x440 (4 registry) - Grid Export/Import Total (volitelné)
+        // HA plugin: scale=0.01 kWh
+        float gridExportTotal = 0;
+        float gridImportTotal = 0;
+        ModbusResponse resp4 = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x43D, 4);
+        if (resp4.isValid)
+        {
+            gridExportTotal = resp4.readUInt32LSB(0x00) / 100.0f;  // 0x43D-0x43E: kWh
+            gridImportTotal = resp4.readUInt32LSB(0x02) / 100.0f;  // 0x43F-0x440: kWh
+            if (gridExportTotal > 0 || gridImportTotal > 0)
+            {
+                LOGD("MIC GEN2 Grid Totals: Export=%.2fkWh, Import=%.2fkWh", gridExportTotal, gridImportTotal);
+            }
+        }
+        else
+        {
+            LOGD("MIC GEN2: Grid Export/Import registers (0x43D-0x440) not available - no meter");
+        }
+        
+        // Nastavení výstupních dat
         data.inverterOutpuPowerL1 = inverterPower;
         data.inverterOutpuPowerL2 = 0;
         data.inverterOutpuPowerL3 = 0;
+        data.inverterTemperature = inverterTemperature;  // 0x40D
         
-        // Pokusíme se číst Measured Power (export/import) - některé GEN2 to mají
-        // Registry 0x43B-0x43C (offset 0x3B-0x3C)
-        int32_t measuredPower = response.readInt32LSB(0x3B);  // W (záporné = export)
+        // Grid power - použijeme measuredPower pokud máme měřič
+        // measuredPower: záporné = export, kladné = import (HA konvence)
+        data.gridPowerL1 = measuredPower;  // Bude 0 pokud není měřič
+        data.gridPowerL2 = 0;
+        data.gridPowerL3 = 0;
         
-        // Grid Export/Import totals (0x43D-0x440, offset 0x3D-0x40)
-        float gridExportTotal = response.readUInt32LSB(0x3D) / 100.0f;  // kWh
-        float gridImportTotal = response.readUInt32LSB(0x3F) / 100.0f;  // kWh
+        if (measuredPower == 0 && inverterPower > 0)
+        {
+            LOGW("MIC GEN2: Grid power not available (no meter). Cannot determine grid import/export.");
+        }
         
+        // Grid totals - použijeme registry pokud máme měřič, jinak aproximace z PV yield
         if (gridExportTotal > 0 || gridImportTotal > 0)
         {
-            LOGD("MIC GEN2 Grid: MeasuredPower=%dW, ExportTotal=%.2fkWh, ImportTotal=%.2fkWh", 
-                 measuredPower, gridExportTotal, gridImportTotal);
             data.gridSellTotal = gridExportTotal;
             data.gridBuyTotal = gridImportTotal;
         }
         else
         {
-            // Fallback - aproximace
             data.gridSellTotal = data.pvTotal;
             data.gridBuyTotal = 0;
         }
-        data.gridSellToday = 0;  // Nemáme denní data
+        data.gridSellToday = 0;  // Nemáme registr pro today
         data.gridBuyToday = 0;
         
-        // MIC nemá baterii - nulové hodnoty
+        // Load power = inverterPower + measuredPower
+        // inverterPower = co vyrobí střídač, measuredPower = co jde do/ze sítě
+        // loadPower = výroba - export = výroba + import (pokud measuredPower je záporné = export)
+        data.loadPower = inverterPower + measuredPower;
+        if (data.loadPower < 0) data.loadPower = 0;
+        
+        // MIC nemá baterii
         data.soc = 0;
         data.batteryPower = 0;
         data.batteryVoltage = 0;
@@ -1012,18 +1088,6 @@ private:
         data.minSoc = 0;
         data.maxSoc = 0;
         
-        // Load power - výroba minus export (pokud máme měřič)
-        if (measuredPower != 0)
-        {
-            // measuredPower záporné = export do sítě
-            data.loadPower = (data.pv1Power + data.pv2Power) + measuredPower;  
-            if (data.loadPower < 0) data.loadPower = 0;
-        }
-        else
-        {
-            data.loadPower = 0;  // Bez měřiče nevíme spotřebu
-        }
-        
         // Doplnění chybějících polí
         data.pv3Power = 0;
         data.pv4Power = 0;
@@ -1033,8 +1097,7 @@ private:
         
         data.inverterMode = INVERTER_MODE_SELF_USE;
         
-        // Aktualizace denních čítačů (vypočítá gridSellToday, gridBuyToday, loadToday)
-        updateDailyCounters(data, -1);  // -1 = použij RTC nebo systémový čas
+        updateDailyCounters(data, -1);
         
         return true;
     }
@@ -1188,7 +1251,18 @@ private:
         data.soc = response.readUInt16(0x1C);
         data.batteryPower = response.readInt16(0x16);
         data.batteryVoltage = response.readInt16(0x14) / 10.0f;
-        //data.gridPower = response.readInt32LSB(0x46); //read later from phases
+        
+        // Pro X1 (jednofázový) čteme grid power z registru 0x46 (Measured Power)
+        // Pro X3 (třífázový) se čte později z registrů 0x82, 0x84, 0x86 v readPhaseData
+        if (!isThreePhase)
+        {
+            int32_t measuredPower = response.readInt32LSB(0x46);  // W (záporné = export, kladné = import)
+            data.gridPowerL1 = measuredPower;
+            data.gridPowerL2 = 0;
+            data.gridPowerL3 = 0;
+            LOGD("X1 inverter: Grid power from register 0x46 (Measured Power) = %d W", measuredPower);
+        }
+        
         data.batteryChargedToday = response.readUInt16(0x23) / 10.0f;
         data.batteryDischargedToday = response.readUInt16(0x20) / 10.0f;
         data.batteryTemperature = response.readInt16(0x18);
@@ -1366,21 +1440,38 @@ private:
         {
             return false;
         }
-        data.inverterOutpuPowerL1 = response.readInt16(0x6C);
-        data.inverterOutpuPowerL2 = response.readInt16(0x70);
-        data.inverterOutpuPowerL3 = response.readInt16(0x74);
+        
+        if (isThreePhase)
+        {
+            // X3 (třífázový) - čteme výkon z registrů 0x6C, 0x70, 0x74
+            data.inverterOutpuPowerL1 = response.readInt16(0x6C);
+            data.inverterOutpuPowerL2 = response.readInt16(0x70);
+            data.inverterOutpuPowerL3 = response.readInt16(0x74);
 
-        //backup
-        uint16_t backupL1Power = response.readInt16(0x78);
-        uint16_t backupL2Power = response.readInt16(0x7C);
-        uint16_t backupL3Power = response.readInt16(0x80);
-        data.inverterOutpuPowerL1 += backupL1Power;
-        data.inverterOutpuPowerL2 += backupL2Power;
-        data.inverterOutpuPowerL3 += backupL3Power;
+            //backup
+            uint16_t backupL1Power = response.readInt16(0x78);
+            uint16_t backupL2Power = response.readInt16(0x7C);
+            uint16_t backupL3Power = response.readInt16(0x80);
+            data.inverterOutpuPowerL1 += backupL1Power;
+            data.inverterOutpuPowerL2 += backupL2Power;
+            data.inverterOutpuPowerL3 += backupL3Power;
+            
+            // X3 - grid power z registrů 0x82, 0x84, 0x86 (vyžaduje připojený meter/CT)
+            data.gridPowerL1 = response.readInt16(0x82);
+            data.gridPowerL2 = response.readInt16(0x84);
+            data.gridPowerL3 = response.readInt16(0x86);
+        }
+        else
+        {
+            // X1 (jednofázový) - ponecháme hodnotu z registru 0x02 (vyčteno v readMainInverterData)
+            // Registry 0x6C, 0x70, 0x74 jsou pro X3 a u X1 vrací 0
+            LOGD("X1 inverter: keeping inverterOutpuPowerL1 from register 0x02 = %d", data.inverterOutpuPowerL1);
+            
+            // X1 - grid power bude vyčteno z registru 0x46 (Measured Power) v readMainInverterData
+            // Registry 0x82, 0x84, 0x86 vrací 0 pro X1 bez externího meteru
+            // gridPowerL1 je nastaven v readMainInverterData z registru 0x46
+        }
 
-        data.gridPowerL1 = response.readInt16(0x82);
-        data.gridPowerL2 = response.readInt16(0x84);
-        data.gridPowerL3 = response.readInt16(0x86);
         //data.gridPower = data.gridPowerL1 + data.gridPowerL2 + data.gridPowerL3;
         return true;
     }
@@ -1534,6 +1625,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN5;
+            isThreePhase = true;
             LOGI("Detected HYBRID GEN5 inverter (X3-Ultra/IES): %s", serialNumber.c_str());
             return;
         }
@@ -1543,6 +1635,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN5;
+            isThreePhase = false;
             LOGI("Detected HYBRID GEN5 X1-IES inverter: %s", serialNumber.c_str());
             return;
         }
@@ -1552,6 +1645,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN6;
+            isThreePhase = (prefix3 == "10K");
             LOGI("Detected HYBRID GEN6 inverter: %s", serialNumber.c_str());
             return;
         }
@@ -1561,6 +1655,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN4;
+            isThreePhase = false;
             LOGI("Detected HYBRID GEN4 X1 inverter: %s", serialNumber.c_str());
             return;
         }
@@ -1570,6 +1665,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN4;
+            isThreePhase = true;
             LOGI("Detected HYBRID GEN4 X3 inverter: %s", serialNumber.c_str());
             return;
         }
@@ -1579,6 +1675,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN3;
+            isThreePhase = false;
             LOGI("Detected HYBRID GEN3 X1 inverter: %s", serialNumber.c_str());
             return;
         }
@@ -1588,6 +1685,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN3;
+            isThreePhase = true;
             LOGI("Detected HYBRID GEN3 X3 inverter: %s", serialNumber.c_str());
             return;
         }
@@ -1597,6 +1695,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN2;
+            isThreePhase = false;
             LOGI("Detected HYBRID GEN2 X1 inverter: %s", serialNumber.c_str());
             return;
         }
@@ -1608,6 +1707,7 @@ private:
             // AC coupled, ale má baterii
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = (prefix3.startsWith("F") || prefix3 == "PRE") ? SOLAX_GEN4 : SOLAX_GEN3;
+            isThreePhase = !(prefix3.startsWith("F"));  // F4x jsou X1, ostatní X3
             LOGI("Detected AC/RetroFit inverter: %s", serialNumber.c_str());
             return;
         }
@@ -1617,6 +1717,7 @@ private:
         {
             inverterCategory = SOLAX_CATEGORY_HYBRID;
             inverterGeneration = SOLAX_GEN4;
+            isThreePhase = (prefix2 == "H3");  // H3x jsou X3, H4x/H5x jsou X1
             LOGI("Detected HYBRID inverter (H-prefix): %s", serialNumber.c_str());
             return;
         }
@@ -1624,6 +1725,7 @@ private:
         // Default: HYBRID GEN4 (původní chování)
         inverterCategory = SOLAX_CATEGORY_HYBRID;
         inverterGeneration = SOLAX_GEN4;
+        isThreePhase = false;  // Default na X1 pro bezpečnější chování
         LOGI("Unknown SN prefix, defaulting to HYBRID GEN4: %s", serialNumber.c_str());
     }
     

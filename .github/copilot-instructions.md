@@ -13,3 +13,5 @@ Dělej minimální úpravy v kódu.
 
 Každý hotový úkol zkompiluj a vyřeš případné chyby.
 Nakonec shrň změny.
+
+Aplikace se vydává otagováním v Gitu. Formát je Release_XXX, kde XXX je číslo verze (např. Release_102). O jedničku vyšší než předchozí verze.
