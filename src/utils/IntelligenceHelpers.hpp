@@ -34,10 +34,3 @@ inline SolarPriceData_t toPriceData(const ElectricityPriceTwoDays_t& prices) {
     
     return priceData;
 }
-
-/**
- * Command to string
- */
-inline String commandToString(SolarInverterMode_t command) {
-    return IntelligenceResolver::commandToString(command);
-}

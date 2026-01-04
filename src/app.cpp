@@ -856,7 +856,7 @@ bool runIntelligenceTask()
             }
 
             LOGI("Recommended action: %s - %s",
-                  commandToString(lastIntelligenceResult.command).c_str(),
+                  IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str(),
                   lastIntelligenceResult.reason.c_str());
 
             // Generate plan for all future quarters (for chart display)
@@ -916,7 +916,7 @@ bool runIntelligenceTask()
                 {
                     int hour = (q % QUARTERS_OF_DAY) / 4;
                     int minute = ((q % QUARTERS_OF_DAY) % 4) * 15;
-                    const char *modeName = commandToString((SolarInverterMode_t)intelligencePlan[q]).c_str();
+                    const char *modeName = IntelligenceResolver::commandToString((SolarInverterMode_t)intelligencePlan[q]).c_str();
                     float spotPrice = (q < (electricityPriceResult->hasTomorrowData ? 192 : 96))
                                           ? electricityPriceResult->prices[q].electricityPrice
                                           : 0;
@@ -976,9 +976,9 @@ bool runIntelligenceTask()
                     if (modeNeedsUpdate)
                     {
                         LOGD("Mode update needed: command=%s, lastSent=%s, inverterMode=%s",
-                              commandToString(lastIntelligenceResult.command).c_str(),
-                              commandToString(lastSentMode).c_str(),
-                              commandToString(inverterData.inverterMode).c_str());
+                              IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str(),
+                              IntelligenceResolver::commandToString(lastSentMode).c_str(),
+                              IntelligenceResolver::commandToString(inverterData.inverterMode).c_str());
 
                         bool success = false;
                         if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX)
@@ -1011,7 +1011,7 @@ bool runIntelligenceTask()
                         if (success)
                         {
                             LOGI("Successfully sent work mode %s to inverter",
-                                  commandToString(lastIntelligenceResult.command).c_str());
+                                  IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str());
                             lastSentMode = lastIntelligenceResult.command;
                         }
                         else if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX || wifiDiscoveryResult.type == CONNECTION_TYPE_GOODWE)
@@ -1022,7 +1022,7 @@ bool runIntelligenceTask()
                     else
                     {
                         LOGD("Mode unchanged (%s), no update sent",
-                              commandToString(lastSentMode).c_str());
+                              IntelligenceResolver::commandToString(lastSentMode).c_str());
                     }
                 }
             }
