@@ -2,7 +2,7 @@
 
 #include "../../Protocol/V5TCP.hpp"
 #include <RemoteLogger.hpp>
-#include "../../utils/IntelligenceSettings.hpp"
+#include <SolarIntelligence.h>
 
 class SofarSolarDongleAPI
 {
@@ -32,7 +32,7 @@ public:
      * @param mode Desired inverter mode
      * @return true if mode was set successfully
      */
-    bool setWorkMode(const String& ipAddress, const String& dongleSN, InverterMode_t mode)
+    bool setWorkMode(const String& ipAddress, const String& dongleSN, SolarInverterMode_t mode)
     {
         LOGD("setWorkMode called: ip=%s, sn=%s, mode=%d", ipAddress.c_str(), dongleSN.c_str(), mode);
         
@@ -49,36 +49,36 @@ public:
 
         switch (mode)
         {
-        case INVERTER_MODE_SELF_USE:
+        case SI_MODE_SELF_USE:
             // Self-Use mode (Energy Storage Mode = 0)
             LOGD("Setting Self-Use mode (reg 0x%04X = %d)", SOFAR_REG_ENERGY_STORAGE_MODE, SOFAR_MODE_SELF_USE);
             success = writeRegister(sn, SOFAR_REG_ENERGY_STORAGE_MODE, SOFAR_MODE_SELF_USE);
             break;
 
-        case INVERTER_MODE_HOLD_BATTERY:
+        case SI_MODE_HOLD_BATTERY:
             // Passive Mode with 0 power = hold battery at current state
             LOGD("Setting Hold Battery mode (Passive + GridPower=0, Bat=0)");
             success = setPassiveMode(sn, 0, 0, 0);  // Grid=0, MinBat=0, MaxBat=0
             break;
 
-        case INVERTER_MODE_CHARGE_FROM_GRID:
+        case SI_MODE_CHARGE_FROM_GRID:
         {
             // Passive Mode: positive grid power = buy from grid (charge battery)
             // Based on Sofar docs: GridPower > 0 = buy from grid, Bat > 0 = charge
             // Load power from Intelligence settings
-            IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
+            SolarIntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
             int32_t chargePowerW = (int32_t)(settings.maxChargePowerKw * 1000);
             LOGD("Setting Charge from Grid mode (Passive + GridPower=+%dW, Bat +1000 to +%dW)", chargePowerW, chargePowerW);
             success = setPassiveMode(sn, chargePowerW, 1000, chargePowerW);
             break;
         }
 
-        case INVERTER_MODE_DISCHARGE_TO_GRID:
+        case SI_MODE_DISCHARGE_TO_GRID:
         {
             // Passive Mode: negative grid power = sell to grid (discharge battery)
             // Based on Sofar docs: GridPower < 0 = sell to grid, Bat < 0 = discharge
             // Load power from Intelligence settings
-            IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
+            SolarIntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
             int32_t dischargePowerW = (int32_t)(settings.maxDischargePowerKw * 1000);
             LOGD("Setting Discharge to Grid mode (Passive + GridPower=-%dW, Bat -%d to -1000W)", dischargePowerW, dischargePowerW);
             success = setPassiveMode(sn, -dischargePowerW, -dischargePowerW, -1000);
@@ -95,7 +95,7 @@ public:
     }
 
     // Overload for compatibility - without dongleSN parameter
-    bool setWorkMode(const String& ipAddress, InverterMode_t mode)
+    bool setWorkMode(const String& ipAddress, SolarInverterMode_t mode)
     {
         LOGW("setWorkMode called without dongleSN - not supported for Sofar");
         return false;
@@ -261,12 +261,12 @@ private:
                 
                 if (storageMode == SOFAR_MODE_SELF_USE)
                 {
-                    inverterData.inverterMode = INVERTER_MODE_SELF_USE;
+                    inverterData.inverterMode = SI_MODE_SELF_USE;
                 }
                 else if (storageMode == SOFAR_MODE_PASSIVE)
                 {
                     // In passive mode, we need to read the power parameters to determine the actual mode
-                    inverterData.inverterMode = INVERTER_MODE_HOLD_BATTERY; // Will be updated below
+                    inverterData.inverterMode = SI_MODE_HOLD_BATTERY; // Will be updated below
                 }
             }))
         {
@@ -275,7 +275,7 @@ private:
         }
         
         // If in Passive Mode, read the power parameters to determine actual mode
-        if (inverterData.inverterMode == INVERTER_MODE_HOLD_BATTERY)
+        if (inverterData.inverterMode == SI_MODE_HOLD_BATTERY)
         {
             // Read Passive Mode parameters (0x1187-0x118C = 6 registers)
             if (channel.tryReadWithRetries(SOFAR_REG_PASSIVE_GRID_POWER, 6, sn, packetBuffer, [&]()
@@ -305,22 +305,22 @@ private:
                     if (gridPower > 500 && maxBatPower > 500)
                     {
                         // Buying from grid and battery charging
-                        inverterData.inverterMode = INVERTER_MODE_CHARGE_FROM_GRID;
+                        inverterData.inverterMode = SI_MODE_CHARGE_FROM_GRID;
                     }
                     else if (gridPower < -500 && maxBatPower < -500)
                     {
                         // Selling to grid and battery discharging
-                        inverterData.inverterMode = INVERTER_MODE_DISCHARGE_TO_GRID;
+                        inverterData.inverterMode = SI_MODE_DISCHARGE_TO_GRID;
                     }
                     else if (gridPower == 0 && minBatPower == 0 && maxBatPower == 0)
                     {
                         // All zeros = hold battery
-                        inverterData.inverterMode = INVERTER_MODE_HOLD_BATTERY;
+                        inverterData.inverterMode = SI_MODE_HOLD_BATTERY;
                     }
                     else
                     {
                         // Some other passive mode configuration
-                        inverterData.inverterMode = INVERTER_MODE_HOLD_BATTERY;
+                        inverterData.inverterMode = SI_MODE_HOLD_BATTERY;
                     }
                 }))
             {

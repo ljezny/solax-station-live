@@ -215,7 +215,7 @@ private:
      * @param mode Desired inverter mode
      * @return true if mode was set successfully
      */
-    bool setWorkMode(const String& ipAddress, const String& dongleSN, InverterMode_t mode)
+    bool setWorkMode(const String& ipAddress, const String& dongleSN, SolarInverterMode_t mode)
     {
         uint32_t sn = strtoul(dongleSN.c_str(), NULL, 10);
         if (sn == 0)
@@ -231,22 +231,22 @@ private:
 
         switch (mode)
         {
-        case INVERTER_MODE_SELF_USE:
+        case SI_MODE_SELF_USE:
             // Selling First mode - work_mode = 0
             success = writeRegister(sn, DEYE_REG_WORK_MODE, DEYE_MODE_SELLING_FIRST);
             break;
 
-        case INVERTER_MODE_HOLD_BATTERY:
+        case SI_MODE_HOLD_BATTERY:
             // Zero Export to Load - work_mode = 1 (battery won't discharge to grid)
             success = writeRegister(sn, DEYE_REG_WORK_MODE, DEYE_MODE_ZERO_EXPORT_LOAD);
             break;
 
-        case INVERTER_MODE_CHARGE_FROM_GRID:
+        case SI_MODE_CHARGE_FROM_GRID:
             // Enable grid charging via Time of Use mode
             success = setGridCharging(sn, true, 100);  // 100% SOC target
             break;
 
-        case INVERTER_MODE_DISCHARGE_TO_GRID:
+        case SI_MODE_DISCHARGE_TO_GRID:
             // Selling First with max export
             success = writeRegister(sn, DEYE_REG_WORK_MODE, DEYE_MODE_SELLING_FIRST);
             // Also disable battery SOC protection to allow full discharge
@@ -265,7 +265,7 @@ private:
     }
 
     // Overload for compatibility - without dongleSN parameter
-    bool setWorkMode(const String& ipAddress, InverterMode_t mode)
+    bool setWorkMode(const String& ipAddress, SolarInverterMode_t mode)
     {
         LOGD("setWorkMode called without dongleSN - not supported for Deye");
         return false;

@@ -5,7 +5,7 @@
 #include <lvgl.h>
 #include "ui/ui.h"
 #include "ui/ui_IntelligenceSetup.h"
-#include "utils/IntelligenceSettings.hpp"
+#include <SolarIntelligence.h>
 #include "utils/Localization.hpp"
 
 // Forward declarations of event handlers
@@ -42,7 +42,7 @@ public:
         lv_scr_load(ui_IntelligenceSetup);
         
         // Load current settings
-        IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
+        SolarIntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
         loadSettingsToUI(settings);
         
         // Add event handlers only once
@@ -80,7 +80,7 @@ public:
     }
     
     void onSaveClick() {
-        IntelligenceSettings_t settings = readSettingsFromUI();
+        SolarIntelligenceSettings_t settings = readSettingsFromUI();
         LOGD("Saving intelligence settings: batCost=%.2f, minSoc=%d, maxSoc=%d, buyK=%.2f, buyQ=%.2f, sellK=%.2f, sellQ=%.2f, cap=%.1f, chg=%.1f, dis=%.1f",
               settings.batteryCostPerKwh, settings.minSocPercent, settings.maxSocPercent,
               settings.buyK, settings.buyQ, settings.sellK, settings.sellQ,
@@ -97,7 +97,7 @@ public:
     
     void onResetClick() {
         // Reset settings to defaults and reload UI
-        IntelligenceSettings_t defaults = IntelligenceSettings_t::getDefault();
+        SolarIntelligenceSettings_t defaults = SolarIntelligenceSettings_t::getDefault();
         loadSettingsToUI(defaults);
         
         // Nastavit flag pro smazání predikcí (zpracuje app.cpp)
@@ -214,7 +214,7 @@ private:
         if (ui_intelligenceSellFormulaLabel) lv_label_set_text(ui_intelligenceSellFormulaLabel, TR(STR_PRICE_FORMULA));
     }
     
-    void loadSettingsToUI(const IntelligenceSettings_t& settings) {
+    void loadSettingsToUI(const SolarIntelligenceSettings_t& settings) {
         LOGD("Loading settings to UI: batCost=%.2f, minSoc=%d, maxSoc=%d",
               settings.batteryCostPerKwh, settings.minSocPercent, settings.maxSocPercent);
         
@@ -262,8 +262,8 @@ private:
         lv_textarea_set_text(ui_intelligenceMaxDischargeInput, buf);
     }
     
-    IntelligenceSettings_t readSettingsFromUI() {
-        IntelligenceSettings_t settings;
+    SolarIntelligenceSettings_t readSettingsFromUI() {
+        SolarIntelligenceSettings_t settings;
         
         // Enable switch
         settings.enabled = lv_obj_has_state(ui_intelligenceEnableSwitch, LV_STATE_CHECKED);

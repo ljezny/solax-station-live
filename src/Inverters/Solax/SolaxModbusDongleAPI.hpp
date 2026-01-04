@@ -95,7 +95,7 @@ public:
             }
             
             // MIC nemá work mode řízení baterie
-            inverterData.inverterMode = INVERTER_MODE_SELF_USE;
+            inverterData.inverterMode = SI_MODE_SELF_USE;
         }
         else
         {
@@ -118,7 +118,7 @@ public:
             uint16_t runMode = readRunMode();
             if (runMode == RUN_MODE_IDLE || runMode == RUN_MODE_STANDBY)
             {
-                inverterData.inverterMode = INVERTER_MODE_SELF_USE;
+                inverterData.inverterMode = SI_MODE_SELF_USE;
             }
             else
             {
@@ -144,10 +144,10 @@ public:
      * Nastaví work mode střídače Solax
      * Pokud je střídač v idle/standby, nejprve ho probudí
      * @param ipAddress IP adresa donglu
-     * @param mode Požadovaný režim (InverterMode_t)
+     * @param mode Požadovaný režim (SolarInverterMode_t)
      * @return true pokud se nastavení podařilo
      */
-    bool setWorkMode(const String &ipAddress, InverterMode_t mode)
+    bool setWorkMode(const String &ipAddress, SolarInverterMode_t mode)
     {
         if (!connectToDongle(ipAddress))
         {
@@ -251,13 +251,13 @@ public:
      * Tato metoda je bezpečnější než setWorkMode - automatický návrat do Self-Use po timeoutu
      * DŮLEŽITÉ: Používá writeMultipleRegisters (FC 0x10) - střídač vyžaduje atomický zápis všech registrů najednou!
      * @param ipAddress IP adresa donglu
-     * @param mode Požadovaný režim (InverterMode_t)
+     * @param mode Požadovaný režim (SolarInverterMode_t)
      * @param maxChargePowerW Maximální nabíjecí výkon v W (default 10000)
      * @param maxDischargePowerW Maximální vybíjecí výkon v W (default 10000)
      * @param timeoutSec Timeout v sekundách, po kterém se vrátí do Self-Use (default 300 = 5 min)
      * @return true pokud se nastavení podařilo
      */
-    bool setWorkModeViaPowerControl(const String &ipAddress, InverterMode_t mode, 
+    bool setWorkModeViaPowerControl(const String &ipAddress, SolarInverterMode_t mode, 
                                      uint16_t maxChargePowerW = 10000, 
                                      uint16_t maxDischargePowerW = 10000,
                                      uint16_t timeoutSec = 300)
@@ -274,24 +274,24 @@ public:
         
         switch (mode)
         {
-        case INVERTER_MODE_SELF_USE:
+        case SI_MODE_SELF_USE:
             // Vypnout remote control → střídač řídí sám
             powerCtrlMode = POWER_CTRL_DISABLED;  // 0 = disable
             timeoutSec = 0;
             activePowerTarget = 0;
             break;
             
-        case INVERTER_MODE_CHARGE_FROM_GRID:
+        case SI_MODE_CHARGE_FROM_GRID:
             // Nabíjení = KLADNÝ výkon (podle dokumentace: positive = charge)
             activePowerTarget = (int32_t)maxChargePowerW;
             break;
             
-        case INVERTER_MODE_DISCHARGE_TO_GRID:
+        case SI_MODE_DISCHARGE_TO_GRID:
             // Vybíjení = ZÁPORNÝ výkon (podle dokumentace: negative = discharge)
             activePowerTarget = -(int32_t)maxDischargePowerW;
             break;
             
-        case INVERTER_MODE_HOLD_BATTERY:
+        case SI_MODE_HOLD_BATTERY:
             // Držet baterii = 0 W výkon
             activePowerTarget = 0;
             break;
@@ -495,30 +495,30 @@ private:
     static constexpr uint16_t SOLAX_MANUAL_FORCE_DISCHARGE = 2;     // Force discharge
 
     /**
-     * Převede InverterMode_t na Solax work mode a manual mode hodnoty
+     * Převede SolarInverterMode_t na Solax work mode a manual mode hodnoty
      * @param mode Požadovaný režim
      * @param outWorkMode Výstup: hodnota pro registr 0x008B (SolarChargerUseMode)
      * @param outManualMode Výstup: hodnota pro registr 0x008C (ManualMode)
      */
-    void inverterModeToSolaxMode(InverterMode_t mode, uint16_t &outWorkMode, uint16_t &outManualMode)
+    void inverterModeToSolaxMode(SolarInverterMode_t mode, uint16_t &outWorkMode, uint16_t &outManualMode)
     {
         switch (mode)
         {
-        case INVERTER_MODE_SELF_USE:
+        case SI_MODE_SELF_USE:
             outWorkMode = SOLAX_WORK_MODE_SELF_USE;
             outManualMode = SOLAX_MANUAL_STOP;
             break;
-        case INVERTER_MODE_CHARGE_FROM_GRID:
+        case SI_MODE_CHARGE_FROM_GRID:
             // Pro nabíjení ze sítě použijeme Manual mode s Force Charge
             outWorkMode = SOLAX_WORK_MODE_MANUAL;
             outManualMode = SOLAX_MANUAL_FORCE_CHARGE;
             break;
-        case INVERTER_MODE_DISCHARGE_TO_GRID:
+        case SI_MODE_DISCHARGE_TO_GRID:
             // Pro prodej do sítě použijeme Manual mode s Force Discharge
             outWorkMode = SOLAX_WORK_MODE_MANUAL;
             outManualMode = SOLAX_MANUAL_FORCE_DISCHARGE;
             break;
-        case INVERTER_MODE_HOLD_BATTERY:
+        case SI_MODE_HOLD_BATTERY:
             // Pro držení baterie použijeme Manual mode se Stop
             outWorkMode = SOLAX_WORK_MODE_MANUAL;
             outManualMode = SOLAX_MANUAL_STOP;
@@ -531,34 +531,34 @@ private:
     }
 
     /**
-     * Převede Solax work mode a manual mode hodnoty na InverterMode_t
+     * Převede Solax work mode a manual mode hodnoty na SolarInverterMode_t
      * @param solaxMode Hodnota z registru 0x008B (SolarChargerUseMode)
      * @param manualMode Hodnota z registru 0x008C (ManualMode)
      */
-    InverterMode_t solaxModeToInverterMode(uint16_t solaxMode, uint16_t manualMode = 0)
+    SolarInverterMode_t solaxModeToInverterMode(uint16_t solaxMode, uint16_t manualMode = 0)
     {
         switch (solaxMode)
         {
         case SOLAX_WORK_MODE_SELF_USE:
-            return INVERTER_MODE_SELF_USE;
+            return SI_MODE_SELF_USE;
         case SOLAX_WORK_MODE_FEEDIN_PRIORITY:
-            return INVERTER_MODE_DISCHARGE_TO_GRID;
+            return SI_MODE_DISCHARGE_TO_GRID;
         case SOLAX_WORK_MODE_BACK_UP:
-            return INVERTER_MODE_HOLD_BATTERY;
+            return SI_MODE_HOLD_BATTERY;
         case SOLAX_WORK_MODE_MANUAL:
             // V manual mode záleží na hodnotě manualMode registru
             switch (manualMode)
             {
             case SOLAX_MANUAL_FORCE_CHARGE:
-                return INVERTER_MODE_CHARGE_FROM_GRID;
+                return SI_MODE_CHARGE_FROM_GRID;
             case SOLAX_MANUAL_FORCE_DISCHARGE:
-                return INVERTER_MODE_DISCHARGE_TO_GRID;
+                return SI_MODE_DISCHARGE_TO_GRID;
             case SOLAX_MANUAL_STOP:
             default:
-                return INVERTER_MODE_HOLD_BATTERY;
+                return SI_MODE_HOLD_BATTERY;
             }
         default:
-            return INVERTER_MODE_UNKNOWN;
+            return SI_MODE_UNKNOWN;
         }
     }
 
@@ -1095,7 +1095,7 @@ private:
         data.batteryDischargedTotal = 0;
         data.loadTotal = 0;
         
-        data.inverterMode = INVERTER_MODE_SELF_USE;
+        data.inverterMode = SI_MODE_SELF_USE;
         
         updateDailyCounters(data, -1);
         
@@ -1224,7 +1224,7 @@ private:
         data.batteryDischargedTotal = 0;
         data.loadTotal = 0;
         
-        data.inverterMode = INVERTER_MODE_SELF_USE;
+        data.inverterMode = SI_MODE_SELF_USE;
         
         // Aktualizace denních čítačů (vypočítá gridSellToday, gridBuyToday, loadToday)
         updateDailyCounters(data, -1);
@@ -1383,15 +1383,15 @@ private:
                 // Podle dokumentace: positive = charge, negative = discharge
                 if (activePowerTarget > 100)  // Kladný = nabíjení (s tolerancí)
                 {
-                    data.inverterMode = INVERTER_MODE_CHARGE_FROM_GRID;
+                    data.inverterMode = SI_MODE_CHARGE_FROM_GRID;
                 }
                 else if (activePowerTarget < -100)  // Záporný = vybíjení (s tolerancí)
                 {
-                    data.inverterMode = INVERTER_MODE_DISCHARGE_TO_GRID;
+                    data.inverterMode = SI_MODE_DISCHARGE_TO_GRID;
                 }
                 else  // Blízko 0 = hold
                 {
-                    data.inverterMode = INVERTER_MODE_HOLD_BATTERY;
+                    data.inverterMode = SI_MODE_HOLD_BATTERY;
                 }
                 return true;
             }

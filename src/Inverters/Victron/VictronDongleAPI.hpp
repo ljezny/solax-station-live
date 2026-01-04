@@ -295,7 +295,7 @@ public:
      * @param mode Desired inverter mode
      * @return true if mode was set successfully
      */
-    bool setWorkMode(const String& ipAddress, InverterMode_t mode)
+    bool setWorkMode(const String& ipAddress, SolarInverterMode_t mode)
     {
         IPAddress ip;
         if (!ipAddress.isEmpty())
@@ -320,7 +320,7 @@ public:
 
         switch (mode)
         {
-        case INVERTER_MODE_SELF_USE:
+        case SI_MODE_SELF_USE:
             // ESS Mode: Optimized with BatteryLife (mode 1)
             success = channel.writeSingleRegister(VICTRON_UNIT_SYSTEM, VICTRON_REG_ESS_MODE, VICTRON_ESS_OPTIMIZED_BATTERYLIFE);
             if (success)
@@ -330,17 +330,17 @@ public:
             }
             break;
 
-        case INVERTER_MODE_HOLD_BATTERY:
+        case SI_MODE_HOLD_BATTERY:
             // ESS Mode: Keep charged (mode 3) - battery stays full
             success = channel.writeSingleRegister(VICTRON_UNIT_SYSTEM, VICTRON_REG_ESS_MODE, VICTRON_ESS_KEEP_CHARGED);
             break;
 
-        case INVERTER_MODE_CHARGE_FROM_GRID:
+        case SI_MODE_CHARGE_FROM_GRID:
             // Set VE.Bus to Charger Only mode
             success = channel.writeSingleRegister(VICTRON_UNIT_VEBUS, VICTRON_REG_VEBUS_SWITCH, VICTRON_VEBUS_CHARGER_ONLY);
             break;
 
-        case INVERTER_MODE_DISCHARGE_TO_GRID:
+        case SI_MODE_DISCHARGE_TO_GRID:
             // ESS Mode: Optimized without BatteryLife (mode 2) + low min SOC
             success = channel.writeSingleRegister(VICTRON_UNIT_SYSTEM, VICTRON_REG_ESS_MODE, VICTRON_ESS_OPTIMIZED_NO_BATTERYLIFE);
             if (success)

@@ -11,7 +11,8 @@
 #include "utils/UIBackgroundAnimatior.hpp"
 #include "utils/MedianPowerSampler.hpp"
 #include "Spot/ElectricityPriceLoader.hpp"
-#include "utils/IntelligenceSettings.hpp"
+#include <SolarIntelligence.h>
+#include "utils/IntelligenceHelpers.hpp"
 #include "utils/Localization.hpp"
 
 lv_color_t red = lv_color_hex(0xE63946);
@@ -19,7 +20,7 @@ lv_color_t orange = lv_color_hex(0xFFA726);
 lv_color_t green = lv_color_hex(0x4CAF50);
 
 // Callback typ pro změnu režimu střídače
-typedef void (*InverterModeChangeCallback)(InverterMode_t mode, bool intelligenceEnabled);
+typedef void (*InverterModeChangeCallback)(SolarInverterMode_t mode, bool intelligenceEnabled);
 
 // Forward declaration for touch callback
 static void onAnyTouchShowButtons(lv_event_t *e);
@@ -963,22 +964,22 @@ public:
         lv_obj_set_style_text_align(title, LV_TEXT_ALIGN_CENTER, 0);
 
         // Get current intelligence state
-        IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
+        SolarIntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
 
         // Menu items
         struct MenuItem {
             const char* text;
-            InverterMode_t mode;
+            SolarInverterMode_t mode;
             bool enableIntelligence;
             lv_color_t color;
         };
         
         MenuItem items[] = {
-            {TR(STR_INTELLIGENCE), INVERTER_MODE_UNKNOWN, true, lv_color_hex(0x2196F3)},
-            {TR(STR_NORMAL), INVERTER_MODE_SELF_USE, false, lv_color_hex(_ui_theme_color_loadColor[0])},
-            {TR(STR_CHARGE), INVERTER_MODE_CHARGE_FROM_GRID, false, lv_color_hex(_ui_theme_color_gridColor[0])},
-            {TR(STR_DISCHARGE), INVERTER_MODE_DISCHARGE_TO_GRID, false, lv_color_hex(_ui_theme_color_batteryColor[0])},
-            {TR(STR_HOLD), INVERTER_MODE_HOLD_BATTERY, false, lv_color_hex(0x888888)},
+            {TR(STR_INTELLIGENCE), SI_MODE_UNKNOWN, true, lv_color_hex(0x2196F3)},
+            {TR(STR_NORMAL), SI_MODE_SELF_USE, false, lv_color_hex(_ui_theme_color_loadColor[0])},
+            {TR(STR_CHARGE), SI_MODE_CHARGE_FROM_GRID, false, lv_color_hex(_ui_theme_color_gridColor[0])},
+            {TR(STR_DISCHARGE), SI_MODE_DISCHARGE_TO_GRID, false, lv_color_hex(_ui_theme_color_batteryColor[0])},
+            {TR(STR_HOLD), SI_MODE_HOLD_BATTERY, false, lv_color_hex(0x888888)},
         };
 
         for (int i = 0; i < 5; i++) {
@@ -1001,7 +1002,7 @@ public:
                 DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
                 lv_obj_t* btn = lv_event_get_target(e);
                 uint32_t data = (uint32_t)(uintptr_t)lv_obj_get_user_data(btn);
-                InverterMode_t mode = (InverterMode_t)(data >> 8);
+                SolarInverterMode_t mode = (SolarInverterMode_t)(data >> 8);
                 bool enableIntelligence = (data & 1) != 0;
                 
                 // Close overlay first
@@ -1345,13 +1346,13 @@ public:
      * - HOLD_BATTERY: Gray (holding)
      * - UNKNOWN: Hidden
      */
-    void updateIntelligenceModeLabel(InverterMode_t mode) {
+    void updateIntelligenceModeLabel(SolarInverterMode_t mode) {
         if (intelligenceModeLabel == nullptr) {
             return;
         }
         
         // Hide badge if intelligence is not supported for this inverter
-        if (!intelligenceSupported || mode == INVERTER_MODE_UNKNOWN) {
+        if (!intelligenceSupported || mode == SI_MODE_UNKNOWN) {
             lv_obj_add_flag(intelligenceModeLabel, LV_OBJ_FLAG_HIDDEN);
             return;
         }
@@ -1368,19 +1369,19 @@ public:
         } else {
             // When intelligence is disabled, show actual inverter mode
             switch (mode) {
-                case INVERTER_MODE_SELF_USE:
+                case SI_MODE_SELF_USE:
                     labelText = TR(STR_NORMAL);
                     bgColor = lv_color_hex(_ui_theme_color_loadColor[0]);  // Green (load color)
                     break;
-                case INVERTER_MODE_CHARGE_FROM_GRID:
+                case SI_MODE_CHARGE_FROM_GRID:
                     labelText = TR(STR_CHARGE);
                     bgColor = lv_color_hex(_ui_theme_color_gridColor[0]);  // Red/Pink (grid color)
                     break;
-                case INVERTER_MODE_DISCHARGE_TO_GRID:
+                case SI_MODE_DISCHARGE_TO_GRID:
                     labelText = TR(STR_DISCHARGE);
                     bgColor = lv_color_hex(_ui_theme_color_batteryColor[0]);  // Blue (battery color)
                     break;
-                case INVERTER_MODE_HOLD_BATTERY:
+                case SI_MODE_HOLD_BATTERY:
                     labelText = TR(STR_HOLD);
                     bgColor = lv_color_hex(0x888888);  // Gray
                     break;
@@ -1404,26 +1405,26 @@ public:
      * @param currentQuarter Current quarter index
      * @param totalQuarters Total number of quarters in plan
      */
-    void updateIntelligencePlanSummary(InverterMode_t currentMode, const InverterMode_t plan[], int currentQuarter, int totalQuarters, float savings, const char* currency = nullptr) {
+    void updateIntelligencePlanSummary(SolarInverterMode_t currentMode, const SolarInverterMode_t plan[], int currentQuarter, int totalQuarters, float savings, const char* currency = nullptr) {
         if (intelligenceSummaryBadge == nullptr || intelligenceSummaryTitle == nullptr) return;
         
         // Get mode name and color
         const char* modeName = "";
         lv_color_t badgeColor = lv_color_hex(0x666666);
         switch (currentMode) {
-            case INVERTER_MODE_SELF_USE: 
+            case SI_MODE_SELF_USE: 
                 modeName = TR(STR_NORMAL); 
                 badgeColor = lv_color_hex(_ui_theme_color_loadColor[0]);  // Green (load color)
                 break;
-            case INVERTER_MODE_CHARGE_FROM_GRID: 
+            case SI_MODE_CHARGE_FROM_GRID: 
                 modeName = TR(STR_CHARGE); 
                 badgeColor = lv_color_hex(_ui_theme_color_gridColor[0]);  // Red/Pink (grid color)
                 break;
-            case INVERTER_MODE_DISCHARGE_TO_GRID: 
+            case SI_MODE_DISCHARGE_TO_GRID: 
                 modeName = TR(STR_DISCHARGE); 
                 badgeColor = lv_color_hex(_ui_theme_color_batteryColor[0]);  // Blue (battery color)
                 break;
-            case INVERTER_MODE_HOLD_BATTERY: 
+            case SI_MODE_HOLD_BATTERY: 
                 modeName = TR(STR_HOLD); 
                 badgeColor = lv_color_hex(0x888888);  // Gray
                 break;
@@ -1461,37 +1462,37 @@ public:
      * @param prices Optional electricity prices for detailed reasons
      * @param settings Optional intelligence settings for price calculations
      */
-    void updateIntelligenceUpcomingPlans(const InverterMode_t plan[], int currentQuarter, int totalQuarters, 
+    void updateIntelligenceUpcomingPlans(const SolarInverterMode_t plan[], int currentQuarter, int totalQuarters, 
                                          const ElectricityPriceTwoDays_t* prices = nullptr, 
-                                         const IntelligenceSettings_t* settings = nullptr) {
+                                         const SolarIntelligenceSettings_t* settings = nullptr) {
         if (intelligenceUpcomingRows[0] == nullptr) return;
         
         // Helper to get mode name
-        auto getModeName = [](InverterMode_t mode) -> const char* {
+        auto getModeName = [](SolarInverterMode_t mode) -> const char* {
             switch (mode) {
-                case INVERTER_MODE_SELF_USE: return TR(STR_NORMAL);
-                case INVERTER_MODE_CHARGE_FROM_GRID: return TR(STR_CHARGE);
-                case INVERTER_MODE_DISCHARGE_TO_GRID: return TR(STR_DISCHARGE);
-                case INVERTER_MODE_HOLD_BATTERY: return TR(STR_HOLD);
+                case SI_MODE_SELF_USE: return TR(STR_NORMAL);
+                case SI_MODE_CHARGE_FROM_GRID: return TR(STR_CHARGE);
+                case SI_MODE_DISCHARGE_TO_GRID: return TR(STR_DISCHARGE);
+                case SI_MODE_HOLD_BATTERY: return TR(STR_HOLD);
                 default: return "---";
             }
         };
         
-        auto getModeColor = [](InverterMode_t mode) -> lv_color_t {
+        auto getModeColor = [](SolarInverterMode_t mode) -> lv_color_t {
             switch (mode) {
-                case INVERTER_MODE_SELF_USE: return lv_color_hex(_ui_theme_color_loadColor[0]);  // Green (load color)
-                case INVERTER_MODE_CHARGE_FROM_GRID: return lv_color_hex(_ui_theme_color_gridColor[0]);  // Red/Pink (grid color)
-                case INVERTER_MODE_DISCHARGE_TO_GRID: return lv_color_hex(_ui_theme_color_batteryColor[0]);  // Blue (battery color)
-                case INVERTER_MODE_HOLD_BATTERY: return lv_color_hex(0x888888);  // Gray
+                case SI_MODE_SELF_USE: return lv_color_hex(_ui_theme_color_loadColor[0]);  // Green (load color)
+                case SI_MODE_CHARGE_FROM_GRID: return lv_color_hex(_ui_theme_color_gridColor[0]);  // Red/Pink (grid color)
+                case SI_MODE_DISCHARGE_TO_GRID: return lv_color_hex(_ui_theme_color_batteryColor[0]);  // Blue (battery color)
+                case SI_MODE_HOLD_BATTERY: return lv_color_hex(0x888888);  // Gray
                 default: return lv_color_hex(0x666666);
             }
         };
         
         // Count total mode changes first
         int totalChanges = 0;
-        InverterMode_t countMode = (currentQuarter >= 0 && currentQuarter < totalQuarters) ? plan[currentQuarter] : INVERTER_MODE_UNKNOWN;
+        SolarInverterMode_t countMode = (currentQuarter >= 0 && currentQuarter < totalQuarters) ? plan[currentQuarter] : SI_MODE_UNKNOWN;
         for (int q = currentQuarter + 1; q < totalQuarters; q++) {
-            if (plan[q] != countMode && plan[q] != INVERTER_MODE_UNKNOWN) {
+            if (plan[q] != countMode && plan[q] != SI_MODE_UNKNOWN) {
                 totalChanges++;
                 countMode = plan[q];
             }
@@ -1499,10 +1500,10 @@ public:
         
         // Find next VISIBLE_PLAN_ROWS mode changes
         int foundChanges = 0;
-        InverterMode_t lastMode = (currentQuarter >= 0 && currentQuarter < totalQuarters) ? plan[currentQuarter] : INVERTER_MODE_UNKNOWN;
+        SolarInverterMode_t lastMode = (currentQuarter >= 0 && currentQuarter < totalQuarters) ? plan[currentQuarter] : SI_MODE_UNKNOWN;
         
         for (int q = currentQuarter + 1; q < totalQuarters && foundChanges < VISIBLE_PLAN_ROWS; q++) {
-            if (plan[q] != lastMode && plan[q] != INVERTER_MODE_UNKNOWN) {
+            if (plan[q] != lastMode && plan[q] != SI_MODE_UNKNOWN) {
                 // Calculate time
                 int hour = (q % QUARTERS_OF_DAY) / 4;
                 int minute = ((q % QUARTERS_OF_DAY) % 4) * 15;
@@ -1519,20 +1520,20 @@ public:
                 char reasonBuf[64];
                 if (prices != nullptr && settings != nullptr && q < (prices->hasTomorrowData ? 192 : 96)) {
                     float spotPrice = prices->prices[q].electricityPrice;
-                    float buyPrice = IntelligenceSettingsStorage::calculateBuyPrice(spotPrice, *settings);
-                    float sellPrice = IntelligenceSettingsStorage::calculateSellPrice(spotPrice, *settings);
+                    float buyPrice = calculateBuyPrice(spotPrice, *settings);
+                    float sellPrice = calculateSellPrice(spotPrice, *settings);
                     
                     switch (plan[q]) {
-                        case INVERTER_MODE_SELF_USE:
+                        case SI_MODE_SELF_USE:
                             snprintf(reasonBuf, sizeof(reasonBuf), "%s %.1f %s", TR(STR_BATTERY_CHEAPER_THAN), buyPrice, prices->currency);
                             break;
-                        case INVERTER_MODE_CHARGE_FROM_GRID:
+                        case SI_MODE_CHARGE_FROM_GRID:
                             snprintf(reasonBuf, sizeof(reasonBuf), "%s %.1f %s", TR(STR_LOW_PRICE), buyPrice, prices->currency);
                             break;
-                        case INVERTER_MODE_DISCHARGE_TO_GRID:
+                        case SI_MODE_DISCHARGE_TO_GRID:
                             snprintf(reasonBuf, sizeof(reasonBuf), "%s %.1f %s", TR(STR_HIGH_PRICE), sellPrice, prices->currency);
                             break;
-                        case INVERTER_MODE_HOLD_BATTERY:
+                        case SI_MODE_HOLD_BATTERY:
                             snprintf(reasonBuf, sizeof(reasonBuf), "%s", TR(STR_WAITING_BETTER_PRICE));
                             break;
                         default:
@@ -1541,16 +1542,16 @@ public:
                 } else {
                     // Fallback without prices
                     switch (plan[q]) {
-                        case INVERTER_MODE_SELF_USE: 
+                        case SI_MODE_SELF_USE: 
                             snprintf(reasonBuf, sizeof(reasonBuf), "%s", TR(STR_USING_BATTERY));
                             break;
-                        case INVERTER_MODE_CHARGE_FROM_GRID: 
+                        case SI_MODE_CHARGE_FROM_GRID: 
                             snprintf(reasonBuf, sizeof(reasonBuf), "%s", TR(STR_LOW_ELECTRICITY_PRICE));
                             break;
-                        case INVERTER_MODE_DISCHARGE_TO_GRID: 
+                        case SI_MODE_DISCHARGE_TO_GRID: 
                             snprintf(reasonBuf, sizeof(reasonBuf), "%s", TR(STR_HIGH_ELECTRICITY_PRICE));
                             break;
-                        case INVERTER_MODE_HOLD_BATTERY: 
+                        case SI_MODE_HOLD_BATTERY: 
                             snprintf(reasonBuf, sizeof(reasonBuf), "%s", TR(STR_HOLDING_FOR_LATER));
                             break;
                         default:

@@ -1,5 +1,5 @@
 
-Budeme se spolu bavit česky.
+Budeme se spolu bavit česky. Komentáře v kódu piš anglicky.
 
 Projekt používá aktivně více než 1000 lidí. 
 Je potřeba dělat věškeré změny opatrně s ohledem na migraci dat - ideálně se jí vyhnout úplně.

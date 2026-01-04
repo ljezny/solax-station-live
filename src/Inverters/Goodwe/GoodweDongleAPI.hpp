@@ -44,7 +44,7 @@ public:
      * @param maxSoc Maximum SOC for charge (target SOC when charging)
      * @return true if mode was set successfully
      */
-    bool setWorkMode(const String& ipAddress, InverterMode_t mode, int minSoc = 10, int maxSoc = 100)
+    bool setWorkMode(const String& ipAddress, SolarInverterMode_t mode, int minSoc = 10, int maxSoc = 100)
     {
         // Set IP address
         if (!ipAddress.isEmpty())
@@ -69,20 +69,20 @@ private:
     /**
      * Execute the actual work mode change using tryWrite methods
      */
-    bool executeWorkModeChange(InverterMode_t mode, int minSoc, int maxSoc)
+    bool executeWorkModeChange(SolarInverterMode_t mode, int minSoc, int maxSoc)
     {
         switch (mode)
         {
-        case INVERTER_MODE_SELF_USE:
+        case SI_MODE_SELF_USE:
             return tryWriteSingleRegister(REG_WORK_MODE, GOODWE_WORK_MODE_GENERAL);
 
-        case INVERTER_MODE_HOLD_BATTERY:
+        case SI_MODE_HOLD_BATTERY:
             return setEcoModeDischarge(ip, 1, minSoc);
 
-        case INVERTER_MODE_CHARGE_FROM_GRID:
+        case SI_MODE_CHARGE_FROM_GRID:
             return setEcoModeCharge(ip, 99, maxSoc);
 
-        case INVERTER_MODE_DISCHARGE_TO_GRID:
+        case SI_MODE_DISCHARGE_TO_GRID:
             return setEcoModeDischarge(ip, 99, minSoc);
 
         default:
@@ -350,9 +350,9 @@ private:
     // ==================== Mode Conversion ====================
 
     /**
-     * Converts GoodWe work_mode register value to InverterMode_t
+     * Converts GoodWe work_mode register value to SolarInverterMode_t
      */
-    InverterMode_t goodweModeToInverterMode(uint16_t goodweMode, int16_t ecoModePower = 0, bool ecoModeEnabled = false)
+    SolarInverterMode_t goodweModeToInverterMode(uint16_t goodweMode, int16_t ecoModePower = 0, bool ecoModeEnabled = false)
     {
         switch (goodweMode)
         {
@@ -360,23 +360,23 @@ private:
         case GOODWE_WORK_MODE_OFFGRID:
         case GOODWE_WORK_MODE_PEAKSHAVING:
         case GOODWE_WORK_MODE_SELFUSE:
-            return INVERTER_MODE_SELF_USE;
+            return SI_MODE_SELF_USE;
         
         case GOODWE_WORK_MODE_BACKUP:
-            return INVERTER_MODE_HOLD_BATTERY;
+            return SI_MODE_HOLD_BATTERY;
         
         case GOODWE_WORK_MODE_ECO:
             if (!ecoModeEnabled || ecoModePower == 0)
-                return INVERTER_MODE_SELF_USE;
+                return SI_MODE_SELF_USE;
             else if (ecoModePower < 0)
-                return INVERTER_MODE_CHARGE_FROM_GRID;
+                return SI_MODE_CHARGE_FROM_GRID;
             else if (ecoModePower <= 1)
-                return INVERTER_MODE_HOLD_BATTERY;
+                return SI_MODE_HOLD_BATTERY;
             else
-                return INVERTER_MODE_DISCHARGE_TO_GRID;
+                return SI_MODE_DISCHARGE_TO_GRID;
         
         default:
-            return INVERTER_MODE_UNKNOWN;
+            return SI_MODE_UNKNOWN;
         }
     }
 

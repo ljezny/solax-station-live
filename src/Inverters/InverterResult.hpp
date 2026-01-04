@@ -1,6 +1,7 @@
 #pragma once
 
 #include <RemoteLogger.hpp>
+#include <SolarIntelligence.h>
 
 typedef enum DongleStatus {
     DONGLE_STATUS_OK = 1,
@@ -11,17 +12,6 @@ typedef enum DongleStatus {
     DONGLE_STATUS_WIFI_DISCONNECTED = -4,
     DONGLE_STATUS_UNSUPPORTED_DONGLE = -5,
 } DongleStatus_t;
-
-/**
- * Příkazy pro režim střídače (inteligentní řízení)
- */
-typedef enum InverterMode {
-    INVERTER_MODE_UNKNOWN = 0,         // Neznámý stav / inteligence vypnutá
-    INVERTER_MODE_SELF_USE,            // Normální provoz - spotřeba z baterie pro vlastní potřebu
-    INVERTER_MODE_CHARGE_FROM_GRID,    // Nabíjet baterii ze sítě
-    INVERTER_MODE_DISCHARGE_TO_GRID,   // Vybíjet baterii do sítě (prodej)
-    INVERTER_MODE_HOLD_BATTERY,        // Držet baterii - nepoužívat ani nenabíjet
-} InverterMode_t;
 
 typedef struct
 {
@@ -64,7 +54,7 @@ typedef struct
     double pvToday = 0;
     double pvTotal = 0;
     bool hasBattery = true;
-    InverterMode_t inverterMode = INVERTER_MODE_UNKNOWN;  // Aktuální režim střídače (inteligence)
+    SolarInverterMode_t inverterMode = SI_MODE_UNKNOWN;  // Aktuální režim střídače (inteligence)
     time_t inverterTime = 0;  // RTC čas ze střídače (0 = neplatný)
 } InverterData_t;
 

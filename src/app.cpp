@@ -28,11 +28,8 @@
 #include "utils/SmartControlRuleResolver.hpp"
 #include "utils/MedianPowerSampler.hpp"
 #include "Spot/ElectricityPriceLoader.hpp"
-#include "utils/IntelligenceSettings.hpp"
-#include "utils/IntelligenceResolver.hpp"
-#include "utils/IntelligenceSimulator.hpp"
-#include "utils/ConsumptionPredictor.hpp"
-#include "utils/ProductionPredictor.hpp"
+#include <SolarIntelligence.h>
+#include "utils/IntelligenceHelpers.hpp"
 #include "utils/WebServer.hpp"
 #include "utils/FlashMutex.hpp"
 #include <RemoteLogger.hpp>
@@ -111,14 +108,22 @@ SmartControlRuleResolver wallboxRuleResolver(wallboxMedianPowerSampler);
 ConsumptionPredictor consumptionPredictor;
 ProductionPredictor productionPredictor;
 IntelligenceResolver intelligenceResolver(consumptionPredictor, productionPredictor);
-IntelligenceResult_t lastIntelligenceResult;
-static InverterMode_t lastSentMode = INVERTER_MODE_UNKNOWN; // Last mode sent to inverter
+
+// Local result structure for backward compatibility with SolarInverterMode_t
+struct LocalIntelligenceResult {
+    SolarInverterMode_t command = SI_MODE_UNKNOWN;
+    String reason;
+    float expectedSavings = 0;
+};
+LocalIntelligenceResult lastIntelligenceResult;
+
+static SolarInverterMode_t lastSentMode = SI_MODE_UNKNOWN; // Last mode sent to inverter
 static long lastIntelligenceAttempt = 0;
 static int lastProcessedQuarter = -1;        // Track last quarter when we processed intelligence
 #define INTELLIGENCE_REFRESH_INTERVAL 300000 // 5 minutes - recalculate every 5 minutes
 
 // Pending mode change from UI - processed in mainUpdateTask to avoid blocking LVGL
-static volatile InverterMode_t pendingModeChange = INVERTER_MODE_UNKNOWN;
+static volatile SolarInverterMode_t pendingModeChange = SI_MODE_UNKNOWN;
 static volatile bool pendingModeChangeRequest = false;
 
 SplashUI *splashUI = NULL;
@@ -423,17 +428,17 @@ void setupLVGL()
     // Set callback for inverter mode change from dashboard menu
     // NOTE: This callback is called from LVGL event handler, so we must NOT do network
     // operations here. Instead, we queue the request and process it in mainUpdateTask.
-    dashboardUI->setModeChangeCallback([](InverterMode_t mode, bool enableIntelligence)
+    dashboardUI->setModeChangeCallback([](SolarInverterMode_t mode, bool enableIntelligence)
                                        {
         LOGD("Mode change requested: mode=%d, intelligence=%d", mode, enableIntelligence);
         
         // Update intelligence settings (NVS is fast, OK to do here)
-        IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
+        SolarIntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
         settings.enabled = enableIntelligence;
         IntelligenceSettingsStorage::save(settings);
         
         // If not intelligence mode, queue command for mainUpdateTask (network operation)
-        if (!enableIntelligence && mode != INVERTER_MODE_UNKNOWN) {
+        if (!enableIntelligence && mode != SI_MODE_UNKNOWN) {
             pendingModeChange = mode;
             pendingModeChangeRequest = true;
         }
@@ -796,7 +801,7 @@ bool loadElectricityPriceTask()
 bool runIntelligenceTask()
 {
     bool run = false;
-    static InverterMode_t intelligencePlan[QUARTERS_TWO_DAYS]; // Plan for today + tomorrow
+    static SolarInverterMode_t intelligencePlan[QUARTERS_TWO_DAYS]; // Plan for today + tomorrow
 
     // Check if current time is aligned to 5-minute boundary (0, 5, 10, 15, 20, ...)
     time_t now_check = time(nullptr);
@@ -812,7 +817,7 @@ bool runIntelligenceTask()
     {
         LOGD("Running intelligence resolver");
 
-        IntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
+        SolarIntelligenceSettings_t settings = IntelligenceSettingsStorage::load();
         bool hasSpotPrices = electricityPriceResult && electricityPriceResult->updated > 0;
         bool canSimulate = settings.enabled && inverterData.status == DONGLE_STATUS_OK && hasSpotPrices;
 
@@ -824,8 +829,8 @@ bool runIntelligenceTask()
             struct tm *timeinfo_log = localtime(&now_log);
             int currentQuarterLog = (timeinfo_log->tm_hour * 60 + timeinfo_log->tm_min) / 15;
             float currentSpotPrice = electricityPriceResult->prices[currentQuarterLog].electricityPrice;
-            float buyPrice = IntelligenceSettingsStorage::calculateBuyPrice(currentSpotPrice, settings);
-            float sellPrice = IntelligenceSettingsStorage::calculateSellPrice(currentSpotPrice, settings);
+            float buyPrice = calculateBuyPrice(currentSpotPrice, settings);
+            float sellPrice = calculateSellPrice(currentSpotPrice, settings);
 
             LOGI("=== INTELLIGENCE SIMULATION ===");
             LOGI("Time: %02d:%02d (Q%d), SOC: %d%%, Enabled: %s",
@@ -837,7 +842,9 @@ bool runIntelligenceTask()
                   inverterData.batteryCapacityWh / 1000.0f, settings.minSocPercent, settings.maxSocPercent);
 
             // Run simulation to get all quarter decisions at once
-            const auto &simResults = intelligenceResolver.runSimulation(inverterData, *electricityPriceResult, settings, true);
+            SolarBatteryState_t batteryState = toBatteryState(inverterData);
+            SolarPriceData_t priceData = toPriceData(*electricityPriceResult);
+            const auto &simResults = intelligenceResolver.runSimulation(batteryState, priceData, settings, true);
             const auto &summary = intelligenceResolver.getLastSummary();
 
             // Get current quarter result
@@ -849,7 +856,7 @@ bool runIntelligenceTask()
             }
 
             LOGI("Recommended action: %s - %s",
-                  IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str(),
+                  commandToString(lastIntelligenceResult.command).c_str(),
                   lastIntelligenceResult.reason.c_str());
 
             // Generate plan for all future quarters (for chart display)
@@ -863,7 +870,7 @@ bool runIntelligenceTask()
             // Fill intelligencePlan from simulation results
             for (int q = 0; q < currentQuarter; q++)
             {
-                intelligencePlan[q] = INVERTER_MODE_UNKNOWN;
+                intelligencePlan[q] = SI_MODE_UNKNOWN;
             }
 
             for (size_t i = 0; i < simResults.size(); i++)
@@ -909,7 +916,7 @@ bool runIntelligenceTask()
                 {
                     int hour = (q % QUARTERS_OF_DAY) / 4;
                     int minute = ((q % QUARTERS_OF_DAY) % 4) * 15;
-                    const char *modeName = IntelligenceResolver::commandToString((InverterMode_t)intelligencePlan[q]).c_str();
+                    const char *modeName = commandToString((SolarInverterMode_t)intelligencePlan[q]).c_str();
                     float spotPrice = (q < (electricityPriceResult->hasTomorrowData ? 192 : 96))
                                           ? electricityPriceResult->prices[q].electricityPrice
                                           : 0;
@@ -922,7 +929,7 @@ bool runIntelligenceTask()
             // Fill remaining quarters with UNKNOWN if no tomorrow data
             for (int q = totalQuarters; q < QUARTERS_TWO_DAYS; q++)
             {
-                intelligencePlan[q] = INVERTER_MODE_UNKNOWN;
+                intelligencePlan[q] = SI_MODE_UNKNOWN;
             }
 
             // Use simulation summary for stats
@@ -956,8 +963,8 @@ bool runIntelligenceTask()
                 bool quarterChanged = (currentQuarter != lastProcessedQuarter);
                 // Check if mode needs update: compare with lastSentMode AND actual inverter mode
                 // This handles cases where someone changed mode manually in inverter app
-                bool modeNeedsUpdate = (lastIntelligenceResult.command != INVERTER_MODE_UNKNOWN &&
-                                        (lastIntelligenceResult.command != lastSentMode && lastSentMode != INVERTER_MODE_UNKNOWN ||
+                bool modeNeedsUpdate = (lastIntelligenceResult.command != SI_MODE_UNKNOWN &&
+                                        (lastIntelligenceResult.command != lastSentMode && lastSentMode != SI_MODE_UNKNOWN ||
                                          lastIntelligenceResult.command != inverterData.inverterMode));
 
                 if (quarterChanged || (modeNeedsUpdate && lastProcessedQuarter == -1))
@@ -969,9 +976,9 @@ bool runIntelligenceTask()
                     if (modeNeedsUpdate)
                     {
                         LOGD("Mode update needed: command=%s, lastSent=%s, inverterMode=%s",
-                              IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str(),
-                              IntelligenceResolver::commandToString(lastSentMode).c_str(),
-                              IntelligenceResolver::commandToString(inverterData.inverterMode).c_str());
+                              commandToString(lastIntelligenceResult.command).c_str(),
+                              commandToString(lastSentMode).c_str(),
+                              commandToString(inverterData.inverterMode).c_str());
 
                         bool success = false;
                         if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX)
@@ -1004,7 +1011,7 @@ bool runIntelligenceTask()
                         if (success)
                         {
                             LOGI("Successfully sent work mode %s to inverter",
-                                  IntelligenceResolver::commandToString(lastIntelligenceResult.command).c_str());
+                                  commandToString(lastIntelligenceResult.command).c_str());
                             lastSentMode = lastIntelligenceResult.command;
                         }
                         else if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOLAX || wifiDiscoveryResult.type == CONNECTION_TYPE_GOODWE)
@@ -1015,14 +1022,14 @@ bool runIntelligenceTask()
                     else
                     {
                         LOGD("Mode unchanged (%s), no update sent",
-                              IntelligenceResolver::commandToString(lastSentMode).c_str());
+                              commandToString(lastSentMode).c_str());
                     }
                 }
             }
             else
             {
                 // Intelligence disabled - reset tracking
-                lastSentMode = INVERTER_MODE_UNKNOWN;
+                lastSentMode = SI_MODE_UNKNOWN;
                 lastProcessedQuarter = -1;
             }
 
@@ -1076,7 +1083,7 @@ bool runIntelligenceTask()
             }
 
             // Update UI state
-            lastSentMode = INVERTER_MODE_UNKNOWN;
+            lastSentMode = SI_MODE_UNKNOWN;
             lastProcessedQuarter = -1;
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
             if (dashboardUI != nullptr)
@@ -1088,7 +1095,7 @@ bool runIntelligenceTask()
         else
         {
             // No inverter data - just update UI state
-            lastSentMode = INVERTER_MODE_UNKNOWN;
+            lastSentMode = SI_MODE_UNKNOWN;
             lastProcessedQuarter = -1;
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
             if (dashboardUI != nullptr)
@@ -1648,7 +1655,7 @@ void updateState()
             if (pendingModeChangeRequest)
             {
                 pendingModeChangeRequest = false;
-                InverterMode_t mode = pendingModeChange;
+                SolarInverterMode_t mode = pendingModeChange;
                 LOGD("Processing pending mode change: %d", mode);
 
                 bool success = false;

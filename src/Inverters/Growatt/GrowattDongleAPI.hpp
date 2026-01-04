@@ -279,7 +279,7 @@ private:
      * @param mode Desired inverter mode
      * @return true if mode was set successfully
      */
-    bool setWorkMode(const String& ipAddress, InverterMode_t mode)
+    bool setWorkMode(const String& ipAddress, SolarInverterMode_t mode)
     {
         if (!connectToDongle(ipAddress))
         {
@@ -290,7 +290,7 @@ private:
 
         switch (mode)
         {
-        case INVERTER_MODE_SELF_USE:
+        case SI_MODE_SELF_USE:
             // Load First mode - register 1100 = 0
             success = channel.writeSingleRegister(UNIT_ID, GROWATT_REG_PRIORITY_MODE, GROWATT_PRIORITY_LOAD_FIRST);
             if (success)
@@ -300,17 +300,17 @@ private:
             }
             break;
 
-        case INVERTER_MODE_HOLD_BATTERY:
+        case SI_MODE_HOLD_BATTERY:
             // Battery First mode - keeps battery from discharging
             success = channel.writeSingleRegister(UNIT_ID, GROWATT_REG_PRIORITY_MODE, GROWATT_PRIORITY_BAT_FIRST);
             break;
 
-        case INVERTER_MODE_CHARGE_FROM_GRID:
+        case SI_MODE_CHARGE_FROM_GRID:
             // Force Charge mode
             success = channel.writeSingleRegister(UNIT_ID, GROWATT_REG_SYSTEM_MODE, GROWATT_SYSTEM_FORCE_CHARGE);
             break;
 
-        case INVERTER_MODE_DISCHARGE_TO_GRID:
+        case SI_MODE_DISCHARGE_TO_GRID:
             // Grid First + allow export
             success = channel.writeSingleRegister(UNIT_ID, GROWATT_REG_PRIORITY_MODE, GROWATT_PRIORITY_GRID_FIRST);
             if (success)
