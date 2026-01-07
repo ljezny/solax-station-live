@@ -37,7 +37,6 @@ private:
         Wire.beginTransmission(address);
         return (Wire.endTransmission() == 0);
     }
-
 public:
     void setup()
     {
@@ -69,7 +68,7 @@ public:
         }
         else if (i2cScanForAddress(0x30))
         {
-            // Fallback: assume V1.2 for backwards compatibility
+            // Fallback: use 0x10 which works on both V1.2 and V1.3
             Wire.beginTransmission(0x30);
             Wire.write(0x10);
             Wire.endTransmission();
@@ -184,7 +183,7 @@ public:
     {
         if (brightness != lastBrightness)
         {
-            LOGD("Setting backlight: %d -> %d (version=%s)", lastBrightness, brightness, getVersionName());
+            LOGD("Setting backlight: %d -> %d", lastBrightness, brightness);
             lastBrightness = brightness;
         }
 #if CROW_PANEL_ADVANCE
@@ -194,50 +193,37 @@ public:
             io.digitalWrite(1, brightness > 0 ? 1 : 0);
             LOGD("V1.0: digitalWrite=%d", brightness > 0 ? 1 : 0);
         }
-        else if (detectedVersion == CrowPanelVersion::V1_2)
-        {
-            // V1.2: STC8H1K28 at 0x30, values 0x05 (off) to 0x10 (max)
-            Wire.beginTransmission(0x30);
-            uint8_t pwmValue;
-            if (brightness == 0) {
-                pwmValue = 0x05; // OFF
-            } else {
-                // Map 1-255 to 0x06-0x10 (6 levels)
-                pwmValue = map(brightness, 1, 255, 0x06, 0x10);
-            }
-            Wire.write(pwmValue);
-            uint8_t result = Wire.endTransmission();
-            LOGD("V1.2: pwmValue=0x%02X, result=%d", pwmValue, result);
-        }
-        else if (detectedVersion == CrowPanelVersion::V1_3)
-        {
-            // V1.3: STC8H1K28 at 0x30, values 0 (max) to 244 (min), 245 (off)
-            Wire.beginTransmission(0x30);
-            uint8_t pwmValue;
-            if (brightness == 0) {
-                pwmValue = 245; // OFF
-            } else {
-                // Map 1-255 to 244-0 (inverted, 0 is brightest)
-                pwmValue = map(brightness, 1, 255, 244, 0);
-            }
-            Wire.write(pwmValue);
-            uint8_t result = Wire.endTransmission();
-            LOGD("V1.3: pwmValue=%d, result=%d", pwmValue, result);
-        }
         else
         {
-            // Unknown version - try both protocols and log
-            LOGW("Unknown board version, trying V1.2 protocol as fallback");
-            if (i2cScanForAddress(0x30))
+            // V1.2/V1.3: Use detected protocol
+            if (detectedVersion == CrowPanelVersion::V1_2)
             {
+                // V1.2 protocol: 0x05=off, 0x06-0x10=brightness levels
+                uint8_t v12Value;
+                if (brightness == 0) {
+                    v12Value = 0x05; // OFF
+                } else {
+                    v12Value = map(brightness, 1, 255, 0x06, 0x10);
+                }
                 Wire.beginTransmission(0x30);
-                uint8_t pwmValue = map(brightness, 0, 255, 0x05, 0x10);
-                Wire.write(pwmValue);
+                Wire.write(v12Value);
                 Wire.endTransmission();
+                LOGD("V1.2: brightness=0x%02X", v12Value);
             }
-            else if (i2cScanForAddress(0x18))
+            else
             {
-                io.digitalWrite(1, brightness > 0 ? 1 : 0);
+                // V1.3 protocol: inverted, 0=max, 244=min, 245=off
+                uint8_t v13Value;
+                if (brightness == 0) {
+                    v13Value = 245; // OFF
+                } else {
+                    // Map 255->0 (brightest), 1->244 (dimmest)
+                    v13Value = map(brightness, 1, 255, 244, 0);
+                }
+                Wire.beginTransmission(0x30);
+                Wire.write(v13Value);
+                Wire.endTransmission();
+                LOGD("V1.3: brightness=%d", v13Value);
             }
         }
 
@@ -252,7 +238,10 @@ public:
 
 private:
     /**
-     * Detect board version by reading from I2C
+     * Detect board version by testing I2C response to value 25
+     * V1.0: PCA9557 at 0x18
+     * V1.2: STC8H1K28 at 0x30, value 25 causes I2C timeout
+     * V1.3: STC8H1K28 at 0x30, value 25 works fine (valid brightness)
      */
     CrowPanelVersion detectBoardVersion()
     {
@@ -263,45 +252,63 @@ private:
             return CrowPanelVersion::V1_0;
         }
         
-        // Check for V1.2/V1.3 (STC8H1K28 at 0x30)
+        // Check for V1.2/V1.3 (STC8H1K28 at 0x30) using Wire first
         if (!i2cScanForAddress(0x30))
         {
             LOGW("No backlight controller found at 0x30 or 0x18!");
             return CrowPanelVersion::UNKNOWN;
         }
         
-        // Read 4 bytes from 0x30 to distinguish V1.2 vs V1.3
-        // V1.2 returns: [0xFF, 0x4E, ...]
-        // V1.3 returns: [0xFF, 0x52, ...]
-        uint8_t readBuffer[4] = {0};
-        int bytesRead = Wire.requestFrom((uint8_t)0x30, (uint8_t)4);
+        LOGD("Found STC8H1K28 at 0x30, detecting version...");
         
-        for (int i = 0; i < bytesRead && i < 4; i++)
-        {
-            readBuffer[i] = Wire.read();
+        // Set Wire timeout to detect slow transactions
+        Wire.setTimeOut(100); // 100ms timeout
+        
+        // Send value 25 - valid for V1.3, problematic for V1.2
+        Wire.beginTransmission(0x30);
+        Wire.write(25);
+        uint8_t result1 = Wire.endTransmission();
+        delay(50);
+        
+        // Try to read from chip - V1.2 may not respond after bad value
+        int bytesRead = Wire.requestFrom((uint8_t)0x30, (uint8_t)1);
+        uint8_t readVal = 0;
+        if (bytesRead > 0) {
+            readVal = Wire.read();
         }
+        LOGD("After 25: result=%d, read %d bytes (0x%02X)", result1, bytesRead, readVal);
         
-        LOGD("Read from 0x30: [0x%02X, 0x%02X, 0x%02X, 0x%02X]", 
-             readBuffer[0], readBuffer[1], readBuffer[2], readBuffer[3]);
+        CrowPanelVersion detected;
         
-        // Detect version based on second byte
-        // V1.2: 0x4E (78), V1.3: 0x52 (82)
-        if (readBuffer[1] == 0x4E)
+        // If read returned 0 bytes, chip stopped responding = V1.2
+        if (bytesRead == 0 || result1 != 0)
         {
-            LOGD("Detected CrowPanel V1.2 (signature byte: 0x4E)");
-            return CrowPanelVersion::V1_2;
-        }
-        else if (readBuffer[1] == 0x52)
-        {
-            LOGD("Detected CrowPanel V1.3 (signature byte: 0x52)");
-            return CrowPanelVersion::V1_3;
+            LOGD("No response after 25 -> V1.2 detected");
+            detected = CrowPanelVersion::V1_2;
+            
+            // Reset I2C bus to recover from error state
+            Wire.end();
+            delay(100);
+            Wire.begin(15, 16);
+            delay(100);
+            
+            // Send valid V1.2 command to turn on display
+            Wire.beginTransmission(0x30);
+            Wire.write(0x10);
+            Wire.endTransmission();
         }
         else
         {
-            // Unknown signature, default to V1.3 as it's the newest and seems compatible
-            LOGW("Unknown signature byte 0x%02X, defaulting to V1.3 protocol", readBuffer[1]);
-            return CrowPanelVersion::V1_3;
+            LOGD("Chip responded after 25 -> V1.3 detected");
+            detected = CrowPanelVersion::V1_3;
+            
+            // Set V1.3 max brightness
+            Wire.beginTransmission(0x30);
+            Wire.write(0); // V1.3 max brightness
+            Wire.endTransmission();
         }
+        
+        return detected;
     }
     
     const char* getVersionName() const
