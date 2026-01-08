@@ -480,10 +480,15 @@ private:
         if (!tryReadWithRetries(35100, 125, [&](ModbusResponse& response) {
             inverterData.status = DONGLE_STATUS_OK;
             inverterData.millis = millis();
-            inverterData.pv1Power = response.readUInt32(35100 + 5);
-            inverterData.pv2Power = response.readUInt32(35100 + 9);
-            inverterData.pv3Power = response.readUInt32(35100 + 13);
-            inverterData.pv4Power = response.readUInt32(35100 + 17);
+            // PV power: 0xFFFFFFFF means invalid/not connected string, treat as 0
+            uint32_t pv1Raw = response.readUInt32(35100 + 5);
+            uint32_t pv2Raw = response.readUInt32(35100 + 9);
+            uint32_t pv3Raw = response.readUInt32(35100 + 13);
+            uint32_t pv4Raw = response.readUInt32(35100 + 17);
+            inverterData.pv1Power = (pv1Raw == 0xFFFFFFFF) ? 0 : pv1Raw;
+            inverterData.pv2Power = (pv2Raw == 0xFFFFFFFF) ? 0 : pv2Raw;
+            inverterData.pv3Power = (pv3Raw == 0xFFFFFFFF) ? 0 : pv3Raw;
+            inverterData.pv4Power = (pv4Raw == 0xFFFFFFFF) ? 0 : pv4Raw;
             inverterData.batteryPower -= response.readInt16(35100 + 83);
             inverterData.inverterOutpuPowerL1 = response.readInt16(35100 + 25);
             inverterData.inverterOutpuPowerL2 = response.readInt16(35100 + 30);
