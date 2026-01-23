@@ -985,7 +985,7 @@ private:
         
         // Note: X1-Boost G3 (XB3) nemá registry pro Measured Power (0x43B) ani Grid Export/Import (0x43D-0x440)
         // Tyto registry existují pouze v GEN4 verzích. Pro GEN2/G3 nejsou v dokumentaci.
-        // Grid power tedy nelze přímo měřit - použijeme inverterPower jako aproximaci.
+        // Grid power a grid totals nelze číst - hodnoty zůstanou nulové.
         
         // Nastavení výstupních dat
         data.inverterOutpuPowerL1 = inverterPower;
@@ -994,21 +994,19 @@ private:
         data.inverterTemperature = inverterTemperature;  // 0x40D
         
         // Grid power - X1-Boost G3 nemá měřič, grid power není dostupný
-        // Předpokládáme že veškerý výkon jde do sítě (export)
-        data.gridPowerL1 = -inverterPower;  // Záporné = export do sítě
+        data.gridPowerL1 = 0;
         data.gridPowerL2 = 0;
         data.gridPowerL3 = 0;
         
-        LOGD("MIC GEN2: No meter available, assuming all power exported: %dW", inverterPower);
+        LOGD("MIC GEN2: No meter available, grid power unknown");
         
-        // Grid totals - bez měřiče použijeme aproximaci z PV yield
-        data.gridSellTotal = data.pvTotal;
+        // Grid totals - X1-Boost G3 nemá registry pro grid export/import
+        data.gridSellTotal = 0;
         data.gridBuyTotal = 0;
-        data.gridSellToday = 0;  // Nemáme registr pro today
+        data.gridSellToday = 0;
         data.gridBuyToday = 0;
         
         // Load power - bez měřiče nemůžeme určit spotřebu
-        // Předpokládáme 0 (vše jde do sítě)
         data.loadPower = 0;
         
         // MIC nemá baterii
