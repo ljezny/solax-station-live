@@ -983,60 +983,9 @@ private:
             LOGW("MIC GEN2: Failed to read yield registers 0x423-0x426");
         }
         
-        // Blok 3: Measured Power - pro měřič
-        // HA plugin definuje 2 registry pro MIC GEN2 X1:
-        //   - 0x43B-0x43C (S32) - primární, ale může vracet Exception 2 na některých FW
-        //   - 0x704-0x705 (S32) - "measured_power_2", alternativní pro MIC|GEN2|X1
-        // Zkusíme primárně 0x43B, pokud selže nebo vrací 0, fallback na 0x704
-        int32_t measuredPower = 0;
-        
-        // Primární: 0x43B-0x43C
-        ModbusResponse resp3 = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x43B, 2);
-        if (resp3.isValid)
-        {
-            measuredPower = resp3.readInt32LSB(0x00);  // W (záporné = export, kladné = import)
-            if (measuredPower != 0)
-            {
-                LOGD("MIC GEN2 Measured Power (0x43B): %dW", measuredPower);
-            }
-        }
-        
-        // Fallback: 0x704-0x705 (measured_power_2) pokud 0x43B selhal nebo vrátil 0
-        if (measuredPower == 0)
-        {
-            ModbusResponse resp3alt = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x704, 2);
-            if (resp3alt.isValid)
-            {
-                measuredPower = resp3alt.readInt32LSB(0x00);  // W
-                if (measuredPower != 0)
-                {
-                    LOGD("MIC GEN2 Measured Power (0x704 fallback): %dW", measuredPower);
-                }
-            }
-            else
-            {
-                LOGD("MIC GEN2: Measured Power registers (0x43B, 0x704) not available - no meter");
-            }
-        }
-        
-        // Blok 4: 0x43D-0x440 (4 registry) - Grid Export/Import Total (volitelné)
-        // HA plugin: scale=0.01 kWh
-        float gridExportTotal = 0;
-        float gridImportTotal = 0;
-        ModbusResponse resp4 = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x43D, 4);
-        if (resp4.isValid)
-        {
-            gridExportTotal = resp4.readUInt32LSB(0x00) / 100.0f;  // 0x43D-0x43E: kWh
-            gridImportTotal = resp4.readUInt32LSB(0x02) / 100.0f;  // 0x43F-0x440: kWh
-            if (gridExportTotal > 0 || gridImportTotal > 0)
-            {
-                LOGD("MIC GEN2 Grid Totals: Export=%.2fkWh, Import=%.2fkWh", gridExportTotal, gridImportTotal);
-            }
-        }
-        else
-        {
-            LOGD("MIC GEN2: Grid Export/Import registers (0x43D-0x440) not available - no meter");
-        }
+        // Note: X1-Boost G3 (XB3) nemá registry pro Measured Power (0x43B) ani Grid Export/Import (0x43D-0x440)
+        // Tyto registry existují pouze v GEN4 verzích. Pro GEN2/G3 nejsou v dokumentaci.
+        // Grid power tedy nelze přímo měřit - použijeme inverterPower jako aproximaci.
         
         // Nastavení výstupních dat
         data.inverterOutpuPowerL1 = inverterPower;
@@ -1044,36 +993,23 @@ private:
         data.inverterOutpuPowerL3 = 0;
         data.inverterTemperature = inverterTemperature;  // 0x40D
         
-        // Grid power - použijeme measuredPower pokud máme měřič
-        // measuredPower: záporné = export, kladné = import (HA konvence)
-        data.gridPowerL1 = measuredPower;  // Bude 0 pokud není měřič
+        // Grid power - X1-Boost G3 nemá měřič, grid power není dostupný
+        // Předpokládáme že veškerý výkon jde do sítě (export)
+        data.gridPowerL1 = -inverterPower;  // Záporné = export do sítě
         data.gridPowerL2 = 0;
         data.gridPowerL3 = 0;
         
-        if (measuredPower == 0 && inverterPower > 0)
-        {
-            LOGW("MIC GEN2: Grid power not available (no meter). Cannot determine grid import/export.");
-        }
+        LOGD("MIC GEN2: No meter available, assuming all power exported: %dW", inverterPower);
         
-        // Grid totals - použijeme registry pokud máme měřič, jinak aproximace z PV yield
-        if (gridExportTotal > 0 || gridImportTotal > 0)
-        {
-            data.gridSellTotal = gridExportTotal;
-            data.gridBuyTotal = gridImportTotal;
-        }
-        else
-        {
-            data.gridSellTotal = data.pvTotal;
-            data.gridBuyTotal = 0;
-        }
+        // Grid totals - bez měřiče použijeme aproximaci z PV yield
+        data.gridSellTotal = data.pvTotal;
+        data.gridBuyTotal = 0;
         data.gridSellToday = 0;  // Nemáme registr pro today
         data.gridBuyToday = 0;
         
-        // Load power = inverterPower + measuredPower
-        // inverterPower = co vyrobí střídač, measuredPower = co jde do/ze sítě
-        // loadPower = výroba - export = výroba + import (pokud measuredPower je záporné = export)
-        data.loadPower = inverterPower + measuredPower;
-        if (data.loadPower < 0) data.loadPower = 0;
+        // Load power - bez měřiče nemůžeme určit spotřebu
+        // Předpokládáme 0 (vše jde do sítě)
+        data.loadPower = 0;
         
         // MIC nemá baterii
         data.soc = 0;

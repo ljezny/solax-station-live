@@ -1,6 +1,8 @@
 
 Budeme se spolu bavit česky. Komentáře v kódu piš anglicky.
 
+Před každým úkolem stáhni aktuální verzi z gitu - pull.
+
 Projekt používá aktivně více než 1000 lidí. 
 Je potřeba dělat věškeré změny opatrně s ohledem na migraci dat - ideálně se jí vyhnout úplně.
 
