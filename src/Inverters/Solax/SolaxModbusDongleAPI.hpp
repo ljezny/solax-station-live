@@ -983,9 +983,43 @@ private:
             LOGW("MIC GEN2: Failed to read yield registers 0x423-0x426");
         }
         
-        // Note: X1-Boost G3 (XB3) nemá registry pro Measured Power (0x43B) ani Grid Export/Import (0x43D-0x440)
-        // Tyto registry existují pouze v GEN4 verzích. Pro GEN2/G3 nejsou v dokumentaci.
-        // Grid power a grid totals nelze číst - hodnoty zůstanou nulové.
+        // Blok 3: 0x431-0x43E - FeedIn, Consume a Grid Energy registry (vyžadují CT)
+        // Dle dokumentace X1-Boost G3 V1.7:
+        // 0x431: FeedInPower (1W, Uint16) - aktuální export do sítě
+        // 0x433-0x434: Feedin_energy_total (0.1kWh, Uint32) - celkový export
+        // 0x435-0x436: Consume_energy_total (0.1kWh, Uint32) - celková spotřeba ze sítě
+        // 0x43D: Feedin_energy_today (0.1kWh, Uint16) - denní export
+        // 0x43E: Consume_energy_today (0.1kWh, Uint16) - denní spotřeba ze sítě
+        int16_t feedInPower = 0;
+        ModbusResponse resp3 = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x431, 14);  // 0x431-0x43E
+        if (resp3.isValid)
+        {
+            // FeedInPower (0x431, offset 0x00) - kladná hodnota = export do sítě
+            feedInPower = (int16_t)resp3.readUInt16(0x00);  // 0x431: 1W
+            
+            // Feedin_energy_total (0x433-0x434, offset 0x02-0x03)
+            data.gridSellTotal = resp3.readUInt32LSB(0x02) / 10.0f;  // 0x433-0x434: kWh
+            
+            // Consume_energy_total (0x435-0x436, offset 0x04-0x05)
+            data.gridBuyTotal = resp3.readUInt32LSB(0x04) / 10.0f;  // 0x435-0x436: kWh
+            
+            // Feedin_energy_today (0x43D, offset 0x0C)
+            data.gridSellToday = resp3.readUInt16(0x0C) / 10.0f;  // 0x43D: kWh
+            
+            // Consume_energy_today (0x43E, offset 0x0D)
+            data.gridBuyToday = resp3.readUInt16(0x0D) / 10.0f;  // 0x43E: kWh
+            
+            LOGD("MIC GEN2 CT: FeedInPower=%dW, SellTotal=%.1fkWh, BuyTotal=%.1fkWh, SellToday=%.1fkWh, BuyToday=%.1fkWh",
+                 feedInPower, data.gridSellTotal, data.gridBuyTotal, data.gridSellToday, data.gridBuyToday);
+        }
+        else
+        {
+            LOGW("MIC GEN2: Failed to read CT registers 0x431-0x43E (CT may not be connected)");
+            data.gridSellTotal = 0;
+            data.gridBuyTotal = 0;
+            data.gridSellToday = 0;
+            data.gridBuyToday = 0;
+        }
         
         // Nastavení výstupních dat
         data.inverterOutpuPowerL1 = inverterPower;
@@ -993,21 +1027,30 @@ private:
         data.inverterOutpuPowerL3 = 0;
         data.inverterTemperature = inverterTemperature;  // 0x40D
         
-        // Grid power - X1-Boost G3 nemá měřič, grid power není dostupný
-        data.gridPowerL1 = 0;
+        // Grid power z FeedInPower - kladná hodnota = export (odpovídá naší konvenci)
+        // Solax FeedInPower: kladné = export, záporné by bylo import (ale Uint16, takže jen kladné)
+        // Pro gridPowerL1 používáme zápornou hodnotu pro export (standardní konvence v kódu)
+        data.gridPowerL1 = -feedInPower;  // Záporné = export, kladné = import
         data.gridPowerL2 = 0;
         data.gridPowerL3 = 0;
         
-        LOGD("MIC GEN2: No meter available, grid power unknown");
+        if (feedInPower != 0)
+        {
+            LOGD("MIC GEN2: Grid power from CT: %dW (export=%dW)", data.gridPowerL1, feedInPower);
+        }
+        else
+        {
+            LOGD("MIC GEN2: No CT power available (CT not connected or zero flow)");
+        }
         
-        // Grid totals - X1-Boost G3 nemá registry pro grid export/import
-        data.gridSellTotal = 0;
-        data.gridBuyTotal = 0;
-        data.gridSellToday = 0;
-        data.gridBuyToday = 0;
+        // Load power = inverterPower - feedInPower
+        // Pokud exportujeme (feedInPower > 0), loadPower = inverterPower - feedInPower
+        // Pokud bychom importovali, loadPower = inverterPower + |feedInPower|
+        data.loadPower = inverterPower - feedInPower;
+        if (data.loadPower < 0) data.loadPower = 0;  // Ochrana proti záporným hodnotám
         
-        // Load power - bez měřiče nemůžeme určit spotřebu
-        data.loadPower = 0;
+        LOGD("MIC GEN2: Load power calculated: %dW (inverter=%dW, feedIn=%dW)", 
+             data.loadPower, inverterPower, feedInPower);
         
         // MIC nemá baterii
         data.soc = 0;
@@ -1031,7 +1074,14 @@ private:
         
         data.inverterMode = SI_MODE_SELF_USE;
         
-        updateDailyCounters(data, -1);
+        // Denní statistiky - počítáme loadToday z hodnot ze střídače
+        // Nepoužíváme updateDailyCounters, protože střídač má vlastní denní čítače (0x43D, 0x43E)
+        // loadToday = pvToday - gridSellToday + gridBuyToday
+        data.loadToday = data.pvToday - data.gridSellToday + data.gridBuyToday;
+        if (data.loadToday < 0) data.loadToday = 0;
+        
+        LOGD("MIC GEN2: Daily stats from inverter: pvToday=%.1fkWh, sellToday=%.1fkWh, buyToday=%.1fkWh, loadToday=%.1fkWh",
+             data.pvToday, data.gridSellToday, data.gridBuyToday, data.loadToday);
         
         return true;
     }
