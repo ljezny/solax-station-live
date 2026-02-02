@@ -965,22 +965,55 @@ private:
         
         // Blok 2: 0x423-0x426 (4 registry) - Yield data
         // HA plugin: scale=0.1 pro GEN2, scale=0.001 pro GEN
+        bool yieldFromStandardRegs = false;
         ModbusResponse resp2 = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x423, 4);
         if (resp2.isValid)
         {
             data.pvTotal = resp2.readUInt32LSB(0x00) / 10.0f;  // 0x423-0x424: kWh (scale 0.1 pro GEN2)
             data.pvToday = resp2.readUInt32LSB(0x02) / 10.0f;  // 0x425-0x426: kWh (scale 0.1 pro GEN2)
-            LOGD("MIC GEN2 Yield: Total=%.1fkWh, Today=%.1fkWh", data.pvTotal, data.pvToday);
+            LOGD("MIC GEN2 Yield (0x423): Total=%.1fkWh, Today=%.1fkWh", data.pvTotal, data.pvToday);
             
-            // Pokud jsou yield hodnoty 0, ale PV vyrábí, logujeme warning
-            if (data.pvTotal == 0 && data.pvToday == 0 && totalPvPower > 0)
+            if (data.pvTotal > 0 || data.pvToday > 0)
             {
-                LOGW("MIC GEN2: Yield registre vrací 0, ale PV vyrábí %dW - možný problém s registry", totalPvPower);
+                yieldFromStandardRegs = true;
+            }
+            else if (totalPvPower > 0)
+            {
+                LOGW("MIC GEN2: Yield registry 0x423-0x426 vrací 0, ale PV vyrábí %dW - zkouším Datahub registry", totalPvPower);
             }
         }
         else
         {
-            LOGW("MIC GEN2: Failed to read yield registers 0x423-0x426");
+            LOGW("MIC GEN2: Failed to read yield registers 0x423-0x426, trying Datahub registers");
+        }
+        
+        // Fallback: Datahub registry pro yield (0xF02A-0xF02B) - pro starší generace G1/G2
+        if (!yieldFromStandardRegs)
+        {
+            LOGD("MIC GEN2: Trying Datahub yield registers 0xF02A-0xF02B");
+            ModbusResponse respDH = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0xF02A, 2);
+            if (respDH.isValid)
+            {
+                // 0xF02A: dwEtotal (Uint32, 0.1kWh) - ale jen 2 registry, možná je to jinak
+                // Dle dokumentace: 0xF02A = Total (Uint32), 0xF02B = Today (Uint16)
+                uint32_t totalRaw = respDH.readUInt16(0x00);  // 0xF02A - možná jen 16bit
+                uint16_t todayRaw = respDH.readUInt16(0x01);  // 0xF02B
+                
+                data.pvTotal = totalRaw / 10.0f;  // 0.1kWh
+                data.pvToday = todayRaw / 10.0f;  // 0.1kWh
+                
+                LOGD("MIC GEN2 Datahub Yield (0xF02A): Total=%.1fkWh (raw=%u), Today=%.1fkWh (raw=%u)", 
+                     data.pvTotal, totalRaw, data.pvToday, todayRaw);
+                
+                if (data.pvTotal == 0 && data.pvToday == 0 && totalPvPower > 0)
+                {
+                    LOGW("MIC GEN2: Datahub yield registry také vrací 0");
+                }
+            }
+            else
+            {
+                LOGW("MIC GEN2: Failed to read Datahub yield registers 0xF02A-0xF02B");
+            }
         }
         
         // Blok 3: 0x431-0x43E - FeedIn, Consume a Grid Energy registry (vyžadují CT)
@@ -990,7 +1023,8 @@ private:
         // 0x435-0x436: Consume_energy_total (0.1kWh, Uint32) - celková spotřeba ze sítě
         // 0x43D: Feedin_energy_today (0.1kWh, Uint16) - denní export
         // 0x43E: Consume_energy_today (0.1kWh, Uint16) - denní spotřeba ze sítě
-        int16_t feedInPower = 0;
+        int32_t feedInPower = 0;
+        bool ctFromStandardRegs = false;
         ModbusResponse resp3 = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0x431, 14);  // 0x431-0x43E
         if (resp3.isValid)
         {
@@ -1009,16 +1043,52 @@ private:
             // Consume_energy_today (0x43E, offset 0x0D)
             data.gridBuyToday = resp3.readUInt16(0x0D) / 10.0f;  // 0x43E: kWh
             
-            LOGD("MIC GEN2 CT: FeedInPower=%dW, SellTotal=%.1fkWh, BuyTotal=%.1fkWh, SellToday=%.1fkWh, BuyToday=%.1fkWh",
+            ctFromStandardRegs = true;
+            LOGD("MIC GEN2 CT (0x431): FeedInPower=%dW, SellTotal=%.1fkWh, BuyTotal=%.1fkWh, SellToday=%.1fkWh, BuyToday=%.1fkWh",
                  feedInPower, data.gridSellTotal, data.gridBuyTotal, data.gridSellToday, data.gridBuyToday);
         }
         else
         {
-            LOGW("MIC GEN2: Failed to read CT registers 0x431-0x43E (CT may not be connected)");
-            data.gridSellTotal = 0;
-            data.gridBuyTotal = 0;
-            data.gridSellToday = 0;
-            data.gridBuyToday = 0;
+            LOGW("MIC GEN2: Failed to read CT registers 0x431-0x43E, trying Datahub registers");
+        }
+        
+        // Fallback: Datahub registry pro FeedIn/Consume (0xF03F-0xF041) - pro starší generace
+        if (!ctFromStandardRegs)
+        {
+            LOGD("MIC GEN2: Trying Datahub CT registers 0xF03F-0xF041");
+            // 0xF03F: wFeedinpower (Int32, 1W) - 4 bytes = 2 registry
+            // 0xF040: dwFeedinEnergy_Charger1 (Uint32) - 4 bytes = 2 registry  
+            // 0xF041: dwConsumeEnergy (Int32, 0.01kWh) - 4 bytes = 2 registry
+            // Celkem: 0xF03F + 6 registrů
+            ModbusResponse respDH2 = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_INPUT, 0xF03F, 6);
+            if (respDH2.isValid)
+            {
+                // 0xF03F-0xF040: wFeedinpower (Int32, 1W)
+                feedInPower = respDH2.readInt32LSB(0x00);  // Signed 32-bit
+                
+                // 0xF040-0xF041: dwFeedinEnergy_Charger1 (Uint32) - není jasná jednotka v dokumentaci
+                uint32_t feedinEnergyRaw = respDH2.readUInt32LSB(0x02);
+                data.gridSellTotal = feedinEnergyRaw / 100.0f;  // Předpokládám 0.01kWh jako consume
+                
+                // 0xF041-0xF042: dwConsumeEnergy (Int32, 0.01kWh)
+                int32_t consumeEnergyRaw = respDH2.readInt32LSB(0x04);
+                data.gridBuyTotal = consumeEnergyRaw / 100.0f;  // 0.01kWh -> kWh
+                
+                LOGD("MIC GEN2 Datahub CT (0xF03F): FeedInPower=%dW, SellTotal=%.2fkWh (raw=%u), BuyTotal=%.2fkWh (raw=%d)",
+                     feedInPower, data.gridSellTotal, feedinEnergyRaw, data.gridBuyTotal, consumeEnergyRaw);
+                
+                // Denní hodnoty nejsou v Datahub registrech, použijeme půlnoční výpočet
+                data.gridSellToday = 0;
+                data.gridBuyToday = 0;
+            }
+            else
+            {
+                LOGW("MIC GEN2: Failed to read Datahub CT registers 0xF03F-0xF041");
+                data.gridSellTotal = 0;
+                data.gridBuyTotal = 0;
+                data.gridSellToday = 0;
+                data.gridBuyToday = 0;
+            }
         }
         
         // Nastavení výstupních dat
@@ -1074,14 +1144,23 @@ private:
         
         data.inverterMode = SI_MODE_SELF_USE;
         
-        // Denní statistiky - počítáme loadToday z hodnot ze střídače
-        // Nepoužíváme updateDailyCounters, protože střídač má vlastní denní čítače (0x43D, 0x43E)
-        // loadToday = pvToday - gridSellToday + gridBuyToday
-        data.loadToday = data.pvToday - data.gridSellToday + data.gridBuyToday;
-        if (data.loadToday < 0) data.loadToday = 0;
-        
-        LOGD("MIC GEN2: Daily stats from inverter: pvToday=%.1fkWh, sellToday=%.1fkWh, buyToday=%.1fkWh, loadToday=%.1fkWh",
-             data.pvToday, data.gridSellToday, data.gridBuyToday, data.loadToday);
+        // Denní statistiky
+        // Pokud máme denní hodnoty ze střídače (0x43D, 0x43E), použijeme je
+        // Jinak použijeme půlnoční výpočet z totalů
+        if (data.gridSellToday > 0 || data.gridBuyToday > 0 || ctFromStandardRegs)
+        {
+            // Máme denní hodnoty přímo ze střídače
+            data.loadToday = data.pvToday - data.gridSellToday + data.gridBuyToday;
+            if (data.loadToday < 0) data.loadToday = 0;
+            LOGD("MIC GEN2: Daily stats from inverter: pvToday=%.1fkWh, sellToday=%.1fkWh, buyToday=%.1fkWh, loadToday=%.1fkWh",
+                 data.pvToday, data.gridSellToday, data.gridBuyToday, data.loadToday);
+        }
+        else
+        {
+            // Použijeme půlnoční výpočet pro denní statistiky (Datahub nemá denní registry)
+            LOGD("MIC GEN2: Using midnight calculation for daily stats (Datahub fallback)");
+            updateDailyCounters(data, -1);
+        }
         
         return true;
     }
