@@ -15,6 +15,8 @@ private:
     double loadTotal = 0;
     double lastBatteryPower = 0;
     time_t lastBatteryPowerTime = 0;
+    double pvTodayIntegrated = 0;  // Wh, for fallback local integration
+    time_t lastPvPowerTime = 0;
     int day = -1;
     uint8_t solarChargerUnits[100] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                                       11, 12, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
@@ -196,7 +198,7 @@ public:
             if (response.isValid)
             {
                 int pvPower = response.readUInt16(3730);
-                int pvTotal = response.readUInt32(3728);
+                int pvYieldTotal = response.readUInt32(3728);
                 switch (solarChargerIndex)
                 {
                 case 0:
@@ -215,7 +217,14 @@ public:
                     inverterData.pv4Power += pvPower;
                     break;
                 }
-                inverterData.pvTotal += pvTotal;
+                inverterData.pvTotal += pvYieldTotal;
+                
+                // Read daily yield from register 784 (/History/Daily/0/Yield)
+                ModbusResponse dailyResponse = channel.sendModbusRequest(solarChargerUnits[i], 0x03, 784, 1);
+                if (dailyResponse.isValid)
+                {
+                    inverterData.pvToday += dailyResponse.readUInt16(784) / 10.0;  // kWh, scale 10
+                }
                 solarChargerIndex++;
             }
             else
@@ -252,6 +261,20 @@ public:
                     LOGD("Victron: PV from Multi RS unit %d: %d/%d/%d/%d W",
                          multiRsUnits[i], inverterData.pv1Power, inverterData.pv2Power,
                          inverterData.pv3Power, inverterData.pv4Power);
+                    
+                    // Read daily yield from register 4574 (/History/Daily/0/Yield)
+                    ModbusResponse dailyResponse = channel.sendModbusRequest(multiRsUnits[i], 0x03, 4574, 1);
+                    if (dailyResponse.isValid)
+                    {
+                        inverterData.pvToday = dailyResponse.readUInt16(4574) / 10.0;  // kWh, scale 10
+                    }
+                    
+                    // Read total yield from register 4603 (/Yield/User)
+                    ModbusResponse totalResponse = channel.sendModbusRequest(multiRsUnits[i], 0x03, 4603, 2);
+                    if (totalResponse.isValid)
+                    {
+                        inverterData.pvTotal = totalResponse.readUInt32(4603);
+                    }
                     break; // Found Multi RS
                 }
                 else if (!multiRsUnitsInitialized)
@@ -286,6 +309,21 @@ public:
                     LOGD("Victron: PV from RS Inverter unit %d: %d/%d/%d/%d W",
                          rsInverterUnits[i], inverterData.pv1Power, inverterData.pv2Power,
                          inverterData.pv3Power, inverterData.pv4Power);
+                    
+                    // Read daily yield per string from registers 3148-3151 (/History/Daily/0/Pv/0-3/Yield)
+                    ModbusResponse dailyResponse = channel.sendModbusRequest(rsInverterUnits[i], 0x03, 3148, 4);
+                    if (dailyResponse.isValid)
+                    {
+                        inverterData.pvToday = (dailyResponse.readUInt16(3148) + dailyResponse.readUInt16(3149) +
+                                               dailyResponse.readUInt16(3150) + dailyResponse.readUInt16(3151)) / 10.0;  // kWh, scale 10
+                    }
+                    
+                    // Read total yield from registers 3134+3136 (/Energy/SolarToAcOut + /Energy/SolarToBattery)
+                    ModbusResponse totalResponse = channel.sendModbusRequest(rsInverterUnits[i], 0x03, 3134, 4);
+                    if (totalResponse.isValid)
+                    {
+                        inverterData.pvTotal = (totalResponse.readUInt32(3134) + totalResponse.readUInt32(3136)) / 100.0;  // kWh, scale 100
+                    }
                     break; // Found RS Inverter
                 }
                 else if (!rsInverterUnitsInitialized)
@@ -310,6 +348,13 @@ public:
                 {
                     inverterData.pv1Power = systemPvPower;
                     LOGD("Victron: Using system DC PV fallback (reg 850): %d W", systemPvPower);
+                    
+                    // Local integration for daily yield (fallback only)
+                    if (lastPvPowerTime != 0)
+                    {
+                        pvTodayIntegrated += systemPvPower * (inverterData.millis - lastPvPowerTime) / 1000.0 / 3600.0;  // Wh
+                    }
+                    lastPvPowerTime = inverterData.millis;
                 }
             }
         }
@@ -339,6 +384,7 @@ public:
                 loadTotal = inverterData.loadTotal;
                 batteryChargedToday = 0;
                 batteryDischargedToday = 0;
+                pvTodayIntegrated = 0;  // Reset local PV integration at midnight
             }
 
             // if system was restarted, reset counters
@@ -358,7 +404,18 @@ public:
             {
                 loadTotal = inverterData.loadTotal;
             }
-            inverterData.pvToday = inverterData.pvTotal - pvTotal;
+            // Use pvToday from registers if available, otherwise use local calculation or integration
+            if (inverterData.pvToday == 0)
+            {
+                if (pvTodayIntegrated > 0)
+                {
+                    inverterData.pvToday = pvTodayIntegrated / 1000.0;  // Convert Wh to kWh
+                }
+                else
+                {
+                    inverterData.pvToday = inverterData.pvTotal - pvTotal;  // Fallback to local calculation
+                }
+            }
             inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
             inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
             inverterData.loadToday = inverterData.loadTotal - loadTotal;
