@@ -34,6 +34,16 @@ private:
                                232, 233, 234, 235, 236, 237, 238, 239, 242, 243, 245,
                                246, 247};
     bool vebusUnitsInitialized = false;
+    
+    // Multi RS units for PV reading (registers 4598-4601)
+    uint8_t multiRsUnits[50] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 21, 22, 23, 24, 25,
+                                226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237};
+    bool multiRsUnitsInitialized = false;
+    
+    // RS Smart Inverter units for PV reading (registers 3164-3167)
+    uint8_t rsInverterUnits[50] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 21, 22, 23, 24, 25,
+                                   226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237};
+    bool rsInverterUnitsInitialized = false;
 
     ModbusTCP channel;
 
@@ -217,6 +227,92 @@ public:
             }
         }
         solarChargerUnitsInitialized = true;
+
+        // If no PV from Solar Chargers, try Multi RS
+        int totalPvPower = inverterData.pv1Power + inverterData.pv2Power + 
+                           inverterData.pv3Power + inverterData.pv4Power;
+
+        if (totalPvPower == 0)
+        {
+            // Multi RS - registers 4598-4601 (/Pv/0-3/P)
+            for (int i = 0; i < sizeof(multiRsUnits); i++)
+            {
+                if (multiRsUnits[i] == 0)
+                {
+                    continue;
+                }
+
+                response = channel.sendModbusRequest(multiRsUnits[i], 0x03, 4598, 4);
+                if (response.isValid)
+                {
+                    inverterData.pv1Power = response.readUInt16(4598);
+                    inverterData.pv2Power = response.readUInt16(4599);
+                    inverterData.pv3Power = response.readUInt16(4600);
+                    inverterData.pv4Power = response.readUInt16(4601);
+                    LOGD("Victron: PV from Multi RS unit %d: %d/%d/%d/%d W",
+                         multiRsUnits[i], inverterData.pv1Power, inverterData.pv2Power,
+                         inverterData.pv3Power, inverterData.pv4Power);
+                    break; // Found Multi RS
+                }
+                else if (!multiRsUnitsInitialized)
+                {
+                    multiRsUnits[i] = 0;
+                }
+            }
+            multiRsUnitsInitialized = true;
+        }
+
+        // If still no PV, try RS Smart Inverter
+        totalPvPower = inverterData.pv1Power + inverterData.pv2Power +
+                       inverterData.pv3Power + inverterData.pv4Power;
+
+        if (totalPvPower == 0)
+        {
+            // RS Smart Inverter - registers 3164-3167 (/Pv/0-3/P)
+            for (int i = 0; i < sizeof(rsInverterUnits); i++)
+            {
+                if (rsInverterUnits[i] == 0)
+                {
+                    continue;
+                }
+
+                response = channel.sendModbusRequest(rsInverterUnits[i], 0x03, 3164, 4);
+                if (response.isValid)
+                {
+                    inverterData.pv1Power = response.readUInt16(3164);
+                    inverterData.pv2Power = response.readUInt16(3165);
+                    inverterData.pv3Power = response.readUInt16(3166);
+                    inverterData.pv4Power = response.readUInt16(3167);
+                    LOGD("Victron: PV from RS Inverter unit %d: %d/%d/%d/%d W",
+                         rsInverterUnits[i], inverterData.pv1Power, inverterData.pv2Power,
+                         inverterData.pv3Power, inverterData.pv4Power);
+                    break; // Found RS Inverter
+                }
+                else if (!rsInverterUnitsInitialized)
+                {
+                    rsInverterUnits[i] = 0;
+                }
+            }
+            rsInverterUnitsInitialized = true;
+        }
+
+        // Final fallback to system aggregate DC PV
+        totalPvPower = inverterData.pv1Power + inverterData.pv2Power +
+                       inverterData.pv3Power + inverterData.pv4Power;
+
+        if (totalPvPower == 0)
+        {
+            response = channel.sendModbusRequest(100, 0x03, 850, 1);
+            if (response.isValid)
+            {
+                int systemPvPower = response.readUInt16(850);
+                if (systemPvPower > 0)
+                {
+                    inverterData.pv1Power = systemPvPower;
+                    LOGD("Victron: Using system DC PV fallback (reg 850): %d W", systemPvPower);
+                }
+            }
+        }
 
         response = channel.sendModbusRequest(225, 0x03, 262, 16);
         if (response.isValid)
