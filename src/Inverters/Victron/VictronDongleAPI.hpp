@@ -185,6 +185,7 @@ public:
             }
         }
         vebusUnitsInitialized = true;
+        LOGD("Victron: VE.Bus scan complete, loadTotal=%.2f kWh", inverterData.loadTotal);
 
         int solarChargerIndex = 0;
         for (int i = 0; i < sizeof(solarChargerUnits); i++)
@@ -199,6 +200,7 @@ public:
             {
                 int pvPower = response.readUInt16(3730);
                 int pvYieldTotal = response.readUInt32(3728);
+                LOGD("Victron: Solar Charger unit %d: PV=%dW, Total=%d kWh", solarChargerUnits[i], pvPower, pvYieldTotal);
                 switch (solarChargerIndex)
                 {
                 case 0:
@@ -223,7 +225,13 @@ public:
                 ModbusResponse dailyResponse = channel.sendModbusRequest(solarChargerUnits[i], 0x03, 784, 1);
                 if (dailyResponse.isValid)
                 {
-                    inverterData.pvToday += dailyResponse.readUInt16(784) / 10.0;  // kWh, scale 10
+                    double dailyYield = dailyResponse.readUInt16(784) / 10.0;  // kWh, scale 10
+                    inverterData.pvToday += dailyYield;
+                    LOGD("Victron: Solar Charger unit %d daily yield: %.2f kWh", solarChargerUnits[i], dailyYield);
+                }
+                else
+                {
+                    LOGD("Victron: Solar Charger unit %d daily yield read failed", solarChargerUnits[i]);
                 }
                 solarChargerIndex++;
             }
@@ -236,6 +244,7 @@ public:
             }
         }
         solarChargerUnitsInitialized = true;
+        LOGD("Victron: Solar Charger scan complete, found %d chargers, pvToday=%.2f kWh", solarChargerIndex, inverterData.pvToday);
 
         // If no PV from Solar Chargers, try Multi RS
         int totalPvPower = inverterData.pv1Power + inverterData.pv2Power + 
@@ -243,6 +252,7 @@ public:
 
         if (totalPvPower == 0)
         {
+            LOGD("Victron: No PV from Solar Chargers, trying Multi RS...");
             // Multi RS - registers 4598-4601 (/Pv/0-3/P)
             for (int i = 0; i < sizeof(multiRsUnits); i++)
             {
@@ -267,6 +277,11 @@ public:
                     if (dailyResponse.isValid)
                     {
                         inverterData.pvToday = dailyResponse.readUInt16(4574) / 10.0;  // kWh, scale 10
+                        LOGD("Victron: Multi RS daily yield: %.2f kWh", inverterData.pvToday);
+                    }
+                    else
+                    {
+                        LOGD("Victron: Multi RS daily yield read failed");
                     }
                     
                     // Read total yield from register 4603 (/Yield/User)
@@ -274,6 +289,7 @@ public:
                     if (totalResponse.isValid)
                     {
                         inverterData.pvTotal = totalResponse.readUInt32(4603);
+                        LOGD("Victron: Multi RS total yield: %.2f kWh", inverterData.pvTotal);
                     }
                     break; // Found Multi RS
                 }
@@ -291,6 +307,7 @@ public:
 
         if (totalPvPower == 0)
         {
+            LOGD("Victron: No PV from Multi RS, trying RS Smart Inverter...");
             // RS Smart Inverter - registers 3164-3167 (/Pv/0-3/P)
             for (int i = 0; i < sizeof(rsInverterUnits); i++)
             {
@@ -316,6 +333,11 @@ public:
                     {
                         inverterData.pvToday = (dailyResponse.readUInt16(3148) + dailyResponse.readUInt16(3149) +
                                                dailyResponse.readUInt16(3150) + dailyResponse.readUInt16(3151)) / 10.0;  // kWh, scale 10
+                        LOGD("Victron: RS Inverter daily yield: %.2f kWh", inverterData.pvToday);
+                    }
+                    else
+                    {
+                        LOGD("Victron: RS Inverter daily yield read failed");
                     }
                     
                     // Read total yield from registers 3134+3136 (/Energy/SolarToAcOut + /Energy/SolarToBattery)
@@ -323,6 +345,7 @@ public:
                     if (totalResponse.isValid)
                     {
                         inverterData.pvTotal = (totalResponse.readUInt32(3134) + totalResponse.readUInt32(3136)) / 100.0;  // kWh, scale 100
+                        LOGD("Victron: RS Inverter total yield: %.2f kWh", inverterData.pvTotal);
                     }
                     break; // Found RS Inverter
                 }
@@ -340,6 +363,7 @@ public:
 
         if (totalPvPower == 0)
         {
+            LOGD("Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...");
             response = channel.sendModbusRequest(100, 0x03, 850, 1);
             if (response.isValid)
             {
@@ -352,7 +376,9 @@ public:
                     // Local integration for daily yield (fallback only)
                     if (lastPvPowerTime != 0)
                     {
-                        pvTodayIntegrated += systemPvPower * (inverterData.millis - lastPvPowerTime) / 1000.0 / 3600.0;  // Wh
+                        double addedWh = systemPvPower * (inverterData.millis - lastPvPowerTime) / 1000.0 / 3600.0;
+                        pvTodayIntegrated += addedWh;
+                        LOGD("Victron: System PV fallback integration: +%.2f Wh, total=%.2f Wh", addedWh, pvTodayIntegrated);
                     }
                     lastPvPowerTime = inverterData.millis;
                 }
@@ -410,20 +436,26 @@ public:
                 if (pvTodayIntegrated > 0)
                 {
                     inverterData.pvToday = pvTodayIntegrated / 1000.0;  // Convert Wh to kWh
+                    LOGD("Victron: Using integrated pvToday: %.2f kWh", inverterData.pvToday);
                 }
                 else
                 {
                     inverterData.pvToday = inverterData.pvTotal - pvTotal;  // Fallback to local calculation
+                    LOGD("Victron: Using calculated pvToday: %.2f kWh (pvTotal=%.2f - stored=%.2f)", 
+                         inverterData.pvToday, inverterData.pvTotal, pvTotal);
                 }
             }
             inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
             inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
             inverterData.loadToday = inverterData.loadTotal - loadTotal;
+            LOGD("Victron: Daily stats - pvToday=%.2f, gridBuy=%.2f, gridSell=%.2f, load=%.2f kWh", 
+                 inverterData.pvToday, inverterData.gridBuyToday, inverterData.gridSellToday, inverterData.loadToday);
 
             inverterData.batteryChargedToday = batteryChargedToday / 1000.0;       // convert to kWh
             inverterData.batteryDischargedToday = batteryDischargedToday / 1000.0; // convert to kWh
         }
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
+        LOGD("Victron: Final PV power: %d/%d/%d/%d W", inverterData.pv1Power, inverterData.pv2Power, inverterData.pv3Power, inverterData.pv4Power);
         logInverterData(inverterData, millis() - inverterData.millis);
         channel.disconnect();
 
