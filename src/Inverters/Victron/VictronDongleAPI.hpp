@@ -115,17 +115,38 @@ public:
         }
 
         response = channel.sendModbusRequest(100, 0x03, 808, 15);
+        int acPvOnOutputL1 = 0, acPvOnOutputL2 = 0, acPvOnOutputL3 = 0;
         if (response.isValid)
         {
+            // Log all system AC registers for diagnostics
+            // 808-810: AC Input L1-L3 (from grid/genset)
+            // 811-813: AC PV on Output L1-L3 (AC-coupled PV inverter on AC-out)
+            // 814-816: AC Consumption L1-L3
+            // 817-819: AC Output L1-L3 (load)
+            // 820-822: AC Grid L1-L3
+            int acInputL1 = response.readUInt16(808);
+            int acInputL2 = response.readUInt16(809);
+            int acInputL3 = response.readUInt16(810);
+            acPvOnOutputL1 = response.readUInt16(811);
+            acPvOnOutputL2 = response.readUInt16(812);
+            acPvOnOutputL3 = response.readUInt16(813);
+            int acConsumptionL1 = response.readUInt16(814);
+            int acConsumptionL2 = response.readUInt16(815);
+            int acConsumptionL3 = response.readUInt16(816);
+            LOGD("Victron: System AC regs - AcIn:%d/%d/%d PvOnOut:%d/%d/%d AcCons:%d/%d/%d Load:%d/%d/%d Grid:%d/%d/%d",
+                 acInputL1, acInputL2, acInputL3,
+                 acPvOnOutputL1, acPvOnOutputL2, acPvOnOutputL3,
+                 acConsumptionL1, acConsumptionL2, acConsumptionL3,
+                 response.readUInt16(817), response.readUInt16(818), response.readUInt16(819),
+                 response.readInt16(820), response.readInt16(821), response.readInt16(822));
+
             inverterData.inverterOutpuPowerL1 = max(0, ((int)response.readUInt16(817)) - response.readInt16(820));
             inverterData.inverterOutpuPowerL2 = max(0, ((int)response.readUInt16(818)) - response.readInt16(821));
             inverterData.inverterOutpuPowerL3 = max(0, ((int)response.readUInt16(819)) - response.readInt16(822));
             inverterData.loadPower = response.readUInt16(817) + response.readUInt16(818) + response.readUInt16(819);
-            //inverterData.inverterPower = inverterData.L1Power + inverterData.L2Power + inverterData.L3Power;
             inverterData.gridPowerL1 = -1 * response.readInt16(820);
             inverterData.gridPowerL2 = -1 * response.readInt16(821);
             inverterData.gridPowerL3 = -1 * response.readInt16(822);
-            //inverterData.gridPower = inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3;
         }
 
         for (int i = 0; i < sizeof(vebusUnits); i++)
@@ -172,8 +193,12 @@ public:
                     inverterData.gridSellTotal = energyBatteryToACIn1;
                     inverterData.batteryChargedTotal = energyACIn1ToBattery;
                     inverterData.batteryDischargedTotal = energyBatteryToACOut; // it seems that it is battery + solar
-                    // inverterData.pvTotal = readUInt32(90) / 100.0;
                     inverterData.loadTotal = energyACIn1ToACOut + energyBatteryToACOut;
+                    // AC PV total = reverse-fed PV from AC-out to AC-in (covers AC-coupled PV)
+                    double acPvTotal = energyACOutToACIn1 + energyACOutToACIn2;
+                    LOGD("Victron: VE.Bus energy - ACIn1ToOut=%.2f ACIn1ToBat=%.2f ACOutToACIn1=%.2f ACOutToACIn2=%.2f BatToOut=%.2f OutToBat=%.2f acPvTotal=%.2f kWh",
+                         energyACIn1ToACOut, energyACIn1ToBattery, energyACOutToACIn1, energyACOutToACIn2,
+                         energyBatteryToACOut, energyACOutToBattery, acPvTotal);
                 }
             }
             else
@@ -357,31 +382,57 @@ public:
             rsInverterUnitsInitialized = true;
         }
 
-        // Final fallback to system aggregate DC PV
+        // Final fallback to system aggregate DC PV + AC-coupled PV
         totalPvPower = inverterData.pv1Power + inverterData.pv2Power +
                        inverterData.pv3Power + inverterData.pv4Power;
 
         if (totalPvPower == 0)
         {
-            LOGD("Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...");
-            response = channel.sendModbusRequest(100, 0x03, 850, 1);
+            LOGD("Victron: No PV from RS Inverter, trying system PV fallbacks...");
+            // Read system DC PV (reg 850) and AC PV on Grid (reg 855)
+            response = channel.sendModbusRequest(100, 0x03, 850, 16);
+            int systemDcPv = 0;
+            int acPvOnGridL1 = 0, acPvOnGridL2 = 0, acPvOnGridL3 = 0;
+            int acPvOnGensetL1 = 0, acPvOnGensetL2 = 0, acPvOnGensetL3 = 0;
             if (response.isValid)
             {
-                int systemPvPower = response.readUInt16(850);
-                if (systemPvPower > 0)
+                systemDcPv = response.readUInt16(850);
+                // 851: /Dc/Pv/Current (not used but logged)
+                // 855-857: AC PV on Grid input L1-L3
+                acPvOnGridL1 = response.readUInt16(855);
+                acPvOnGridL2 = response.readUInt16(856);
+                acPvOnGridL3 = response.readUInt16(857);
+                // 860-862: AC PV on Genset input L1-L3
+                acPvOnGensetL1 = response.readUInt16(860);
+                acPvOnGensetL2 = response.readUInt16(861);
+                acPvOnGensetL3 = response.readUInt16(862);
+                LOGD("Victron: System PV regs - DcPv:%d DcPvI:%d PvOnGrid:%d/%d/%d PvOnGenset:%d/%d/%d",
+                     systemDcPv, response.readUInt16(851),
+                     acPvOnGridL1, acPvOnGridL2, acPvOnGridL3,
+                     acPvOnGensetL1, acPvOnGensetL2, acPvOnGensetL3);
+            }
+
+            // Sum all PV sources: DC + AC on Output + AC on Grid + AC on Genset
+            int acPvOnOutput = acPvOnOutputL1 + acPvOnOutputL2 + acPvOnOutputL3;
+            int acPvOnGrid = acPvOnGridL1 + acPvOnGridL2 + acPvOnGridL3;
+            int acPvOnGenset = acPvOnGensetL1 + acPvOnGensetL2 + acPvOnGensetL3;
+            int totalSystemPv = systemDcPv + acPvOnOutput + acPvOnGrid + acPvOnGenset;
+            LOGD("Victron: Total system PV: DC=%d + AcOut=%d + AcGrid=%d + AcGenset=%d = %d W",
+                 systemDcPv, acPvOnOutput, acPvOnGrid, acPvOnGenset, totalSystemPv);
+
+            if (totalSystemPv > 0)
+            {
+                inverterData.pv1Power = totalSystemPv;
+                LOGD("Victron: Using system PV fallback: %d W", totalSystemPv);
+
+                // Local integration for daily yield (fallback only)
+                if (lastPvPowerTime != 0)
                 {
-                    inverterData.pv1Power = systemPvPower;
-                    LOGD("Victron: Using system DC PV fallback (reg 850): %d W", systemPvPower);
-                    
-                    // Local integration for daily yield (fallback only)
-                    if (lastPvPowerTime != 0)
-                    {
-                        double addedWh = systemPvPower * (inverterData.millis - lastPvPowerTime) / 1000.0 / 3600.0;
-                        pvTodayIntegrated += addedWh;
-                        LOGD("Victron: System PV fallback integration: +%.2f Wh, total=%.2f Wh", addedWh, pvTodayIntegrated);
-                    }
-                    lastPvPowerTime = inverterData.millis;
+                    double addedWh = totalSystemPv * (inverterData.millis - lastPvPowerTime) / 1000.0 / 3600.0;
+                    pvTodayIntegrated += addedWh;
+                    LOGD("Victron: System PV fallback integration: +%.2f Wh, total=%.2f Wh", addedWh, pvTodayIntegrated);
                 }
+                lastPvPowerTime = inverterData.millis;
             }
         }
 
