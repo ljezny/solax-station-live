@@ -194,11 +194,18 @@ public:
                     inverterData.batteryChargedTotal = energyACIn1ToBattery;
                     inverterData.batteryDischargedTotal = energyBatteryToACOut; // it seems that it is battery + solar
                     inverterData.loadTotal = energyACIn1ToACOut + energyBatteryToACOut;
-                    // AC PV total = reverse-fed PV from AC-out to AC-in (covers AC-coupled PV)
-                    double acPvTotal = energyACOutToACIn1 + energyACOutToACIn2;
+                    // AC PV total = reverse-fed PV (AC-out to AC-in) + PV to battery (AC-out to battery)
+                    // This covers AC-coupled PV energy: part goes to grid (reverse feed), part charges battery
+                    double acPvTotalEnergy = energyACOutToACIn1 + energyACOutToACIn2 + energyACOutToBattery;
                     LOGD("Victron: VE.Bus energy - ACIn1ToOut=%.2f ACIn1ToBat=%.2f ACOutToACIn1=%.2f ACOutToACIn2=%.2f BatToOut=%.2f OutToBat=%.2f acPvTotal=%.2f kWh",
                          energyACIn1ToACOut, energyACIn1ToBattery, energyACOutToACIn1, energyACOutToACIn2,
-                         energyBatteryToACOut, energyACOutToBattery, acPvTotal);
+                         energyBatteryToACOut, energyACOutToBattery, acPvTotalEnergy);
+                    // Use AC PV total as fallback pvTotal (only if no DC PV source set it later)
+                    if (inverterData.pvTotal == 0 && acPvTotalEnergy > 0)
+                    {
+                        inverterData.pvTotal = acPvTotalEnergy;
+                        LOGD("Victron: Using VE.Bus AC PV energy as pvTotal fallback: %.2f kWh", acPvTotalEnergy);
+                    }
                 }
             }
             else
@@ -389,27 +396,35 @@ public:
         if (totalPvPower == 0)
         {
             LOGD("Victron: No PV from RS Inverter, trying system PV fallbacks...");
-            // Read system DC PV (reg 850) and AC PV on Grid (reg 855)
-            response = channel.sendModbusRequest(100, 0x03, 850, 16);
+            // Read system DC PV (reg 850) - single register to avoid exception on missing regs
             int systemDcPv = 0;
-            int acPvOnGridL1 = 0, acPvOnGridL2 = 0, acPvOnGridL3 = 0;
-            int acPvOnGensetL1 = 0, acPvOnGensetL2 = 0, acPvOnGensetL3 = 0;
+            response = channel.sendModbusRequest(100, 0x03, 850, 2);
             if (response.isValid)
             {
                 systemDcPv = response.readUInt16(850);
-                // 851: /Dc/Pv/Current (not used but logged)
-                // 855-857: AC PV on Grid input L1-L3
+                LOGD("Victron: System DC PV (reg 850): %d W, DC PV current (reg 851): %d", systemDcPv, response.readUInt16(851));
+            }
+
+            // Read AC PV on Grid input (reg 855-857) - separate request
+            int acPvOnGridL1 = 0, acPvOnGridL2 = 0, acPvOnGridL3 = 0;
+            response = channel.sendModbusRequest(100, 0x03, 855, 3);
+            if (response.isValid)
+            {
                 acPvOnGridL1 = response.readUInt16(855);
                 acPvOnGridL2 = response.readUInt16(856);
                 acPvOnGridL3 = response.readUInt16(857);
-                // 860-862: AC PV on Genset input L1-L3
+                LOGD("Victron: AC PV on Grid (reg 855-857): %d/%d/%d W", acPvOnGridL1, acPvOnGridL2, acPvOnGridL3);
+            }
+
+            // Read AC PV on Genset input (reg 860-862) - separate request
+            int acPvOnGensetL1 = 0, acPvOnGensetL2 = 0, acPvOnGensetL3 = 0;
+            response = channel.sendModbusRequest(100, 0x03, 860, 3);
+            if (response.isValid)
+            {
                 acPvOnGensetL1 = response.readUInt16(860);
                 acPvOnGensetL2 = response.readUInt16(861);
                 acPvOnGensetL3 = response.readUInt16(862);
-                LOGD("Victron: System PV regs - DcPv:%d DcPvI:%d PvOnGrid:%d/%d/%d PvOnGenset:%d/%d/%d",
-                     systemDcPv, response.readUInt16(851),
-                     acPvOnGridL1, acPvOnGridL2, acPvOnGridL3,
-                     acPvOnGensetL1, acPvOnGensetL2, acPvOnGensetL3);
+                LOGD("Victron: AC PV on Genset (reg 860-862): %d/%d/%d W", acPvOnGensetL1, acPvOnGensetL2, acPvOnGensetL3);
             }
 
             // Sum all PV sources: DC + AC on Output + AC on Grid + AC on Genset
