@@ -2558,6 +2558,13 @@ public:
         lv_obj_set_style_text_font(pv2Label, &ui_font_OpenSansSmall, 0);
         lv_obj_set_style_text_font(pv3Label, &ui_font_OpenSansSmall, 0);
         lv_obj_set_style_text_font(pv4Label, &ui_font_OpenSansSmall, 0);
+        
+        // Apply intelligence supported state (may have been set before show())
+        if (intelligenceSupported) {
+            lv_obj_add_flag(inverterContainer, LV_OBJ_FLAG_CLICKABLE);
+        } else {
+            lv_obj_clear_flag(inverterContainer, LV_OBJ_FLAG_CLICKABLE);
+        }
     }
     
     /**
@@ -2929,16 +2936,25 @@ public:
     /**
      * Enable or disable intelligence features based on inverter support
      * This controls visibility of intelligence button, mode badge, inverter click menu
+     * Can be called before show() - UI will be updated when screen is created
      */
     void setIntelligenceSupported(bool supported) {
         intelligenceSupported = supported;
         
+        // Update UI only if screen is initialized
+        if (!initialized) return;
+        
         // Update clickable state for inverter container
-        if (supported) {
-            lv_obj_add_flag(inverterContainer, LV_OBJ_FLAG_CLICKABLE);
-        } else {
-            lv_obj_clear_flag(inverterContainer, LV_OBJ_FLAG_CLICKABLE);
-            // Hide intelligence tile if inverter doesn't support intelligence
+        if (inverterContainer != nullptr) {
+            if (supported) {
+                lv_obj_add_flag(inverterContainer, LV_OBJ_FLAG_CLICKABLE);
+            } else {
+                lv_obj_clear_flag(inverterContainer, LV_OBJ_FLAG_CLICKABLE);
+            }
+        }
+        
+        // Hide intelligence tile if inverter doesn't support intelligence
+        if (intelligencePlanTile != nullptr && !supported) {
             lv_obj_add_flag(intelligencePlanTile, LV_OBJ_FLAG_HIDDEN);
         }
         

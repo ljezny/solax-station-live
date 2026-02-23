@@ -1375,19 +1375,21 @@ void logMemory()
 void onEntering(state_t newState)
 {
     LOGD("Entering state %d", newState);
+    auto& screenMgr = ScreenManager::instance();
+    
     switch (newState)
     {
     case BOOT:
-        // Show splash screen with logo only during WiFi scan
+        // Show splash screen with logo only during WiFi scan (no animation for first screen)
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-        splashUI->show();
+        screenMgr.switchTo(splashUI, LV_SCR_LOAD_ANIM_NONE, 0);
         splashUI->showLogo();
         xSemaphoreGive(lvgl_mutex);
         break;
     case STATE_SPLASH:
         // Show splash screen (needed when coming from STATE_WIFI_SETUP)
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-        splashUI->show();
+        screenMgr.switchTo(splashUI, LV_SCR_LOAD_ANIM_FADE_ON, 200);
         xSemaphoreGive(lvgl_mutex);
 
         // Initialize LittleFS and load predictors
@@ -1404,19 +1406,19 @@ void onEntering(state_t newState)
         break;
     case STATE_WIFI_SETUP:
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-        wifiSetupUI->show();
+        screenMgr.switchTo(wifiSetupUI, LV_SCR_LOAD_ANIM_MOVE_LEFT, 300);
         xSemaphoreGive(lvgl_mutex);
         break;
     case STATE_INTELLIGENCE_SETUP:
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-        intelligenceSetupUI->show();
+        screenMgr.switchTo(intelligenceSetupUI, LV_SCR_LOAD_ANIM_MOVE_LEFT, 300);
         xSemaphoreGive(lvgl_mutex);
         break;
     case STATE_DASHBOARD:
         // Split into smaller mutex locks to avoid blocking LVGL timer
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         dashboardUI->setIntelligenceSupported(supportsIntelligenceForCurrentInverter(wifiDiscoveryResult));
-        dashboardUI->show();
+        screenMgr.switchTo(dashboardUI, LV_SCR_LOAD_ANIM_FADE_ON, 300);
         xSemaphoreGive(lvgl_mutex);
 
         if (inverterData.status == DONGLE_STATUS_OK && electricityPriceResult && previousElectricityPriceResult)
