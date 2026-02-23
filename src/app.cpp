@@ -428,6 +428,11 @@ void setupLVGL()
     wifiSetupUI = new WiFiSetupUI(dongleDiscovery);
     intelligenceSetupUI = new IntelligenceSetupUI();
 
+    // Show splash screen with logo immediately (before WiFi scan starts)
+    // This ensures user sees the logo right from boot, not a white screen
+    ScreenManager::instance().switchTo(splashUI, LV_SCR_LOAD_ANIM_NONE, 0);
+    splashUI->showLogo();
+
     // Set callback for inverter mode change from dashboard menu
     // NOTE: This callback is called from LVGL event handler, so we must NOT do network
     // operations here. Instead, we queue the request and process it in mainUpdateTask.
@@ -1380,11 +1385,8 @@ void onEntering(state_t newState)
     switch (newState)
     {
     case BOOT:
-        // Show splash screen with logo only during WiFi scan (no animation for first screen)
-        xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-        screenMgr.switchTo(splashUI, LV_SCR_LOAD_ANIM_NONE, 0);
-        splashUI->showLogo();
-        xSemaphoreGive(lvgl_mutex);
+        // Splash screen with logo is already shown from setupLVGL()
+        // Nothing to do here
         break;
     case STATE_SPLASH:
         // Show splash screen (needed when coming from STATE_WIFI_SETUP)
