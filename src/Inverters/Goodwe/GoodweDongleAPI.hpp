@@ -96,6 +96,7 @@ private:
     bool preferTcp = false; // prefer TCP after successful TCP connection
     double gridBuyTotal = 0;
     double gridSellTotal = 0;
+    bool gridTotalsInitialized = false; // flag for first reading after start
     int day = -1;
     static constexpr int RETRY_COUNT = 3;
     static constexpr int GOODWE_TCP_PORT = 502;
@@ -503,12 +504,19 @@ private:
             inverterData.batteryChargedToday = response.readUInt16(35100 + 108) / 10.0;
             inverterData.batteryDischargedToday = response.readUInt16(35100 + 111) / 10.0;
             
+            // Read daily grid values directly from inverter registers (primary source)
+            // 35199 = e_day_exp (Today Energy export), 35202 = e_day_imp (Today Energy import)
+            inverterData.gridSellToday = response.readUInt16(35100 + 99) / 10.0;  // reg 35199
+            inverterData.gridBuyToday = response.readUInt16(35100 + 102) / 10.0;  // reg 35202
+            
             int newDay = (response.readUInt16(35100 + 1) >> 8) & 0xFF;
             if (this->day != newDay)
             {
                 this->day = newDay;
                 gridBuyTotal = 0;
                 gridSellTotal = 0;
+                gridTotalsInitialized = false; // reset for new day
+                LOGD("GoodWe: New day detected, resetting grid totals");
             }
 
             uint16_t reg0 = response.readUInt16(35100 + 0);
@@ -543,10 +551,23 @@ private:
             inverterData.gridPowerL3 = response.readInt32(36000 + 23);
             inverterData.loadPower -= (inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
             
-            if (gridBuyTotal == 0) gridBuyTotal = inverterData.gridBuyTotal;
-            if (gridSellTotal == 0) gridSellTotal = inverterData.gridSellTotal;
-            inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
-            inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
+            // Fallback: if inverter registers didn't provide daily values, calculate from totals
+            if (inverterData.gridSellToday == 0 && inverterData.gridBuyToday == 0 && inverterData.gridSellTotal > 0) {
+                // Initialize totals on first read or after station restart
+                if (!gridTotalsInitialized) {
+                    gridBuyTotal = inverterData.gridBuyTotal;
+                    gridSellTotal = inverterData.gridSellTotal;
+                    gridTotalsInitialized = true;
+                    LOGD("GoodWe: Grid totals initialized (fallback mode) - buy=%.2f sell=%.2f", gridBuyTotal, gridSellTotal);
+                }
+                inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
+                inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
+                LOGD("GoodWe: Using fallback grid daily calc - sellToday=%.2f buyToday=%.2f", 
+                     inverterData.gridSellToday, inverterData.gridBuyToday);
+            } else if (inverterData.gridSellToday > 0 || inverterData.gridBuyToday > 0) {
+                LOGD("GoodWe: Using inverter registers for daily grid - sellToday=%.2f buyToday=%.2f", 
+                     inverterData.gridSellToday, inverterData.gridBuyToday);
+            }
         });
 
         // Read BMS info (optional)

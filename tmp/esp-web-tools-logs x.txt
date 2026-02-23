@@ -1,0 +1,526 @@
+[16:05:47][125674][D][ElectricityPriceLoader.hpp:321] Failed to load electricity prices for AT
+[16:05:48][126142][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:05:48][126210][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:05:48][126274][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:05:48][126274][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:05:48][126284][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:05:48][126295][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:05:48][126305][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:05:48][126338][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:05:48][126338][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:05:48][126348][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:05:48][126359][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-583W PV1=0W PV2=0W PV3=0W PV4=0W Load=437W GridPwr=-18/54/137W [148ms]
+[16:05:48][126369][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:05:48][126370][I][CustomNetworkClient.hpp:118] Socket closed
+[16:05:48][126380][D][ConsumptionPredictor.cpp:151] Shifting week history
+[16:05:48][126381][D][ConsumptionPredictor.cpp:253] Consumption correction reset at midnight
+[16:05:48][126391][D][ConsumptionPredictor.cpp:190] Updated consumption for day 4, quarter 4: 121.2 Wh (correction: 0.0)
+[16:05:48][126402][D][ProductionPredictor.cpp:112] Updated production for quarter 4: 0.0 Wh (samples: 2)
+[16:05:48][126412][D][app.cpp:665] Quarter changed, saving predictors to flash
+[16:05:48][126533][D][ConsumptionPredictor.cpp:512] Consumption saved 2 days to LittleFS
+[16:05:48][126533][W][FlashMutex.hpp:216] Flash[save:cons]: 102774us (>2ms!), wait 18287us, vsync OK
+[16:05:48][126605][D][ProductionPredictor.cpp:297] Production data saved to LittleFS
+[16:05:48][126605][W][FlashMutex.hpp:216] Flash[save:prod]: 60660us (>2ms!), wait 581us, vsync OK
+[16:05:48][126642][D][SolarChartDataProvider.hpp:334] Chart data saved to LittleFS
+[16:05:48][126642][W][FlashMutex.hpp:216] Flash[save:chart]: 6764us (>2ms!), wait 19551us, vsync TIMEOUT
+[16:05:48][126659][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 100us, wait 6090us, vsync OK
+[16:05:48][126659][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:05:48][126669][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:05:48][126669][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:05:47
+[16:05:48][126729][D][app.cpp:818] Running intelligence resolver
+[16:05:51]I (130204) mdns_mem: mDNS task will be created from internal RAM
+[16:05:51][129453][D][Shelly.hpp:204] mDNS initialized successfully
+[16:05:54][132553][D][Shelly.hpp:221] mDNS query returned 2 results
+[16:05:54][132553][D][Shelly.hpp:224] SoftAP IP: 192.168.4.1, Subnet: 255.255.255.0
+[16:05:54][132564][D][Shelly.hpp:250] Found service: venus IP: 172.24.24.1
+[16:05:54][132564][D][Shelly.hpp:284]   -> NOT on softAP subnet (device: 172.24.24.1, softAP: 192.168.4.1/255.255.255.0)
+[16:05:54][132574][D][Shelly.hpp:250] Found service: shellyplug-s-7C87CEB4AA89 IP: 192.168.4.2
+[16:05:54][132584][D][Shelly.hpp:255]   -> on softAP subnet, checking if Shelly...
+[16:05:54][132585][D][Shelly.hpp:263] Found Shelly: shellyplug-s-7c87ceb4aa89 model: shellyplug-s-
+[16:05:54][132595][D][Shelly.hpp:268] Checking Shelly 0
+[16:05:54][132595][D][Shelly.hpp:274] Paired Shelly 7c87ceb4aa89
+[16:05:54][132616][D][Shelly.hpp:292] Paired Shelly count: 1
+[16:05:55][133133][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:05:55][133215][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:05:55][133377][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:05:55][133378][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:05:55][133388][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:05:55][133448][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:05:55][133458][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:05:55][133602][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:05:55][133602][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:05:55][133671][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:05:55][133682][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-553W PV1=0W PV2=0W PV3=0W PV4=0W Load=457W GridPwr=-50/-30/100W [467ms]
+[16:05:55][133750][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:05:55][133750][I][CustomNetworkClient.hpp:118] Socket closed
+[16:05:55][133765][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 94us, wait 4181us, vsync OK
+[16:05:55][133765][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:05:55][133821][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:05:55][133821][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:05:54
+[16:05:55][133892][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:05:55][133893][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:05:55][133964][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:05:55]Host: 192.168.4.2
+[16:05:55]Connection: close
+[16:05:55]
+[16:05:55]
+[16:05:55][134036][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:05:56]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:05","unixtime":1771167955,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171555,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.51,"overtemperature":false,"tmp":{"tC":24.51,"tF":76.12, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39776,"fs_size":233681,"fs_free":166162,"uptime":1978488}I (135096) mdns_mem: mDNS task will be created from internal RAM
+[16:05:59][137445][D][EcoVolterProV2.hpp:139] Found service: venus
+[16:05:59][137445][D][EcoVolterProV2.hpp:154] Found IP: 172.24.24.1
+[16:05:59][137446][D][EcoVolterProV2.hpp:162] Found instance: Victron
+[16:05:59][137456][D][EcoVolterProV2.hpp:139] Found service: shellyplug-s-7C87CEB4AA89
+[16:05:59][137477][D][EcoVolterProV2.hpp:154] Found IP: 192.168.4.2
+[16:05:59][137477][D][EcoVolterProV2.hpp:162] Found instance: shellyplug-s-7C87CEB4AA89
+[16:05:59][137558][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:05:59][137559][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:05:59][137563][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:05:59]Host: 192.168.4.2
+[16:05:59]Connection: close
+[16:05:59]
+[16:05:59]
+[16:05:59][137622][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:00]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:05","unixtime":1771167958,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171558,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.51,"overtemperature":false,"tmp":{"tC":24.51,"tF":76.12, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39596,"fs_size":233681,"fs_free":166162,"uptime":1978491}[138238][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:00]I (139040) mdns_mem: mDNS task will be created from internal RAM
+[16:06:03][141389][D][SolaxWallboxLocalAPI.hpp:150] No results found.
+[16:06:03][141526][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:03][141593][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:03][141593][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:03][141604][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:03][141627][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:03][141637][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:03][141693][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:03][141693][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:03][141703][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:03][141726][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-487W PV1=0W PV2=0W PV3=0W PV4=0W Load=429W GridPwr=-31/29/89W [200ms]
+[16:06:03][141736][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:03][141737][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:03][141760][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 98us, wait 599us, vsync OK
+[16:06:03][141760][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:03][141771][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:03][141771][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:02
+[16:06:03][141843][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:03][141843][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:03][141933][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:03]Host: 192.168.4.2
+[16:06:03]Connection: close
+[16:06:03]
+[16:06:03]
+[16:06:03][141965][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:05]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167963,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171563,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.59,"overtemperature":false,"tmp":{"tC":24.59,"tF":76.26, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39380,"fs_size":233681,"fs_free":166162,"uptime":1978496}[143312][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:07][145117][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:07][145117][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:07][145212][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:07]Host: 192.168.4.2
+[16:06:07]Connection: close
+[16:06:07]
+[16:06:07]
+[16:06:07][145241][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:08]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167966,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171566,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.48,"overtemperature":false,"tmp":{"tC":24.48,"tF":76.06, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39380,"fs_size":233681,"fs_free":166162,"uptime":1978499}[146853][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:08][146896][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:08][146897][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:08][146909][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:08][146919][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:08][146936][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:08][146967][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:08][146968][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:08][146978][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:08][146993][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-508W PV1=0W PV2=0W PV3=0W PV4=0W Load=446W GridPwr=-47/-9/91W [140ms]
+[16:06:08][147003][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:08][147004][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:08][147056][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 118us, wait 28224us, vsync OK
+[16:06:08][147057][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:08][147067][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:08][147067][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:07
+[16:06:10][148376][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:10][148502][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:10][148502][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:10][148641][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:10]Host: 192.168.4.2
+[16:06:10]Connection: close
+[16:06:10]
+[16:06:10]
+[16:06:10][148763][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:11]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167969,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171569,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.48,"overtemperature":false,"tmp":{"tC":24.48,"tF":76.06, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39380,"fs_size":233681,"fs_free":166162,"uptime":1978502}[149115][D][SmartControlRuleResolver.hpp:39] SOC: 97, Median battery power: -508, Median feed in power: 35, Median PV power: 0, Median load power: 446
+[16:06:11][149216][D][SmartControlRuleResolver.hpp:51] Battery discharging, deactivating
+[16:06:12][150216][D][Shelly.hpp:337] Updating state to -2
+[16:06:14][152116][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:14][152159][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:14][152159][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:14][152178][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:14][152188][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:14][152211][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:14][152226][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:14][152226][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:14][152244][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:14][152255][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-462W PV1=0W PV2=0W PV3=0W PV4=0W Load=453W GridPwr=-69/-10/77W [139ms]
+[16:06:14][152277][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:14][152278][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:14][152311][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 117us, wait 22022us, vsync OK
+[16:06:14][152311][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:14][152321][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:14][152321][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:12
+[16:06:15][153436][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:15][153515][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:15][153516][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:15][153607][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:15]Host: 192.168.4.2
+[16:06:15]Connection: close
+[16:06:15]
+[16:06:15]
+[16:06:15][153665][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:18]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167974,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171574,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.33,"overtemperature":false,"tmp":{"tC":24.33,"tF":75.79, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39380,"fs_size":233681,"fs_free":166162,"uptime":1978507}[156937][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:18][156937][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:18][156997][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:18]Host: 192.168.4.2
+[16:06:18]Connection: close
+[16:06:18]
+[16:06:18]
+[16:06:18][157044][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:19]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167978,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171578,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.33,"overtemperature":false,"tmp":{"tC":24.33,"tF":75.79, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39416,"fs_size":233681,"fs_free":166162,"uptime":1978511}[157398][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:19][157426][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:19][157426][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:19][157436][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:19][157447][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:19][157458][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:19][157481][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:19][157482][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:19][157492][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:19][157502][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-447W PV1=0W PV2=0W PV3=0W PV4=0W Load=457W GridPwr=-72/-25/95W [104ms]
+[16:06:19][157514][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:19][157514][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:19][157545][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 99us, wait 20304us, vsync OK
+[16:06:19][157545][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:19][157558][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:19][157558][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:18
+[16:06:20][158466][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:22][160140][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:22][160141][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:22][160168][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:22]Host: 192.168.4.2
+[16:06:22]Connection: close
+[16:06:22]
+[16:06:22]
+[16:06:22][160205][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:24]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167981,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171581,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.33,"overtemperature":false,"tmp":{"tC":24.33,"tF":75.79, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39416,"fs_size":233681,"fs_free":166162,"uptime":1978514}[162600][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:24][162644][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:24][162645][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:24][162661][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:24][162671][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:24][162683][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:24][162705][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:24][162705][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:24][162716][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:24][162727][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-467W PV1=0W PV2=0W PV3=0W PV4=0W Load=573W GridPwr=-181/-16/90W [127ms]
+[16:06:24][162737][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:24][162738][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:24][162761][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 91us, wait 12333us, vsync OK
+[16:06:24][162761][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:24][162772][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:24][162772][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:23
+[16:06:25][163518][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:25][163568][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:25][163568][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:25][163642][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:25]Host: 192.168.4.2
+[16:06:25]Connection: close
+[16:06:25]
+[16:06:25]
+[16:06:25][163693][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:28]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167984,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171584,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.48,"overtemperature":false,"tmp":{"tC":24.48,"tF":76.06, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39228,"fs_size":233681,"fs_free":166162,"uptime":1978517}[166790][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:28][166790][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:28][166840][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:28]Host: 192.168.4.2
+[16:06:28]Connection: close
+[16:06:28]
+[16:06:28]
+[16:06:28][166882][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:29]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-80},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167988,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171588,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.48,"overtemperature":false,"tmp":{"tC":24.48,"tF":76.06, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39228,"fs_size":233681,"fs_free":166162,"uptime":1978521}I (168298) mdns_mem: mDNS task will be created from internal RAM
+[16:06:32][170647][D][EcoVolterProV2.hpp:139] Found service: venus
+[16:06:32][170647][D][EcoVolterProV2.hpp:154] Found IP: 172.24.24.1
+[16:06:32][170647][D][EcoVolterProV2.hpp:162] Found instance: Victron
+[16:06:32][170658][D][EcoVolterProV2.hpp:139] Found service: shellyplug-s-7C87CEB4AA89
+[16:06:32][170668][D][EcoVolterProV2.hpp:154] Found IP: 192.168.4.2
+[16:06:32][170668][D][EcoVolterProV2.hpp:162] Found instance: shellyplug-s-7C87CEB4AA89
+[16:06:33][171203][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:33][171256][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:33][171326][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:33][171326][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:33][171336][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:33][171347][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:33][171357][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:33][171381][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:33][171381][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:33][171391][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:33][171402][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-457W PV1=0W PV2=0W PV3=0W PV4=0W Load=692W GridPwr=-343/18/88W [146ms]
+[16:06:33][171412][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:33][171412][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:33][171440][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 95us, wait 16450us, vsync OK
+[16:06:33][171440][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:33][171450][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:33][171450][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:32
+[16:06:33][171511][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:33][171511][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:33][171526][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:33]Host: 192.168.4.2
+[16:06:33]Connection: close
+[16:06:33]
+[16:06:33]
+[16:06:33][171577][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:33]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-78},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167992,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171592,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.44,"overtemperature":false,"tmp":{"tC":24.44,"tF":75.99, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39412,"fs_size":233681,"fs_free":166162,"uptime":1978525}I (172466) mdns_mem: mDNS task will be created from internal RAM
+[16:06:36][174817][D][SolaxWallboxLocalAPI.hpp:150] No results found.
+[16:06:36][174878][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:36][174879][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:36][174910][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:36]Host: 192.168.4.2
+[16:06:36]Connection: close
+[16:06:36]
+[16:06:36]
+[16:06:36][174957][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:38]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-80},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167996,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171596,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.44,"overtemperature":false,"tmp":{"tC":24.44,"tF":75.99, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39416,"fs_size":233681,"fs_free":166162,"uptime":1978529}[176235][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:38][176491][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:38][176515][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:38][176515][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:38][176525][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:38][176536][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:38][176546][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:38][176566][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:38][176566][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:38][176577][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:38][176587][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-462W PV1=0W PV2=0W PV3=0W PV4=0W Load=652W GridPwr=-259/-5/100W [96ms]
+[16:06:38][176598][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:38][176598][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:38][176610][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 96us, wait 1175us, vsync OK
+[16:06:38][176610][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:38][176621][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:38][176631][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:37
+[16:06:39][178066][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:39][178066][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:40][178194][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:40]Host: 192.168.4.2
+[16:06:40]Connection: close
+[16:06:40]
+[16:06:40]
+[16:06:40][178234][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:40]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167999,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171599,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.44,"overtemperature":false,"tmp":{"tC":24.44,"tF":75.99, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39416,"fs_size":233681,"fs_free":166162,"uptime":1978532}[178373][D][SmartControlRuleResolver.hpp:39] SOC: 97, Median battery power: -462, Median feed in power: -107, Median PV power: 0, Median load power: 573
+[16:06:40][178389][D][SmartControlRuleResolver.hpp:63] Battery discharging, partial deactivating
+[16:06:41][179389][D][Shelly.hpp:337] Updating state to -1
+[16:06:41][179389][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:41][179389][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:41][179412][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:41]Host: 192.168.4.2
+[16:06:41]Connection: close
+[16:06:41]
+[16:06:41]
+[16:06:41][179470][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:43]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-80},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771168000,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171600,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.33,"overtemperature":false,"tmp":{"tC":24.33,"tF":75.79, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39228,"fs_size":233681,"fs_free":166162,"uptime":1978533}[181303][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:43][181682][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:43][181709][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:43][181709][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:43][181719][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:43][181730][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:43][181740][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:43][181766][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:43][181766][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:43][181777][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:43][181787][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-517W PV1=0W PV2=0W PV3=0W PV4=0W Load=515W GridPwr=-108/9/101W [105ms]
+[16:06:43][181798][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:43][181798][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:43][181826][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 98us, wait 17407us, vsync OK
+[16:06:43][181826][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:43][181837][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:43][181837][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:42
+[16:06:44][182607][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:44][182607][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:44][182704][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:44]Host: 192.168.4.2
+[16:06:44]Connection: close
+[16:06:44]
+[16:06:44]
+[16:06:44][182742][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:48]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-80},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771168003,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171603,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.33,"overtemperature":false,"tmp":{"tC":24.33,"tF":75.79, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39228,"fs_size":233681,"fs_free":166162,"uptime":1978536}[186349][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:48][186428][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:48][186428][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:48][186526][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:48]Host: 192.168.4.2
+[16:06:48]Connection: close
+[16:06:48]
+[16:06:48]
+[16:06:48][186597][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:48]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-80},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771168007,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171607,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.33,"overtemperature":false,"tmp":{"tC":24.33,"tF":75.79, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39228,"fs_size":233681,"fs_free":166162,"uptime":1978540}[186889][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:48][187039][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:49][187039][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:49][187110][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:49][187121][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:49][187181][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:49][187330][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:49][187330][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:49][187396][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:49][187406][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-527W PV1=0W PV2=0W PV3=0W PV4=0W Load=512W GridPwr=-109/22/92W [517ms]
+[16:06:49][187466][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:49][187467][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:49][187563][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 103us, wait 85286us, vsync OK
+[16:06:49][187563][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:49][187574][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:49][187574][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:48
+[16:06:52][190366][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:52][190366][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:52][190371][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:52]Host: 192.168.4.2
+[16:06:52]Connection: close
+[16:06:52]
+[16:06:52]
+[16:06:52][190427][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:53]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-80},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771168011,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171611,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.40,"overtemperature":false,"tmp":{"tC":24.40,"tF":75.92, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39416,"fs_size":233681,"fs_free":166162,"uptime":1978544}[191410][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:54][192669][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:54][192717][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:54][192718][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:54][192728][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:54][192739][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:54][192749][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:54][192770][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:54][192770][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:54][192781][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:54][192792][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-502W PV1=0W PV2=0W PV3=0W PV4=0W Load=463W GridPwr=-83/4/92W [123ms]
+[16:06:54][192804][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:54][192805][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:54][192828][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 99us, wait 12421us, vsync OK
+[16:06:54][192828][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:54][192838][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:54][192839][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:53
+[16:06:55][193521][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:55][193521][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:55][193565][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:55]Host: 192.168.4.2
+[16:06:55]Connection: close
+[16:06:55]
+[16:06:55]
+[16:06:55][193612][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:58]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-80},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771168014,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171614,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.25,"overtemperature":false,"tmp":{"tC":24.25,"tF":75.66, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39416,"fs_size":233681,"fs_free":166162,"uptime":1978547}[196434][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:58][196736][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:58][196736][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:58][196821][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:58]Host: 192.168.4.2
+[16:06:58]Connection: close
+[16:06:58]
+[16:06:58]
+[16:06:58][196853][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:59]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771168018,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171618,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.25,"overtemperature":false,"tmp":{"tC":24.25,"tF":75.66, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39228,"fs_size":233681,"fs_free":166162,"uptime":1978551}[197911][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:59][197951][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:59][197951][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:59][197964][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:59][197974][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:59][197986][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:59][197995][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:59][197995][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:59][198009][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:59][198019][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-487W PV1=0W PV2=0W PV3=0W PV4=0W Load=460W GridPwr=-78/-10/92W [108ms]
+[16:06:59][198032][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:59][198033][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:59][198044][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 89us, wait 649us, vsync OK
+[16:06:59][198044][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:59][198055][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:59][198066][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:58
+[16:07:01][199968][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:07:01][199968][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:07:01][199997][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:07:01]Host: 192.168.4.2
+[16:07:01]Connection: close
+[16:07:01]
+[16:07:01]
+[16:07:01][200036][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:07:02]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:07","unixtime":1771168021,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171621,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.14,"overtemperature":false,"tmp":{"tC":24.14,"tF":75.45, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39192,"fs_size":233681,"fs_free":166162,"uptime":1978554}I (201498) mdns_mem: mDNS task will be created from internal RAM
+[16:07:05][203847][D][EcoVolterProV2.hpp:139] Found service: venus
+[16:07:05][203847][D][EcoVolterProV2.hpp:154] Found IP: 172.24.24.1
+[16:07:05][203847][D][EcoVolterProV2.hpp:162] Found instance: Victron
+[16:07:05][203858][D][EcoVolterProV2.hpp:139] Found service: shellyplug-s-7C87CEB4AA89
+[16:07:05][203868][D][EcoVolterProV2.hpp:154] Found IP: 192.168.4.2
+[16:07:05][203868][D][EcoVolterProV2.hpp:162] Found instance: shellyplug-s-7C87CEB4AA89
+[16:07:06][204406][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:07:06][204460][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:07:06][204489][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:07:06][204489][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:07:06][204499][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:07:06][204510][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:07:06][204520][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:07:06][204539][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:07:06][204539][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:07:06][204550][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:07:06][204560][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-472W PV1=0W PV2=0W PV3=0W PV4=0W Load=564W GridPwr=-178/-23/83W [100ms]
+[16:07:06][204571][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:07:06][204571][I][CustomNetworkClient.hpp:118] Socket closed
+[16:07:06][204602][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 115us, wait 20200us, vsync TIMEOUT
+[16:07:06][204602][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:06][204613][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:06][204613][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:07:05
+[16:07:06][204692][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:07:06][204692][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:07:06][204707][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:07:06]Host: 192.168.4.2
+[16:07:06]Connection: close
+[16:07:06]
+[16:07:06]
+[16:07:06][204747][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:07:06]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-82},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:07","unixtime":1771168025,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171625,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.40,"overtemperature":false,"tmp":{"tC":24.40,"tF":75.92, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39372,"fs_size":233681,"fs_free":166162,"uptime":1978558}[204835][D][SmartControlRuleResolver.hpp:39] SOC: 97, Median battery power: -502, Median feed in power: 4, Median PV power: 0, Median load power: 512
+[16:07:06][204845][D][SmartControlRuleResolver.hpp:51] Battery discharging, deactivating
+[16:07:07][205858][D][Shelly.hpp:337] Updating state to -2
+[16:07:07]I (206660) mdns_mem: mDNS task will be created from internal RAM
+[16:07:10][209009][D][SolaxWallboxLocalAPI.hpp:150] No results found.
+[16:07:11][209539][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:07:11][209616][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:07:11][209616][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:07:11][209784][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:07:11]Host: 192.168.4.2
+[16:07:11]Connection: close
+[16:07:11]
+[16:07:11]
+[16:07:11][209855][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:07:12]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-80},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:07","unixtime":1771168030,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171630,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.10,"overtemperature":false,"tmp":{"tC":24.10,"tF":75.39, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39416,"fs_size":233681,"fs_free":166162,"uptime":1978564}[210290][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:07:12][210525][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:07:12][210525][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:07:12][210583][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:07:12][210593][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:07:12][210654][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:07:12][210729][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:07:12][210729][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:07:12][210740][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:07:12][210822][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-462W PV1=0W PV2=0W PV3=0W PV4=0W Load=515W GridPwr=-177/-9/117W [532ms]
+[16:07:12][210832][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:07:12][210833][I][CustomNetworkClient.hpp:118] Socket closed
+[16:07:12][210914][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 92us, wait 8076us, vsync OK
+[16:07:12][210914][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:12][210940][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:12][210940][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:07:11
+[16:07:15][213121][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:07:15][213121][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:07:15][213209][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:07:15]Host: 192.168.4.2
+[16:07:15]Connection: close
+[16:07:15]
+[16:07:15]
+[16:07:15][213265][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:07:16]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:07","unixtime":1771168034,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171634,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.10,"overtemperature":false,"tmp":{"tC":24.10,"tF":75.39, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39416,"fs_size":233681,"fs_free":166162,"uptime":1978567}[214597][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:07:17][215990][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:07:17][216079][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:07:17][216080][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:07:18][216098][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:07:18][216109][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:07:18][216126][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:07:18][216215][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:07:18][216216][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:07:18][216235][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:07:18][216245][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-497W PV1=0W PV2=0W PV3=0W PV4=0W Load=384W GridPwr=-57/26/98W [255ms]
+[16:07:18][216261][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:07:18][216262][I][CustomNetworkClient.hpp:118] Socket closed
+[16:07:18][216289][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 88us, wait 16365us, vsync OK
+[16:07:18][216289][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:18][216300][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:18][216300][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:07:16
+[16:07:18][216370][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:07:18][216370][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:07:18][216380][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:07:18]Host: 192.168.4.2
+[16:07:18]Connection: close
+[16:07:18]
+[16:07:18]
+[16:07:18][216438][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK

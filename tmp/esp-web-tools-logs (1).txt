@@ -1,0 +1,1376 @@
+[16:05:47][125674][D][ElectricityPriceLoader.hpp:321] Failed to load electricity prices for AT
+[16:05:48][126142][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:05:48][126210][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:05:48][126274][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:05:48][126274][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:05:48][126284][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:05:48][126295][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:05:48][126305][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:05:48][126338][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:05:48][126338][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:05:48][126348][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:05:48][126359][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-583W PV1=0W PV2=0W PV3=0W PV4=0W Load=437W GridPwr=-18/54/137W [148ms]
+[16:05:48][126369][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:05:48][126370][I][CustomNetworkClient.hpp:118] Socket closed
+[16:05:48][126380][D][ConsumptionPredictor.cpp:151] Shifting week history
+[16:05:48][126381][D][ConsumptionPredictor.cpp:253] Consumption correction reset at midnight
+[16:05:48][126391][D][ConsumptionPredictor.cpp:190] Updated consumption for day 4, quarter 4: 121.2 Wh (correction: 0.0)
+[16:05:48][126402][D][ProductionPredictor.cpp:112] Updated production for quarter 4: 0.0 Wh (samples: 2)
+[16:05:48][126412][D][app.cpp:665] Quarter changed, saving predictors to flash
+[16:05:48][126533][D][ConsumptionPredictor.cpp:512] Consumption saved 2 days to LittleFS
+[16:05:48][126533][W][FlashMutex.hpp:216] Flash[save:cons]: 102774us (>2ms!), wait 18287us, vsync OK
+[16:05:48][126605][D][ProductionPredictor.cpp:297] Production data saved to LittleFS
+[16:05:48][126605][W][FlashMutex.hpp:216] Flash[save:prod]: 60660us (>2ms!), wait 581us, vsync OK
+[16:05:48][126642][D][SolarChartDataProvider.hpp:334] Chart data saved to LittleFS
+[16:05:48][126642][W][FlashMutex.hpp:216] Flash[save:chart]: 6764us (>2ms!), wait 19551us, vsync TIMEOUT
+[16:05:48][126659][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 100us, wait 6090us, vsync OK
+[16:05:48][126659][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:05:48][126669][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:05:48][126669][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:05:47
+[16:05:48][126729][D][app.cpp:818] Running intelligence resolver
+[16:05:51]I (130204) mdns_mem: mDNS task will be created from internal RAM
+[16:05:51][129453][D][Shelly.hpp:204] mDNS initialized successfully
+[16:05:54][132553][D][Shelly.hpp:221] mDNS query returned 2 results
+[16:05:54][132553][D][Shelly.hpp:224] SoftAP IP: 192.168.4.1, Subnet: 255.255.255.0
+[16:05:54][132564][D][Shelly.hpp:250] Found service: venus IP: 172.24.24.1
+[16:05:54][132564][D][Shelly.hpp:284]   -> NOT on softAP subnet (device: 172.24.24.1, softAP: 192.168.4.1/255.255.255.0)
+[16:05:54][132574][D][Shelly.hpp:250] Found service: shellyplug-s-7C87CEB4AA89 IP: 192.168.4.2
+[16:05:54][132584][D][Shelly.hpp:255]   -> on softAP subnet, checking if Shelly...
+[16:05:54][132585][D][Shelly.hpp:263] Found Shelly: shellyplug-s-7c87ceb4aa89 model: shellyplug-s-
+[16:05:54][132595][D][Shelly.hpp:268] Checking Shelly 0
+[16:05:54][132595][D][Shelly.hpp:274] Paired Shelly 7c87ceb4aa89
+[16:05:54][132616][D][Shelly.hpp:292] Paired Shelly count: 1
+[16:05:55][133133][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:05:55][133215][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:05:55][133377][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:05:55][133378][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:05:55][133388][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:05:55][133448][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:05:55][133458][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:05:55][133602][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:05:55][133602][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:05:55][133671][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:05:55][133682][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-553W PV1=0W PV2=0W PV3=0W PV4=0W Load=457W GridPwr=-50/-30/100W [467ms]
+[16:05:55][133750][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:05:55][133750][I][CustomNetworkClient.hpp:118] Socket closed
+[16:05:55][133765][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 94us, wait 4181us, vsync OK
+[16:05:55][133765][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:05:55][133821][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:05:55][133821][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:05:54
+[16:05:55][133892][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:05:55][133893][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:05:55][133964][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:05:55]Host: 192.168.4.2
+[16:05:55]Connection: close
+[16:05:55]
+[16:05:55]
+[16:05:55][134036][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:05:56]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:05","unixtime":1771167955,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171555,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.51,"overtemperature":false,"tmp":{"tC":24.51,"tF":76.12, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39776,"fs_size":233681,"fs_free":166162,"uptime":1978488}I (135096) mdns_mem: mDNS task will be created from internal RAM
+[16:05:59][137445][D][EcoVolterProV2.hpp:139] Found service: venus
+[16:05:59][137445][D][EcoVolterProV2.hpp:154] Found IP: 172.24.24.1
+[16:05:59][137446][D][EcoVolterProV2.hpp:162] Found instance: Victron
+[16:05:59][137456][D][EcoVolterProV2.hpp:139] Found service: shellyplug-s-7C87CEB4AA89
+[16:05:59][137477][D][EcoVolterProV2.hpp:154] Found IP: 192.168.4.2
+[16:05:59][137477][D][EcoVolterProV2.hpp:162] Found instance: shellyplug-s-7C87CEB4AA89
+[16:05:59][137558][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:05:59][137559][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:05:59][137563][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:05:59]Host: 192.168.4.2
+[16:05:59]Connection: close
+[16:05:59]
+[16:05:59]
+[16:05:59][137622][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:00]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:05","unixtime":1771167958,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171558,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.51,"overtemperature":false,"tmp":{"tC":24.51,"tF":76.12, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39596,"fs_size":233681,"fs_free":166162,"uptime":1978491}[138238][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:00]I (139040) mdns_mem: mDNS task will be created from internal RAM
+[16:06:03][141389][D][SolaxWallboxLocalAPI.hpp:150] No results found.
+[16:06:03][141526][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:03][141593][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:03][141593][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:03][141604][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:03][141627][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:03][141637][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:03][141693][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:03][141693][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:03][141703][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:03][141726][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-487W PV1=0W PV2=0W PV3=0W PV4=0W Load=429W GridPwr=-31/29/89W [200ms]
+[16:06:03][141736][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:03][141737][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:03][141760][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 98us, wait 599us, vsync OK
+[16:06:03][141760][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:03][141771][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:03][141771][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:02
+[16:06:03][141843][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:03][141843][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:03][141933][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:03]Host: 192.168.4.2
+[16:06:03]Connection: close
+[16:06:03]
+[16:06:03]
+[16:06:03][141965][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:05]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167963,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171563,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.59,"overtemperature":false,"tmp":{"tC":24.59,"tF":76.26, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39380,"fs_size":233681,"fs_free":166162,"uptime":1978496}[143312][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:07][145117][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:07][145117][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:07][145212][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:07]Host: 192.168.4.2
+[16:06:07]Connection: close
+[16:06:07]
+[16:06:07]
+[16:06:07][145241][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:08]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167966,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171566,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.48,"overtemperature":false,"tmp":{"tC":24.48,"tF":76.06, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39380,"fs_size":233681,"fs_free":166162,"uptime":1978499}[146853][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:08][146896][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:08][146897][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:08][146909][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:08][146919][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:08][146936][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:08][146967][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:08][146968][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:08][146978][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:08][146993][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-508W PV1=0W PV2=0W PV3=0W PV4=0W Load=446W GridPwr=-47/-9/91W [140ms]
+[16:06:08][147003][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:08][147004][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:08][147056][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 118us, wait 28224us, vsync OK
+[16:06:08][147057][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:08][147067][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:08][147067][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:07
+[16:06:10][148376][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:10][148502][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:10][148502][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:10][148641][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:10]Host: 192.168.4.2
+[16:06:10]Connection: close
+[16:06:10]
+[16:06:10]
+[16:06:10][148763][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:11]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167969,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171569,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.48,"overtemperature":false,"tmp":{"tC":24.48,"tF":76.06, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39380,"fs_size":233681,"fs_free":166162,"uptime":1978502}[149115][D][SmartControlRuleResolver.hpp:39] SOC: 97, Median battery power: -508, Median feed in power: 35, Median PV power: 0, Median load power: 446
+[16:06:11][149216][D][SmartControlRuleResolver.hpp:51] Battery discharging, deactivating
+[16:06:12][150216][D][Shelly.hpp:337] Updating state to -2
+[16:06:14][152116][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:14][152159][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:14][152159][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:14][152178][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:14][152188][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:14][152211][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:14][152226][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:14][152226][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:14][152244][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:14][152255][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-462W PV1=0W PV2=0W PV3=0W PV4=0W Load=453W GridPwr=-69/-10/77W [139ms]
+[16:06:14][152277][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:14][152278][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:14][152311][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 117us, wait 22022us, vsync OK
+[16:06:14][152311][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:14][152321][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:14][152321][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:12
+[16:06:15][153436][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:15][153515][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:15][153516][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:15][153607][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:15]Host: 192.168.4.2
+[16:06:15]Connection: close
+[16:06:15]
+[16:06:15]
+[16:06:15][153665][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:18]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167974,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171574,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.33,"overtemperature":false,"tmp":{"tC":24.33,"tF":75.79, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39380,"fs_size":233681,"fs_free":166162,"uptime":1978507}[156937][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:18][156937][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:18][156997][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:18]Host: 192.168.4.2
+[16:06:18]Connection: close
+[16:06:18]
+[16:06:18]
+[16:06:18][157044][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:19]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167978,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171578,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.33,"overtemperature":false,"tmp":{"tC":24.33,"tF":75.79, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39416,"fs_size":233681,"fs_free":166162,"uptime":1978511}[157398][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:19][157426][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:19][157426][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:19][157436][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:19][157447][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:19][157458][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:19][157481][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:19][157482][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:19][157492][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:19][157502][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-447W PV1=0W PV2=0W PV3=0W PV4=0W Load=457W GridPwr=-72/-25/95W [104ms]
+[16:06:19][157514][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:19][157514][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:19][157545][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 99us, wait 20304us, vsync OK
+[16:06:19][157545][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:19][157558][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:19][157558][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:18
+[16:06:20][158466][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:22][160140][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:22][160141][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:22][160168][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:22]Host: 192.168.4.2
+[16:06:22]Connection: close
+[16:06:22]
+[16:06:22]
+[16:06:22][160205][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:24]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167981,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171581,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.33,"overtemperature":false,"tmp":{"tC":24.33,"tF":75.79, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39416,"fs_size":233681,"fs_free":166162,"uptime":1978514}[162600][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:24][162644][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:24][162645][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:24][162661][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:24][162671][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:24][162683][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:24][162705][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:24][162705][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:24][162716][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:24][162727][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-467W PV1=0W PV2=0W PV3=0W PV4=0W Load=573W GridPwr=-181/-16/90W [127ms]
+[16:06:24][162737][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:24][162738][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:24][162761][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 91us, wait 12333us, vsync OK
+[16:06:24][162761][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:24][162772][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:24][162772][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:23
+[16:06:25][163518][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:25][163568][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:25][163568][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:25][163642][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:25]Host: 192.168.4.2
+[16:06:25]Connection: close
+[16:06:25]
+[16:06:25]
+[16:06:25][163693][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:28]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167984,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171584,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.48,"overtemperature":false,"tmp":{"tC":24.48,"tF":76.06, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39228,"fs_size":233681,"fs_free":166162,"uptime":1978517}[166790][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:28][166790][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:28][166840][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:28]Host: 192.168.4.2
+[16:06:28]Connection: close
+[16:06:28]
+[16:06:28]
+[16:06:28][166882][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:29]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-80},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167988,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171588,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.48,"overtemperature":false,"tmp":{"tC":24.48,"tF":76.06, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39228,"fs_size":233681,"fs_free":166162,"uptime":1978521}I (168298) mdns_mem: mDNS task will be created from internal RAM
+[16:06:32][170647][D][EcoVolterProV2.hpp:139] Found service: venus
+[16:06:32][170647][D][EcoVolterProV2.hpp:154] Found IP: 172.24.24.1
+[16:06:32][170647][D][EcoVolterProV2.hpp:162] Found instance: Victron
+[16:06:32][170658][D][EcoVolterProV2.hpp:139] Found service: shellyplug-s-7C87CEB4AA89
+[16:06:32][170668][D][EcoVolterProV2.hpp:154] Found IP: 192.168.4.2
+[16:06:32][170668][D][EcoVolterProV2.hpp:162] Found instance: shellyplug-s-7C87CEB4AA89
+[16:06:33][171203][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:33][171256][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:33][171326][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:33][171326][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:33][171336][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:33][171347][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:33][171357][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:33][171381][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:33][171381][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:33][171391][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:33][171402][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-457W PV1=0W PV2=0W PV3=0W PV4=0W Load=692W GridPwr=-343/18/88W [146ms]
+[16:06:33][171412][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:33][171412][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:33][171440][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 95us, wait 16450us, vsync OK
+[16:06:33][171440][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:33][171450][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:33][171450][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:32
+[16:06:33][171511][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:33][171511][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:33][171526][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:33]Host: 192.168.4.2
+[16:06:33]Connection: close
+[16:06:33]
+[16:06:33]
+[16:06:33][171577][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:33]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-78},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167992,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171592,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.44,"overtemperature":false,"tmp":{"tC":24.44,"tF":75.99, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39412,"fs_size":233681,"fs_free":166162,"uptime":1978525}I (172466) mdns_mem: mDNS task will be created from internal RAM
+[16:06:36][174817][D][SolaxWallboxLocalAPI.hpp:150] No results found.
+[16:06:36][174878][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:36][174879][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:36][174910][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:36]Host: 192.168.4.2
+[16:06:36]Connection: close
+[16:06:36]
+[16:06:36]
+[16:06:36][174957][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:38]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-80},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167996,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171596,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.44,"overtemperature":false,"tmp":{"tC":24.44,"tF":75.99, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39416,"fs_size":233681,"fs_free":166162,"uptime":1978529}[176235][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:38][176491][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:38][176515][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:38][176515][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:38][176525][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:38][176536][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:38][176546][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:38][176566][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:38][176566][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:38][176577][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:38][176587][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-462W PV1=0W PV2=0W PV3=0W PV4=0W Load=652W GridPwr=-259/-5/100W [96ms]
+[16:06:38][176598][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:38][176598][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:38][176610][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 96us, wait 1175us, vsync OK
+[16:06:38][176610][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:38][176621][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:38][176631][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:37
+[16:06:39][178066][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:39][178066][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:40][178194][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:40]Host: 192.168.4.2
+[16:06:40]Connection: close
+[16:06:40]
+[16:06:40]
+[16:06:40][178234][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:40]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771167999,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171599,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.44,"overtemperature":false,"tmp":{"tC":24.44,"tF":75.99, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39416,"fs_size":233681,"fs_free":166162,"uptime":1978532}[178373][D][SmartControlRuleResolver.hpp:39] SOC: 97, Median battery power: -462, Median feed in power: -107, Median PV power: 0, Median load power: 573
+[16:06:40][178389][D][SmartControlRuleResolver.hpp:63] Battery discharging, partial deactivating
+[16:06:41][179389][D][Shelly.hpp:337] Updating state to -1
+[16:06:41][179389][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:41][179389][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:41][179412][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:41]Host: 192.168.4.2
+[16:06:41]Connection: close
+[16:06:41]
+[16:06:41]
+[16:06:41][179470][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:43]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-80},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771168000,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171600,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.33,"overtemperature":false,"tmp":{"tC":24.33,"tF":75.79, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39228,"fs_size":233681,"fs_free":166162,"uptime":1978533}[181303][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:43][181682][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:43][181709][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:43][181709][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:43][181719][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:43][181730][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:43][181740][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:43][181766][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:43][181766][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:43][181777][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:43][181787][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-517W PV1=0W PV2=0W PV3=0W PV4=0W Load=515W GridPwr=-108/9/101W [105ms]
+[16:06:43][181798][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:43][181798][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:43][181826][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 98us, wait 17407us, vsync OK
+[16:06:43][181826][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:43][181837][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:43][181837][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:42
+[16:06:44][182607][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:44][182607][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:44][182704][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:44]Host: 192.168.4.2
+[16:06:44]Connection: close
+[16:06:44]
+[16:06:44]
+[16:06:44][182742][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:48]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-80},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771168003,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171603,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.33,"overtemperature":false,"tmp":{"tC":24.33,"tF":75.79, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39228,"fs_size":233681,"fs_free":166162,"uptime":1978536}[186349][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:48][186428][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:48][186428][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:48][186526][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:48]Host: 192.168.4.2
+[16:06:48]Connection: close
+[16:06:48]
+[16:06:48]
+[16:06:48][186597][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:48]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-80},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771168007,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171607,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.33,"overtemperature":false,"tmp":{"tC":24.33,"tF":75.79, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39228,"fs_size":233681,"fs_free":166162,"uptime":1978540}[186889][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:48][187039][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:49][187039][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:49][187110][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:49][187121][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:49][187181][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:49][187330][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:49][187330][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:49][187396][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:49][187406][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-527W PV1=0W PV2=0W PV3=0W PV4=0W Load=512W GridPwr=-109/22/92W [517ms]
+[16:06:49][187466][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:49][187467][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:49][187563][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 103us, wait 85286us, vsync OK
+[16:06:49][187563][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:49][187574][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:49][187574][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:48
+[16:06:52][190366][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:52][190366][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:52][190371][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:52]Host: 192.168.4.2
+[16:06:52]Connection: close
+[16:06:52]
+[16:06:52]
+[16:06:52][190427][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:53]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-80},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771168011,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171611,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.40,"overtemperature":false,"tmp":{"tC":24.40,"tF":75.92, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39416,"fs_size":233681,"fs_free":166162,"uptime":1978544}[191410][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:54][192669][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:54][192717][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:54][192718][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:54][192728][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:54][192739][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:54][192749][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:54][192770][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:54][192770][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:54][192781][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:54][192792][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-502W PV1=0W PV2=0W PV3=0W PV4=0W Load=463W GridPwr=-83/4/92W [123ms]
+[16:06:54][192804][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:54][192805][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:54][192828][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 99us, wait 12421us, vsync OK
+[16:06:54][192828][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:54][192838][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:54][192839][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:53
+[16:06:55][193521][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:55][193521][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:55][193565][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:55]Host: 192.168.4.2
+[16:06:55]Connection: close
+[16:06:55]
+[16:06:55]
+[16:06:55][193612][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:58]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-80},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771168014,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171614,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.25,"overtemperature":false,"tmp":{"tC":24.25,"tF":75.66, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39416,"fs_size":233681,"fs_free":166162,"uptime":1978547}[196434][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:06:58][196736][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:06:58][196736][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:06:58][196821][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:06:58]Host: 192.168.4.2
+[16:06:58]Connection: close
+[16:06:58]
+[16:06:58]
+[16:06:58][196853][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:06:59]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:06","unixtime":1771168018,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171618,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.25,"overtemperature":false,"tmp":{"tC":24.25,"tF":75.66, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39228,"fs_size":233681,"fs_free":166162,"uptime":1978551}[197911][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:06:59][197951][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:06:59][197951][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:06:59][197964][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:06:59][197974][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:06:59][197986][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:06:59][197995][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:06:59][197995][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:06:59][198009][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:06:59][198019][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-487W PV1=0W PV2=0W PV3=0W PV4=0W Load=460W GridPwr=-78/-10/92W [108ms]
+[16:06:59][198032][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:06:59][198033][I][CustomNetworkClient.hpp:118] Socket closed
+[16:06:59][198044][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 89us, wait 649us, vsync OK
+[16:06:59][198044][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:59][198055][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:06:59][198066][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:06:58
+[16:07:01][199968][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:07:01][199968][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:07:01][199997][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:07:01]Host: 192.168.4.2
+[16:07:01]Connection: close
+[16:07:01]
+[16:07:01]
+[16:07:01][200036][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:07:02]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:07","unixtime":1771168021,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171621,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.14,"overtemperature":false,"tmp":{"tC":24.14,"tF":75.45, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39192,"fs_size":233681,"fs_free":166162,"uptime":1978554}I (201498) mdns_mem: mDNS task will be created from internal RAM
+[16:07:05][203847][D][EcoVolterProV2.hpp:139] Found service: venus
+[16:07:05][203847][D][EcoVolterProV2.hpp:154] Found IP: 172.24.24.1
+[16:07:05][203847][D][EcoVolterProV2.hpp:162] Found instance: Victron
+[16:07:05][203858][D][EcoVolterProV2.hpp:139] Found service: shellyplug-s-7C87CEB4AA89
+[16:07:05][203868][D][EcoVolterProV2.hpp:154] Found IP: 192.168.4.2
+[16:07:05][203868][D][EcoVolterProV2.hpp:162] Found instance: shellyplug-s-7C87CEB4AA89
+[16:07:06][204406][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:07:06][204460][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:07:06][204489][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:07:06][204489][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:07:06][204499][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:07:06][204510][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:07:06][204520][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:07:06][204539][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:07:06][204539][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:07:06][204550][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:07:06][204560][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-472W PV1=0W PV2=0W PV3=0W PV4=0W Load=564W GridPwr=-178/-23/83W [100ms]
+[16:07:06][204571][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:07:06][204571][I][CustomNetworkClient.hpp:118] Socket closed
+[16:07:06][204602][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 115us, wait 20200us, vsync TIMEOUT
+[16:07:06][204602][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:06][204613][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:06][204613][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:07:05
+[16:07:06][204692][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:07:06][204692][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:07:06][204707][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:07:06]Host: 192.168.4.2
+[16:07:06]Connection: close
+[16:07:06]
+[16:07:06]
+[16:07:06][204747][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:07:06]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-82},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:07","unixtime":1771168025,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171625,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.40,"overtemperature":false,"tmp":{"tC":24.40,"tF":75.92, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39372,"fs_size":233681,"fs_free":166162,"uptime":1978558}[204835][D][SmartControlRuleResolver.hpp:39] SOC: 97, Median battery power: -502, Median feed in power: 4, Median PV power: 0, Median load power: 512
+[16:07:06][204845][D][SmartControlRuleResolver.hpp:51] Battery discharging, deactivating
+[16:07:07][205858][D][Shelly.hpp:337] Updating state to -2
+[16:07:07]I (206660) mdns_mem: mDNS task will be created from internal RAM
+[16:07:10][209009][D][SolaxWallboxLocalAPI.hpp:150] No results found.
+[16:07:11][209539][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:07:11][209616][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:07:11][209616][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:07:11][209784][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:07:11]Host: 192.168.4.2
+[16:07:11]Connection: close
+[16:07:11]
+[16:07:11]
+[16:07:11][209855][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:07:12]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-80},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:07","unixtime":1771168030,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171630,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.10,"overtemperature":false,"tmp":{"tC":24.10,"tF":75.39, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39416,"fs_size":233681,"fs_free":166162,"uptime":1978564}[210290][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:07:12][210525][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:07:12][210525][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:07:12][210583][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:07:12][210593][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:07:12][210654][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:07:12][210729][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:07:12][210729][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:07:12][210740][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:07:12][210822][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-462W PV1=0W PV2=0W PV3=0W PV4=0W Load=515W GridPwr=-177/-9/117W [532ms]
+[16:07:12][210832][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:07:12][210833][I][CustomNetworkClient.hpp:118] Socket closed
+[16:07:12][210914][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 92us, wait 8076us, vsync OK
+[16:07:12][210914][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:12][210940][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:12][210940][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:07:11
+[16:07:15][213121][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:07:15][213121][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:07:15][213209][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:07:15]Host: 192.168.4.2
+[16:07:15]Connection: close
+[16:07:15]
+[16:07:15]
+[16:07:15][213265][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:07:16]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-79},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:07","unixtime":1771168034,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171634,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.10,"overtemperature":false,"tmp":{"tC":24.10,"tF":75.39, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39416,"fs_size":233681,"fs_free":166162,"uptime":1978567}[214597][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:07:17][215990][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:07:17][216079][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:07:17][216080][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:07:18][216098][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:07:18][216109][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:07:18][216126][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:07:18][216215][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:07:18][216216][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.02 kWh
+[16:07:18][216235][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:07:18][216245][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-497W PV1=0W PV2=0W PV3=0W PV4=0W Load=384W GridPwr=-57/26/98W [255ms]
+[16:07:18][216261][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:07:18][216262][I][CustomNetworkClient.hpp:118] Socket closed
+[16:07:18][216289][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 88us, wait 16365us, vsync OK
+[16:07:18][216289][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:18][216300][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:18][216300][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:07:16
+[16:07:18][216370][D][Shelly.hpp:302] Getting state for Shelly 7c87ceb4aa89
+[16:07:18][216370][D][Shelly.hpp:133] IP: 192.168.4.2
+[16:07:18][216380][D][Shelly.hpp:154] Request: GET /status HTTP/1.1
+[16:07:18]Host: 192.168.4.2
+[16:07:18]Connection: close
+[16:07:18]
+[16:07:18]
+[16:07:18][216438][D][Shelly.hpp:167] Response code: HTTP/1.1 200 OK
+[16:07:19]{"wifi_sta":{"connected":true,"ssid":"SolarStationLive-C820C41DB410","ip":"192.168.4.2","rssi":-78},"cloud":{"enabled":false,"connected":false},"mqtt":{"connected":false},"time":"16:07","unixtime":1771168037,"serial":43266,"has_update":true,"mac":"7C87CEB4AA89","cfg_changed_cnt":6,"actions_stats":{"skipped":0},"relays":[{"ison":false,"has_timer":false,"timer_started":0,"timer_duration":0,"timer_remaining":0,"overpower":false,"source":"timer"}],"meters":[{"power":0.00,"overpower":0.00,"is_valid":true,"timestamp":1771171637,"counters":[0.000, 0.000, 0.000],"total":598012}],"temperature":24.40,"overtemperature":false,"tmp":{"tC":24.40,"tF":75.92, "is_valid":true},"update":{"status":"pending","has_update":true,"new_version":"20230913-113421/v1.14.0-gcb84623","old_version":"20220627-131242/v1.11.8-6-g09c98037f-plug-s-selftest-calibration","beta_version":"20231107-164219/v1.14.1-rc1-g0617c15"},"ram_total":51200,"ram_free":39416,"fs_size":233681,"fs_free":166162,"uptime":1978570}ESP-ROM:esp32s3-20210327
+[16:07:19]Build:Mar 27 2021
+[16:07:19]rst:0x1 (POWERON),boot:0x8 (SPI_FAST_FLASH_BOOT)
+[16:07:19]SPIWP:0xee
+[16:07:19]mode:DIO, clock div:1
+[16:07:19]load:0x3fce2820,len:0x17ec
+[16:07:19]load:0x403c8700,len:0x4
+[16:07:19]load:0x403c8704,len:0xf28
+[16:07:19]load:0x403cb700,len:0x35dc
+[16:07:19]entry 0x403c89c0
+[16:07:19]I (27) boot: ESP-IDF 5.4.1 2nd stage bootloader
+[16:07:19]I (27) boot: compile time Dec 15 2025 11:44:17
+[16:07:19]I (27) boot: Multicore bootloader
+[16:07:19]I (27) boot: chip revision: v0.2
+[16:07:19]I (30) boot: efuse block revision: v1.3
+[16:07:19]I (33) qio_mode: Enabling default flash chip QIO
+[16:07:19]I (38) boot.esp32s3: Boot SPI Speed : 80MHz
+[16:07:19]I (42) boot.esp32s3: SPI Mode       : QIO
+[16:07:19]I (45) boot.esp32s3: SPI Flash Size : 16MB
+[16:07:19]I (49) boot: Enabling RNG early entropy source...
+[16:07:19]I (54) boot: Partition Table:
+[16:07:19]I (56) boot: ## Label            Usage          Type ST Offset   Length
+[16:07:19]I (63) boot:  0 nvs              WiFi data        01 02 00009000 00010000
+[16:07:19]I (69) boot:  1 app0             factory app      00 00 00020000 00300000
+[16:07:19]I (76) boot:  2 spiffs           Unknown data     01 82 00320000 000d0000
+[16:07:19]I (82) boot:  3 coredump         Unknown data     01 03 003f0000 00010000
+[16:07:19]I (89) boot: End of partition table
+[16:07:19]I (92) esp_image: segment 0: paddr=00020020 vaddr=3c150020 size=bd89ch (776348) map
+[16:07:19]I (207) esp_image: segment 1: paddr=000dd8c4 vaddr=3fc9cb00 size=02754h ( 10068) load
+[16:07:19]I (209) esp_image: segment 2: paddr=000e0020 vaddr=42000020 size=14ba88h (1358472) map
+[16:07:19]I (400) esp_image: segment 3: paddr=0022bab0 vaddr=3fc9f254 size=033ech ( 13292) load
+[16:07:19]I (402) esp_image: segment 4: paddr=0022eea4 vaddr=40374000 size=18ae8h (101096) load
+[16:07:19]I (421) esp_image: segment 5: paddr=00247994 vaddr=600fe100 size=0001ch (    28) load
+[16:07:19]I (431) boot: Loaded app from partition at offset 0x20000
+[16:07:19]I (431) boot: Disabling RNG early entropy source...
+[16:07:19]W (441) flash HPM: HPM mode with DC adjustment is disabled. Some flash models may not be supported. Read Docs First!
+[16:07:19]W (441) flash HPM: High performance mode of this flash model hasn't been supported.
+[16:07:19]I (450) MSPI Timing: Flash timing tuning index: 2
+[16:07:19]I (455) octal_psram: ECC is enabled
+[16:07:19]I (459) octal_psram: vendor id    : 0x0d (AP)
+[16:07:19]I (464) octal_psram: dev id       : 0x02 (generation 3)
+[16:07:19]I (470) octal_psram: density      : 0x03 (64 Mbit)
+[16:07:19]I (475) octal_psram: good-die     : 0x01 (Pass)
+[16:07:19]I (480) octal_psram: Latency      : 0x01 (Fixed)
+[16:07:19]I (486) octal_psram: VCC          : 0x01 (3V)
+[16:07:19]I (491) octal_psram: SRF          : 0x01 (Fast Refresh)
+[16:07:19]I (497) octal_psram: BurstType    : 0x00 ( Wrap)
+[16:07:19]I (502) octal_psram: BurstLen     : 0x03 (1024 Byte)
+[16:07:19]I (508) octal_psram: Readlatency  : 0x02 (10 cycles@Fixed)
+[16:07:19]I (514) octal_psram: DriveStrength: 0x00 (1/1)
+[16:07:19]I (525) MSPI Timing: PSRAM timing tuning index: 2
+[16:07:19]I (525) esp_psram: Found 8MB PSRAM device
+[16:07:19]I (529) esp_psram: Speed: 120MHz
+[16:07:19]I (576) mmu_psram: Read only data copied and mapped to SPIRAM
+[16:07:19]I (663) mmu_psram: Instructions copied and mapped to SPIRAM
+[16:07:19]I (663) cpu_start: Multicore app
+[16:07:19]I (674) cpu_start: Pro cpu start user code
+[16:07:19]I (674) cpu_start: cpu freq: 240000000 Hz
+[16:07:19]I (674) app_init: Application information:
+[16:07:19]I (677) app_init: Project name:     solax-station-live
+[16:07:19]I (683) app_init: App version:      Release_351
+[16:07:19]I (688) app_init: Compile time:     Feb 14 2026 18:49:21
+[16:07:19]I (694) app_init: ELF file SHA256:  5c88ba9ffb94c237...
+[16:07:19]I (700) app_init: ESP-IDF:          5.4.1
+[16:07:19]I (704) efuse_init: Min chip rev:     v0.0
+[16:07:19]I (709) efuse_init: Max chip rev:     v0.99 
+[16:07:19]I (714) efuse_init: Chip rev:         v0.2
+[16:07:19]I (719) heap_init: Initializing. RAM available for dynamic allocation:
+[16:07:19]I (726) heap_init: At 3FCAB5F0 len 0003E120 (248 KiB): RAM
+[16:07:19]I (732) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
+[16:07:19]I (738) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
+[16:07:19]I (744) heap_init: At 600FE11C len 00001ECC (7 KiB): RTCRAM
+[16:07:19]I (751) esp_psram: Adding pool of 5568K of PSRAM memory to heap allocator
+[16:07:19]I (758) spi_flash: detected chip: generic
+[16:07:19]I (763) spi_flash: flash io: qio
+[16:07:19]W (767) spi_flash: Flash suspend feature is enabled
+[16:07:19]I (775) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+[16:07:19]I (780) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+[16:07:19]I (787) main_task: Started on CPU0
+[16:07:19]I (801) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+[16:07:19]I (801) main_task: Callin[63][D][Localization.hpp:199] Localization initialized, language: 1
+[16:07:20][63][D][FlashMutex.hpp:219] Flash[Flash]: 265us, wait 0us, vsync TIMEOUT
+[16:07:20][73][D][app.cpp:482] Electricity price structures allocated in PSRAM (1576 bytes each)
+[16:07:20][73][D][BacklightResolver.hpp:47] Display off timeout loaded: 0 minutes
+[16:07:20][584][D][BacklightResolver.hpp:262] Found STC8H1K28 at 0x30, detecting version...
+[16:07:20][635][D][BacklightResolver.hpp:279] After 25: result=0, read 1 bytes (0xFF)
+[16:07:20][636][D][BacklightResolver.hpp:302] Chip responded after 25 -> V1.3 detected
+[16:07:20][646][D][BacklightResolver.hpp:57] Detected CrowPanel version: V1.3
+[16:07:20][646][D][BacklightResolver.hpp:186] Setting backlight: -1 -> 255
+[16:07:20][657][D][BacklightResolver.hpp:226] V1.3: brightness=0
+[16:07:20][657][D][BacklightResolver.hpp:226] V1.3: brightness=0
+[16:07:20][984][I][FlashMutex.hpp:80] VSyncManager: Initialized, waiting for VSYNC callback registration
+[16:07:20][984][I][FlashMutex.hpp:91] VSyncManager: VSYNC callback registered on Bus_RGB
+[16:07:20][995][I][app.cpp:348] VSYNC synchronization enabled (patched Bus_RGB)
+[16:07:21][1095][D][app.cpp:373] Display buffers in PSRAM: 2x 187.5 KB (120 lines)
+[16:07:21]I (2196) pp: pp rom version: e7ae62f
+[16:07:21]I (2196) net80211: net80211 rom version: e7ae62f
+[16:07:21]I (2274) wifi:wifi driver task: 3fcc8d04, prio:23, stack:6656, core=0
+[16:07:21]I (2275) wifi:wifi firmware version: 79fa3f41ba
+[16:07:21]I (2278) wifi:wifi certification version: v7.0
+[16:07:21]I (2282) wifi:config NVS flash: enabled
+[16:07:21]I (2285) wifi:config nano formatting: disabled
+[16:07:21]I (2290) wifi:Init data frame dynamic rx buffer num: 32
+[16:07:21]I (2295) wifi:Init static rx mgmt buffer num: 5
+[16:07:21]I (2299) wifi:Init management short buffer num: 32
+[16:07:21]I (2303) wifi:Init dynamic tx buffer num: 32
+[16:07:21]I (2307) wifi:Init static tx FG buffer num: 2
+[16:07:21]I (2312) wifi:Init static rx buffer size: 1600
+[16:07:21]I (2316) wifi:Init static rx buffer num: 4
+[16:07:21]I (2319) wifi:Init dynamic rx buffer num: 32
+[16:07:21]I (2324) wifi_init: rx ba win: 6
+[16:07:21]I (2327) wifi_init: accept mbox: 6
+[16:07:21]I (2331) wifi_init: tcpip mbox: 32
+[16:07:21]I (2335) wifi_init: udp mbox: 6
+[16:07:21]I (2339) wifi_init: tcp mbox: 6
+[16:07:21]I (2343) wifi_init: tcp tx win: 5760
+[16:07:21]I (2347) wifi_init: tcp rx win: 5760
+[16:07:21]I (2352) wifi_init: tcp mss: 1440
+[16:07:21]I (2356) wifi_init: WiFi IRAM OP enabled
+[16:07:21]I (2360) wifi_init: WiFi RX IRAM OP enabled
+[16:07:21]I (2366) phy_init: phy_version 700,8582a7fd,Feb 10 2025,20:13:11
+[16:07:21]I (2399) wifi:mode : sta (10:b4:1d:c4:20:c8) + softAP (10:b4:1d:c4:20:c9)
+[16:07:21]I (2399) wifi:enable tsf
+[16:07:21]I (2399) wifi:Total power save buffer number: 16
+[16:07:21]I (2401) wifi:Init max length of beacon: 752/752
+[16:07:21]I (2405) wifi:Init max length of beacon: 752/752
+[16:07:21]I (2410) wifi:Set p[s type: 0, coexist: 0
+[16:07:21]
+[16:07:21]I (2413) esp_netif_lwip: DHCP server started on interface WIFI_AP_DEF with IP: 192.168.4.1
+[16:07:21]1660][I][WebServer.hpp:93] Web server started on port 80
+[16:07:24][4706][D][WiFiDiscovery.hpp:429] DongleInfo cache initialized
+[16:07:24][4706][D][FlashMutex.hpp:219] Flash[Dongle:loadAll]: 208us, wait 16510us, vsync OK
+[16:07:24][4730][D][FlashMutex.hpp:219] Flash[Dongle:load]: 751us, wait 12242us, vsync OK
+[16:07:24][4751][D][FlashMutex.hpp:219] Flash[Dongle:load]: 795us, wait 20192us, vsync TIMEOUT
+[16:07:24][4752][D][FlashMutex.hpp:219] Flash[Dongle:load]: 170us, wait 524us, vsync OK
+[16:07:24][4775][D][FlashMutex.hpp:219] Flash[WiFi:loadSSID]: 215us, wait 12195us, vsync OK
+[16:07:24][4775][D][app.cpp:1512] Autoconnect dongle found: venus-HQ2244DA4FJ-275, type: 4
+[16:07:24][4785][D][app.cpp:1474] Leaving state 0
+[16:07:24][4785][D][app.cpp:1394] Entering state 1
+[16:07:24][4787][D][app.cpp:1426] Initializing LittleFS and loading predictors...
+[16:07:24][4821][D][ConsumptionPredictor.cpp:551] Loaded correction state: error=0.0, lastQuarter=4, currentPower=900.4, recQ=64, recDay=0
+[16:07:24][4945][D][ConsumptionPredictor.cpp:572] Consumption loaded 6 days from LittleFS
+[16:07:24][4946][W][FlashMutex.hpp:216] Flash[load:cons]: 148293us (>2ms!), wait 304us, vsync OK
+[16:07:24][4964][D][ProductionPredictor.cpp:352] Loaded correction state: error=-147.8, lastQuarter=63, recQuarter=64, samples=1, accum=0.0
+[16:07:24][4975][D][ProductionPredictor.cpp:372] Production data loaded from LittleFS
+[16:07:24][4975][W][FlashMutex.hpp:216] Flash[load:prod]: 18343us (>2ms!), wait 729us, vsync OK
+[16:07:24][4985][D][app.cpp:1430] Predictors loaded successfully
+[16:07:24]W (5787) wifi:Haven't to connect to a suitable AP now!
+[16:07:25]I (6098) wifi:new:<1,1>, old:<1,1>, ap:<1,1>, sta:<1,0>, prof:1, snd_ch_cfg:0x0
+[16:07:25]I (6099) wifi:state: init -> auth (0xb0)
+[16:07:25]I (6100) wifi:state: auth -> assoc (0x0)
+[16:07:25]I (6104) wifi:state: assoc -> run (0x10)
+[16:07:25]I (6132) wifi:connected with venus-HQ2244DA4FJ-275, aid = 1, channel 1, BW20, bssid = 6a:4e:05:45:62:73
+[16:07:25]I (6132) wifi:security: WPA2-PSK, phy: bg, rssi: -79
+[16:07:25]I (6135) wifi:pm start, type: 0
+[16:07:25]
+[16:07:25]I (6138) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us
+[16:07:25]I (6146) wifi:set rx beacon pti, rx_bcn_pti: 0, bcn_timeout: 25000, mt_pti: 0, mt_time: 10000
+[16:07:25]I (6199) wifi:AP's beacon interval = 102400 us, DTIM period = 1
+[16:07:26]I (7175) esp_netif_handlers: sta ip: 172.24.24.76, mask: 255.255.255.0, gw: 172.24.24.1
+[16:07:26][6436][D][WiFiDiscovery.hpp:300] WiFi: venus-HQ2244DA4FJ-275 IP=172.24.24.76 RSSI=-79 (42%)
+[16:07:26][6438][D][FlashMutex.hpp:219] Flash[Dongle:save]: 267us, wait 582us, vsync OK
+[16:07:26][6460][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 103us, wait 11674us, vsync OK
+[16:07:26][6460][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:26][6471][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:31][11481][E][app.cpp:1313] Failed to obtain time from NTP
+[16:07:31][11493][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:07:31][11520][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11526][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11529][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11538][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11544][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11552][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11557][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11562][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11567][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11582][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11588][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11595][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11602][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11607][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11618][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11622][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11626][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11631][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11636][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11641][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11647][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11653][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11659][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11669][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11674][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11679][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11684][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11692][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11715][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11731][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11746][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11752][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11761][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11767][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11773][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11777][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11783][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11788][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11793][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11800][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11806][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11845][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11855][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11862][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11877][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11883][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11911][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11928][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11941][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11955][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11964][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11974][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11980][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11987][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][11993][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][12000][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][12003][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][12014][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][12021][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][12028][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][12034][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][12040][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:31][12047][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12068][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12092][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12103][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12111][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12125][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12137][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12149][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12157][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12170][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12192][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12200][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12207][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12217][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12228][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12238][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12244][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12250][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12255][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12255][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:07:32][12271][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12276][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12282][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12286][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12293][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12305][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12312][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12319][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12331][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12343][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12347][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12363][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12370][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12374][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12380][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12386][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12391][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12397][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12401][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12406][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12410][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12446][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12456][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12466][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12472][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12479][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12484][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12491][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12496][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12501][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12511][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12519][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12526][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12540][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12553][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12560][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12570][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12575][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12584][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12590][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12595][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12603][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12608][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12612][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12624][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12650][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12661][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12669][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12676][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12681][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12688][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12693][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12696][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12701][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12705][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12710][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12716][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12719][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12726][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12732][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12737][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12743][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12751][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12756][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12761][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12772][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12784][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12791][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12796][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12802][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12807][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12814][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12820][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12827][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12847][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12851][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12858][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12871][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12877][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12884][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12888][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12899][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12900][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:07:32][12910][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:07:32][12927][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12932][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12936][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12944][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12951][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12957][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12969][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12974][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12979][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12984][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12988][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][12995][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][13000][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][13011][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][13021][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][13029][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][13035][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][13041][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][13051][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][13058][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:32][13065][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13077][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13083][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13088][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13103][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13109][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13115][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13125][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13125][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:07:33][13157][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13179][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13188][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13193][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13199][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13207][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13211][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13217][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13227][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13232][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13238][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13244][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13267][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13274][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13282][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13286][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13291][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13296][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13304][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13308][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13314][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13319][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13329][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13344][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13351][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13362][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13372][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13379][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:33][13379][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:07:33][13408][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:07:33][13409][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.00 kWh
+[16:07:33][13419][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:07:33][13429][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-542W PV1=0W PV2=0W PV3=0W PV4=0W Load=441W GridPwr=-54/36/101W [1936ms]
+[16:07:33][13440][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:07:33][13440][I][CustomNetworkClient.hpp:118] Socket closed
+[16:07:33][13451][D][app.cpp:1474] Leaving state 1
+[16:07:33][13451][D][app.cpp:1394] Entering state 4
+[16:07:33][13565][W][app.cpp:267] LVGL mutex timeout - something blocking UI!
+[16:07:33][13829][D][SoftAP.hpp:29] Starting SoftAP
+[16:07:33][13829][D][SoftAP.hpp:97] Using STA channel for SoftAP: 1
+[16:07:34][13829][D][SoftAP.hpp:31] SoftAP channel: 1
+[16:07:34]ESP-ROM:esp32s3-20210327
+[16:07:34]Build:Mar 27 2021
+[16:07:34]rst:0x1 (POWERON),boot:0x8 (SPI_FAST_FLASH_BOOT)
+[16:07:34]SPIWP:0xee
+[16:07:34]mode:DIO, clock div:1
+[16:07:34]load:0x3fce2820,len:0x17ec
+[16:07:34]load:0x403c8700,len:0x4
+[16:07:34]load:0x403c8704,len:0xf28
+[16:07:34]load:0x403cb700,len:0x35dc
+[16:07:34]entry 0x403c89c0
+[16:07:34]I (27) boot: ESP-IDF 5.4.1 2nd stage bootloader
+[16:07:34]I (27) boot: compile time Dec 15 2025 11:44:17
+[16:07:34]I (27) boot: Multicore bootloader
+[16:07:34]I (27) boot: chip revision: v0.2
+[16:07:34]I (30) boot: efuse block revision: v1.3
+[16:07:34]I (33) qio_mode: Enabling default flash chip QIO
+[16:07:34]I (38) boot.esp32s3: Boot SPI Speed : 80MHz
+[16:07:34]I (42) boot.esp32s3: SPI Mode       : QIO
+[16:07:34]I (45) boot.esp32s3: SPI Flash Size : 16MB
+[16:07:34]I (49) boot: Enabling RNG early entropy source...
+[16:07:34]I (54) boot: Partition Table:
+[16:07:34]I (56) boot: ## Label            Usage          Type ST Offset   Length
+[16:07:34]I (63) boot:  0 nvs              WiFi data        01 02 00009000 00010000
+[16:07:34]I (69) boot:  1 app0             factory app      00 00 00020000 00300000
+[16:07:34]I (76) boot:  2 spiffs           Unknown data     01 82 00320000 000d0000
+[16:07:34]I (82) boot:  3 coredump         Unknown data     01 03 003f0000 00010000
+[16:07:34]I (89) boot: End of partition table
+[16:07:34]I (92) esp_image: segment 0: paddr=00020020 vaddr=3c150020 size=bd89ch (776348) map
+[16:07:34]I (207) esp_image: segment 1: paddr=000dd8c4 vaddr=3fc9cb00 size=02754h ( 10068) load
+[16:07:34]I (209) esp_image: segment 2: paddr=000e0020 vaddr=42000020 size=14ba88h (1358472) map
+[16:07:34]I (400) esp_image: segment 3: paddr=0022bab0 vaddr=3fc9f254 size=033ech ( 13292) load
+[16:07:34]I (402) esp_image: segment 4: paddr=0022eea4 vaddr=40374000 size=18ae8h (101096) load
+[16:07:34]I (421) esp_image: segment 5: paddr=00247994 vaddr=600fe100 size=0001ch (    28) load
+[16:07:35]I (431) boot: Loaded app from partition at offset 0x20000
+[16:07:35]I (431) boot: Disabling RNG early entropy source...
+[16:07:35]W (441) flash HPM: HPM mode with DC adjustment is disabled. Some flash models may not be supported. Read Docs First!
+[16:07:35]W (441) flash HPM: High performance mode of this flash model hasn't been supported.
+[16:07:35]I (450) MSPI Timing: Flash timing tuning index: 2
+[16:07:35]I (455) octal_psram: ECC is enabled
+[16:07:35]I (459) octal_psram: vendor id    : 0x0d (AP)
+[16:07:35]I (464) octal_psram: dev id       : 0x02 (generation 3)
+[16:07:35]I (470) octal_psram: density      : 0x03 (64 Mbit)
+[16:07:35]I (475) octal_psram: good-die     : 0x01 (Pass)
+[16:07:35]I (480) octal_psram: Latency      : 0x01 (Fixed)
+[16:07:35]I (486) octal_psram: VCC          : 0x01 (3V)
+[16:07:35]I (491) octal_psram: SRF          : 0x01 (Fast Refresh)
+[16:07:35]I (497) octal_psram: BurstType    : 0x00 ( Wrap)
+[16:07:35]I (502) octal_psram: BurstLen     : 0x03 (1024 Byte)
+[16:07:35]I (508) octal_psram: Readlatency  : 0x02 (10 cycles@Fixed)
+[16:07:35]I (514) octal_psram: DriveStrength: 0x00 (1/1)
+[16:07:35]I (525) MSPI Timing: PSRAM timing tuning index: 2
+[16:07:35]I (525) esp_psram: Found 8MB PSRAM device
+[16:07:35]I (529) esp_psram: Speed: 120MHz
+[16:07:35]I (576) mmu_psram: Read only data copied and mapped to SPIRAM
+[16:07:35]I (663) mmu_psram: Instructions copied and mapped to SPIRAM
+[16:07:35]I (663) cpu_start: Multicore app
+[16:07:35]I (674) cpu_start: Pro cpu start user code
+[16:07:35]I (674) cpu_start: cpu freq: 240000000 Hz
+[16:07:35]I (674) app_init: Application information:
+[16:07:35]I (677) app_init: Project name:     solax-station-live
+[16:07:35]I (683) app_init: App version:      Release_351
+[16:07:35]I (688) app_init: Compile time:     Feb 14 2026 18:49:21
+[16:07:35]I (694) app_init: ELF file SHA256:  5c88ba9ffb94c237...
+[16:07:35]I (700) app_init: ESP-IDF:          5.4.1
+[16:07:35]I (704) efuse_init: Min chip rev:     v0.0
+[16:07:35]I (709) efuse_init: Max chip rev:     v0.99 
+[16:07:35]I (714) efuse_init: Chip rev:         v0.2
+[16:07:35]I (719) heap_init: Initializing. RAM available for dynamic allocation:
+[16:07:35]I (726) heap_init: At 3FCAB5F0 len 0003E120 (248 KiB): RAM
+[16:07:35]I (732) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
+[16:07:35]I (738) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
+[16:07:35]I (744) heap_init: At 600FE11C len 00001ECC (7 KiB): RTCRAM
+[16:07:35]I (751) esp_psram: Adding pool of 5568K of PSRAM memory to heap allocator
+[16:07:35]I (758) spi_flash: detected chip: generic
+[16:07:35]I (763) spi_flash: flash io: qio
+[16:07:35]W (767) spi_flash: Flash suspend feature is enabled
+[16:07:35]I (775) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+[16:07:35]I (780) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+[16:07:35]I (787) main_task: Started on CPU0
+[16:07:35]I (801) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+[16:07:35]I (801) main_task: Callin[63][D][Localization.hpp:199] Localization initialized, language: 1
+[16:07:35][63][D][FlashMutex.hpp:219] Flash[Flash]: 265us, wait 0us, vsync TIMEOUT
+[16:07:35][73][D][app.cpp:482] Electricity price structures allocated in PSRAM (1576 bytes each)
+[16:07:35][73][D][BacklightResolver.hpp:47] Display off timeout loaded: 0 minutes
+[16:07:35][584][D][BacklightResolver.hpp:262] Found STC8H1K28 at 0x30, detecting version...
+[16:07:35][635][D][BacklightResolver.hpp:279] After 25: result=0, read 1 bytes (0xFF)
+[16:07:35][636][D][BacklightResolver.hpp:302] Chip responded after 25 -> V1.3 detected
+[16:07:35][646][D][BacklightResolver.hpp:57] Detected CrowPanel version: V1.3
+[16:07:35][646][D][BacklightResolver.hpp:186] Setting backlight: -1 -> 255
+[16:07:35][657][D][BacklightResolver.hpp:226] V1.3: brightness=0
+[16:07:35][657][D][BacklightResolver.hpp:226] V1.3: brightness=0
+[16:07:36][984][I][FlashMutex.hpp:80] VSyncManager: Initialized, waiting for VSYNC callback registration
+[16:07:36][984][I][FlashMutex.hpp:91] VSyncManager: VSYNC callback registered on Bus_RGB
+[16:07:36][995][I][app.cpp:348] VSYNC synchronization enabled (patched Bus_RGB)
+[16:07:36][1095][D][app.cpp:373] Display buffers in PSRAM: 2x 187.5 KB (120 lines)
+[16:07:36]I (2196) pp: pp rom version: e7ae62f
+[16:07:36]I (2196) net80211: net80211 rom version: e7ae62f
+[16:07:36]I (2274) wifi:wifi driver task: 3fcc8d04, prio:23, stack:6656, core=0
+[16:07:36]I (2275) wifi:wifi firmware version: 79fa3f41ba
+[16:07:36]I (2278) wifi:wifi certification version: v7.0
+[16:07:36]I (2282) wifi:config NVS flash: enabled
+[16:07:36]I (2285) wifi:config nano formatting: disabled
+[16:07:36]I (2290) wifi:Init data frame dynamic rx buffer num: 32
+[16:07:36]I (2295) wifi:Init static rx mgmt buffer num: 5
+[16:07:36]I (2299) wifi:Init management short buffer num: 32
+[16:07:36]I (2303) wifi:Init dynamic tx buffer num: 32
+[16:07:36]I (2307) wifi:Init static tx FG buffer num: 2
+[16:07:36]I (2312) wifi:Init static rx buffer size: 1600
+[16:07:36]I (2316) wifi:Init static rx buffer num: 4
+[16:07:36]I (2319) wifi:Init dynamic rx buffer num: 32
+[16:07:36]I (2324) wifi_init: rx ba win: 6
+[16:07:36]I (2327) wifi_init: accept mbox: 6
+[16:07:36]I (2331) wifi_init: tcpip mbox: 32
+[16:07:36]I (2335) wifi_init: udp mbox: 6
+[16:07:36]I (2339) wifi_init: tcp mbox: 6
+[16:07:36]I (2343) wifi_init: tcp tx win: 5760
+[16:07:36]I (2347) wifi_init: tcp rx win: 5760
+[16:07:36]I (2352) wifi_init: tcp mss: 1440
+[16:07:36]I (2356) wifi_init: WiFi IRAM OP enabled
+[16:07:36]I (2360) wifi_init: WiFi RX IRAM OP enabled
+[16:07:36]I (2366) phy_init: phy_version 700,8582a7fd,Feb 10 2025,20:13:11
+[16:07:36]I (2398) wifi:mode : sta (10:b4:1d:c4:20:c8) + softAP (10:b4:1d:c4:20:c9)
+[16:07:36]I (2398) wifi:enable tsf
+[16:07:36]I (2399) wifi:Total power save buffer number: 16
+[16:07:36]I (2400) wifi:Init max length of beacon: 752/752
+[16:07:36]I (2405) wifi:Init max length of beacon: 752/752
+[16:07:36]I (2410) wifi:I (2410) esp_netif_lwip: DHCP server started on interface WIFI_AP_DEF with IP: 192.168.4.1
+[16:07:37]Set ps type: [0, coexist: 0
+[16:07:37]
+[16:07:37]1669][I][WebServer.hpp:93] Web server started on port 80
+[16:07:39][4501][D][WiFiDiscovery.hpp:429] DongleInfo cache initialized
+[16:07:39][4501][D][FlashMutex.hpp:219] Flash[Dongle:loadAll]: 111us, wait 11976us, vsync OK
+[16:07:39][4525][D][FlashMutex.hpp:219] Flash[Dongle:load]: 751us, wait 12339us, vsync OK
+[16:07:39][4546][D][FlashMutex.hpp:219] Flash[Dongle:load]: 966us, wait 20255us, vsync TIMEOUT
+[16:07:39][4547][D][FlashMutex.hpp:219] Flash[WiFi:loadSSID]: 197us, wait 187us, vsync OK
+[16:07:39][4557][D][app.cpp:1512] Autoconnect dongle found: venus-HQ2244DA4FJ-275, type: 4
+[16:07:39][4557][D][app.cpp:1474] Leaving state 0
+[16:07:39][4568][D][app.cpp:1394] Entering state 1
+[16:07:39][4568][D][app.cpp:1426] Initializing LittleFS and loading predictors...
+[16:07:39][4610][D][ConsumptionPredictor.cpp:551] Loaded correction state: error=0.0, lastQuarter=4, currentPower=900.4, recQ=64, recDay=0
+[16:07:40][4735][D][ConsumptionPredictor.cpp:572] Consumption loaded 6 days from LittleFS
+[16:07:40][4735][W][FlashMutex.hpp:216] Flash[load:cons]: 142845us (>2ms!), wait 8401us, vsync OK
+[16:07:40][4759][D][ProductionPredictor.cpp:352] Loaded correction state: error=-147.8, lastQuarter=63, recQuarter=64, samples=1, accum=0.0
+[16:07:40][4770][D][ProductionPredictor.cpp:372] Production data loaded from LittleFS
+[16:07:40][4770][W][FlashMutex.hpp:216] Flash[load:prod]: 18576us (>2ms!), wait 6173us, vsync OK
+[16:07:40][4781][D][app.cpp:1430] Predictors loaded successfully
+[16:07:40]W (5583) wifi:Haven't to connect to a suitable AP now!
+[16:07:40]I (5896) wifi:new:<1,1>, old:<1,1>, ap:<1,1>, sta:<1,0>, prof:1, snd_ch_cfg:0x0
+[16:07:40]I (5896) wifi:state: init -> auth (0xb0)
+[16:07:40]I (5898) wifi:state: auth -> assoc (0x0)
+[16:07:40]I (5902) wifi:state: assoc -> run (0x10)
+[16:07:40]I (5922) wifi:connected with venus-HQ2244DA4FJ-275, aid = 1, channel 1, BW20, bssid = 6a:4e:05:45:62:73
+[16:07:40]I (5922) wifi:security: WPA2-PSK, phy: bg, rssi: -82
+[16:07:40]I (5925) wifi:pm start, type: 0
+[16:07:40]
+[16:07:40]I (5927) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us
+[16:07:40]I (5935) wifi:set rx beacon pti, rx_bcn_pti: 0, bcn_timeout: 25000, mt_pti: 0, mt_time: 10000
+[16:07:40]I (5967) wifi:AP's beacon interval = 102400 us, DTIM period = 1
+[16:07:41]I (6974) esp_netif_handlers: sta ip: 172.24.24.76, mask: 255.255.255.0, gw: 172.24.24.1
+[16:07:41][6232][D][WiFiDiscovery.hpp:300] WiFi: venus-HQ2244DA4FJ-275 IP=172.24.24.76 RSSI=-81 (38%)
+[16:07:41][6253][D][FlashMutex.hpp:219] Flash[Dongle:save]: 297us, wait 20401us, vsync TIMEOUT
+[16:07:41][6255][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 101us, wait 953us, vsync OK
+[16:07:41][6266][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:41][6266][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:46][11286][E][app.cpp:1313] Failed to obtain time from NTP
+[16:07:46][11300][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:07:46][11368][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:46][11380][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:46][11386][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:46][11405][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:46][11411][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:46][11419][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:46][11426][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:46][11458][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:46][11471][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:46][11490][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:46][11498][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:46][11502][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:46][11514][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:46][11521][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:46][11537][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:46][11545][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13048][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13060][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13066][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13084][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13089][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13103][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13107][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13125][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13134][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13148][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13155][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13159][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13168][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13174][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13177][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13182][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13185][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13196][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13199][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13203][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13209][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13216][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13222][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13276][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13280][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13286][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13292][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13296][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13299][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13303][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13310][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13314][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13324][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13333][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13340][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13352][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13361][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13372][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13378][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13381][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13387][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13406][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13410][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13414][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13418][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13421][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13430][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13441][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:48][13469][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:49][14546][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:49][14569][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:49][14580][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:49][14590][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:49][14595][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:49][14598][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:49][14603][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:49][14610][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:49][14617][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:49][14623][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:49][14627][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:49][14641][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:49][14645][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:49][14657][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:49][14668][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:50][14694][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:50][14694][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:07:50][14710][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:50][14740][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:50][14761][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16050][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16057][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16068][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16075][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16078][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16083][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16092][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16095][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16100][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16137][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16158][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16166][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16173][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16179][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16182][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16196][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16202][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16210][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16218][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16226][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16243][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16252][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16257][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16263][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16266][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16271][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16279][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16282][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16301][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16304][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16322][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16330][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16334][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:51][16347][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:52][17568][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:52][17583][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:52][17595][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:52][17603][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:52][17609][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:52][17616][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:52][17619][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:52][17632][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:52][17641][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:52][17649][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:52][17658][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:52][17661][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:53][17686][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:53][17689][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:53][17699][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:53][17712][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19044][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19051][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19059][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19063][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19066][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19084][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19088][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19093][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19099][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19102][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19111][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19125][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19130][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19142][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19148][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19153][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19173][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19188][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19193][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19197][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19202][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19211][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19215][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19219][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19226][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19236][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19254][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19262][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19278][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19278][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:07:54][19289][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:07:54][19303][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19307][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19310][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19335][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19342][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19349][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19370][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19393][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19397][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19405][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19411][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19422][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19427][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19433][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19438][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19442][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19453][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19460][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:54][19484][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:55][20544][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:55][20559][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:55][20569][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:55][20574][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:55][20583][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:55][20587][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:55][20599][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:55][20613][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:55][20622][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:55][20622][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:07:55][20636][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22045][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22048][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22060][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22063][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22069][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22074][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22083][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22090][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22097][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22100][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22105][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22109][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22141][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22153][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22162][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22170][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22174][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22177][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22195][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22199][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22203][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22209][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22217][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22223][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22262][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22265][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22271][D][ModbusTCP.hpp:136] Modbus exception: code 10
+[16:07:57][22271][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:07:57][22297][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:07:57][22297][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.00, load=0.00 kWh
+[16:07:57][22307][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:07:57][22318][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-527W PV1=0W PV2=0W PV3=0W PV4=0W Load=431W GridPwr=-47/31/98W [11018ms]
+[16:07:57][22328][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:07:57][22329][I][CustomNetworkClient.hpp:118] Socket closed
+[16:07:57][22339][D][app.cpp:1474] Leaving state 1
+[16:07:57][22340][D][app.cpp:1394] Entering state 4
+[16:07:57][22464][W][app.cpp:267] LVGL mutex timeout - something blocking UI!
+[16:07:58][22718][D][SoftAP.hpp:29] Starting SoftAP
+[16:07:58][22718][D][SoftAP.hpp:97] Using STA channel for SoftAP: 1
+[16:07:58][22718][D][SoftAP.hpp:31] SoftAP channel: 1
+[16:07:58]I (24142) wifi:Total power save buffer number: 16
+[16:07:58]I (24143) esp_netif_lwip: DHCP server started on interface WIFI_AP_DEF with IP: 192.168.4.1
+[16:07:58][23407][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 98us, wait 8044us, vsync OK
+[16:07:58][23407][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:58][23474][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:07:58][23573][D][BacklightResolver.hpp:186] Setting backlight: 255 -> 16
+[16:07:59][23916][D][BacklightResolver.hpp:226] V1.3: brightness=230
+[16:07:59][24065][I][CustomNetworkClient.hpp:61] Successfully connected
+[16:07:59][24362][D][VictronDongleAPI.hpp:188] Victron: VE.Bus scan complete, loadTotal=1.60 kWh
+[16:07:59][24362][D][VictronDongleAPI.hpp:247] Victron: Solar Charger scan complete, found 0 chargers, pvToday=0.00 kWh
+[16:07:59][24372][D][VictronDongleAPI.hpp:255] Victron: No PV from Solar Chargers, trying Multi RS...
+[16:07:59][24435][D][VictronDongleAPI.hpp:310] Victron: No PV from Multi RS, trying RS Smart Inverter...
+[16:07:59][24445][D][VictronDongleAPI.hpp:366] Victron: No PV from RS Inverter, trying system DC PV fallback (reg 850)...
+[16:07:59][24584][D][VictronDongleAPI.hpp:444] Victron: Using calculated pvToday: 0.00 kWh (pvTotal=0.00 - stored=0.00)
+[16:07:59][24584][D][VictronDongleAPI.hpp:451] Victron: Daily stats - pvToday=0.00, gridBuy=0.00, gridSell=0.02, load=0.00 kWh
+[16:07:59][24594][D][VictronDongleAPI.hpp:458] Victron: Final PV power: 0/0/0/0 W
+[16:07:59][24657][D][InverterResult.hpp:62] Inv: SOC=97% BatPwr=-552W PV1=0W PV2=0W PV3=0W PV4=0W Load=635W GridPwr=-191/44/105W [591ms]
+[16:08:00][24667][I][CustomNetworkClient.hpp:112] Stopping socket 57
+[16:08:00][24668][I][CustomNetworkClient.hpp:118] Socket closed
+[16:08:00][24731][D][ConsumptionPredictor.cpp:151] Shifting week history
+[16:08:00][24732][D][ProductionPredictor.cpp:112] Updated production for quarter 64: 0.0 Wh (samples: 1)
+[16:08:00][24742][D][app.cpp:665] Quarter changed, saving predictors to flash
+[16:08:00][24887][W][FlashMutex.hpp:216] Flash[save:cons]: 68431us (>2ms!), wait 13979us, vsync OK
+[16:08:00][24959][D][ProductionPredictor.cpp:297] Production data saved to LittleFS
+[16:08:00][24959][W][FlashMutex.hpp:216] Flash[save:prod]: 6356us (>2ms!), wait 65190us, vsync OK
+[16:08:00][25102][D][FlashMutex.hpp:219] Flash[save:chart]: 3us, wait 73714us, vsync OK
+[16:08:00][25115][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 94us, wait 12856us, vsync OK
+[16:08:00][25115][D][app.cpp:1290] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:08:00][25176][D][app.cpp:1297] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:08:00][25176][I][app.cpp:1374] System time set from inverter RTC: 2026-02-15 16:07:58
+[16:08:00][25258][D][SolarChartDataProvider.hpp:403] Chart data loaded from LittleFS, 64 quarters restored
+[16:08:00][25258][W][FlashMutex.hpp:216] Flash[load:chart]: 9679us (>2ms!), wait 62519us, vsync OK
+[16:08:00][25343][D][FlashMutex.hpp:219] Flash[WiFi:storeSSID]: 233us, wait 13759us, vsync OK
+[16:08:00][25398][D][app.cpp:769] Loading electricity price data
+[16:08:00][25411][D][FlashMutex.hpp:219] Flash[SpotProvider:get]: 125us, wait 12892us, vsync OK
+[16:08:00][25411][D][ElectricityPriceLoader.hpp:293] Loading electricity price data for Austria (AT)
+[16:08:00][25422][D][EnergyChartsAPI.hpp:66] EnergyChartsAPI: Fetching URL: https://api.energy-charts.info/price?bzn=AT&start=2026-02-15
+[16:08:05][30447][D][EnergyChartsAPI.hpp:130] EnergyChartsAPI: HTTP error -1
+[16:08:05][30447][D][ElectricityPriceLoader.hpp:316] Retry 1/5 for AT
+[16:08:10]I (35931) wifi:new:<1,0>, old:<1,1>, ap:<1,1>, sta:<1,0>, prof:1, snd_ch_cfg:0x0
+[16:08:10]I (35932) wifi:station: 7c:87:ce:b4:aa:89 join, AID=1, bgn, 20
+[16:08:10]I (35971) esp_netif_lwip: DHCP server assigned IP to a client, IP is: 192.168.4.2
+[16:08:10][35447][D][EnergyChartsAPI.hpp:66] EnergyChartsAPI: Fetching URL: https://api.energy-charts.info/price?bzn=AT&start=2026-02-15
+[16:08:15][40457][D][EnergyChartsAPI.hpp:130] EnergyChartsAPI: HTTP error -1
+[16:08:15][40457][D][ElectricityPriceLoader.hpp:316] Retry 2/5 for AT
