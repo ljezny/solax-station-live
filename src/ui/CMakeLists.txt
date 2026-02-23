@@ -1,9 +1,5 @@
-SET(SOURCES ui_Splash.c
-    ui_Dashboard.c
-    ui_WifiSetup.c
-    ui_theme_manager.c
+SET(SOURCES ui_theme_manager.c
     ui_themes.c
-    ui.c
     ui_comp_hook.c
     ui_helpers.c
     ui_events.c

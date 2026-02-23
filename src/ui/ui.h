@@ -2,6 +2,7 @@
 // SquareLine Studio version: SquareLine Studio 1.5.3
 // LVGL version: 8.3.11
 // Project name: SolaxStationLive_Project
+// Modified: Screen initialization moved to C++ UI classes (OOP refactoring)
 
 #ifndef _SOLAXSTATIONLIVE_PROJECT_UI_H
 #define _SOLAXSTATIONLIVE_PROJECT_UI_H
@@ -17,18 +18,7 @@ extern "C" {
 #include "ui_theme_manager.h"
 #include "ui_themes.h"
 
-///////////////////// SCREENS ////////////////////
-#include "ui_Splash.h"
-#include "ui_Dashboard.h"
-#include "ui_WifiSetup.h"
-#include "ui_IntelligenceSetup.h"
-
-///////////////////// VARIABLES ////////////////////
-
-// EVENTS
-extern lv_obj_t *ui____initial_actions0;
-
-// IMAGES AND IMAGE SETS
+///////////////////// IMAGES AND IMAGE SETS ////////////////////
 LV_IMG_DECLARE( ui_img_logo_png);   // assets/logo.png
 LV_IMG_DECLARE( ui_img_1516017106);   // assets/solar-panel-4.png
 LV_IMG_DECLARE( ui_img_battery_60_png);   // assets/battery_60.png
@@ -54,10 +44,6 @@ LV_FONT_DECLARE( ui_font_OpenSansLargeBold);
 LV_FONT_DECLARE( ui_font_OpenSansMedium);
 LV_FONT_DECLARE( ui_font_OpenSansMediumBold);
 LV_FONT_DECLARE( ui_font_OpenSansSmall);
-
-// UI INIT
-void ui_init(void);
-void ui_destroy(void);
 
 #ifdef __cplusplus
 } /*extern "C"*/

@@ -2,8 +2,15 @@
 
 #include <Arduino.h>
 #include <lvgl.h>
-#include "ui/ui.h"
+#include "BaseUI.hpp"
 #include "utils/Localization.hpp"
+
+// Image declaration (from SquareLine assets)
+LV_IMG_DECLARE(ui_img_logo_png);
+
+// Font declarations
+LV_FONT_DECLARE(ui_font_OpenSansSmall);
+LV_FONT_DECLARE(ui_font_OpenSansMedium);
 
 // Checklist item states
 enum SplashCheckState_t {
@@ -13,9 +20,15 @@ enum SplashCheckState_t {
     CHECK_ERROR           // Error (red X)
 };
 
-class SplashUI
+class SplashUI : public BaseUI
 {
 private:
+    // Logo phase elements
+    lv_obj_t* logoImage = nullptr;
+    lv_obj_t* splashLabel = nullptr;
+    lv_obj_t* fwVersionLabel = nullptr;
+    lv_obj_t* espIdLabel = nullptr;
+    
     // Two-column layout for checklist phase
     lv_obj_t* mainContainer = nullptr;    // Row container: logo | checklist
     lv_obj_t* smallLogo = nullptr;        // Smaller logo for checklist phase
@@ -34,15 +47,57 @@ private:
         self->buttonPressed = true;
     }
     
+    void createLogoPhase() {
+        // Main logo centered
+        logoImage = lv_img_create(screen);
+        lv_img_set_src(logoImage, &ui_img_logo_png);
+        lv_obj_set_width(logoImage, LV_SIZE_CONTENT);
+        lv_obj_set_height(logoImage, LV_SIZE_CONTENT);
+        lv_obj_set_align(logoImage, LV_ALIGN_CENTER);
+        lv_obj_add_flag(logoImage, LV_OBJ_FLAG_ADV_HITTEST);
+        lv_obj_clear_flag(logoImage, LV_OBJ_FLAG_SCROLLABLE);
+        
+        // Splash label (centered below logo)
+        splashLabel = lv_label_create(screen);
+        lv_obj_set_width(splashLabel, lv_pct(50));
+        lv_obj_set_height(splashLabel, LV_SIZE_CONTENT);
+        lv_obj_set_align(splashLabel, LV_ALIGN_CENTER);
+        lv_obj_set_y(splashLabel, 100);  // Below logo
+        lv_label_set_text(splashLabel, "");
+        lv_obj_set_style_text_align(splashLabel, LV_TEXT_ALIGN_CENTER, LV_PART_MAIN);
+        lv_obj_set_style_text_font(splashLabel, &ui_font_OpenSansMedium, LV_PART_MAIN);
+        
+        // Version label (bottom left)
+        fwVersionLabel = lv_label_create(screen);
+        lv_obj_set_width(fwVersionLabel, lv_pct(20));
+        lv_obj_set_height(fwVersionLabel, LV_SIZE_CONTENT);
+        lv_obj_set_align(fwVersionLabel, LV_ALIGN_BOTTOM_LEFT);
+        lv_label_set_text(fwVersionLabel, "");
+        lv_obj_add_flag(fwVersionLabel, LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_HIDDEN);
+        lv_obj_set_style_text_font(fwVersionLabel, &ui_font_OpenSansSmall, LV_PART_MAIN);
+        lv_obj_set_style_pad_all(fwVersionLabel, 8, LV_PART_MAIN);
+        
+        // ESP ID label (bottom right)
+        espIdLabel = lv_label_create(screen);
+        lv_obj_set_width(espIdLabel, lv_pct(30));
+        lv_obj_set_height(espIdLabel, LV_SIZE_CONTENT);
+        lv_obj_set_align(espIdLabel, LV_ALIGN_BOTTOM_RIGHT);
+        lv_label_set_text(espIdLabel, "");
+        lv_obj_add_flag(espIdLabel, LV_OBJ_FLAG_IGNORE_LAYOUT | LV_OBJ_FLAG_HIDDEN);
+        lv_obj_set_style_text_align(espIdLabel, LV_TEXT_ALIGN_RIGHT, LV_PART_MAIN);
+        lv_obj_set_style_text_font(espIdLabel, &ui_font_OpenSansSmall, LV_PART_MAIN);
+        lv_obj_set_style_pad_all(espIdLabel, 8, LV_PART_MAIN);
+    }
+    
     void createChecklist() {
         if (checklistCreated) return;
         
         // Hide original large logo and splash label
-        lv_obj_add_flag(ui_Image1, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_splashLabel, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(logoImage, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(splashLabel, LV_OBJ_FLAG_HIDDEN);
         
         // Create main row container (logo left | checklist right)
-        mainContainer = lv_obj_create(ui_Splash);
+        mainContainer = lv_obj_create(screen);
         lv_obj_set_size(mainContainer, 780, 400);
         lv_obj_center(mainContainer);
         lv_obj_set_style_bg_opa(mainContainer, LV_OPA_TRANSP, 0);
@@ -141,13 +196,20 @@ private:
     }
 
 public:
-    void show()
+    void show() override
     {
-        // Delete previous checklist container if exists
-        if (mainContainer != nullptr) {
-            lv_obj_del(mainContainer);
-        }
+        // Clean up any previous state
+        hide();
         
+        // Create screen with flex column layout
+        createScreen();
+        lv_obj_clear_flag(screen, LV_OBJ_FLAG_SCROLLABLE);
+        lv_obj_set_flex_flow(screen, LV_FLEX_FLOW_COLUMN);
+        lv_obj_set_flex_align(screen, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+        lv_obj_set_style_pad_row(screen, 32, LV_PART_MAIN);
+        lv_obj_set_style_pad_column(screen, 0, LV_PART_MAIN);
+        
+        // Reset state
         checklistCreated = false;
         buttonPressed = false;
         mainContainer = nullptr;
@@ -159,32 +221,64 @@ public:
             checkItems[i] = nullptr;
             checkLabels[i] = nullptr;
         }
-        lv_scr_load(ui_Splash);
+        
+        // Create logo phase elements
+        createLogoPhase();
+        
+        // Load the screen
+        loadScreen();
     }
     
-    // Show logo phase (first 5 seconds during WiFi scan)
+    void hide() override
+    {
+        // Reset all pointers before deleting screen
+        logoImage = nullptr;
+        splashLabel = nullptr;
+        fwVersionLabel = nullptr;
+        espIdLabel = nullptr;
+        mainContainer = nullptr;
+        checklistContainer = nullptr;
+        smallLogo = nullptr;
+        statusLabel = nullptr;
+        continueBtn = nullptr;
+        checklistCreated = false;
+        for (int i = 0; i < ITEM_COUNT; i++) {
+            checkItems[i] = nullptr;
+            checkLabels[i] = nullptr;
+        }
+        
+        // Call parent to delete screen
+        BaseUI::hide();
+    }
+    
+    // Show logo phase (during WiFi scan)
     void showLogo() {
+        if (logoImage == nullptr) return;
+        
         // Make sure original elements are visible and centered
-        lv_obj_clear_flag(ui_Image1, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_clear_flag(ui_splashLabel, LV_OBJ_FLAG_HIDDEN);
-        // Center the logo (reset SquareLine offset)
-        lv_obj_set_x(ui_Image1, 0);
-        lv_obj_set_y(ui_Image1, 0);
+        lv_obj_clear_flag(logoImage, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(splashLabel, LV_OBJ_FLAG_HIDDEN);
         // Hide version labels during logo phase
-        lv_obj_add_flag(ui_fwVersionLabel, LV_OBJ_FLAG_HIDDEN);
-        lv_obj_add_flag(ui_ESPIdLabel, LV_OBJ_FLAG_HIDDEN);
-        lv_label_set_text(ui_splashLabel, "");
+        lv_obj_add_flag(fwVersionLabel, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_add_flag(espIdLabel, LV_OBJ_FLAG_HIDDEN);
+        lv_label_set_text(splashLabel, "");
     }
 
     void update(String espId, String fwVersion)
     {
-        lv_label_set_text(ui_fwVersionLabel, fwVersion.c_str());
-        lv_label_set_text(ui_ESPIdLabel, espId.c_str());
+        if (fwVersionLabel != nullptr) {
+            lv_label_set_text(fwVersionLabel, fwVersion.c_str());
+        }
+        if (espIdLabel != nullptr) {
+            lv_label_set_text(espIdLabel, espId.c_str());
+        }
     }
 
     void updateText(String text)
     {
-        lv_label_set_text(ui_splashLabel, text.c_str());
+        if (splashLabel != nullptr) {
+            lv_label_set_text(splashLabel, text.c_str());
+        }
     }
     
     void showChecklist() {

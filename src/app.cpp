@@ -418,7 +418,11 @@ void setupLVGL()
     indev_drv.read_cb = my_touchpad_read;
     lv_indev_drv_register(&indev_drv);
 
-    ui_init();
+    // Initialize LVGL theme (previously done in ui_init())
+    lv_disp_t *dispp = lv_disp_get_default();
+    lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), false, LV_FONT_DEFAULT);
+    lv_disp_set_theme(dispp, theme);
+    
     splashUI = new SplashUI();
     dashboardUI = new DashboardUI(onSettingsShow, onIntelligenceShow);
     wifiSetupUI = new WiFiSetupUI(dongleDiscovery);
