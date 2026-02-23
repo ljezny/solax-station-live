@@ -38,6 +38,9 @@ private:
         // Check for overflow (strtoul returns ULONG_MAX on overflow)
         if (sn == ULONG_MAX || sn == 0) {
             LOGE("Invalid SN conversion: '%s' -> %lu. Check SN format.", dongleSN.c_str(), sn);
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.errorDescription = String("Invalid Dongle SN: '") + dongleSN + "' (must be numeric, max 10 digits)";
+            return inverterData;
         }
         
         LOGD("SN: %lu (from string: '%s')", sn, dongleSN.c_str());
@@ -55,7 +58,11 @@ private:
                     String inverterSN = channel.readString(packetBuffer, 3, 10);
                     LOGD("Inverter SN: %s", inverterSN.c_str());
                     inverterData.sn = inverterSN; }))
+        {
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.errorDescription = String("Failed to connect to Deye dongle at ") + ipAddress + ":8899 (V5 protocol). " + channel.getLastErrorMessage();
             return inverterData;
+        }
 
         if (deviceType == 2 || deviceType == 3)
         {
@@ -90,7 +97,11 @@ private:
                                             inverterData.batteryPower = -1 * channel.readInt16(packetBuffer, 190 - 150);
                                             inverterData.gridPowerL1 = -1 * channel.readInt16(packetBuffer, 169 - 150);
                                         }))
+        {
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.errorDescription = String("Deye micro: Failed to read registers 150-197. ") + channel.getLastErrorMessage();
             return;
+        }
 
                 if (!channel.tryReadWithRetries(60, 99 - 60 + 1, sn, packetBuffer, [&]()
                                         {
@@ -103,7 +114,11 @@ private:
                 inverterData.gridBuyToday = channel.readUInt16(packetBuffer, 76 - 60) / 10.0f;
                 inverterData.gridSellToday = channel.readUInt16(packetBuffer, 77 - 60) / 10.0f;
                                         }))
+        {
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.errorDescription = String("Deye micro: Failed to read registers 60-99. ") + channel.getLastErrorMessage();
             return;
+        }
     }
 
     void readInverterRTC(uint32_t sn, InverterData_t &inverterData)
@@ -140,7 +155,11 @@ private:
                 inverterData.pv2Power = powerMultiplier * channel.readUInt16(packetBuffer, 673 - 672);
                 inverterData.pv3Power = powerMultiplier * channel.readUInt16(packetBuffer, 674 - 672);
                 inverterData.pv4Power = powerMultiplier * channel.readUInt16(packetBuffer, 675 - 672); }))
+        {
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.errorDescription = String("Deye 3-phase: Failed to read PV registers 672-675. ") + channel.getLastErrorMessage();
             return;
+        }
 
         if (!channel.tryReadWithRetries(586, 591 - 586 + 1, sn, packetBuffer, [&]()
                                         {
@@ -148,7 +167,11 @@ private:
                                             inverterData.soc = channel.readUInt16(packetBuffer, 588 - 586);
                                             inverterData.batteryPower = -1 * powerMultiplier * channel.readInt16(packetBuffer, 590 - 586); // Battery power flow - negative for charging, positive for discharging
                                         }))
+        {
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.errorDescription = String("Deye 3-phase: Failed to read battery registers 586-591. ") + channel.getLastErrorMessage();
             return;
+        }
 
         // Read max charge/discharge current from registers 108/109
         // Scale is 0.1A according to Deye documentation
@@ -176,7 +199,11 @@ private:
                 inverterData.gridPowerL3 = -1 * channel.readInt16(packetBuffer, 624 - 598);
                 //inverterData.gridPower = -1 * channel.readInt16(packetBuffer, 625 - 598); 
             }))
+        {
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.errorDescription = String("Deye 3-phase: Failed to read power registers 598-655. ") + channel.getLastErrorMessage();
             return;
+        }
 
         channel.tryReadWithRetries(541, 1, sn, packetBuffer, [&]()
                                    { inverterData.inverterTemperature = (channel.readInt16(packetBuffer, 0) - 1000) / 10; });
@@ -193,7 +220,11 @@ private:
                 inverterData.gridBuyTotal = channel.readUInt32(packetBuffer, 522 - 514) / 10.0f;
                 inverterData.gridSellToday = channel.readUInt16(packetBuffer, 521 - 514) / 10.0f;
                 inverterData.gridSellTotal = channel.readUInt32(packetBuffer, 524 - 514) / 10.0f; }))
+        {
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.errorDescription = String("Deye 3-phase: Failed to read statistics registers 514-537. ") + channel.getLastErrorMessage();
             return;
+        }
     }
 
     /**

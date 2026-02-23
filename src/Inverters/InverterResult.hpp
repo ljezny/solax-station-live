@@ -16,6 +16,7 @@ typedef enum DongleStatus {
 typedef struct
 {
     DongleStatus_t status = DONGLE_STATUS_UNKNOWN;
+    String errorDescription;  // Detailed error message for debugging (not localized)
     long millis = 0;
     String sn;
     String dongleFWVersion;

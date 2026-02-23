@@ -1604,6 +1604,9 @@ public:
 
     void show()
     {
+        // Clear all labels before loading screen to avoid placeholder glitch
+        clearAllLabels();
+        
         lv_scr_load(ui_Dashboard);
 
         // Hide buttons initially - they will appear on touch
@@ -1618,6 +1621,31 @@ public:
         // Reset touch timer
         lastTouchMillis = 0;
         shownMillis = millis();
+    }
+    
+    void clearAllLabels()
+    {
+        // Clear power labels to avoid showing SquareLine placeholder values
+        lv_label_set_text(ui_pvLabel, "-");
+        lv_label_set_text(ui_pv1Label, "");
+        lv_label_set_text(ui_pv2Label, "");
+        if (ui_pv3Label) lv_label_set_text(ui_pv3Label, "");
+        if (ui_pv4Label) lv_label_set_text(ui_pv4Label, "");
+        lv_label_set_text(ui_socLabel, "-");
+        lv_label_set_text(ui_batteryPowerLabel, "");
+        lv_label_set_text(ui_batteryTemperatureLabel, "");
+        lv_label_set_text(ui_batteryTimeLabel, "");
+        lv_label_set_text(ui_loadPowerLabel, "-");
+        lv_label_set_text(ui_feedInPowerLabel, "-");
+        lv_label_set_text(ui_selfUsePercentLabel, "");
+        lv_label_set_text(ui_meterPowerLabelL1, "");
+        lv_label_set_text(ui_meterPowerLabelL2, "");
+        lv_label_set_text(ui_meterPowerLabelL3, "");
+        lv_label_set_text(ui_inverterPowerLabel, "-");
+        lv_label_set_text(ui_inverterTemperatureLabel, "");
+        lv_label_set_text(ui_dongleFWVersion, "");
+        lv_label_set_text(ui_shellyCountLabel, "");
+        lv_label_set_text(ui_shellyPowerLabel, "");
     }
 
     int getSelfUsePowerPercent(InverterData_t &inverterData)

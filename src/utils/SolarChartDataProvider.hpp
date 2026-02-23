@@ -276,130 +276,22 @@ public:
     }
     
     /**
-     * Uloží intraday data do LittleFS
-     * Ukládá pouze reálná data pro dnešek (ne predikce)
-     * Zodpovědnost za volání (kdy ukládat) je na volajícím
+     * DEPRECATED: Chart persistence disabled to avoid display flickering from SPI contention.
+     * Chart data rebuilds from live inverter data within minutes after restart.
+     * Keeping method for API compatibility.
      */
     void saveToPreferences() {
-        // Ukládáme jen když jsou změny
-        if (!dirty) {
-            return;
-        }
-        
-        if (!LittleFS.begin(true)) {
-            return;
-        }
-        
-        File file = LittleFS.open(STORAGE_FILE, "w");
-        if (!file) {
-            return;
-        }
-        
-        // Header: magic + version + day
-        uint32_t magic = 0x43485254;  // "CHRT"
-        uint8_t version = 1;
-        int16_t savedDay = (int16_t)getCurrentDayOfYear();
-        file.write((uint8_t*)&magic, sizeof(magic));
-        file.write(&version, sizeof(version));
-        file.write((uint8_t*)&savedDay, sizeof(savedDay));
-        
-        // Komprimovaná data: uint16_t pro Wh hodnoty, uint8_t pro SOC
-        // Ukládáme jen reálná data (ne predikce) pro dnešek
-        uint16_t pvData[CHART_QUARTERS_PER_DAY];
-        uint16_t loadData[CHART_QUARTERS_PER_DAY];
-        uint8_t socData[CHART_QUARTERS_PER_DAY];
-        uint8_t hasData[12];  // Bitfield - 96 bits = 12 bytes
-        
-        memset(hasData, 0, sizeof(hasData));
-        for (int i = 0; i < CHART_QUARTERS_PER_DAY; i++) {
-            if (chartData[i].samples > 0 && !chartData[i].isPrediction) {
-                pvData[i] = (uint16_t)constrain(chartData[i].pvPowerWh, 0.0f, 65535.0f);
-                loadData[i] = (uint16_t)constrain(chartData[i].loadPowerWh, 0.0f, 65535.0f);
-                socData[i] = (uint8_t)constrain(chartData[i].soc, 0, 100);
-                hasData[i / 8] |= (1 << (i % 8));
-            } else {
-                pvData[i] = 0;
-                loadData[i] = 0;
-                socData[i] = 0;
-            }
-        }
-        
-        file.write((uint8_t*)pvData, sizeof(pvData));
-        file.write((uint8_t*)loadData, sizeof(loadData));
-        file.write(socData, sizeof(socData));
-        file.write(hasData, sizeof(hasData));
-        
-        file.close();
-        dirty = false;
-        LOGD("Chart data saved to LittleFS");
+        // Persistence disabled - data lives only in PSRAM
+        // This eliminates flash writes that cause display flickering
     }
     
     /**
-     * Načte intraday data z LittleFS (volat při startu)
-     * Načte pouze pokud je to stejný den
+     * DEPRECATED: Chart persistence disabled to avoid display flickering from SPI contention.
+     * Chart data rebuilds from live inverter data within minutes after restart.
+     * Keeping method for API compatibility.
      */
     void loadFromPreferences() {
-        if (!LittleFS.begin(true)) {
-            return;
-        }
-        
-        if (!LittleFS.exists(STORAGE_FILE)) {
-            return;
-        }
-        
-        File file = LittleFS.open(STORAGE_FILE, "r");
-        if (!file) {
-            return;
-        }
-        
-        // Kontrola magic a verze
-        uint32_t magic;
-        uint8_t version;
-        int16_t savedDay;
-        file.read((uint8_t*)&magic, sizeof(magic));
-        file.read(&version, sizeof(version));
-        file.read((uint8_t*)&savedDay, sizeof(savedDay));
-        
-        if (magic != 0x43485254 || version != 1) {
-            file.close();
-            return;
-        }
-        
-        // Kontrola zda je to stejný den
-        int currentDay = getCurrentDayOfYear();
-        if (savedDay != currentDay) {
-            file.close();
-            return;
-        }
-        
-        // Načtení dat
-        uint16_t pvData[CHART_QUARTERS_PER_DAY];
-        uint16_t loadData[CHART_QUARTERS_PER_DAY];
-        uint8_t socData[CHART_QUARTERS_PER_DAY];
-        uint8_t hasData[12];
-        
-        file.read((uint8_t*)pvData, sizeof(pvData));
-        file.read((uint8_t*)loadData, sizeof(loadData));
-        file.read(socData, sizeof(socData));
-        file.read(hasData, sizeof(hasData));
-        
-        file.close();
-        
-        // Obnovení dat
-        int restoredCount = 0;
-        for (int i = 0; i < CHART_QUARTERS_PER_DAY; i++) {
-            if (hasData[i / 8] & (1 << (i % 8))) {
-                chartData[i].pvPowerWh = (float)pvData[i];
-                chartData[i].loadPowerWh = (float)loadData[i];
-                chartData[i].soc = socData[i];
-                chartData[i].samples = 1;
-                chartData[i].isPrediction = false;
-                restoredCount++;
-            }
-        }
-        
-        lastRecordedDay = currentDay;
-        dirty = false;
-        LOGD("Chart data loaded from LittleFS, %d quarters restored", restoredCount);
+        // Persistence disabled - data lives only in PSRAM
+        // Chart rebuilds from live data after restart
     }
 };

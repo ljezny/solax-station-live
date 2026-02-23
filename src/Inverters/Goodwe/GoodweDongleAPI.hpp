@@ -466,16 +466,19 @@ private:
             }
         }
 
+        InverterData_t inverterData{};
+        
         if (ip == IPAddress(0, 0, 0, 0))
         {
             ip = discoverDongleIP();
             if (ip == IPAddress(0, 0, 0, 0))
             {
-                ip = IPAddress(10, 10, 100, 253);
+                // Discovery failed and no IP provided
+                inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                inverterData.errorDescription = "GoodWe: No IP configured and UDP discovery (broadcast:48899) failed. Check network or set IP manually.";
+                return inverterData;
             }
         }
-
-        InverterData_t inverterData{};
         
         // Read running data (critical - must succeed)
         if (!tryReadWithRetries(35100, 125, [&](ModbusResponse& response) {
@@ -532,6 +535,15 @@ private:
             inverterData.inverterTime = mktime(&timeinfo);
         }))
         {
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            if (preferTcp)
+            {
+                inverterData.errorDescription = String("GoodWe: Failed to read registers 35100-35224 from ") + ip.toString() + ":" + GOODWE_TCP_PORT + " (Modbus TCP). Check inverter connection.";
+            }
+            else
+            {
+                inverterData.errorDescription = String("GoodWe: Failed to read registers 35100-35224 from ") + ip.toString() + ":" + GOODWE_UDP_PORT + " (UDP) and :" + GOODWE_TCP_PORT + " (TCP fallback). Check inverter connection.";
+            }
             LOGD("Failed to read running data");
             logInverterData(inverterData, millis());
             return inverterData;

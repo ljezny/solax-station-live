@@ -69,6 +69,7 @@ public:
             if (!channel.connect(ip, 502))
             {
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                inverterData.errorDescription = String("Victron: Failed to connect to ") + ipAddress + ":502 (Modbus TCP)";
                 channel.disconnect();
                 return inverterData;
             }
@@ -78,6 +79,7 @@ public:
             if (!channel.connect(String("venus.local"), 502))
             {
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                inverterData.errorDescription = "Victron: Failed to connect to venus.local:502 (mDNS). Set IP manually if mDNS not working.";
                 channel.disconnect();
                 return inverterData;
             }

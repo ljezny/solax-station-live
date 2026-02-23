@@ -23,6 +23,7 @@ public:
         if (!connectToDongle(ipAddress))
         {
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.errorDescription = String("Growatt: Failed to connect to ") + ipAddress + ":502 (Modbus TCP)";
             return inverterData;
         }
 
@@ -30,6 +31,7 @@ public:
         if (!readHoldingData1(inverterData) || !readInputData1(inverterData) || !readInputData2(inverterData))
         {
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.errorDescription = String("Growatt: Modbus read failed from ") + ipAddress + ":502";
             channel.disconnect();
             return inverterData;
         }

@@ -90,6 +90,12 @@ typedef enum {
     STR_FAILED_LOAD_DATA,
     STR_FAILED_CONNECT,
     STR_PREPARING_STORAGE,
+    STR_SPLASH_WIFI_FOUND,
+    STR_SPLASH_WIFI_CONNECTED,
+    STR_SPLASH_TIME_SYNCED,
+    STR_SPLASH_INVERTER_FOUND,
+    STR_SPLASH_DATA_LOADED,
+    STR_SPLASH_CONTACTING_INVERTER,
     
     // Days of week
     STR_MONDAY,
@@ -348,6 +354,12 @@ const char* const Localization::stringsEN[] = {
     "Failed to load data :-(", // STR_FAILED_LOAD_DATA
     "Failed to connect :-(", // STR_FAILED_CONNECT
     "Preparing storage...", // STR_PREPARING_STORAGE
+    "WiFi network found",   // STR_SPLASH_WIFI_FOUND
+    "WiFi connected",       // STR_SPLASH_WIFI_CONNECTED
+    "Time synchronized",    // STR_SPLASH_TIME_SYNCED
+    "Inverter found",       // STR_SPLASH_INVERTER_FOUND
+    "Data loaded",          // STR_SPLASH_DATA_LOADED
+    "Contacting inverter...", // STR_SPLASH_CONTACTING_INVERTER
     
     // Days of week
     "Monday",               // STR_MONDAY
@@ -490,6 +502,12 @@ const char* const Localization::stringsDE[] = {
     "Daten laden fehlgeschlagen :-(", // STR_FAILED_LOAD_DATA
     "Verbindung fehlgeschlagen :-(", // STR_FAILED_CONNECT
     "Speicher vorbereiten...", // STR_PREPARING_STORAGE
+    "WLAN gefunden",        // STR_SPLASH_WIFI_FOUND
+    "WLAN verbunden",       // STR_SPLASH_WIFI_CONNECTED
+    "Zeit synchronisiert",  // STR_SPLASH_TIME_SYNCED
+    "Wechselrichter gefunden", // STR_SPLASH_INVERTER_FOUND
+    "Daten geladen",        // STR_SPLASH_DATA_LOADED
+    "Wechselrichter kontaktieren...", // STR_SPLASH_CONTACTING_INVERTER
     
     // Days of week
     "Montag",               // STR_MONDAY
@@ -632,6 +650,12 @@ const char* const Localization::stringsCS[] = {
     "Nepodařilo se načíst data :-(", // STR_FAILED_LOAD_DATA
     "Připojení selhalo :-(", // STR_FAILED_CONNECT
     "Příprava úložiště...", // STR_PREPARING_STORAGE
+    "WiFi síť nalezena",    // STR_SPLASH_WIFI_FOUND
+    "WiFi připojeno",       // STR_SPLASH_WIFI_CONNECTED
+    "Čas synchronizován",   // STR_SPLASH_TIME_SYNCED
+    "Střídač nalezen",      // STR_SPLASH_INVERTER_FOUND
+    "Data načtena",         // STR_SPLASH_DATA_LOADED
+    "Kontaktuji střídač...", // STR_SPLASH_CONTACTING_INVERTER
     
     // Days of week
     "Pondělí",              // STR_MONDAY

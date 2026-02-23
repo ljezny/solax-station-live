@@ -85,7 +85,6 @@ ShellyResult_t previousShellyResult;
 ElectricityPriceTwoDays_t *electricityPriceResult = nullptr;
 ElectricityPriceTwoDays_t *previousElectricityPriceResult = nullptr;
 SolarChartDataProvider solarChartDataProvider;
-static bool chartDataLoaded = false; // Track if chart data was loaded after time sync
 static bool ntpTimeSynced = false;   // Track if time was synced via NTP
 
 // === DEBUG: Testování simulace s konkrétním časem ===
@@ -450,9 +449,8 @@ void setupLVGL()
     // NOTE: loadFromPreferences() for predictors is called later in STATE_SPLASH
     // after splash screen is displayed, because LittleFS.begin() with formatOnFail=true
     // can take time if storage needs formatting (after factory reset)
-
-    // NOTE: solarChartDataProvider.loadFromPreferences() is called after syncTime()
-    // because it needs correct day-of-year to match saved data
+    // NOTE: Chart data is NOT persisted to avoid display flickering from SPI contention.
+    // Chart rebuilds from live data within minutes after restart.
 
     xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 12 * 1024, NULL, 24, NULL, 1);
 }
@@ -506,24 +504,8 @@ void resetAllTasks()
     lastIntelligenceAttempt = 0;
 }
 
-// Checks if any Shelly device is found in discovery results and starts SoftAP if needed
-void startSoftAPIfShellyFound()
-{
-    if (softAP.isRunning()) {
-        return; // Already running
-    }
-    
-    for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
-    {
-        if (!dongleDiscovery.discoveries[i].ssid.isEmpty() && 
-            shellyAPI.isShellySSID(dongleDiscovery.discoveries[i].ssid))
-        {
-            LOGD("Found Shelly device in scan, starting SoftAP");
-            softAP.start();
-            return;
-        }
-    }
-}
+// SoftAP is started only when entering STATE_DASHBOARD
+// This avoids RF interference during WiFi connection phase
 
 // Manages SoftAP idle timeout
 bool manageSoftAPTask()
@@ -540,9 +522,7 @@ bool discoverDonglesTask()
         run = true;
         lastWiFiScanAttempt = millis();
         dongleDiscovery.scanWiFi(true);
-        
-        // Po každém scanu zkontrolujeme, zda jsme nenašli Shelly
-        startSoftAPIfShellyFound();
+        // SoftAP is started only when entering STATE_DASHBOARD
     }
     return run;
 }
@@ -656,18 +636,23 @@ bool loadInverterDataTask()
 
                 // Add samples for intelligence predictors
                 int pvPower = inverterData.pv1Power + inverterData.pv2Power + inverterData.pv3Power + inverterData.pv4Power;
-                bool consumptionQuarterChanged = consumptionPredictor.addSample(inverterData.loadPower);
-                bool productionQuarterChanged = productionPredictor.addSample(pvPower);
+                consumptionPredictor.addSample(inverterData.loadPower);
+                productionPredictor.addSample(pvPower);
 
-                // Save predictors to flash when quarter changes
-                if (consumptionQuarterChanged || productionQuarterChanged)
+                // Save predictors to flash only at midnight (to avoid display flickering from SPI contention)
+                // Data stays in PSRAM during the day, saved once per day
+                static int lastPredictorSaveDay = -1;
+                time_t nowTs = time(nullptr);
+                struct tm* nowTm = localtime(&nowTs);
+                int currentDay = nowTm->tm_yday;
+                
+                if (lastPredictorSaveDay >= 0 && currentDay != lastPredictorSaveDay)
                 {
-                    LOGD("Quarter changed, saving predictors to flash");
-                    // Každá operace má vlastní zámek - kratší držení = menší šance na kolizi s VSYNC
+                    LOGD("Midnight detected (day %d -> %d), saving predictors to flash", lastPredictorSaveDay, currentDay);
                     { FlashGuard g("save:cons"); consumptionPredictor.saveToPreferences(); }
                     { FlashGuard g("save:prod"); productionPredictor.saveToPreferences(); }
-                    { FlashGuard g("save:chart"); solarChartDataProvider.saveToPreferences(); }
                 }
+                lastPredictorSaveDay = currentDay;
 
                 // Sync system time from inverter RTC if NTP failed
                 syncTimeFromInverter(inverterData);
@@ -709,10 +694,9 @@ bool pairShellyTask()
             }
             if (shellyAPI.isShellySSID(dongleDiscovery.discoveries[i].ssid))
             {
-                // Pokud najdeme Shelly a SoftAP neběží, zapneme ho
+                // SoftAP must be running (started when entering Dashboard)
                 if (!softAP.isRunning()) {
-                    LOGD("Shelly pair: found %s, starting SoftAP", dongleDiscovery.discoveries[i].ssid.c_str());
-                    softAP.start();
+                    continue; // Skip pairing if SoftAP not running yet
                 }
                 
                 if (dongleDiscovery.connectToDongle(dongleDiscovery.discoveries[i]))
@@ -1375,12 +1359,7 @@ void syncTimeFromInverter(const InverterData_t &data)
           timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
           timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 
-    // Load chart data now that we have valid time (if not already loaded)
-    if (!chartDataLoaded)
-    {
-        { FlashGuard g("load:chart"); solarChartDataProvider.loadFromPreferences(); }
-        chartDataLoaded = true;
-    }
+    // NOTE: Chart data is NOT persisted to avoid display flickering from SPI contention.
 }
 
 void logMemory()
@@ -1395,34 +1374,22 @@ void onEntering(state_t newState)
     switch (newState)
     {
     case BOOT:
+        // Show splash screen with logo only during WiFi scan
+        xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+        splashUI->show();
+        splashUI->showLogo();
+        xSemaphoreGive(lvgl_mutex);
         break;
     case STATE_SPLASH:
+        // Show splash screen (needed when coming from STATE_WIFI_SETUP)
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         splashUI->show();
         xSemaphoreGive(lvgl_mutex);
-        
-        // Initialize LittleFS and load predictors here (after splash is visible)
-        // This is done here because LittleFS.begin(true) can take time
-        // to format the storage after factory reset
+
+        // Initialize LittleFS and load predictors
         {
             static bool predictorsLoaded = false;
             if (!predictorsLoaded) {
-                xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-                splashUI->updateText(TR(STR_PREPARING_STORAGE));
-                xSemaphoreGive(lvgl_mutex);
-                
-                // TEST: Explicitní formátování pro simulaci blikání displeje
-                // Odkomentovat pro test VSYNC synchronizace
-                // #define TEST_FLASH_FORMAT 1
-                #if defined(TEST_FLASH_FORMAT) && TEST_FLASH_FORMAT
-                LOGW("TEST: Starting LittleFS format to simulate flash contention...");
-                if (LittleFS.begin(false)) {
-                    LittleFS.end();
-                }
-                LittleFS.format();  // Toto zabere cca 10-30 sekund a intenzivně používá flash
-                LOGW("TEST: LittleFS format complete");
-                #endif
-                
                 LOGD("Initializing LittleFS and loading predictors...");
                 { FlashGuard g("load:cons"); consumptionPredictor.loadFromPreferences(); }
                 { FlashGuard g("load:prod"); productionPredictor.loadFromPreferences(); }
@@ -1505,6 +1472,7 @@ void updateState()
     {
     case BOOT:
     {
+        // Scan WiFi networks (logo is already shown in onEntering)
         dongleDiscovery.scanWiFi();
         wifiDiscoveryResult = dongleDiscovery.getAutoconnectDongle();
         if (wifiDiscoveryResult.type != CONNECTION_TYPE_NONE)
@@ -1519,32 +1487,70 @@ void updateState()
     }
     break;
     case STATE_SPLASH:
+        // Show two-column layout: logo left, checklist right
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+        splashUI->showChecklist();
         splashUI->update(softAP.getESPIdHex(), String(VERSION_NUMBER));
-        splashUI->updateText(TR(STR_DISCOVERING_DONGLES));
+        splashUI->setCheckState(SplashUI::CHECK_WIFI_FOUND, CHECK_IN_PROGRESS);
         xSemaphoreGive(lvgl_mutex);
 
         if (wifiDiscoveryResult.type != CONNECTION_TYPE_NONE)
         {
+            // Step 1: WiFi network found
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-            splashUI->updateText(String(TR(STR_CONNECTING)) + " " + wifiDiscoveryResult.ssid);
+            splashUI->setCheckState(SplashUI::CHECK_WIFI_FOUND, CHECK_SUCCESS, 
+                (String(TR(STR_SPLASH_WIFI_FOUND)) + ": " + wifiDiscoveryResult.ssid).c_str());
+            splashUI->setCheckState(SplashUI::CHECK_WIFI_CONNECTED, CHECK_IN_PROGRESS);
             xSemaphoreGive(lvgl_mutex);
 
             if (dongleDiscovery.connectToDongle(wifiDiscoveryResult))
             {
+                // Step 2: WiFi connected
                 xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-                splashUI->updateText(TR(STR_LOADING_DATA));
+                splashUI->setCheckState(SplashUI::CHECK_WIFI_CONNECTED, CHECK_SUCCESS);
+                splashUI->setCheckState(SplashUI::CHECK_TIME_SYNC, CHECK_IN_PROGRESS);
                 xSemaphoreGive(lvgl_mutex);
 
+                // Step 3: Time sync (optional - may fail without internet)
                 syncTime();
-
-                // Load chart data AFTER time sync (needs correct day-of-year)
-                // Only load if NTP succeeded (valid time available)
-                if (ntpTimeSynced && !chartDataLoaded)
-                {
-                    { FlashGuard g("load:chart"); solarChartDataProvider.loadFromPreferences(); }
-                    chartDataLoaded = true;
+                
+                xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+                if (ntpTimeSynced) {
+                    splashUI->setCheckState(SplashUI::CHECK_TIME_SYNC, CHECK_SUCCESS);
+                } else {
+                    // Time sync failed but continue - will try from inverter RTC later
+                    splashUI->setCheckState(SplashUI::CHECK_TIME_SYNC, CHECK_ERROR, 
+                        (String(TR(STR_SPLASH_TIME_SYNCED)) + " (!)").c_str());
+                    LOGW("NTP time sync failed, will try inverter RTC");
                 }
+                splashUI->setCheckState(SplashUI::CHECK_INVERTER_FOUND, CHECK_IN_PROGRESS);
+                xSemaphoreGive(lvgl_mutex);
+                
+                // Step 4: Check inverter reachability (optional - for diagnostics)
+                {
+                    String detectedIP;
+                    bool inverterReachable = dongleDiscovery.isInverterReachable(wifiDiscoveryResult, detectedIP);
+                    
+                    xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+                    if (inverterReachable) {
+                        String msg = String(TR(STR_SPLASH_INVERTER_FOUND));
+                        if (!detectedIP.isEmpty()) {
+                            msg += ": " + detectedIP;
+                        }
+                        splashUI->setCheckState(SplashUI::CHECK_INVERTER_FOUND, CHECK_SUCCESS, msg.c_str());
+                    } else {
+                        // Inverter not found via ping but continue - protocol might still work
+                        splashUI->setCheckState(SplashUI::CHECK_INVERTER_FOUND, CHECK_ERROR,
+                            (String(TR(STR_SPLASH_INVERTER_FOUND)) + " (?)").c_str());
+                        LOGW("Inverter ping failed, will try to load data anyway");
+                    }
+                    splashUI->setCheckState(SplashUI::CHECK_CONTACTING, CHECK_IN_PROGRESS);
+                    xSemaphoreGive(lvgl_mutex);
+                }
+
+                // Step 5: Contact inverter and load data
+                // NOTE: Chart data is NOT persisted to avoid display flickering from SPI contention.
+                // Chart rebuilds from live data within minutes after restart.
 
                 for (int retry = 0; retry < 3; retry++)
                 {
@@ -1553,19 +1559,40 @@ void updateState()
                     {
                         break;
                     }
+                    xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+                    splashUI->setStatusText((String(TR(STR_CONNECTING)) + " (" + String(retry + 1) + "/3)").c_str());
+                    xSemaphoreGive(lvgl_mutex);
                     delay(2000);
                 }
 
                 if (inverterData.status == DONGLE_STATUS_OK)
                 {
+                    // Success: Data loaded - go to dashboard automatically
+                    xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+                    splashUI->setCheckState(SplashUI::CHECK_CONTACTING, CHECK_SUCCESS);
+                    splashUI->setCheckState(SplashUI::CHECK_DATA_LOADED, CHECK_SUCCESS);
+                    splashUI->setStatusText("");
+                    xSemaphoreGive(lvgl_mutex);
+                    
                     moveToState(STATE_DASHBOARD);
                 }
                 else
                 {
+                    // Error: Failed to load data - show button
                     xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-                    splashUI->updateText(TR(STR_FAILED_LOAD_DATA));
+                    splashUI->setCheckState(SplashUI::CHECK_CONTACTING, CHECK_ERROR);
+                    splashUI->setCheckState(SplashUI::CHECK_DATA_LOADED, CHECK_ERROR);
+                    splashUI->setStatusText(TR(STR_FAILED_LOAD_DATA));
+                    splashUI->showContinueButton();
                     xSemaphoreGive(lvgl_mutex);
-                    delay(2000);
+
+                    // Wait for button press
+                    while (!splashUI->isButtonPressed()) {
+                        xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+                        lv_timer_handler();
+                        xSemaphoreGive(lvgl_mutex);
+                        delay(20);
+                    }
 
                     dongleDiscovery.disconnect();
                     moveToState(STATE_WIFI_SETUP);
@@ -1573,22 +1600,52 @@ void updateState()
             }
             else
             {
+                // Error: Failed to connect to WiFi - show button
+                String errorMsg = TR(STR_FAILED_CONNECT);
+                if (!dongleDiscovery.lastConnectionError.isEmpty()) {
+                    errorMsg += ": " + dongleDiscovery.lastConnectionError;
+                }
+                
                 xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-                splashUI->updateText(TR(STR_FAILED_CONNECT));
+                splashUI->setCheckState(SplashUI::CHECK_WIFI_CONNECTED, CHECK_ERROR);
+                splashUI->setStatusText(errorMsg.c_str());
+                splashUI->showContinueButton();
                 xSemaphoreGive(lvgl_mutex);
-                delay(2000);
+
+                // Wait for button press
+                while (!splashUI->isButtonPressed()) {
+                    xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+                    lv_timer_handler();
+                    xSemaphoreGive(lvgl_mutex);
+                    delay(20);
+                }
 
                 moveToState(STATE_WIFI_SETUP);
             }
         }
         else
         {
+            // No dongle found - show button
+            xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+            splashUI->setCheckState(SplashUI::CHECK_WIFI_FOUND, CHECK_ERROR, TR(STR_DISCOVERING_DONGLES));
+            splashUI->showContinueButton();
+            xSemaphoreGive(lvgl_mutex);
+            
+            // Wait for button press
+            while (!splashUI->isButtonPressed()) {
+                xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+                lv_timer_handler();
+                xSemaphoreGive(lvgl_mutex);
+                delay(20);
+            }
+            
             moveToState(STATE_WIFI_SETUP);
         }
         break;
     case STATE_WIFI_SETUP:
-        if (wifiSetupUI->result.type != CONNECTION_TYPE_NONE)
+        if (wifiSetupUI->setupComplete && wifiSetupUI->result.type != CONNECTION_TYPE_NONE)
         {
+            LOGD("WiFi setup complete, result type=%d", wifiSetupUI->result.type);
             wifiDiscoveryResult = wifiSetupUI->result;
             moveToState(STATE_SPLASH);
         }

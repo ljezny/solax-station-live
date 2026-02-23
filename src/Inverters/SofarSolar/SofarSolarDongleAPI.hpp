@@ -94,6 +94,11 @@ public:
         } else {
             LOGE("=== PROTOCOL DETECTION FAILED ===");
             LOGE("Neither NEW nor OLD protocol returned valid data!");
+            data.status = DONGLE_STATUS_CONNECTION_ERROR;
+            data.errorDescription = String("Sofar: Protocol detection failed at ") + ipAddress + ":8899. " +
+                "Tried SN read from 0x445 (NEW) and 0x2002 (OLD), both failed. " +
+                "Check: 1) IP address correct, 2) Dongle SN correct, 3) Dongle firmware supported. " +
+                "Last error: " + channel.getLastErrorMessage();
         }
         
         return data;
@@ -431,6 +436,8 @@ private:
             }))
         {
             LOGE("OLD protocol: FAILED to read main block 0x200-0x21B");
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.errorDescription = String("Sofar OLD: Failed to read main registers 0x200-0x21B from ") + ipAddress + ":8899. Check if inverter supports OLD protocol (SM1E/SE1E/ZM1E/ZE1E). " + channel.getLastErrorMessage();
             return inverterData;
         }
         LOGI("OLD protocol: Main block 0x200-0x21B read SUCCESS");
@@ -532,6 +539,8 @@ private:
                  inverterData.pv1Power, inverterData.pv2Power, inverterData.pv3Power, inverterData.pv4Power);
             })) {
             LOGE("NEW protocol: FAILED to read PV input from 0x586");
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.errorDescription = String("Sofar NEW: Failed to read PV registers 0x586-0x58F from ") + ipAddress + ":8899. " + channel.getLastErrorMessage();
             return inverterData;
         }
 
@@ -544,6 +553,8 @@ private:
             LOGI("NEW: Battery Power=%dW, SOC=%d%% (regs 0x667, 0x668)", inverterData.batteryPower, inverterData.soc);
             })) {
             LOGE("NEW protocol: FAILED to read battery from 0x667");
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.errorDescription = String("Sofar NEW: Failed to read battery registers 0x667-0x668 from ") + ipAddress + ":8899. " + channel.getLastErrorMessage();
             return inverterData;
         }
 
@@ -606,6 +617,8 @@ private:
             inverterData.loadPower = channel.readInt16(packetBuffer, 0x04AF - 0x484) * 10; 
             })) {
             LOGE("NEW protocol: FAILED to read grid from 0x484");
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.errorDescription = String("Sofar NEW: Failed to read grid registers 0x484-0x4BC from ") + ipAddress + ":8899. " + channel.getLastErrorMessage();
             return inverterData;
         }
 
@@ -627,6 +640,8 @@ private:
                  inverterData.pvToday, inverterData.gridBuyToday, inverterData.gridSellToday);
             inverterData.status = DONGLE_STATUS_OK; })) {
             LOGE("NEW protocol: FAILED to read stats from 0x684");
+            inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.errorDescription = String("Sofar NEW: Failed to read stats registers 0x684-0x69A from ") + ipAddress + ":8899. " + channel.getLastErrorMessage();
             return inverterData;
         }
 

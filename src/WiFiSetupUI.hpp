@@ -26,6 +26,7 @@ class WiFiSetupUI
 public:
     WiFiDiscovery &dongleDiscovery;
     WiFiDiscoveryResult_t result;
+    bool setupComplete = false;  // Flag to indicate setup was completed
 
     const ConnectionType_t connectionTypes[7] = {
         CONNECTION_TYPE_NONE,
@@ -44,10 +45,15 @@ public:
     void show()
     {
         result = WiFiDiscoveryResult_t();
+        setupComplete = false;
 
         lv_scr_load(ui_WifiSetup);
 
-        lv_obj_add_event_cb(ui_wifiSetupCompleteButton, wifiSetupCompleteHandler, LV_EVENT_ALL, this);
+        // Remove any existing callbacks first (in case we're coming back from dashboard)
+        removeAllCallbacks();
+        
+        // Then add fresh callbacks
+        lv_obj_add_event_cb(ui_wifiSetupCompleteButton, wifiSetupCompleteHandler, LV_EVENT_CLICKED, this);
         lv_obj_add_event_cb(ui_wifiDropdown, wifiRollerHandler, LV_EVENT_ALL, this);
         lv_obj_add_event_cb(ui_connectionTypeDropdown, connectionTypeHandler, LV_EVENT_ALL, this);
         lv_obj_add_event_cb(ui_spotProviderDropdown, spotRollerHandler, LV_EVENT_ALL, this);
@@ -225,23 +231,45 @@ public:
         }
     }
 
+    void removeAllCallbacks()
+    {
+        lv_obj_remove_event_cb_with_user_data(ui_wifiSetupCompleteButton, wifiSetupCompleteHandler, this);
+        lv_obj_remove_event_cb_with_user_data(ui_wifiDropdown, wifiRollerHandler, this);
+        lv_obj_remove_event_cb_with_user_data(ui_spotProviderDropdown, spotRollerHandler, this);
+        lv_obj_remove_event_cb_with_user_data(ui_connectionTypeDropdown, connectionTypeHandler, this);
+        lv_obj_remove_event_cb_with_user_data(ui_timeZoneDropdown, timezoneRollerHandler, this);
+        lv_obj_remove_event_cb_with_user_data(ui_languageDropdown, languageRollerHandler, this);
+        lv_obj_remove_event_cb_with_user_data(ui_displayTimeoutDropdown, displayTimeoutHandler, this);
+        lv_obj_remove_event_cb_with_user_data(ui_wifiPassword, onFocusHandler, this);
+        lv_obj_remove_event_cb_with_user_data(ui_inverterIP, onFocusHandler, this);
+        lv_obj_remove_event_cb_with_user_data(ui_inverterSN, onFocusHandler, this);
+        lv_obj_remove_event_cb_with_user_data(ui_wifiPassword, onTextChangedHandler, this);
+        lv_obj_remove_event_cb_with_user_data(ui_inverterIP, onTextChangedHandler, this);
+        lv_obj_remove_event_cb_with_user_data(ui_inverterSN, onTextChangedHandler, this);
+    }
+
     void onCompleteClick()
     {
         int selectedIndex = lv_dropdown_get_selected(ui_wifiDropdown);
+        LOGD("WiFi setup OK clicked, selectedIndex=%d", selectedIndex);
         if (selectedIndex >= 0 && selectedIndex < DONGLE_DISCOVERY_MAX_RESULTS)
         {
             result = dongleDiscovery.discoveries[selectedIndex];
+            LOGD("Result type=%d, ssid=%s", result.type, result.ssid.c_str());
+            
+            // Make sure type is set correctly from dropdown
+            int connectionTypeIndex = lv_dropdown_get_selected(ui_connectionTypeDropdown);
+            if (connectionTypeIndex >= 0 && connectionTypeIndex < sizeof(connectionTypes) / sizeof(ConnectionType_t))
+            {
+                result.type = connectionTypes[connectionTypeIndex];
+                LOGD("Connection type from dropdown: index=%d, type=%d", connectionTypeIndex, result.type);
+            }
+            
+            // Set completion flag
+            setupComplete = true;
+            LOGD("Setup complete flag set to true");
 
-            lv_obj_remove_event_cb_with_user_data(ui_wifiSetupCompleteButton, wifiSetupCompleteHandler, this);
-            lv_obj_remove_event_cb_with_user_data(ui_wifiDropdown, wifiRollerHandler, this);
-            lv_obj_remove_event_cb_with_user_data(ui_spotProviderDropdown, spotRollerHandler, this);
-            lv_obj_remove_event_cb_with_user_data(ui_connectionTypeDropdown, connectionTypeHandler, this);
-            lv_obj_remove_event_cb_with_user_data(ui_wifiPassword, onFocusHandler, this);
-            lv_obj_remove_event_cb_with_user_data(ui_inverterIP, onFocusHandler, this);
-            lv_obj_remove_event_cb_with_user_data(ui_inverterSN, onFocusHandler, this);
-            lv_obj_remove_event_cb_with_user_data(ui_wifiPassword, onTextChangedHandler, this);
-            lv_obj_remove_event_cb_with_user_data(ui_inverterIP, onTextChangedHandler, this);
-            lv_obj_remove_event_cb_with_user_data(ui_inverterSN, onTextChangedHandler, this);
+            removeAllCallbacks();
         }
     }
 
@@ -370,10 +398,9 @@ private:
 
 static void wifiSetupCompleteHandler(lv_event_t *e)
 {
-    lv_event_code_t code = lv_event_get_code(e);
-    if (code == LV_EVENT_CLICKED)
+    WiFiSetupUI *ui = (WiFiSetupUI *)lv_event_get_user_data(e);
+    if (ui)
     {
-        WiFiSetupUI *ui = (WiFiSetupUI *)lv_event_get_user_data(e);
         ui->onCompleteClick();
     }
 }

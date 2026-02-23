@@ -60,12 +60,14 @@ public:
         if (!isSupportedDongle)
         {
             inverterData.status = DONGLE_STATUS_UNSUPPORTED_DONGLE;
+            inverterData.errorDescription = "Solax: Unsupported dongle detected. Only Pocket WiFi 3.0 and newer are supported.";
             return inverterData;
         }
 
         if (!connectToDongle(ipAddress))
         {
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.errorDescription = String("Solax: Failed to connect to ") + ipAddress + ":502 (Modbus TCP)";
             return inverterData;
         }
         
@@ -74,6 +76,7 @@ public:
         {
             LOGW("Failed to read inverter info");
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+            inverterData.errorDescription = String("Solax: Failed to read inverter info (SN) from ") + ipAddress + ":502";
             channel.disconnect();
             return inverterData;
         }
@@ -90,6 +93,7 @@ public:
             if (!handleModbusResult(ipAddress, readSuccess))
             {
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                inverterData.errorDescription = String("Solax MIC: Modbus read failed from ") + ipAddress + ":502";
                 channel.disconnect();
                 return inverterData;
             }
@@ -109,6 +113,7 @@ public:
             if (!handleModbusResult(ipAddress, readSuccess))
             {
                 inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                inverterData.errorDescription = String("Solax HYBRID: Modbus read failed from ") + ipAddress + ":502";
                 channel.disconnect();
                 return inverterData;
             }
@@ -125,6 +130,7 @@ public:
                 if (!readWorkMode(inverterData))
                 { 
                     inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
+                    inverterData.errorDescription = String("Solax: Failed to read work mode from ") + ipAddress + ":502";
                     channel.disconnect();
                     return inverterData;
                 }
