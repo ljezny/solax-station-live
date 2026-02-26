@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <esp_http_server.h>
+#include <esp_heap_caps.h>
 #include <lvgl.h>
 #include <ArduinoJson.h>
 #include "../gfx_conf.h"
@@ -28,13 +29,20 @@ public:
     {
         lvglMutex = mutex;
         
+        // Log memory before starting
+        LOGD("[WebServer] Free heap: %lu, Free internal: %lu, Min free: %lu",
+             (unsigned long)ESP.getFreeHeap(),
+             (unsigned long)heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+             (unsigned long)heap_caps_get_minimum_free_size(MALLOC_CAP_INTERNAL));
+        
         httpd_config_t config = HTTPD_DEFAULT_CONFIG();
         config.server_port = 80;
-        config.stack_size = 8192;
-        config.max_uri_handlers = 16;
+        config.stack_size = 4096;  // Reduced from 8192 to save internal RAM
+        config.max_uri_handlers = 8;  // Reduced from 16
         config.uri_match_fn = httpd_uri_match_wildcard;
         
-        if (httpd_start(&server, &config) == ESP_OK)
+        esp_err_t err = httpd_start(&server, &config);
+        if (err == ESP_OK)
         {
             // Index page
             httpd_uri_t indexUri = {
@@ -94,7 +102,7 @@ public:
         }
         else
         {
-            LOGE("Failed to start web server");
+            LOGE("Failed to start web server: %s (0x%x)", esp_err_to_name(err), err);
         }
     }
 

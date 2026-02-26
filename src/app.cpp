@@ -2,6 +2,7 @@
 #include <lvgl.h>
 #include <esp_task_wdt.h>
 #include <sys/time.h>
+#include <new>  // for placement new
 
 #include <SPI.h>
 #include "consts.h"
@@ -321,18 +322,25 @@ void setupWiFi()
 
 void setupLVGL()
 {
+    LOGI("[MEM LVGL:start] Internal: %luKB, Largest: %luKB", 
+         (unsigned long)heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024,
+         (unsigned long)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL) / 1024);
+
 #if CROW_PANEL
     pinMode(38, OUTPUT);
     digitalWrite(38, LOW);
 #endif
 
     backlightResolver.setup();
+    LOGI("[MEM LVGL:backlight] Internal: %luKB", (unsigned long)heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024);
 
     // Display Prepare
     tft.begin();
+    LOGI("[MEM LVGL:tft.begin] Internal: %luKB", (unsigned long)heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024);
     tft.fillScreen(TFT_BLACK);
     tft.setRotation(2);
     delay(200);
+    LOGI("[MEM LVGL:tft] Internal: %luKB", (unsigned long)heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024);
     
     // Inicializace VSYNC synchronizace pro flash operace
     // Patchnutý Bus_RGB volá náš callback při každém VSYNC
@@ -349,10 +357,12 @@ void setupLVGL()
 #endif
 
     lv_init();
+    LOGI("[MEM LVGL:lv_init] Internal: %luKB", (unsigned long)heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024);
     delay(100);
 
     // touch setup
     touch.init();
+    LOGI("[MEM LVGL:touch] Internal: %luKB", (unsigned long)heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024);
 
     // For RGB panels with PSRAM framebuffer, use larger buffers in PSRAM
     // Larger buffers = fewer flush operations = smoother scrolling
@@ -423,10 +433,25 @@ void setupLVGL()
     lv_theme_t *theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED), false, LV_FONT_DEFAULT);
     lv_disp_set_theme(dispp, theme);
     
-    splashUI = new SplashUI();
-    dashboardUI = new DashboardUI(onSettingsShow, onIntelligenceShow);
-    wifiSetupUI = new WiFiSetupUI(dongleDiscovery);
-    intelligenceSetupUI = new IntelligenceSetupUI();
+    // Log UI class sizes before allocation
+    LOGI("[MEM UI sizes] SplashUI=%d, DashboardUI=%d, WiFiSetupUI=%d, IntelligenceSetupUI=%d bytes",
+         sizeof(SplashUI), sizeof(DashboardUI), sizeof(WiFiSetupUI), sizeof(IntelligenceSetupUI));
+    LOGI("[MEM LVGL:theme] Internal: %luKB", (unsigned long)heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024);
+    
+    // Allocate UI classes in PSRAM to save internal RAM for WiFi stack
+    splashUI = (SplashUI*)heap_caps_malloc(sizeof(SplashUI), MALLOC_CAP_SPIRAM);
+    new (splashUI) SplashUI();  // placement new
+    
+    dashboardUI = (DashboardUI*)heap_caps_malloc(sizeof(DashboardUI), MALLOC_CAP_SPIRAM);
+    new (dashboardUI) DashboardUI(onSettingsShow, onIntelligenceShow);
+    
+    wifiSetupUI = (WiFiSetupUI*)heap_caps_malloc(sizeof(WiFiSetupUI), MALLOC_CAP_SPIRAM);
+    new (wifiSetupUI) WiFiSetupUI(dongleDiscovery);
+    
+    intelligenceSetupUI = (IntelligenceSetupUI*)heap_caps_malloc(sizeof(IntelligenceSetupUI), MALLOC_CAP_SPIRAM);
+    new (intelligenceSetupUI) IntelligenceSetupUI();
+    
+    LOGI("[MEM LVGL:UI allocated] Internal: %luKB", (unsigned long)heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024);
 
     // Show splash screen with logo immediately (before WiFi scan starts)
     // This ensures user sees the logo right from boot, not a white screen
@@ -464,12 +489,38 @@ void setupLVGL()
     xTaskCreatePinnedToCore(lvglTimerTask, "lvglTimerTask", 12 * 1024, NULL, 24, NULL, 1);
 }
 
+void logMemoryStatus(const char* label)
+{
+    LOGI("[MEM %s] Free: %luKB, Internal: %luKB, PSRAM: %luKB, MinFree: %luKB",
+         label,
+         (unsigned long)ESP.getFreeHeap() / 1024,
+         (unsigned long)heap_caps_get_free_size(MALLOC_CAP_INTERNAL) / 1024,
+         (unsigned long)heap_caps_get_free_size(MALLOC_CAP_SPIRAM) / 1024,
+         (unsigned long)ESP.getMinFreeHeap() / 1024);
+}
+
 void setup()
 {
     Serial.begin(115200);
+    delay(100);
+    
+    // Detailed memory diagnostics at very beginning
+    LOGI("=== MEMORY DIAGNOSTICS AT BOOT ===");
+    LOGI("Total heap: %lu bytes", (unsigned long)ESP.getHeapSize());
+    LOGI("Free heap: %lu bytes", (unsigned long)ESP.getFreeHeap());
+    LOGI("Internal RAM total: %lu bytes", (unsigned long)heap_caps_get_total_size(MALLOC_CAP_INTERNAL));
+    LOGI("Internal RAM free: %lu bytes", (unsigned long)heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+    LOGI("Internal RAM largest block: %lu bytes", (unsigned long)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL));
+    LOGI("PSRAM total: %lu bytes", (unsigned long)heap_caps_get_total_size(MALLOC_CAP_SPIRAM));
+    LOGI("PSRAM free: %lu bytes", (unsigned long)heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+    LOGI("DMA RAM free: %lu bytes", (unsigned long)heap_caps_get_free_size(MALLOC_CAP_DMA));
+    LOGI("=================================");
+    
+    logMemoryStatus("BOOT");
 
     // Initialize localization system (load language from NVS)
     Localization::init();
+    logMemoryStatus("LOCALE");
 
     // NOTE: loopTask is NOT subscribed to watchdog because it performs
     // long-running network operations (HTTPS, DNS, SSL handshake, etc.)
@@ -488,12 +539,21 @@ void setup()
     {
         LOGD("Electricity price structures allocated in PSRAM (%d bytes each)", sizeof(ElectricityPriceTwoDays_t));
     }
+    logMemoryStatus("PRICE_ALLOC");
 
     setupLVGL();
+    logMemoryStatus("LVGL");
+    
     setupWiFi();
+    logMemoryStatus("WIFI");
 
-    // Start web server on SoftAP
-    webServer.begin(lvgl_mutex);
+    // Log memory status after setup
+    LOGD("[Memory] After setup - Free heap: %lu, Free internal: %lu",
+         (unsigned long)ESP.getFreeHeap(),
+         (unsigned long)heap_caps_get_free_size(MALLOC_CAP_INTERNAL));
+
+    // Web server will be started when SoftAP is started in STATE_DASHBOARD
+    // webServer.begin() is called in SoftAP.hpp start()
     webServer.setInverterData(&inverterData);
     webServer.setPriceData(electricityPriceResult);
 
@@ -695,32 +755,85 @@ bool pairShellyTask()
     bool run = false;
     if (lastShellyPairAttempt == 0 || millis() - lastShellyPairAttempt > 30000)
     {
+        LOGD("[ShellyPair] Scanning for Shelly devices, SoftAP running: %d, paired: %d, connected: %d", 
+             softAP.isRunning(), shellyAPI.getPairedCount(), softAP.getNumberOfConnectedDevices());
+        
+        int foundCount = 0;
         for (int i = 0; i < DONGLE_DISCOVERY_MAX_RESULTS; i++)
         {
             if (dongleDiscovery.discoveries[i].ssid.isEmpty())
             {
                 continue;
             }
-            if (shellyAPI.isShellySSID(dongleDiscovery.discoveries[i].ssid))
+            foundCount++;
+            bool isShelly = shellyAPI.isShellySSID(dongleDiscovery.discoveries[i].ssid);
+            LOGD("[ShellyPair] SSID[%d]: %s, isShelly: %d", i, dongleDiscovery.discoveries[i].ssid.c_str(), isShelly);
+            
+            if (isShelly)
             {
                 // SoftAP must be running (started when entering Dashboard)
                 if (!softAP.isRunning()) {
+                    LOGD("[ShellyPair] SoftAP not running, skipping pairing");
                     continue; // Skip pairing if SoftAP not running yet
                 }
                 
-                if (dongleDiscovery.connectToDongle(dongleDiscovery.discoveries[i]))
+                // Save current WiFi to reconnect later
+                String currentSSID = WiFi.SSID();
+                String currentPassword = dongleDiscovery.getDiscoveryResult(currentSSID).password;
+                
+                LOGD("[ShellyPair] Connecting to Shelly AP: %s (current WiFi: %s)", 
+                     dongleDiscovery.discoveries[i].ssid.c_str(), currentSSID.c_str());
+                
+                // Shelly AP is open network - connect without password
+                WiFi.disconnect();
+                WiFi.begin(dongleDiscovery.discoveries[i].ssid.c_str());
+                
+                // Wait for connection (max 10 seconds)
+                int retries = 100;
+                bool connected = false;
+                for (int r = 0; r < retries; r++)
                 {
+                    if (WiFi.status() == WL_CONNECTED)
+                    {
+                        connected = true;
+                        LOGD("[ShellyPair] Connected to Shelly AP, IP: %s", WiFi.localIP().toString().c_str());
+                        break;
+                    }
+                    delay(100);
+                }
+                
+                if (connected)
+                {
+                    LOGD("[ShellyPair] Setting WiFi STA to: %s", softAP.getSSID().c_str());
                     if (shellyAPI.setWiFiSTA(dongleDiscovery.discoveries[i].ssid, softAP.getSSID(), softAP.getPassword()))
                     {
                         LOGD("Shelly paired: %s → %s", dongleDiscovery.discoveries[i].ssid.c_str(), softAP.getSSID().c_str());
                         dongleDiscovery.discoveries[i].ssid = ""; // clear SSID to avoid reconnecting
                     }
-                    WiFi.disconnect();
+                    else
+                    {
+                        LOGE("[ShellyPair] Failed to set WiFi STA on Shelly");
+                    }
+                }
+                else
+                {
+                    LOGE("[ShellyPair] Failed to connect to Shelly AP: %s", dongleDiscovery.discoveries[i].ssid.c_str());
+                }
+                
+                // Reconnect to previous WiFi
+                WiFi.disconnect();
+                if (!currentSSID.isEmpty())
+                {
+                    LOGD("[ShellyPair] Reconnecting to: %s", currentSSID.c_str());
+                    WiFi.begin(currentSSID.c_str(), currentPassword.c_str());
                 }
             }
         }
+        LOGD("[ShellyPair] Total SSIDs found: %d", foundCount);
+        
         if (softAP.isRunning() && shellyAPI.getPairedCount() < softAP.getNumberOfConnectedDevices())
         {
+            LOGD("[ShellyPair] Querying mDNS for Shelly devices on SoftAP");
             shellyAPI.queryMDNS(WiFi.softAPIP(), WiFi.softAPSubnetMask());
         }
         lastShellyPairAttempt = millis();
@@ -1437,6 +1550,9 @@ void onEntering(state_t newState)
         }
 
         softAP.start();
+        
+        // Start web server after SoftAP is running
+        webServer.begin(lvgl_mutex);
  
         resetAllTasks();
         setTimeZone();

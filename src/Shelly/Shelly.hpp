@@ -96,10 +96,15 @@ public:
 
     bool isShellySSID(String ssid)
     {
+        String ssidLower = ssid;
+        ssidLower.toLowerCase();
         for (int i = 0; i < SHELLY_SUPPORTED_MODEL_COUNT; i++)
         {
-            if (ssid.startsWith(supportedModels[i].prefix))
+            String prefixLower = supportedModels[i].prefix;
+            prefixLower.toLowerCase();
+            if (ssidLower.startsWith(prefixLower))
             {
+                LOGD("[Shelly] Matched SSID: %s with prefix: %s", ssid.c_str(), supportedModels[i].prefix.c_str());
                 return true;
             }
         }
