@@ -2528,6 +2528,16 @@ public:
                                             lv_label_set_text(self->clocksLabel, "--:--");
                                         }
                                       }, 1000, this);
+        
+        // Cleanup timer when screen is deleted by LVGL (during screen transition)
+        lv_obj_add_event_cb(screen, [](lv_event_t *e) {
+            DashboardUI* self = (DashboardUI*)lv_event_get_user_data(e);
+            if (self->clocksTimer) {
+                LOGD("DashboardUI: Screen deleted, cleaning up timer");
+                lv_timer_del(self->clocksTimer);
+                self->clocksTimer = nullptr;
+            }
+        }, LV_EVENT_DELETE, this);
 
         // Make inverter container clickable and add menu (only if intelligence is supported)
         lv_obj_add_event_cb(inverterContainer, [](lv_event_t *e) {
