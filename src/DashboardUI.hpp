@@ -2845,8 +2845,8 @@ public:
                 
                 // Handle intelligence tile when collapsing OTHER charts (spot/solar)
                 if (child == intelligencePlanTile && !isIntelligenceTile) {
-                    // Show intelligence tile if intelligence is supported
-                    if (intelligenceSupported) {
+                    // Show intelligence tile only if intelligence is supported AND enabled
+                    if (intelligenceSupported && intelligenceEnabled) {
                         animateFade(child, true, ANIM_DURATION / 2);
                         lv_obj_set_flex_grow(child, 0);
                         lv_obj_set_height(child, LV_SIZE_CONTENT);
