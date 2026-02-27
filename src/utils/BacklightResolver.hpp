@@ -143,7 +143,6 @@ public:
             displayIsOff = false;
         }
 
-        LOGD("Touch detected, resetting activity timer");
         setBacklightAnimated(255);
     }
 
@@ -191,7 +190,6 @@ public:
         {
             // V1.0: PCA9557 at 0x18, digital on/off only
             io.digitalWrite(1, brightness > 0 ? 1 : 0);
-            LOGD("V1.0: digitalWrite=%d", brightness > 0 ? 1 : 0);
         }
         else
         {
@@ -208,7 +206,6 @@ public:
                 Wire.beginTransmission(0x30);
                 Wire.write(v12Value);
                 Wire.endTransmission();
-                LOGD("V1.2: brightness=0x%02X", v12Value);
             }
             else
             {
@@ -223,7 +220,6 @@ public:
                 Wire.beginTransmission(0x30);
                 Wire.write(v13Value);
                 Wire.endTransmission();
-                LOGD("V1.3: brightness=%d", v13Value);
             }
         }
 
