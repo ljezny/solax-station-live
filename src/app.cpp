@@ -1429,6 +1429,8 @@ void syncTime()
     // Use PSRAM cache to avoid display flickering (LittleFS uses same SPI bus as LCD)
     remoteLogger.setStatePointer(&remoteLoggerState);
     remoteLogger.setCache(new PSRAMLogCache(32 * 1024));  // 32KB PSRAM buffer
+    remoteLogger.setAppName("solar-station-live");
+    remoteLogger.newSession();  // Generate session ID before registration
     remoteLogger.begin(ESP.getEfuseMac(), String(VERSION_NUMBER));
     remoteLogger.checkLevel();
     
@@ -1922,6 +1924,14 @@ void updateState()
                 {
                     resolveSolaxSmartCharge();
                     break;
+                }
+            }
+            
+            // Flush remote logs when cache is nearly full (>80%)
+            if (remoteLogger.needsFlush()) {
+                int sent = remoteLogger.flush();
+                if (sent > 0) {
+                    LOGD("Remote logs flushed: %d entries sent (cache was nearly full)", sent);
                 }
             }
         }
