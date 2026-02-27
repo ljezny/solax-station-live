@@ -7,6 +7,20 @@
 #include "../../Protocol/ModbusTCP.hpp"
 #include "Inverters/InverterResult.hpp"
 
+/**
+ * GoodWe inverter platform types
+ * - PLATFORM_205: Standard ET/EH/ES series
+ * - PLATFORM_745: ARM 745 based (ETT, HTA, HUB, newer models) - LV and HV variants
+ * - PLATFORM_753: ARM 753 based (AES, EHB, newer high-end models)
+ */
+enum GoodwePlatform {
+    GOODWE_PLATFORM_UNKNOWN = 0,
+    GOODWE_PLATFORM_205 = 205,      // Standard platform
+    GOODWE_PLATFORM_745_LV = 745,   // ARM 745 Low Voltage
+    GOODWE_PLATFORM_745_HV = 7450,  // ARM 745 High Voltage
+    GOODWE_PLATFORM_753 = 753       // ARM 753 platform
+};
+
 class GoodweDongleAPI
 {
 public:
@@ -96,8 +110,11 @@ private:
     bool preferTcp = false; // prefer TCP after successful TCP connection
     double gridBuyTotal = 0;
     double gridSellTotal = 0;
-    bool gridTotalsInitialized = false; // flag for first reading after start
     int day = -1;
+    GoodwePlatform platform = GOODWE_PLATFORM_UNKNOWN;
+    uint32_t ratedPower = 0;  // Read from register 35001
+    bool hasExtendedMeterTested = false;  // True after first meter read attempt
+    bool useExtendedMeterRegs = false;    // True if extended registers work
     static constexpr int RETRY_COUNT = 3;
     static constexpr int GOODWE_TCP_PORT = 502;
     static constexpr uint8_t GOODWE_UNIT_ID = 0xF7;
@@ -118,6 +135,187 @@ private:
     static constexpr uint16_t REG_ECO_MODE_V2_3 = 47559;
     static constexpr uint16_t REG_ECO_MODE_V2_4 = 47565;
     static constexpr uint16_t REG_ECO_MODE_V2_REGS = 6;
+    
+    // ARM 745/753 Platform model prefixes (detected from serial number)
+    // LV = Low Voltage, HV = High Voltage
+    static constexpr const char* PLATFORM_745_LV_MODELS[] = {
+        "ESN", "EBN", "EMN", "SPN", "ERN", "ESC", "HLB", "HMB", "HBB", "EOA"
+    };
+    static constexpr const char* PLATFORM_745_HV_MODELS[] = {
+        "ETT", "HTA", "HUB", "AEB", "SPB", "CUB", "EUB", "HEB", "ERB", "BTT",
+        "ETF", "ARB", "URB", "EBR", "NAH"
+    };
+    static constexpr const char* PLATFORM_753_MODELS[] = {
+        "AES", "HHI", "ABP", "EHB", "HSB", "HUA", "CUA"
+    };
+    static constexpr const char* QIANHAI_MODELS[] = {
+        "ETC", "BTC", "BTN"
+    };
+
+    // ==================== Platform Detection ====================
+    
+    /**
+     * Detect GoodWe platform from serial number prefix
+     * ARM 745/753 platforms have extended meter registers (36104, 36120)
+     * Also triggered for rated_power >= 15kW
+     */
+    GoodwePlatform detectPlatform(const String& sn)
+    {
+        if (sn.length() < 3) return GOODWE_PLATFORM_205;
+        
+        String prefix = sn.substring(0, 3);
+        
+        // Check ARM 745 LV models
+        for (const char* model : PLATFORM_745_LV_MODELS) {
+            if (prefix == model) {
+                LOGD("GoodWe: Detected ARM 745 LV platform (SN prefix: %s)", prefix.c_str());
+                return GOODWE_PLATFORM_745_LV;
+            }
+        }
+        
+        // Check ARM 745 HV models
+        for (const char* model : PLATFORM_745_HV_MODELS) {
+            if (prefix == model) {
+                LOGD("GoodWe: Detected ARM 745 HV platform (SN prefix: %s)", prefix.c_str());
+                return GOODWE_PLATFORM_745_HV;
+            }
+        }
+        
+        // Check ARM 753 models
+        for (const char* model : PLATFORM_753_MODELS) {
+            if (prefix == model) {
+                LOGD("GoodWe: Detected ARM 753 platform (SN prefix: %s)", prefix.c_str());
+                return GOODWE_PLATFORM_753;
+            }
+        }
+        
+        // Check Qianhai models (also ARM 745/753)
+        for (const char* model : QIANHAI_MODELS) {
+            if (prefix == model) {
+                LOGD("GoodWe: Detected Qianhai/ARM platform (SN prefix: %s)", prefix.c_str());
+                return GOODWE_PLATFORM_745_HV;
+            }
+        }
+        
+        // Fallback: check rated power (>= 15kW uses extended registers)
+        if (ratedPower >= 15000) {
+            LOGD("GoodWe: High power inverter (%u W), using ARM 745 registers", ratedPower);
+            return GOODWE_PLATFORM_745_HV;
+        }
+        
+        LOGD("GoodWe: Standard platform 205 (SN prefix: %s)", prefix.c_str());
+        return GOODWE_PLATFORM_205;
+    }
+    
+    /**
+     * Check if platform uses extended meter registers (36104, 36120)
+     */
+    bool hasExtendedMeterRegisters() const
+    {
+        return platform == GOODWE_PLATFORM_745_LV || 
+               platform == GOODWE_PLATFORM_745_HV || 
+               platform == GOODWE_PLATFORM_753;
+    }
+
+    // ==================== SmartMeter Reading ====================
+    
+    /**
+     * Read SmartMeter data with automatic fallback
+     * - First tries extended registers (36104/36120) for ARM 745/753 platforms
+     * - Falls back to Float registers (36015/36017) if extended fails
+     * - Remembers which method works to avoid repeated failures
+     */
+    void readSmartMeterData(InverterData_t& inverterData)
+    {
+        bool meterReadSuccess = false;
+        
+        // Determine which registers to try
+        bool shouldTryExtended = false;
+        if (!hasExtendedMeterTested) {
+            // First attempt - try extended if platform detection suggests it
+            shouldTryExtended = hasExtendedMeterRegisters();
+        } else {
+            // Subsequent attempts - use what worked before
+            shouldTryExtended = useExtendedMeterRegs;
+        }
+        
+        if (shouldTryExtended) {
+            // Try extended U64 registers (36104/36120)
+            LOGD("GoodWe: Trying extended U64 meter registers (36104/36120)");
+            meterReadSuccess = tryReadWithRetries(36000, 125, [&](ModbusResponse& response) {
+                uint64_t rawSell = response.readUInt64(36104);
+                uint64_t rawBuy = response.readUInt64(36120);
+                inverterData.gridSellTotal = rawSell / 100.0;
+                inverterData.gridBuyTotal = rawBuy / 100.0;
+                LOGD("GoodWe U64: raw sell=%llu, raw buy=%llu", rawSell, rawBuy);
+                
+                // Per-phase power
+                inverterData.gridPowerL1 = response.readInt32(36000 + 19);
+                inverterData.gridPowerL2 = response.readInt32(36000 + 21);
+                inverterData.gridPowerL3 = response.readInt32(36000 + 23);
+                LOGD("GoodWe: gridPower L1=%d L2=%d L3=%d W", 
+                     inverterData.gridPowerL1, inverterData.gridPowerL2, inverterData.gridPowerL3);
+                inverterData.loadPower -= (inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
+                
+                // Calculate daily values
+                if (gridBuyTotal == 0) gridBuyTotal = inverterData.gridBuyTotal;
+                if (gridSellTotal == 0) gridSellTotal = inverterData.gridSellTotal;
+                inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
+                inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
+                LOGD("GoodWe: gridSellToday=%.2f (total=%.2f - base=%.2f), gridBuyToday=%.2f (total=%.2f - base=%.2f)",
+                     inverterData.gridSellToday, inverterData.gridSellTotal, gridSellTotal,
+                     inverterData.gridBuyToday, inverterData.gridBuyTotal, gridBuyTotal);
+            });
+            
+            if (meterReadSuccess) {
+                if (!hasExtendedMeterTested) {
+                    LOGD("GoodWe: Extended meter registers (36104/36120) work, using U64 format");
+                    useExtendedMeterRegs = true;
+                    hasExtendedMeterTested = true;
+                }
+                return;
+            } else if (!hasExtendedMeterTested) {
+                LOGD("GoodWe: Extended meter registers failed, falling back to Float");
+            }
+        }
+        
+        // Try Float registers (36015/36017) - either as primary or fallback
+        LOGD("GoodWe: Trying Float meter registers (36015/36017)");
+        meterReadSuccess = tryReadWithRetries(36000, 44, [&](ModbusResponse& response) {
+            float rawSell = response.readIEEE754(36000 + 15);
+            float rawBuy = response.readIEEE754(36000 + 17);
+            inverterData.gridSellTotal = rawSell / 1000.0f;
+            inverterData.gridBuyTotal = rawBuy / 1000.0f;
+            LOGD("GoodWe Float: raw sell=%.2f, raw buy=%.2f", rawSell, rawBuy);
+            
+            // Per-phase power
+            inverterData.gridPowerL1 = response.readInt32(36000 + 19);
+            inverterData.gridPowerL2 = response.readInt32(36000 + 21);
+            inverterData.gridPowerL3 = response.readInt32(36000 + 23);
+            LOGD("GoodWe: gridPower L1=%d L2=%d L3=%d W", 
+                 inverterData.gridPowerL1, inverterData.gridPowerL2, inverterData.gridPowerL3);
+            inverterData.loadPower -= (inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
+            
+            // Calculate daily values
+            if (gridBuyTotal == 0) gridBuyTotal = inverterData.gridBuyTotal;
+            if (gridSellTotal == 0) gridSellTotal = inverterData.gridSellTotal;
+            inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
+            inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
+            LOGD("GoodWe: gridSellToday=%.2f (total=%.2f - base=%.2f), gridBuyToday=%.2f (total=%.2f - base=%.2f)",
+                 inverterData.gridSellToday, inverterData.gridSellTotal, gridSellTotal,
+                 inverterData.gridBuyToday, inverterData.gridBuyTotal, gridBuyTotal);
+        });
+        
+        if (meterReadSuccess) {
+            if (!hasExtendedMeterTested) {
+                LOGD("GoodWe: Using Float meter registers (36015/36017)");
+                useExtendedMeterRegs = false;
+                hasExtendedMeterTested = true;
+            }
+        } else {
+            LOGD("GoodWe: Failed to read SmartMeter data from both U64 and Float registers");
+        }
+    }
 
     // ==================== Core Communication Methods ====================
 
@@ -507,18 +705,12 @@ private:
             inverterData.batteryChargedToday = response.readUInt16(35100 + 108) / 10.0;
             inverterData.batteryDischargedToday = response.readUInt16(35100 + 111) / 10.0;
             
-            // Read daily grid values directly from inverter registers (primary source)
-            // 35199 = e_day_exp (Today Energy export), 35202 = e_day_imp (Today Energy import)
-            inverterData.gridSellToday = response.readUInt16(35100 + 99) / 10.0;  // reg 35199
-            inverterData.gridBuyToday = response.readUInt16(35100 + 102) / 10.0;  // reg 35202
-            
             int newDay = (response.readUInt16(35100 + 1) >> 8) & 0xFF;
             if (this->day != newDay)
             {
                 this->day = newDay;
                 gridBuyTotal = 0;
                 gridSellTotal = 0;
-                gridTotalsInitialized = false; // reset for new day
                 LOGD("GoodWe: New day detected, resetting grid totals");
             }
 
@@ -549,38 +741,24 @@ private:
             return inverterData;
         }
 
-        // Read SN (optional)
-        tryReadWithRetries(35003, 8, [&](ModbusResponse& response) {
+        // Read SN and rated power (optional but needed for platform detection)
+        tryReadWithRetries(35001, 10, [&](ModbusResponse& response) {
+            ratedPower = response.readUInt16(35001);  // Rate Power in W
             inverterData.sn = response.readString(35003, 8);
+            LOGD("GoodWe: SN=%s, ratedPower=%u W", inverterData.sn.c_str(), ratedPower);
         });
+        
+        // Detect platform from SN (once per connection)
+        if (platform == GOODWE_PLATFORM_UNKNOWN && !inverterData.sn.isEmpty()) {
+            platform = detectPlatform(inverterData.sn);
+            LOGD("GoodWe: Platform detected: %d (205=standard, 745/7450=ARM745, 753=ARM753)", platform);
+        }
 
         // Read SmartMeter data (optional)
-        tryReadWithRetries(36000, 44, [&](ModbusResponse& response) {
-            inverterData.gridSellTotal = response.readIEEE754(36000 + 15) / 1000.0f;
-            inverterData.gridBuyTotal = response.readIEEE754(36000 + 17) / 1000.0f;
-            inverterData.gridPowerL1 = response.readInt32(36000 + 19);
-            inverterData.gridPowerL2 = response.readInt32(36000 + 21);
-            inverterData.gridPowerL3 = response.readInt32(36000 + 23);
-            inverterData.loadPower -= (inverterData.gridPowerL1 + inverterData.gridPowerL2 + inverterData.gridPowerL3);
-            
-            // Fallback: if inverter registers didn't provide daily values, calculate from totals
-            if (inverterData.gridSellToday == 0 && inverterData.gridBuyToday == 0 && inverterData.gridSellTotal > 0) {
-                // Initialize totals on first read or after station restart
-                if (!gridTotalsInitialized) {
-                    gridBuyTotal = inverterData.gridBuyTotal;
-                    gridSellTotal = inverterData.gridSellTotal;
-                    gridTotalsInitialized = true;
-                    LOGD("GoodWe: Grid totals initialized (fallback mode) - buy=%.2f sell=%.2f", gridBuyTotal, gridSellTotal);
-                }
-                inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
-                inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
-                LOGD("GoodWe: Using fallback grid daily calc - sellToday=%.2f buyToday=%.2f", 
-                     inverterData.gridSellToday, inverterData.gridBuyToday);
-            } else if (inverterData.gridSellToday > 0 || inverterData.gridBuyToday > 0) {
-                LOGD("GoodWe: Using inverter registers for daily grid - sellToday=%.2f buyToday=%.2f", 
-                     inverterData.gridSellToday, inverterData.gridBuyToday);
-            }
-        });
+        // ARM 745/753 platforms use extended registers 36104/36120 (U64, /100)
+        // Standard platforms use 36015/36017 (Float, /1000)
+        // We try extended first for detected ARM platforms, with fallback to Float
+        readSmartMeterData(inverterData);
 
         // Read BMS info (optional)
         tryReadWithRetries(37000, 8, [&](ModbusResponse& response) {
