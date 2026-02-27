@@ -1577,6 +1577,9 @@ void onLeaving(state_t oldState)
     case STATE_INTELLIGENCE_SETUP:
         break;
     case STATE_DASHBOARD:
+        LOGD("Stopping WebServer and SoftAP");
+        webServer.stop();
+        softAP.stop();
         break;
     }
     logMemory();
