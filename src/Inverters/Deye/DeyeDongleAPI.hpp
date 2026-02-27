@@ -119,6 +119,28 @@ private:
             inverterData.errorDescription = String("Deye micro: Failed to read registers 60-99. ") + channel.getLastErrorMessage();
             return;
         }
+
+        // Sanitize values - pvPower and loadPower cannot be negative
+        if (inverterData.pv1Power < 0 || inverterData.pv1Power > 50000) {
+            LOGD("Deye micro: Invalid pv1Power=%d, setting to 0", inverterData.pv1Power);
+            inverterData.pv1Power = 0;
+        }
+        if (inverterData.pv2Power < 0 || inverterData.pv2Power > 50000) {
+            LOGD("Deye micro: Invalid pv2Power=%d, setting to 0", inverterData.pv2Power);
+            inverterData.pv2Power = 0;
+        }
+        if (inverterData.pv3Power < 0 || inverterData.pv3Power > 50000) {
+            LOGD("Deye micro: Invalid pv3Power=%d, setting to 0", inverterData.pv3Power);
+            inverterData.pv3Power = 0;
+        }
+        if (inverterData.pv4Power < 0 || inverterData.pv4Power > 50000) {
+            LOGD("Deye micro: Invalid pv4Power=%d, setting to 0", inverterData.pv4Power);
+            inverterData.pv4Power = 0;
+        }
+        if (inverterData.loadPower < 0) {
+            LOGD("Deye micro: Invalid loadPower=%d, setting to 0", inverterData.loadPower);
+            inverterData.loadPower = 0;
+        }
     }
 
     void readInverterRTC(uint32_t sn, InverterData_t &inverterData)
@@ -224,6 +246,28 @@ private:
             inverterData.status = DONGLE_STATUS_CONNECTION_ERROR;
             inverterData.errorDescription = String("Deye 3-phase: Failed to read statistics registers 514-537. ") + channel.getLastErrorMessage();
             return;
+        }
+
+        // Sanitize values - pvPower and loadPower cannot be negative
+        if (inverterData.pv1Power < 0 || inverterData.pv1Power > 50000) {
+            LOGD("Deye 3-phase: Invalid pv1Power=%d, setting to 0", inverterData.pv1Power);
+            inverterData.pv1Power = 0;
+        }
+        if (inverterData.pv2Power < 0 || inverterData.pv2Power > 50000) {
+            LOGD("Deye 3-phase: Invalid pv2Power=%d, setting to 0", inverterData.pv2Power);
+            inverterData.pv2Power = 0;
+        }
+        if (inverterData.pv3Power < 0 || inverterData.pv3Power > 50000) {
+            LOGD("Deye 3-phase: Invalid pv3Power=%d, setting to 0", inverterData.pv3Power);
+            inverterData.pv3Power = 0;
+        }
+        if (inverterData.pv4Power < 0 || inverterData.pv4Power > 50000) {
+            LOGD("Deye 3-phase: Invalid pv4Power=%d, setting to 0", inverterData.pv4Power);
+            inverterData.pv4Power = 0;
+        }
+        if (inverterData.loadPower < 0) {
+            LOGD("Deye 3-phase: Invalid loadPower=%d, setting to 0", inverterData.loadPower);
+            inverterData.loadPower = 0;
         }
     }
 
