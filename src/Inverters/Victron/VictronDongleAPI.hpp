@@ -46,6 +46,13 @@ private:
     uint8_t rsInverterUnits[50] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 21, 22, 23, 24, 25,
                                    226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237};
     bool rsInverterUnitsInitialized = false;
+    
+    // Grid meter units (com.victronenergy.grid) - registry 2634/2636 for energy totals
+    // Unit IDs 30-46 are typically used for grid meters
+    uint8_t gridMeterUnits[20] = {30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46};
+    bool gridMeterUnitsInitialized = false;
+    int8_t activeGridMeterUnit = -1;  // -1 = not found/not scanned yet
+    bool hasGridMeter = false;  // True if grid meter was found and provides data
 
     ModbusTCP channel;
 
@@ -219,7 +226,59 @@ public:
             }
         }
         vebusUnitsInitialized = true;
-        LOGD("Victron: VE.Bus scan complete, loadTotal=%.2f kWh", inverterData.loadTotal);
+        LOGD("Victron: VE.Bus scan complete, gridBuyTotal=%.2f, gridSellTotal=%.2f, loadTotal=%.2f kWh", 
+             inverterData.gridBuyTotal, inverterData.gridSellTotal, inverterData.loadTotal);
+
+        // Try to read from Grid Meter (more accurate than VE.Bus for grid energy)
+        // Grid meter registers: 2634 = Energy Forward (from grid), 2636 = Energy Reverse (to grid)
+        if (!gridMeterUnitsInitialized || activeGridMeterUnit >= 0)
+        {
+            LOGD("Victron: Scanning for Grid Meter (unit IDs 30-46)...");
+            for (int i = 0; i < sizeof(gridMeterUnits); i++)
+            {
+                if (gridMeterUnits[i] == 0)
+                {
+                    continue;
+                }
+                
+                // Try to read grid meter energy registers (2634, 2636)
+                response = channel.sendModbusRequest(gridMeterUnits[i], 0x03, 2634, 4);
+                if (response.isValid)
+                {
+                    double gridForwardTotal = response.readUInt32(2634) / 100.0;  // kWh from grid
+                    double gridReverseTotal = response.readUInt32(2636) / 100.0;  // kWh to grid
+                    
+                    LOGI("Victron: Grid Meter FOUND on unit %d - Forward(buy)=%.2f kWh, Reverse(sell)=%.2f kWh",
+                         gridMeterUnits[i], gridForwardTotal, gridReverseTotal);
+                    
+                    // Grid meter values are more accurate than VE.Bus - use them!
+                    if (gridForwardTotal > 0 || gridReverseTotal > 0)
+                    {
+                        double oldGridBuyTotal = inverterData.gridBuyTotal;
+                        double oldGridSellTotal = inverterData.gridSellTotal;
+                        
+                        inverterData.gridBuyTotal = gridForwardTotal;
+                        inverterData.gridSellTotal = gridReverseTotal;
+                        hasGridMeter = true;
+                        activeGridMeterUnit = gridMeterUnits[i];
+                        
+                        LOGI("Victron: Using Grid Meter data instead of VE.Bus (VE.Bus had buy=%.2f, sell=%.2f)",
+                             oldGridBuyTotal, oldGridSellTotal);
+                    }
+                    break;  // Found grid meter, stop scanning
+                }
+                else if (!gridMeterUnitsInitialized)
+                {
+                    gridMeterUnits[i] = 0;  // Mark as not present
+                }
+            }
+            gridMeterUnitsInitialized = true;
+            
+            if (!hasGridMeter)
+            {
+                LOGD("Victron: No Grid Meter found, using VE.Bus energy data");
+            }
+        }
 
         int solarChargerIndex = 0;
         for (int i = 0; i < sizeof(solarChargerUnits); i++)
@@ -469,8 +528,15 @@ public:
 
             struct tm *tm = localtime(&time);
             int day = tm->tm_mday;
+            
+            LOGD("Victron: RTC time read: %ld (day=%d, stored_day=%d)", (long)time, day, this->day);
+            
             if (this->day != day)
             {
+                LOGI("Victron: Day changed from %d to %d - resetting midnight counters", this->day, day);
+                LOGI("Victron: Midnight values BEFORE reset - pvTotal=%.2f, gridBuyTotal=%.2f, gridSellTotal=%.2f, loadTotal=%.2f",
+                     pvTotal, gridBuyTotal, gridSellTotal, loadTotal);
+                
                 this->day = day;
                 pvTotal = inverterData.pvTotal;
                 gridBuyTotal = inverterData.gridBuyTotal;
@@ -479,25 +545,33 @@ public:
                 batteryChargedToday = 0;
                 batteryDischargedToday = 0;
                 pvTodayIntegrated = 0;  // Reset local PV integration at midnight
+                
+                LOGI("Victron: Midnight values AFTER reset - pvTotal=%.2f, gridBuyTotal=%.2f, gridSellTotal=%.2f, loadTotal=%.2f",
+                     pvTotal, gridBuyTotal, gridSellTotal, loadTotal);
             }
 
             // if system was restarted, reset counters
             if (inverterData.pvTotal < pvTotal)
             {
+                LOGW("Victron: pvTotal counter reset detected (%.2f < %.2f), adjusting midnight value", inverterData.pvTotal, pvTotal);
                 pvTotal = inverterData.pvTotal;
             }
             if (inverterData.gridBuyTotal < gridBuyTotal)
             {
+                LOGW("Victron: gridBuyTotal counter reset detected (%.2f < %.2f), adjusting midnight value", inverterData.gridBuyTotal, gridBuyTotal);
                 gridBuyTotal = inverterData.gridBuyTotal;
             }
             if (inverterData.gridSellTotal < gridSellTotal)
             {
+                LOGW("Victron: gridSellTotal counter reset detected (%.2f < %.2f), adjusting midnight value", inverterData.gridSellTotal, gridSellTotal);
                 gridSellTotal = inverterData.gridSellTotal;
             }
             if (inverterData.loadTotal < loadTotal)
             {
+                LOGW("Victron: loadTotal counter reset detected (%.2f < %.2f), adjusting midnight value", inverterData.loadTotal, loadTotal);
                 loadTotal = inverterData.loadTotal;
             }
+            
             // Use pvToday from registers if available, otherwise use local calculation or integration
             if (inverterData.pvToday == 0)
             {
@@ -513,14 +587,29 @@ public:
                          inverterData.pvToday, inverterData.pvTotal, pvTotal);
                 }
             }
+            
+            // Calculate daily values from totals
             inverterData.gridBuyToday = inverterData.gridBuyTotal - gridBuyTotal;
             inverterData.gridSellToday = inverterData.gridSellTotal - gridSellTotal;
             inverterData.loadToday = inverterData.loadTotal - loadTotal;
+            
+            // Detailed logging for gridBuyToday calculation
+            LOGI("Victron: gridBuyToday CALCULATION: %.2f = %.2f (current) - %.2f (midnight) [source: %s]",
+                 inverterData.gridBuyToday, inverterData.gridBuyTotal, gridBuyTotal,
+                 hasGridMeter ? "Grid Meter" : "VE.Bus");
+            LOGI("Victron: gridSellToday CALCULATION: %.2f = %.2f (current) - %.2f (midnight) [source: %s]",
+                 inverterData.gridSellToday, inverterData.gridSellTotal, gridSellTotal,
+                 hasGridMeter ? "Grid Meter" : "VE.Bus");
+            
             LOGD("Victron: Daily stats - pvToday=%.2f, gridBuy=%.2f, gridSell=%.2f, load=%.2f kWh", 
                  inverterData.pvToday, inverterData.gridBuyToday, inverterData.gridSellToday, inverterData.loadToday);
 
             inverterData.batteryChargedToday = batteryChargedToday / 1000.0;       // convert to kWh
             inverterData.batteryDischargedToday = batteryDischargedToday / 1000.0; // convert to kWh
+        }
+        else
+        {
+            LOGW("Victron: Failed to read RTC time from register 830 - daily stats may be inaccurate! day=%d", this->day);
         }
         inverterData.hasBattery = inverterData.soc != 0 || inverterData.batteryPower != 0;
         LOGD("Victron: Final PV power: %d/%d/%d/%d W", inverterData.pv1Power, inverterData.pv2Power, inverterData.pv3Power, inverterData.pv4Power);
