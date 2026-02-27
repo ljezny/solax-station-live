@@ -34,6 +34,7 @@
 #include "utils/WebServer.hpp"
 #include "utils/FlashMutex.hpp"
 #include <RemoteLogger.hpp>
+#include <LogCache.hpp>
 #include <LittleFS.h>
 
 #define UI_REFRESH_INTERVAL 5000            // Define the UI refresh interval in milliseconds
@@ -75,6 +76,7 @@ SoftAP softAP;
 Touch touch;
 WebServer webServer;
 RemoteLogger remoteLogger;
+RTC_DATA_ATTR RemoteLoggerState remoteLoggerState = {LEVEL_NONE, false, 0, {0}};
 
 InverterData_t inverterData;
 InverterData_t previousInverterData;
@@ -1424,6 +1426,9 @@ void syncTime()
     LOGD("NTP sync successful, current time: %s", asctime(&timeinfo));
     
     // Initialize remote logger after time sync (needs WiFi and time)
+    // Use PSRAM cache to avoid display flickering (LittleFS uses same SPI bus as LCD)
+    remoteLogger.setStatePointer(&remoteLoggerState);
+    remoteLogger.setCache(new PSRAMLogCache(32 * 1024));  // 32KB PSRAM buffer
     remoteLogger.begin(ESP.getEfuseMac(), String(VERSION_NUMBER));
     remoteLogger.checkLevel();
     

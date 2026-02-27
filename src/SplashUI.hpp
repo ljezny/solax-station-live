@@ -96,6 +96,10 @@ private:
         lv_obj_add_flag(logoImage, LV_OBJ_FLAG_HIDDEN);
         lv_obj_add_flag(splashLabel, LV_OBJ_FLAG_HIDDEN);
         
+        // Show version and ESP ID labels in checklist phase
+        lv_obj_clear_flag(fwVersionLabel, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(espIdLabel, LV_OBJ_FLAG_HIDDEN);
+        
         // Create main row container (logo left | checklist right)
         mainContainer = lv_obj_create(screen);
         lv_obj_set_size(mainContainer, 780, 400);
