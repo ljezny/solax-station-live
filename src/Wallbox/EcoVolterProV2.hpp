@@ -161,9 +161,9 @@ public:
             String instanceName(rawInstance);
             LOGD("Found instance: %s", instanceName.c_str());
 
-            if (hostname.startsWith("REVCS"))
+            if (hostname.startsWith("REV"))
             {
-                LOGD("Found REVCS device: %s", hostname.c_str());
+                LOGD("Found EcoVolter device: %s", hostname.c_str());
                 hostname.toLowerCase();
                 ecoVolterId = hostname;
                 ip = ipAddress;
