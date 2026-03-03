@@ -369,7 +369,7 @@ public:
                 return isTcpPortOpen(getDefaultIP(discovery), 502, detectedIP);
             case CONNECTION_TYPE_DEYE:
             case CONNECTION_TYPE_SOFAR:
-                return isTcpPortOpen(getDefaultIP(discovery), 8899, detectedIP);
+                return isDeyeSofarReachable(detectedIP);
             case CONNECTION_TYPE_GROWATT:
                 return isTcpPortOpen(getDefaultIP(discovery), 502, detectedIP);
             default:
@@ -411,6 +411,42 @@ private:
         }
         udp.stop();
         LOGW("GoodWe not found via UDP broadcast");
+        return false;
+    }
+    
+    /**
+     * Tries to discover Deye/Sofar dongle via UDP broadcast (same protocol as GoodWe)
+     * These dongles (LSW-3, etc.) use identical discovery on port 48899
+     */
+    bool isDeyeSofarReachable(String &detectedIP)
+    {
+        LOGD("Discovering Deye/Sofar via UDP broadcast on port 48899");
+        WiFiUDP udp;
+        String message = "WIFIKIT-214028-READ";
+        
+        udp.beginPacket(IPAddress(255, 255, 255, 255), 48899);
+        udp.write((const uint8_t *)message.c_str(), (size_t)message.length());
+        udp.endPacket();
+        
+        unsigned long start = millis();
+        while (millis() - start < 3000) {
+            int packetSize = udp.parsePacket();
+            if (packetSize) {
+                char d[128] = {0};
+                udp.read(d, sizeof(d));
+                
+                int indexOfComma = String(d).indexOf(',');
+                if (indexOfComma > 0) {
+                    detectedIP = String(d).substring(0, indexOfComma);
+                    LOGD("Deye/Sofar dongle found at %s", detectedIP.c_str());
+                    udp.stop();
+                    return true;
+                }
+            }
+            delay(50);
+        }
+        udp.stop();
+        LOGW("Deye/Sofar dongle not found via UDP broadcast");
         return false;
     }
     
