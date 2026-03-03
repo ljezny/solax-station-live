@@ -1,0 +1,507 @@
+[16:30:07]ESP-ROM:esp32s3-20210327
+[16:30:07]Build:Mar 27 2021
+[16:30:07]rst:0x1 (POWERON),boot:0x8 (SPI_FAST_FLASH_BOOT)
+[16:30:07]SPIWP:0xee
+[16:30:07]mode:DIO, clock div:1
+[16:30:07]load:0x3fce2820,len:0x17ec
+[16:30:07]load:0x403c8700,len:0x4
+[16:30:07]load:0x403c8704,len:0xf28
+[16:30:07]load:0x403cb700,len:0x35dc
+[16:30:07]entry 0x403c89c0
+[16:30:07]I (27) boot: ESP-IDF 5.4.1 2nd stage bootloader
+[16:30:07]I (27) boot: compile time Dec 15 2025 11:44:17
+[16:30:07]I (27) boot: Multicore bootloader
+[16:30:07]I (27) boot: chip revision: v0.2
+[16:30:07]I (30) boot: efuse block revision: v1.3
+[16:30:07]I (33) qio_mode: Enabling default flash chip QIO
+[16:30:07]I (38) boot.esp32s3: Boot SPI Speed : 80MHz
+[16:30:07]I (42) boot.esp32s3: SPI Mode       : QIO
+[16:30:07]I (45) boot.esp32s3: SPI Flash Size : 16MB
+[16:30:07]I (49) boot: Enabling RNG early entropy source...
+[16:30:07]I (54) boot: Partition Table:
+[16:30:07]I (56) boot: ## Label            Usage          Type ST Offset   Length
+[16:30:07]I (63) boot:  0 nvs              WiFi data        01 02 00009000 00010000
+[16:30:07]I (69) boot:  1 app0             factory app      00 00 00020000 00300000
+[16:30:07]I (76) boot:  2 spiffs           Unknown data     01 82 00320000 000d0000
+[16:30:07]I (82) boot:  3 coredump         Unknown data     01 03 003f0000 00010000
+[16:30:07]I (89) boot: End of partition table
+[16:30:07]I (92) esp_image: segment 0: paddr=00020020 vaddr=3c160020 size=c782ch (817196) map
+[16:30:07]I (213) esp_image: segment 1: paddr=000e7854 vaddr=3fc9cd00 size=05b40h ( 23360) load
+[16:30:07]I (217) esp_image: segment 2: paddr=000ed39c vaddr=40374000 size=02c7ch ( 11388) load
+[16:30:07]I (219) esp_image: segment 3: paddr=000f0020 vaddr=42000020 size=153044h (1388612) map
+[16:30:07]I (417) esp_image: segment 4: paddr=0024306c vaddr=40376c7c size=15fach ( 90028) load
+[16:30:07]I (433) esp_image: segment 5: paddr=00259020 vaddr=50000000 size=00020h (    32) load
+[16:30:07]I (433) esp_image: segment 6: paddr=00259048 vaddr=600fe100 size=0001ch (    28) load
+[16:30:07]I (446) boot: Loaded app from partition at offset 0x20000
+[16:30:07]I (447) boot: Disabling RNG early entropy source...
+[16:30:07]W (458) flash HPM: HPM mode with DC adjustment is disabled. Some flash models may not be supported. Read Docs First!
+[16:30:07]W (458) flash HPM: High performance mode of this flash model hasn't been supported.
+[16:30:07]I (467) MSPI Timing: Flash timing tuning index: 2
+[16:30:07]I (472) octal_psram: ECC is enabled
+[16:30:07]I (476) octal_psram: vendor id    : 0x0d (AP)
+[16:30:07]I (481) octal_psram: dev id       : 0x02 (generation 3)
+[16:30:07]I (487) octal_psram: density      : 0x03 (64 Mbit)
+[16:30:07]I (492) octal_psram: good-die     : 0x01 (Pass)
+[16:30:07]I (498) octal_psram: Latency      : 0x01 (Fixed)
+[16:30:07]I (503) octal_psram: VCC          : 0x01 (3V)
+[16:30:07]I (508) octal_psram: SRF          : 0x01 (Fast Refresh)
+[16:30:07]I (514) octal_psram: BurstType    : 0x00 ( Wrap)
+[16:30:07]I (519) octal_psram: BurstLen     : 0x03 (1024 Byte)
+[16:30:07]I (525) octal_psram: Readlatency  : 0x02 (10 cycles@Fixed)
+[16:30:07]I (531) octal_psram: DriveStrength: 0x00 (1/1)
+[16:30:07]I (542) MSPI Timing: PSRAM timing tuning index: 2
+[16:30:07]I (542) esp_psram: Found 8MB PSRAM device
+[16:30:07]I (546) esp_psram: Speed: 120MHz
+[16:30:07]I (597) mmu_psram: Read only data copied and mapped to SPIRAM
+[16:30:07]I (688) mmu_psram: Instructions copied and mapped to SPIRAM
+[16:30:07]I (688) cpu_start: Multicore app
+[16:30:07]I (699) cpu_start: Pro cpu start user code
+[16:30:07]I (699) cpu_start: cpu freq: 240000000 Hz
+[16:30:07]I (699) app_init: Application information:
+[16:30:07]I (702) app_init: Project name:     solax-station-live
+[16:30:07]I (707) app_init: App version:      Release_358-dirty
+[16:30:07]I (713) app_init: Compile time:     Feb 27 2026 15:53:27
+[16:30:07]I (719) app_init: ELF file SHA256:  9a7bb281bf9ff44e...
+[16:30:07]I (725) app_init: ESP-IDF:          5.4.1
+[16:30:07]I (730) efuse_init: Min chip rev:     v0.0
+[16:30:07]I (734) efuse_init: Max chip rev:     v0.99 
+[16:30:07]I (739) efuse_init: Chip rev:         v0.2
+[16:30:07]I (744) heap_init: Initializing. RAM available for dynamic allocation:
+[16:30:08]I (751) heap_init: At 3FCAB5F0 len 0003E120 (248 KiB): RAM
+[16:30:08]I (758) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
+[16:30:08]I (764) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
+[16:30:08]I (770) heap_init: At 600FE11C len 00001ECC (7 KiB): RTCRAM
+[16:30:08]I (776) esp_psram: Adding pool of 5440K of PSRAM memory to heap allocator
+[16:30:08]I (784) spi_flash: detected chip: generic
+[16:30:08]I (788) spi_flash: flash io: qio
+[16:30:08]W (792) spi_flash: Flash suspend feature is enabled
+[16:30:08]I (800) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+[16:30:08]I (805) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+[16:30:08]I (813) main_task: Started on CPU0
+[16:30:08]I (827) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+[16:30:08]I (827) main_task: Cal[162][I][app.cpp:510] === MEMORY DIAGNOSTICS AT BOOT ===
+[16:30:08][162][I][app.cpp:511] Total heap: 349967 bytes
+[16:30:08][162][I][app.cpp:512] Free heap: 276543 bytes
+[16:30:08][173][I][app.cpp:513] Internal RAM total: 349967 bytes
+[16:30:08][173][I][app.cpp:514] Internal RAM free: 276543 bytes
+[16:30:08][183][I][app.cpp:515] Internal RAM largest block: 172032 bytes
+[16:30:08][183][I][app.cpp:516] PSRAM total: 5570560 bytes
+[16:30:08][193][I][app.cpp:517] PSRAM free: 5548964 bytes
+[16:30:08][193][I][app.cpp:518] DMA RAM free: 269039 bytes
+[16:30:08][193][I][app.cpp:519] =================================
+[16:30:08][204][I][app.cpp:496] [MEM BOOT] Free: 270KB, Internal: 270KB, PSRAM: 5418KB, MinFree: 265KB
+[16:30:08][214][D][Localization.hpp:205] Localization initialized, language: 1
+[16:30:08][214][D][FlashMutex.hpp:219] Flash[Flash]: 234us, wait 0us, vsync TIMEOUT
+[16:30:08][225][I][app.cpp:496] [MEM LOCALE] Free: 270KB, Internal: 270KB, PSRAM: 5418KB, MinFree: 265KB
+[16:30:08][235][D][app.cpp:542] Electricity price structures allocated in PSRAM (1576 bytes each)
+[16:30:08][235][I][app.cpp:496] [MEM PRICE_ALLOC] Free: 270KB, Internal: 270KB, PSRAM: 5415KB, MinFree: 265KB
+[16:30:08][245][I][app.cpp:327] [MEM LVGL:start] Internal: 270KB, Largest: 168KB
+[16:30:08][256][D][BacklightResolver.hpp:47] Display off timeout loaded: 0 minutes
+[16:30:08][756][D][BacklightResolver.hpp:258] Found STC8H1K28 at 0x30, detecting version...
+[16:30:08][807][D][BacklightResolver.hpp:275] After 25: result=0, read 1 bytes (0xFF)
+[16:30:08][808][D][BacklightResolver.hpp:298] Chip responded after 25 -> V1.3 detected
+[16:30:08][818][D][BacklightResolver.hpp:57] Detected CrowPanel version: V1.3
+[16:30:08][818][D][BacklightResolver.hpp:185] Setting backlight: -1 -> 255
+[16:30:08][829][I][app.cpp:337] [MEM LVGL:backlight] Internal: 269KB
+[16:30:08][923][I][app.cpp:341] [MEM LVGL:tft.begin] Internal: 264KB
+[16:30:09][1146][I][app.cpp:345] [MEM LVGL:tft] Internal: 264KB
+[16:30:09][1146][I][FlashMutex.hpp:80] VSyncManager: Initialized, waiting for VSYNC callback registration
+[16:30:09][1157][I][FlashMutex.hpp:91] VSyncManager: VSYNC callback registered on Bus_RGB
+[16:30:09][1157][I][app.cpp:357] VSYNC synchronization enabled (patched Bus_RGB)
+[16:30:09][1167][I][app.cpp:362] [MEM LVGL:lv_init] Internal: 264KB
+[16:30:09][1267][I][app.cpp:367] [MEM LVGL:touch] Internal: 264KB
+[16:30:09][1267][D][app.cpp:384] Display buffers in PSRAM: 2x 187.5 KB (120 lines)
+[16:30:09][1271][I][app.cpp:439] [MEM UI sizes] SplashUI=100, DashboardUI=8196, WiFiSetupUI=204, IntelligenceSetupUI=172 bytes
+[16:30:09][1281][I][app.cpp:441] [MEM LVGL:theme] Internal: 264KB
+[16:30:09][1291][I][app.cpp:456] [MEM LVGL:UI allocated] Internal: 264KB
+[16:30:09][1292][D][BaseUI.hpp:174] ScreenManager: Switching screen (anim=0, duration=0ms)
+[16:30:09][1304][I][app.cpp:496] [MEM LVGL] Free: 252KB, Internal: 252KB, PSRAM: 4273KB, MinFree: 252KB
+[16:30:09]I (2082) pp: pp rom version: e7ae62f
+[16:30:09]I (2159) net80211: net80211 rom version: e7ae62f
+[16:30:09]I (2160) wifi:wifi driver task: 3fcc6d04, prio:23, stack:6656, core=0
+[16:30:09]I (2164) wifi:wifi firmware version: 79fa3f41ba
+[16:30:09]I (2167) wifi:wifi certification version: v7.0
+[16:30:09]I (2171) wifi:config NVS flash: enabled
+[16:30:09]I (2175) wifi:config nano formatting: disabled
+[16:30:09]I (2179) wifi:Init data frame dynamic rx buffer num: 32
+[16:30:09]I (2184) wifi:Init static rx mgmt buffer num: 5
+[16:30:09]I (2188) wifi:Init management short buffer num: 32
+[16:30:09]I (2193) wifi:Init dynamic tx buffer num: 32
+[16:30:09]I (2197) wifi:Init tx cache buffer num: 4
+[16:30:09]I (2201) wifi:Init static tx FG buffer num: 2
+[16:30:09]I (2205) wifi:Init static rx buffer size: 1600
+[16:30:09]I (2209) wifi:Init static rx buffer num: 4
+[16:30:09]I (2213) wifi:Init dynamic rx buffer num: 32
+[16:30:09]I (2217) wifi_init: rx ba win: 6
+[16:30:09]I (2220) wifi_init: accept mbox: 6
+[16:30:09]I (2225) wifi_init: tcpip mbox: 32
+[16:30:09]I (2229) wifi_init: udp mbox: 6
+[16:30:09]I (2232) wifi_init: tcp mbox: 6
+[16:30:09]I (2236) wifi_init: tcp tx win: 5760
+[16:30:09]I (2241) wifi_init: tcp rx win: 5760
+[16:30:09]I (2245) wifi_init: tcp mss: 1440
+[16:30:09]I (2249) wifi_init: WiFi/LWIP prefer SPIRAM
+[16:30:09]I (2254) wifi_init: WiFi IRAM OP enabled
+[16:30:09]I (2258) wifi_init: WiFi RX IRAM OP enabled
+[16:30:09]I (2264) phy_init: phy_version 700,8582a7fd,Feb 10 2025,20:13:11
+[16:30:09]I (2296) wifi:mode : sta (80:b5:4e:f7:b0:00) + softAP (80:b5:4e:f7:b0:01)
+[16:30:09]I (2296) wifi:enable tsf
+[16:30:09]I (2296) wifi:Total power save buffer number: 16
+[16:30:09]I (2298) wifi:Init max length of beacon: 752/752
+[16:30:09]I (2302) wifi:Init max length of beacon: 752/752
+[16:30:09][1530][I (2307) wifi:I (2307) esp_netif_lwip: DHCP server started on interface WIFI_AP_DEF with IP: 192.168.4.1
+[16:30:09]Set ps type: 0, coexist: 0
+[16:30:09]
+[16:30:09]I][app.cpp:496] [MEM WIFI] Free: 216KB, Internal: 216KB, PSRAM: 4256KB, MinFree: 216KB
+[16:30:09][1553][D][app.cpp:553] [Memory] After setup - Free heap: 221463, Free internal: 221463
+[16:30:12][4777][D][WiFiDiscovery.hpp:637] DongleInfo cache initialized
+[16:30:12][4777][D][FlashMutex.hpp:219] Flash[Dongle:loadAll]: 114us, wait 5608us, vsync OK
+[16:30:12][4800][D][FlashMutex.hpp:219] Flash[Dongle:load]: 189us, wait 12339us, vsync OK
+[16:30:12][4820][D][FlashMutex.hpp:219] Flash[Dongle:load]: 231us, wait 19990us, vsync TIMEOUT
+[16:30:12][4823][D][FlashMutex.hpp:219] Flash[Dongle:load]: 739us, wait 1666us, vsync OK
+[16:30:12][4846][D][FlashMutex.hpp:219] Flash[Dongle:load]: 745us, wait 11592us, vsync OK
+[16:30:12][4866][D][FlashMutex.hpp:219] Flash[Dongle:load]: 201us, wait 19773us, vsync TIMEOUT
+[16:30:12][4868][D][FlashMutex.hpp:219] Flash[Dongle:load]: 197us, wait 1643us, vsync OK
+[16:30:12][4891][D][FlashMutex.hpp:219] Flash[WiFi:loadSSID]: 75us, wait 11940us, vsync OK
+[16:30:12][4891][D][WiFiDiscovery.hpp:260] Multiple prefered dongles found, no autoconnect
+[16:30:12][4902][D][app.cpp:1572] Leaving state 0
+[16:30:12][4902][D][app.cpp:1502] Entering state 2
+[16:30:12][4902][D][BaseUI.hpp:174] ScreenManager: Switching screen (anim=5, duration=300ms)
+[16:30:12][4982][D][WiFiSetupUI.hpp:774] Inverter SN changed: 
+[16:30:13][4982][D][FlashMutex.hpp:219] Flash[WiFi:loadSSID]: 87us, wait 326us, vsync OK
+[16:30:13][5003][D][FlashMutex.hpp:219] Flash[SpotProvider:get]: 15us, wait 20436us, vsync TIMEOUT
+[16:30:13][5005][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 29us, wait 1053us, vsync OK
+[16:30:34][26173][D][WiFiSetupUI.hpp:774] Inverter SN changed: 3
+[16:30:34][26174][D][WiFiSetupUI.hpp:774] Inverter SN changed: 31
+[16:30:34][26175][D][WiFiSetupUI.hpp:774] Inverter SN changed: 312
+[16:30:34][26186][D][WiFiSetupUI.hpp:774] Inverter SN changed: 3128
+[16:30:34][26187][D][WiFiSetupUI.hpp:774] Inverter SN changed: 31286
+[16:30:34][26188][D][WiFiSetupUI.hpp:774] Inverter SN changed: 312866
+[16:30:34][26199][D][WiFiSetupUI.hpp:774] Inverter SN changed: 3128668
+[16:30:34][26200][D][WiFiSetupUI.hpp:774] Inverter SN changed: 31286686
+[16:30:34][26211][D][WiFiSetupUI.hpp:774] Inverter SN changed: 312866860
+[16:30:34][26212][D][WiFiSetupUI.hpp:774] Inverter SN changed: 3128668606
+[16:30:34][26223][D][WiFiSetupUI.hpp:774] Inverter SN changed: 3128668606
+[16:30:59][51847][D][WiFiSetupUI.hpp:652] WiFi setup OK clicked, selectedIndex=3
+[16:30:59][51847][D][WiFiSetupUI.hpp:656] Result type=5, ssid=AP_3128668606
+[16:30:59][51857][D][WiFiSetupUI.hpp:664] Connection type from dropdown: index=5, type=5
+[16:30:59][51857][D][WiFiSetupUI.hpp:669] Setup complete flag set to true
+[16:30:59][51902][D][app.cpp:1782] WiFi setup complete, result type=5
+[16:30:59][51902][D][app.cpp:1572] Leaving state 2
+[16:30:59][51902][D][app.cpp:1502] Entering state 1
+[16:30:59][51913][D][BaseUI.hpp:174] ScreenManager: Switching screen (anim=9, duration=200ms)
+[16:30:59][51915][D][app.cpp:1521] Initializing LittleFS and loading predictors...
+[16:31:00][52175][W][FlashMutex.hpp:216] Flash[load:cons]: 247718us (>2ms!), wait 1805us, vsync OK
+[16:31:00][52181][W][FlashMutex.hpp:216] Flash[load:prod]: 3491us (>2ms!), wait 2644us, vsync OK
+[16:31:00][52181][D][app.cpp:1525] Predictors loaded successfully
+[16:31:00]W (53217) wifi:Haven't to connect to a suitable AP now!
+[16:31:02]I (54884) wifi:ap channel adjust o:1,1 n:10,2
+[16:31:02]I (54884) wifi:new:<10,0>, old:<1,1>, ap:<10,2>, sta:<10,0>, prof:1, snd_ch_cfg:0x0
+[16:31:02]I (54885) wifi:state: init -> auth (0xb0)
+[16:31:02]I (54891) wifi:state: auth -> assoc (0x0)
+[16:31:02]I (54895) wifi:state: assoc -> run (0x10)
+[16:31:02]I (54926) wifi:connected with AP_3128668606, aid = 2, channel 10, BW20, bssid = d0:27:87:3a:8b:c6
+[16:31:02]I (54926) wifi:security: WPA2-PSK, phy: bgn, rssi: -84
+[16:31:02]I (54929) wifi:pm start, type: 0
+[16:31:02]
+[16:31:02]I (54932) wifi:dp: 1, bi: 102400, li: 3, scale listen interval from 307200 us to 307200 us
+[16:31:02]I (54940) wifi:set rx beacon pti, rx_bcn_pti: 0, bcn_timeout: 25000, mt_pti: 0, mt_time: 10000
+[16:31:02]I (54960) wifi:AP's beacon interval = 102400 us, DTIM period = 1
+[16:31:03]I (55964) esp_netif_handlers: sta ip: 10.10.100.150, mask: 255.255.255.0, gw: 10.10.100.254
+[16:31:03][55241][D][WiFiDiscovery.hpp:508] WiFi: AP_3128668606 IP=10.10.100.150 RSSI=-83 (34%)
+[16:31:03][55253][D][FlashMutex.hpp:219] Flash[Dongle:save]: 269us, wait 10867us, vsync OK
+[16:31:03][55274][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 70us, wait 20323us, vsync TIMEOUT
+[16:31:03][55274][D][app.cpp:1398] Stored time zone: CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:31:03][55285][D][app.cpp:1405] Time zone set to CET-1CEST,M3.5.0/2,M10.5.0/3
+[16:31:08][60295][E][app.cpp:1421] Failed to obtain time from NTP
+[16:31:08][60297][W][app.cpp:1658] NTP time sync failed, will try inverter RTC
+[16:31:08][60297][D][WiFiDiscovery.hpp:360] Checking inverter reachability for type 5
+[16:31:08][60308][W][WiFiDiscovery.hpp:453] No IP address for TCP check
+[16:31:08][60309][W][app.cpp:1679] Inverter ping failed, will try to load data anyway
+[16:31:08][60320][D][DeyeDongleAPI.hpp:27] Connecting to dongle...
+[16:31:08][60320][D][DeyeDongleAPI.hpp:46] SN: 3128668606 (from string: '3128668606')
+[16:31:11][63335][D][V5TCP.hpp:429] Attempt 1/3 for register 0x0000 (SN: 3128668606)
+[16:31:11][63335][I][CustomNetworkClient.hpp:80] Socket created 54, connecting to 10.10.100.254:8899
+[16:31:14][66214][I][CustomNetworkClient.hpp:101] Successfully connected
+[16:31:14][66215][D][V5TCP.hpp:214] Sending solarmanv5 request. Sequence: 1, SN: 3128668606, Addr: 0, Len: 9
+[16:31:14][66225][D][V5TCP.hpp:224] Request: a5 17 0 10 45 1 0 be b1 7b ba 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 3 0 0 0 9 85 cc 71 15 
+[16:31:16][68719][D][V5TCP.hpp:288] Frame: ctrl=0x1015 seq=1 respSN=3128668606 (expected seq=1, SN=3128668606)
+[16:31:16][68719][D][V5TCP.hpp:347] Payload length: 37, sequence OK, SN OK
+[16:31:16][68730][D][V5TCP.hpp:412] Response: 1 3 12 0 5 0 1 1 4 32 34 31 31 31 32 36 33 32 33 0 0 5b b4 
+[16:31:16][68740][I][V5TCP.hpp:438] Successfully read 23 bytes from register 0x0000
+[16:31:16][68740][D][DeyeDongleAPI.hpp:55] Device type: 5
+[16:31:16][68750][D][DeyeDongleAPI.hpp:57] Comm protocol version: 104
+[16:31:16][68751][D][DeyeDongleAPI.hpp:59] Inverter SN: 2411126323
+[16:31:16][68761][I][CustomNetworkClient.hpp:112] Stopping socket 54
+[16:31:16][68761][I][CustomNetworkClient.hpp:118] Socket closed
+[16:31:16][68762][D][DeyeDongleAPI.hpp:171] Loading 3-phase inverter data...
+[16:31:16][68772][D][V5TCP.hpp:429] Attempt 1/3 for register 0x02A0 (SN: 3128668606)
+[16:31:16][68782][I][CustomNetworkClient.hpp:80] Socket created 54, connecting to 10.10.100.254:8899
+[16:31:28][80604][I][CustomNetworkClient.hpp:101] Successfully connected
+[16:31:28][80604][D][V5TCP.hpp:214] Sending solarmanv5 request. Sequence: 2, SN: 3128668606, Addr: 672, Len: 4
+[16:31:28][80615][D][V5TCP.hpp:224] Request: a5 17 0 10 45 2 0 be b1 7b ba 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 3 2 a0 0 4 45 93 96 15 
+[16:31:28][80711][D][V5TCP.hpp:288] Frame: ctrl=0x1015 seq=2 respSN=3128668606 (expected seq=2, SN=3128668606)
+[16:31:28][80711][D][V5TCP.hpp:347] Payload length: 27, sequence OK, SN OK
+[16:31:28][80722][D][V5TCP.hpp:412] Response: 1 3 8 1 2d 1 1e 0 0 0 0 0 ca 
+[16:31:28][80722][I][V5TCP.hpp:438] Successfully read 13 bytes from register 0x02A0
+[16:31:28][80732][I][CustomNetworkClient.hpp:112] Stopping socket 54
+[16:31:28][80733][I][CustomNetworkClient.hpp:118] Socket closed
+[16:31:28][80743][D][V5TCP.hpp:429] Attempt 1/3 for register 0x024A (SN: 3128668606)
+[16:31:28][80743][I][CustomNetworkClient.hpp:80] Socket created 54, connecting to 10.10.100.254:8899
+[16:31:28][80760][I][CustomNetworkClient.hpp:101] Successfully connected
+[16:31:28][80761][D][V5TCP.hpp:214] Sending solarmanv5 request. Sequence: 3, SN: 3128668606, Addr: 586, Len: 6
+[16:31:28][80771][D][V5TCP.hpp:224] Request: a5 17 0 10 45 3 0 be b1 7b ba 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 3 2 4a 0 6 e5 a6 f6 15 
+[16:31:36][88232][D][V5TCP.hpp:288] Frame: ctrl=0x1015 seq=3 respSN=3128668606 (expected seq=3, SN=3128668606)
+[16:31:36][88232][D][V5TCP.hpp:347] Payload length: 31, sequence OK, SN OK
+[16:31:36][88243][D][V5TCP.hpp:412] Response: 1 3 c 4 ad 14 44 0 19 0 0 4 32 4 c 32 a9 
+[16:31:36][88243][I][V5TCP.hpp:438] Successfully read 17 bytes from register 0x024A
+[16:31:36][88253][I][CustomNetworkClient.hpp:112] Stopping socket 54
+[16:31:36][88264][I][CustomNetworkClient.hpp:118] Socket closed
+[16:31:36][88264][D][V5TCP.hpp:429] Attempt 1/3 for register 0x006C (SN: 3128668606)
+[16:31:36][88275][I][CustomNetworkClient.hpp:80] Socket created 54, connecting to 10.10.100.254:8899
+[16:31:36][88280][I][CustomNetworkClient.hpp:101] Successfully connected
+[16:31:36][88280][D][V5TCP.hpp:214] Sending solarmanv5 request. Sequence: 4, SN: 3128668606, Addr: 108, Len: 2
+[16:31:36][88291][D][V5TCP.hpp:224] Request: a5 17 0 10 45 4 0 be b1 7b ba 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 3 0 6c 0 2 4 16 a2 15 
+[16:31:36][88383][D][V5TCP.hpp:288] Frame: ctrl=0x1015 seq=4 respSN=3128668606 (expected seq=4, SN=3128668606)
+[16:31:36][88383][D][V5TCP.hpp:347] Payload length: 23, sequence OK, SN OK
+[16:31:36][88393][D][V5TCP.hpp:412] Response: 1 3 4 1 5e 1 5e 1a 75 
+[16:31:36][88394][I][V5TCP.hpp:438] Successfully read 9 bytes from register 0x006C
+[16:31:36][88404][D][DeyeDongleAPI.hpp:208] Deye max charge current: 35.0 A, max discharge current: 35.0 A
+[16:31:36][88415][D][DeyeDongleAPI.hpp:209] Max charge power: 1750 W, max discharge power: 1750 W
+[16:31:36][88415][I][CustomNetworkClient.hpp:112] Stopping socket 54
+[16:31:36][88425][I][CustomNetworkClient.hpp:118] Socket closed
+[16:31:36][88426][D][V5TCP.hpp:429] Attempt 1/3 for register 0x0256 (SN: 3128668606)
+[16:31:36][88436][I][CustomNetworkClient.hpp:80] Socket created 54, connecting to 10.10.100.254:8899
+[16:31:36][88453][I][CustomNetworkClient.hpp:101] Successfully connected
+[16:31:36][88453][D][V5TCP.hpp:214] Sending solarmanv5 request. Sequence: 5, SN: 3128668606, Addr: 598, Len: 58
+[16:31:36][88464][D][V5TCP.hpp:224] Request: a5 17 0 10 45 5 0 be b1 7b ba 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 3 2 56 0 3a 24 71 42 15 
+[16:31:36][88678][D][V5TCP.hpp:288] Frame: ctrl=0x1015 seq=5 respSN=3128668606 (expected seq=5, SN=3128668606)
+[16:31:36][88678][D][V5TCP.hpp:347] Payload length: 135, sequence OK, SN OK
+[16:31:36][88689][D][V5TCP.hpp:412] Response: 1 3 74 9 c 9 9 9 a 0 0 0 0 0 0 ff ec ff e4 f9 48 f9 18 0 0 13 8c 0 25 0 2e 2 e6 0 2f 0 2c 0 4c 0 1 0 3 0 5 0 9 0 0 0 0 0 1 0 3 0 5 0 9 0 0 9 e 8 fc 9 12 0 a 0 0 2 e4 0 28 0 2f 6 df 7 36 7 36 13 8c 0 0 0 14 0 13 0 27 0 4e 9 9 8 fd 9 c 0 0 0 0 0 0 0 29 0 32 6 e4 7 3f 7 3f 13 8c 8f f4 
+[16:31:36][88710][I][V5TCP.hpp:438] Successfully read 121 bytes from register 0x0256
+[16:31:36][88720][I][CustomNetworkClient.hpp:112] Stopping socket 54
+[16:31:36][88731][I][CustomNetworkClient.hpp:118] Socket closed
+[16:31:36][88731][D][V5TCP.hpp:429] Attempt 1/3 for register 0x021D (SN: 3128668606)
+[16:31:36][88741][I][CustomNetworkClient.hpp:80] Socket created 54, connecting to 10.10.100.254:8899
+[16:31:36][88748][I][CustomNetworkClient.hpp:101] Successfully connected
+[16:31:36][88748][D][V5TCP.hpp:214] Sending solarmanv5 request. Sequence: 6, SN: 3128668606, Addr: 541, Len: 1
+[16:31:36][88759][D][V5TCP.hpp:224] Request: a5 17 0 10 45 6 0 be b1 7b ba 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 3 2 1d 0 1 15 b4 5 15 
+[16:31:44][96234][D][V5TCP.hpp:288] Frame: ctrl=0x1015 seq=6 respSN=3128668606 (expected seq=6, SN=3128668606)
+[16:31:44][96235][D][V5TCP.hpp:347] Payload length: 21, sequence OK, SN OK
+[16:31:44][96245][D][V5TCP.hpp:412] Response: 1 3 2 5 f4 ba 93 
+[16:31:44][96245][I][V5TCP.hpp:438] Successfully read 7 bytes from register 0x021D
+[16:31:44][96256][I][CustomNetworkClient.hpp:112] Stopping socket 54
+[16:31:44][96256][I][CustomNetworkClient.hpp:118] Socket closed
+[16:31:44][96267][D][V5TCP.hpp:429] Attempt 1/3 for register 0x0202 (SN: 3128668606)
+[16:31:44][96267][I][CustomNetworkClient.hpp:80] Socket created 54, connecting to 10.10.100.254:8899
+[16:31:44][96288][I][CustomNetworkClient.hpp:101] Successfully connected
+[16:31:44][96288][D][V5TCP.hpp:214] Sending solarmanv5 request. Sequence: 7, SN: 3128668606, Addr: 514, Len: 23
+[16:31:44][96298][D][V5TCP.hpp:224] Request: a5 17 0 10 45 7 0 be b1 7b ba 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 3 2 2 0 17 a5 bc 99 15 
+[16:31:44][96435][D][V5TCP.hpp:288] Frame: ctrl=0x1015 seq=7 respSN=3128668606 (expected seq=7, SN=3128668606)
+[16:31:44][96435][D][V5TCP.hpp:347] Payload length: 65, sequence OK, SN OK
+[16:31:44][96446][D][V5TCP.hpp:412] Response: 1 3 2e 0 60 0 4a 2b 33 0 0 28 e6 0 0 0 59 0 0 a9 6 0 0 2 40 0 0 1 19 e9 d1 0 0 0 d1 0 0 0 0 0 0 0 0 47 bb 0 0 0 0 52 51 
+[16:31:44][96457][I][V5TCP.hpp:438] Successfully read 51 bytes from register 0x0202
+[16:31:44][96467][I][CustomNetworkClient.hpp:112] Stopping socket 54
+[16:31:44][96468][I][CustomNetworkClient.hpp:118] Socket closed
+[16:31:44][96478][D][V5TCP.hpp:429] Attempt 1/3 for register 0x0016 (SN: 3128668606)
+[16:31:44][96478][I][CustomNetworkClient.hpp:80] Socket created 54, connecting to 10.10.100.254:8899
+[16:31:44][96497][I][CustomNetworkClient.hpp:101] Successfully connected
+[16:31:44][96497][D][V5TCP.hpp:214] Sending solarmanv5 request. Sequence: 8, SN: 3128668606, Addr: 22, Len: 6
+[16:31:44][96508][D][V5TCP.hpp:224] Request: a5 17 0 10 45 8 0 be b1 7b ba 2 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 3 0 16 0 6 24 c 6a 15 
+[16:31:44][96636][D][V5TCP.hpp:288] Frame: ctrl=0x1015 seq=8 respSN=3128668606 (expected seq=8, SN=3128668606)
+[16:31:44][96636][D][V5TCP.hpp:347] Payload length: 31, sequence OK, SN OK
+[16:31:44][96647][D][V5TCP.hpp:412] Response: 1 3 c 2 3 0 9 0 7 0 0 0 0 0 0 79 63 
+[16:31:44][96647][I][V5TCP.hpp:438] Successfully read 17 bytes from register 0x0016
+[16:31:44]Guru Meditation Error: Core  1 panic'ed (LoadProhibited). Exception was unhandled.
+[16:31:44]
+[16:31:44]Core  1 register dump:
+[16:31:44]PC      : 0x420070f0  PS      : 0x00060b30  A0      : 0x820146e0  A1      : 0x3fcbcf90  
+[16:31:44]A2      : 0x3fcbd4d0  A3      : 0x00000049  A4      : 0x3fcbd020  A5      : 0x3c166fd0  
+[16:31:44]A6      : 0x000001b6  A7      : 0x00000000  A8      : 0x0000543f  A9      : 0x00000009  
+[16:31:44]A10     : 0x3fcbcfd4  A11     : 0x00000000  A12     : 0x0000002f  A13     : 0x0000ff00  
+[16:31:44]A14     : 0x00ff0000  A15     : 0xff000000  SAR     : 0x00000019  EXCCAUSE: 0x0000001c  
+[16:31:44]EXCVADDR: 0x00005443  LBEG    : 0x420070ec  LEND    : 0x420070f0  LCOUNT  : 0x00000000  
+[16:31:44]
+[16:31:44]
+[16:31:44]Backtrace: 0x420070ed:0x3fcbcf90 0x420146dd:0x3fcbd010 0x4203f869:0x3fcbd0b0 0x42042295:0x3fcbd530 0x4204b12e:0x3fcbd690 0x4204c0af:0x3fcbd870 0x4209ec65:0x3fcbd890
+[16:31:44]
+[16:31:44]
+[16:31:44]
+[16:31:44]
+[16:31:44]ELF file SHA256: 9a7bb281bf9ff44e
+[16:31:44]
+[16:31:44]Rebooting...
+[16:31:44]ESP-ROM:esp32s3-20210327
+[16:31:44]Build:Mar 27 2021
+[16:31:44]rst:0xc (RTC_SW_CPU_RST),boot:0x8 (SPI_FAST_FLASH_BOOT)
+[16:31:44]Saved PC:0x4037b5fa
+[16:31:44]SPIWP:0xee
+[16:31:44]mode:DIO, clock div:1
+[16:31:44]load:0x3fce2820,len:0x17ec
+[16:31:44]load:0x403c8700,len:0x4
+[16:31:44]load:0x403c8704,len:0xf28
+[16:31:44]load:0x403cb700,len:0x35dc
+[16:31:44]entry 0x403c89c0
+[16:31:44]I (31) boot: ESP-IDF 5.4.1 2nd stage bootloader
+[16:31:44]I (31) boot: compile time Dec 15 2025 11:44:17
+[16:31:44]I (31) boot: Multicore bootloader
+[16:31:44]I (31) boot: chip revision: v0.2
+[16:31:44]I (34) boot: efuse block revision: v1.3
+[16:31:44]I (38) qio_mode: Enabling default flash chip QIO
+[16:31:44]I (42) boot.esp32s3: Boot SPI Speed : 80MHz
+[16:31:44]I (46) boot.esp32s3: SPI Mode       : QIO
+[16:31:44]I (50) boot.esp32s3: SPI Flash Size : 16MB
+[16:31:44]I (54) boot: Enabling RNG early entropy source...
+[16:31:44]I (58) boot: Partition Table:
+[16:31:44]I (61) boot: ## Label            Usage          Type ST Offset   Length
+[16:31:44]I (67) boot:  0 nvs              WiFi data        01 02 00009000 00010000
+[16:31:44]I (73) boot:  1 app0             factory app      00 00 00020000 00300000
+[16:31:44]I (80) boot:  2 spiffs           Unknown data     01 82 00320000 000d0000
+[16:31:44]I (87) boot:  3 coredump         Unknown data     01 03 003f0000 00010000
+[16:31:44]I (93) boot: End of partition table
+[16:31:44]I (96) esp_image: segment 0: paddr=00020020 vaddr=3c160020 size=c782ch (817196) map
+[16:31:45]I (218) esp_image: segment 1: paddr=000e7854 vaddr=3fc9cd00 size=05b40h ( 23360) load
+[16:31:45]I (222) esp_image: segment 2: paddr=000ed39c vaddr=40374000 size=02c7ch ( 11388) load
+[16:31:45]I (224) esp_image: segment 3: paddr=000f0020 vaddr=42000020 size=153044h (1388612) map
+[16:31:45]I (424) esp_image: segment 4: paddr=0024306c vaddr=40376c7c size=15fach ( 90028) load
+[16:31:45]I (439) esp_image: segment 5: paddr=00259020 vaddr=50000000 size=00020h (    32) load
+[16:31:45]I (439) esp_image: segment 6: paddr=00259048 vaddr=600fe100 size=0001ch (    28) load
+[16:31:45]I (453) boot: Loaded app from partition at offset 0x20000
+[16:31:45]I (453) boot: Disabling RNG early entropy source...
+[16:31:45]W (464) flash HPM: HPM mode with DC adjustment is disabled. Some flash models may not be supported. Read Docs First!
+[16:31:45]W (465) flash HPM: High performance mode of this flash model hasn't been supported.
+[16:31:45]I (473) MSPI Timing: Flash timing tuning index: 2
+[16:31:45]I (478) octal_psram: ECC is enabled
+[16:31:45]I (482) octal_psram: vendor id    : 0x0d (AP)
+[16:31:45]I (487) octal_psram: dev id       : 0x02 (generation 3)
+[16:31:45]I (493) octal_psram: density      : 0x03 (64 Mbit)
+[16:31:45]I (499) octal_psram: good-die     : 0x01 (Pass)
+[16:31:45]I (504) octal_psram: Latency      : 0x01 (Fixed)
+[16:31:45]I (509) octal_psram: VCC          : 0x01 (3V)
+[16:31:45]I (514) octal_psram: SRF          : 0x01 (Fast Refresh)
+[16:31:45]I (520) octal_psram: BurstType    : 0x00 ( Wrap)
+[16:31:45]I (525) octal_psram: BurstLen     : 0x03 (1024 Byte)
+[16:31:45]I (531) octal_psram: Readlatency  : 0x02 (10 cycles@Fixed)
+[16:31:45]I (537) octal_psram: DriveStrength: 0x00 (1/1)
+[16:31:45]I (548) MSPI Timing: PSRAM timing tuning index: 2
+[16:31:45]I (548) esp_psram: Found 8MB PSRAM device
+[16:31:45]I (553) esp_psram: Speed: 120MHz
+[16:31:45]I (603) mmu_psram: Read only data copied and mapped to SPIRAM
+[16:31:45]I (694) mmu_psram: Instructions copied and mapped to SPIRAM
+[16:31:45]I (695) cpu_start: Multicore app
+[16:31:45]I (705) cpu_start: Pro cpu start user code
+[16:31:45]I (705) cpu_start: cpu freq: 240000000 Hz
+[16:31:45]I (705) app_init: Application information:
+[16:31:45]I (708) app_init: Project name:     solax-station-live
+[16:31:45]I (714) app_init: App version:      Release_358-dirty
+[16:31:45]I (719) app_init: Compile time:     Feb 27 2026 15:53:27
+[16:31:45]I (725) app_init: ELF file SHA256:  9a7bb281bf9ff44e...
+[16:31:45]I (731) app_init: ESP-IDF:          5.4.1
+[16:31:45]I (736) efuse_init: Min chip rev:     v0.0
+[16:31:45]I (741) efuse_init: Max chip rev:     v0.99 
+[16:31:45]I (746) efuse_init: Chip rev:         v0.2
+[16:31:45]I (751) heap_init: Initializing. RAM available for dynamic allocation:
+[16:31:45]I (758) heap_init: At 3FCAB5F0 len 0003E120 (248 KiB): RAM
+[16:31:45]I (764) heap_init: At 3FCE9710 len 00005724 (21 KiB): RAM
+[16:31:45]I (770) heap_init: At 3FCF0000 len 00008000 (32 KiB): DRAM
+[16:31:45]I (776) heap_init: At 600FE11C len 00001ECC (7 KiB): RTCRAM
+[16:31:45]I (782) esp_psram: Adding pool of 5440K of PSRAM memory to heap allocator
+[16:31:45]I (790) spi_flash: detected chip: generic
+[16:31:45]I (794) spi_flash: flash io: qio
+[16:31:45]W (798) spi_flash: Flash suspend feature is enabled
+[16:31:45]I (806) sleep_gpio: Configure to isolate all GPIO pins in sleep state
+[16:31:45]I (811) sleep_gpio: Enable automatic switching of GPIO sleep configuration
+[16:31:45]I (819) main_task: Started on CPU0
+[16:31:45]I (833) esp_psram: Reserving pool of 32K of internal memory for DMA/internal allocations
+[16:31:45]I (833) main_task: Cal[162][I][app.cpp:510] === MEMORY DIAGNOSTICS AT BOOT ===
+[16:31:45][162][I][app.cpp:511] Total heap: 349967 bytes
+[16:31:45][162][I][app.cpp:512] Free heap: 276543 bytes
+[16:31:45][173][I][app.cpp:513] Internal RAM total: 349967 bytes
+[16:31:45][173][I][app.cpp:514] Internal RAM free: 276543 bytes
+[16:31:45][183][I][app.cpp:515] Internal RAM largest block: 172032 bytes
+[16:31:45][183][I][app.cpp:516] PSRAM total: 5570560 bytes
+[16:31:45][193][I][app.cpp:517] PSRAM free: 5548964 bytes
+[16:31:45][193][I][app.cpp:518] DMA RAM free: 269039 bytes
+[16:31:45][193][I][app.cpp:519] =================================
+[16:31:45][204][I][app.cpp:496] [MEM BOOT] Free: 270KB, Internal: 270KB, PSRAM: 5418KB, MinFree: 265KB
+[16:31:45][214][D][Localization.hpp:205] Localization initialized, language: 1
+[16:31:45][214][D][FlashMutex.hpp:219] Flash[Flash]: 235us, wait 0us, vsync TIMEOUT
+[16:31:45][225][I][app.cpp:496] [MEM LOCALE] Free: 270KB, Internal: 270KB, PSRAM: 5418KB, MinFree: 265KB
+[16:31:45][235][D][app.cpp:542] Electricity price structures allocated in PSRAM (1576 bytes each)
+[16:31:45][235][I][app.cpp:496] [MEM PRICE_ALLOC] Free: 270KB, Internal: 270KB, PSRAM: 5415KB, MinFree: 265KB
+[16:31:45][245][I][app.cpp:327] [MEM LVGL:start] Internal: 270KB, Largest: 168KB
+[16:31:45][256][D][BacklightResolver.hpp:47] Display off timeout loaded: 0 minutes
+[16:31:46][756][D][BacklightResolver.hpp:258] Found STC8H1K28 at 0x30, detecting version...
+[16:31:46][807][D][BacklightResolver.hpp:275] After 25: result=0, read 1 bytes (0xFF)
+[16:31:46][808][D][BacklightResolver.hpp:298] Chip responded after 25 -> V1.3 detected
+[16:31:46][818][D][BacklightResolver.hpp:57] Detected CrowPanel version: V1.3
+[16:31:46][818][D][BacklightResolver.hpp:185] Setting backlight: -1 -> 255
+[16:31:46][829][I][app.cpp:337] [MEM LVGL:backlight] Internal: 269KB
+[16:31:46][923][I][app.cpp:341] [MEM LVGL:tft.begin] Internal: 264KB
+[16:31:46][1146][I][app.cpp:345] [MEM LVGL:tft] Internal: 264KB
+[16:31:46][1146][I][FlashMutex.hpp:80] VSyncManager: Initialized, waiting for VSYNC callback registration
+[16:31:46][1157][I][FlashMutex.hpp:91] VSyncManager: VSYNC callback registered on Bus_RGB
+[16:31:46][1157][I][app.cpp:357] VSYNC synchronization enabled (patched Bus_RGB)
+[16:31:46][1167][I][app.cpp:362] [MEM LVGL:lv_init] Internal: 264KB
+[16:31:46][1267][I][app.cpp:367] [MEM LVGL:touch] Internal: 264KB
+[16:31:46][1267][D][app.cpp:384] Display buffers in PSRAM: 2x 187.5 KB (120 lines)
+[16:31:46][1271][I][app.cpp:439] [MEM UI sizes] SplashUI=100, DashboardUI=8196, WiFiSetupUI=204, IntelligenceSetupUI=172 bytes
+[16:31:46][1281][I][app.cpp:441] [MEM LVGL:theme] Internal: 264KB
+[16:31:46][1291][I][app.cpp:456] [MEM LVGL:UI allocated] Internal: 264KB
+[16:31:46][1292][D][BaseUI.hpp:174] ScreenManager: Switching screen (anim=0, duration=0ms)
+[16:31:46][1304][I][app.cpp:496] [MEM LVGL] Free: 252KB, Internal: 252KB, PSRAM: 4273KB, MinFree: 252KB
+[16:31:46]I (2088) pp: pp rom version: e7ae62f
+[16:31:46]I (2165) net80211: net80211 rom version: e7ae62f
+[16:31:46]I (2166) wifi:wifi driver task: 3fcc6d04, prio:23, stack:6656, core=0
+[16:31:46]I (2170) wifi:wifi firmware version: 79fa3f41ba
+[16:31:46]I (2173) wifi:wifi certification version: v7.0
+[16:31:46]I (2177) wifi:config NVS flash: enabled
+[16:31:46]I (2181) wifi:config nano formatting: disabled
+[16:31:46]I (2185) wifi:Init data frame dynamic rx buffer num: 32
+[16:31:47]I (2190) wifi:Init static rx mgmt buffer num: 5
+[16:31:47]I (2194) wifi:Init management short buffer num: 32
+[16:31:47]I (2199) wifi:Init dynamic tx buffer num: 32
+[16:31:47]I (2203) wifi:Init tx cache buffer num: 4
+[16:31:47]I (2207) wifi:Init static tx FG buffer num: 2
+[16:31:47]I (2211) wifi:Init static rx buffer size: 1600
+[16:31:47]I (2215) wifi:Init static rx buffer num: 4
+[16:31:47]I (2219) wifi:Init dynamic rx buffer num: 32
+[16:31:47]I (2223) wifi_init: rx ba win: 6
+[16:31:47]I (2226) wifi_init: accept mbox: 6
+[16:31:47]I (2231) wifi_init: tcpip mbox: 32
+[16:31:47]I (2235) wifi_init: udp mbox: 6
+[16:31:47]I (2238) wifi_init: tcp mbox: 6
+[16:31:47]I (2242) wifi_init: tcp tx win: 5760
+[16:31:47]I (2247) wifi_init: tcp rx win: 5760
+[16:31:47]I (2251) wifi_init: tcp mss: 1440
+[16:31:47]I (2255) wifi_init: WiFi/LWIP prefer SPIRAM
+[16:31:47]I (2260) wifi_init: WiFi IRAM OP enabled
+[16:31:47]I (2264) wifi_init: WiFi RX IRAM OP enabled
+[16:31:47]I (2270) phy_init: phy_version 700,8582a7fd,Feb 10 2025,20:13:11
+[16:31:47]I (2302) wifi:mode : sta (80:b5:4e:f7:b0:00) + softAP (80:b5:4e:f7:b0:01)
+[16:31:47]I (2302) wifi:enable tsf
+[16:31:47]I (2303) wifi:Total power save buffer number: 16
+[16:31:47]I (2304) wifi:Init max length of beacon: 752/752
+[16:31:47]I (2309) wifi:Init max length of beacon: 752/752
+[16:31:47][1530][I (2314) wifi:I (2314) esp_netif_lwip: DHCP server started on interface WIFI_AP_DEF with IP: 192.168.4.1
+[16:31:47]Set ps type: 0, coexist: 0
+[16:31:47]
+[16:31:47]I][app.cpp:496] [MEM WIFI] Free: 216KB, Internal: 216KB, PSRAM: 4256KB, MinFree: 216KB
+[16:31:47][1554][D][app.cpp:553] [Memory] After setup - Free heap: 221463, Free internal: 221463
+[16:31:50][4572][D][WiFiDiscovery.hpp:637] DongleInfo cache initialized
+[16:31:50][4572][D][FlashMutex.hpp:219] Flash[Dongle:loadAll]: 114us, wait 209us, vsync OK
+[16:31:50][4595][D][FlashMutex.hpp:219] Flash[Dongle:load]: 189us, wait 12315us, vsync OK
+[16:31:50][4615][D][FlashMutex.hpp:219] Flash[Dongle:load]: 233us, wait 19905us, vsync TIMEOUT
+[16:31:50][4618][D][FlashMutex.hpp:219] Flash[Dongle:load]: 721us, wait 1964us, vsync OK
+[16:31:50][4641][D][FlashMutex.hpp:219] Flash[Dongle:load]: 740us, wait 11604us, vsync OK
+[16:31:50][4661][D][FlashMutex.hpp:219] Flash[Dongle:load]: 203us, wait 19430us, vsync TIMEOUT
+[16:31:50][4663][D][FlashMutex.hpp:219] Flash[Dongle:load]: 179us, wait 1831us, vsync OK
+[16:31:50][4686][D][FlashMutex.hpp:219] Flash[WiFi:loadSSID]: 75us, wait 12150us, vsync OK
+[16:31:50][4686][D][WiFiDiscovery.hpp:260] Multiple prefered dongles found, no autoconnect
+[16:31:50][4697][D][app.cpp:1572] Leaving state 0
+[16:31:50][4697][D][app.cpp:1502] Entering state 2
+[16:31:50][4697][D][BaseUI.hpp:174] ScreenManager: Switching screen (anim=5, duration=300ms)
+[16:31:50][4777][D][WiFiSetupUI.hpp:774] Inverter SN changed: 
+[16:31:50][4777][D][FlashMutex.hpp:219] Flash[WiFi:loadSSID]: 85us, wait 339us, vsync OK
+[16:31:50][4798][D][FlashMutex.hpp:219] Flash[SpotProvider:get]: 15us, wait 20440us, vsync TIMEOUT
+[16:31:50][4800][D][FlashMutex.hpp:219] Flash[TimeZone:get]: 30us, wait 1052us, vsync OK

@@ -145,25 +145,38 @@ private:
 
     void readInverterRTC(uint32_t sn, InverterData_t &inverterData)
     {
-        // Deye RTC registers: 22-27 (holding registers)
-        // 22: Year, 23: Month, 24: Day, 25: Hour, 26: Minute, 27: Second
-        byte packetBuffer[16];
-        channel.tryReadWithRetries(22, 6, sn, packetBuffer, [&]()
+        // Deye RTC: 3 registers (22-24), each packs two values in high/low byte
+        // Reg 22: high=Year(+2000), low=Month
+        // Reg 23: high=Day, low=Hour
+        // Reg 24: high=Minute, low=Second
+        byte packetBuffer[32];
+        channel.tryReadWithRetries(22, 3, sn, packetBuffer, [&]()
                                    {
+                                       uint16_t reg22 = channel.readUInt16(packetBuffer, 0);
+                                       uint16_t reg23 = channel.readUInt16(packetBuffer, 1);
+                                       uint16_t reg24 = channel.readUInt16(packetBuffer, 2);
+
                                        struct tm timeinfo = {};
-                                       timeinfo.tm_year = channel.readUInt16(packetBuffer, 0) - 1900;  // Year - 1900
-                                       timeinfo.tm_mon = channel.readUInt16(packetBuffer, 1) - 1;     // Month 1-12 to 0-11
-                                       timeinfo.tm_mday = channel.readUInt16(packetBuffer, 2);
-                                       timeinfo.tm_hour = channel.readUInt16(packetBuffer, 3);
-                                       timeinfo.tm_min = channel.readUInt16(packetBuffer, 4);
-                                       timeinfo.tm_sec = channel.readUInt16(packetBuffer, 5);
+                                       timeinfo.tm_year = (reg22 >> 8) + 2000 - 1900;  // High byte + 2000, then -1900 for tm
+                                       timeinfo.tm_mon = (reg22 & 0xFF) - 1;            // Low byte, 1-12 to 0-11
+                                       timeinfo.tm_mday = reg23 >> 8;                   // High byte
+                                       timeinfo.tm_hour = reg23 & 0xFF;                 // Low byte
+                                       timeinfo.tm_min = reg24 >> 8;                    // High byte
+                                       timeinfo.tm_sec = reg24 & 0xFF;                  // Low byte
                                        timeinfo.tm_isdst = -1;
 
-                                       inverterData.inverterTime = mktime(&timeinfo);
-                                       LOGD("Deye RTC: %04d-%02d-%02d %02d:%02d:%02d",
-                                             timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
-                                             timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-                                   });
+                                       // Validate basic ranges before mktime
+                                       if (timeinfo.tm_year >= 100 && timeinfo.tm_mon >= 0 && timeinfo.tm_mon <= 11 &&
+                                           timeinfo.tm_mday >= 1 && timeinfo.tm_mday <= 31) {
+                                           inverterData.inverterTime = mktime(&timeinfo);
+                                           LOGD("Deye RTC: %04d-%02d-%02d %02d:%02d:%02d",
+                                                 timeinfo.tm_year + 1900, timeinfo.tm_mon + 1, timeinfo.tm_mday,
+                                                 timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+                                       } else {
+                                           LOGW("Deye RTC: invalid values y=%d m=%d d=%d, skipping",
+                                                 (reg22 >> 8), (reg22 & 0xFF), (reg23 >> 8));
+                                       }
+                                   }, sizeof(packetBuffer));
     }
 
     void load3PhaseInverter(int deviceType, uint32_t sn, InverterData_t &inverterData)

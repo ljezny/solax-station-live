@@ -420,7 +420,7 @@ public:
         return -1;
     }
 
-    bool tryReadWithRetries(uint16_t startReg, uint16_t length, uint32_t sn, byte *buffer, std::function<void()> onSuccess)
+    bool tryReadWithRetries(uint16_t startReg, uint16_t length, uint32_t sn, byte *buffer, std::function<void()> onSuccess, size_t bufferSize = 1024)
     {
         lastError = V5Error::OK;
         
@@ -432,7 +432,7 @@ public:
             {
                 if (sendReadDataRequest(startReg, length, sn))
                 {
-                    int result = readModbusRTUResponse(buffer, 1024);
+                    int result = readModbusRTUResponse(buffer, bufferSize);
                     if (result > 0)
                     {
                         LOGI("Successfully read %d bytes from register 0x%04X", result, startReg);

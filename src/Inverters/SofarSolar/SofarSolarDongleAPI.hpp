@@ -140,7 +140,7 @@ public:
                     if (c1 >= 0x20 && c1 <= 0x7E) result += c1;
                     if (c2 >= 0x20 && c2 <= 0x7E) result += c2;
                 }
-            });
+            }, sizeof(packetBuffer));
         } else {
             success = channel.tryReadWithRetries(address, wordCount, dongleSn, packetBuffer, [&]() {
                 // Convert registers to ASCII string
@@ -155,7 +155,7 @@ public:
                     if (c1 >= 0x20 && c1 <= 0x7E) result += c1;
                     if (c2 >= 0x20 && c2 <= 0x7E) result += c2;
                 }
-            });
+            }, sizeof(packetBuffer));
         }
         
         if (success) {
