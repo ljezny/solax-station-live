@@ -669,16 +669,21 @@ private:
             return true;
         }
         
+        bool needsByteSwap = false;  // Only fallback addresses need byte swap
+        
         // Zkusit primární adresu 0x00 pro SN (standardní Solax střídače)
+        // Address 0x00 does NOT need byte swap (per homeassistant-solax-modbus reference)
         ModbusResponse response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, 0x00, 0x14);
         if (!response.isValid)
         {
             // Fallback: alternativní adresa 0x300 (některé MIC střídače)
+            // Address 0x300 MAY need byte swap for some devices
             LOGD("SN read failed at 0x00, trying fallback address 0x300");
             response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, 0x300, 0x07);
             if (!response.isValid)
             {
                 // Fallback 2: adresa 0x1A10 (některé starší MIC střídače)
+                // Address 0x1A10 MAY need byte swap for some devices
                 LOGD("SN read failed at 0x300, trying fallback address 0x1A10");
                 response = channel.sendModbusRequest(UNIT_ID, FUNCTION_CODE_READ_HOLDING, 0x1A10, 0x07);
                 if (!response.isValid)
@@ -687,21 +692,25 @@ private:
                     return false;
                 }
                 sn = response.readString(0x1A10, 14);
+                needsByteSwap = true;
             }
             else
             {
                 sn = response.readString(0x300, 14);
+                needsByteSwap = true;
             }
         }
         else
         {
             sn = response.readString(0x00, 14);
+            needsByteSwap = false;  // Primary address 0x00 does not need swap
         }
         
-        // Některé střídače vrací SN s prohozením bytů - opravit pokud nezačíná na M nebo X
-        if (!sn.isEmpty() && !sn.startsWith("M") && !sn.startsWith("X") && !sn.startsWith("H") && !sn.startsWith("L"))
+        // Byte swap only for fallback addresses AND only if SN doesn't start with known prefixes
+        // Per homeassistant-solax-modbus: swap only for 0x300/0x1A10 if not starting with M or X
+        if (needsByteSwap && !sn.isEmpty() && !sn.startsWith("M") && !sn.startsWith("X"))
         {
-            // Swap bytes - některé starší střídače mají prohozené byty v SN
+            // Swap bytes - some older inverters at fallback addresses have swapped bytes in SN
             String swapped = "";
             for (int pos = 0; pos < sn.length() - 1; pos += 2)
             {
@@ -712,7 +721,7 @@ private:
             {
                 swapped += sn[sn.length() - 1];
             }
-            LOGD("SN byte swap: %s -> %s", sn.c_str(), swapped.c_str());
+            LOGD("SN byte swap (fallback address): %s -> %s", sn.c_str(), swapped.c_str());
             sn = swapped;
         }
 
@@ -1313,8 +1322,9 @@ private:
         data.pv1Power = response.readUInt16(0x0A);
         data.pv2Power = response.readUInt16(0x0B);
         data.inverterTemperature = response.readInt16(0x08);
-        if (isGen5(data.sn))
+        if (isGen5OrGen6())
         {
+            // GEN5 and GEN6 inverters report temperature in 0.1°C units
             data.inverterTemperature /= 10;
         }
         data.soc = response.readUInt16(0x1C);
