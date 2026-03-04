@@ -1182,12 +1182,15 @@ bool runIntelligenceTask()
                 solarChartDataProvider.setPrediction(q, predProductionWh, predConsumptionWh, -1); // -1 = no SOC
             }
 
-            // Predictions for tomorrow
-            for (int q = 0; q < QUARTERS_OF_DAY; q++)
+            // Predictions for tomorrow - only if we have spot prices for tomorrow
+            if (electricityPriceResult != nullptr && electricityPriceResult->hasTomorrowData)
             {
-                float predProductionWh = productionPredictor.predictQuarterlyProduction(tomorrowMonth, q);
-                float predConsumptionWh = consumptionPredictor.predictQuarterlyConsumption(tomorrowDay, q);
-                solarChartDataProvider.setPrediction(QUARTERS_OF_DAY + q, predProductionWh, predConsumptionWh, -1);
+                for (int q = 0; q < QUARTERS_OF_DAY; q++)
+                {
+                    float predProductionWh = productionPredictor.predictQuarterlyProduction(tomorrowMonth, q);
+                    float predConsumptionWh = consumptionPredictor.predictQuarterlyConsumption(tomorrowDay, q);
+                    solarChartDataProvider.setPrediction(QUARTERS_OF_DAY + q, predProductionWh, predConsumptionWh, -1);
+                }
             }
 
             // Update UI state
