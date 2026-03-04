@@ -42,7 +42,7 @@ class UITextChangeAnimator {
         }
 
         ~UITextChangeAnimator() {
-            lv_anim_del(&anim, (lv_anim_exec_xcb_t)animation_set_text);
+            lv_anim_del(&variables, (lv_anim_exec_xcb_t)animation_set_text);
         }
 
         void animate(lv_obj_t *label, int32_t from, int32_t to) {
