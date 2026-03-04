@@ -2895,11 +2895,11 @@ public:
             
             expandedChart = nullptr;
         } else {
-            // Expand - fade out all siblings except clicked chart
+            // Expand - fade out all siblings except clicked chart and TopRightContainer (daily stats)
             uint32_t childCount = lv_obj_get_child_cnt(RightContainer);
             for (uint32_t i = 0; i < childCount; i++) {
                 lv_obj_t *child = lv_obj_get_child(RightContainer, i);
-                if (child != chart) {
+                if (child != chart && child != TopRightContainer) {
                     animateFade(child, false);
                 }
             }
