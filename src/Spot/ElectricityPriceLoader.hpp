@@ -306,16 +306,7 @@ private:
         tempResult->updated = 0;
         
         EnergyChartsAPI api;
-        for (int r = 0; r < 5; r++)
-        {
-            if (api.reloadData(zoneInfo.apiCode, tomorrow, *tempResult))
-            {
-                break;
-            }
-            
-            LOGD("Retry %d/5 for %s", r + 1, zoneInfo.apiCode);
-            delay(5000 * (r + 1));
-        }
+        api.reloadData(zoneInfo.apiCode, tomorrow, *tempResult);
         
         if (tempResult->updated == 0) {
             LOGD("Failed to load electricity prices for %s", zoneInfo.apiCode);
