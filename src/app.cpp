@@ -598,10 +598,12 @@ bool discoverDonglesTask()
     return run;
 }
 
+// Single shared instance for read and write operations
+static GoodweDongleAPI goodweDongleAPI;
+
 InverterData_t loadInverterData(WiFiDiscoveryResult_t &discoveryResult)
 {
     static SolaxModbusDongleAPI solaxModbusDongleAPI = SolaxModbusDongleAPI();
-    static GoodweDongleAPI goodweDongleAPI = GoodweDongleAPI();
     static SofarSolarDongleAPI sofarSolarDongleAPI = SofarSolarDongleAPI();
     static DeyeDongleAPI deyeDongleAPI = DeyeDongleAPI();
     static VictronDongleAPI victronDongleAPI = VictronDongleAPI();
@@ -643,7 +645,6 @@ bool supportsIntelligenceForCurrentInverter(WiFiDiscoveryResult_t &discoveryResu
 {
     // Use static instances - same as in loadInverterData()
     static SolaxModbusDongleAPI solaxModbusDongleAPI;
-    static GoodweDongleAPI goodweDongleAPI;
     static SofarSolarDongleAPI sofarSolarDongleAPI;
     static DeyeDongleAPI deyeDongleAPI;
     static VictronDongleAPI victronDongleAPI;
@@ -1102,8 +1103,7 @@ bool runIntelligenceTask()
                         }
                         else if (wifiDiscoveryResult.type == CONNECTION_TYPE_GOODWE)
                         {
-                            static GoodweDongleAPI goodweAPI;
-                            success = goodweAPI.setWorkMode(wifiDiscoveryResult.inverterIP, lastIntelligenceResult.command,
+                            success = goodweDongleAPI.setWorkMode(wifiDiscoveryResult.inverterIP, lastIntelligenceResult.command,
                                                             settings.minSocPercent, settings.maxSocPercent);
                         }
                         else if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOFAR)
@@ -1668,6 +1668,12 @@ void updateState()
                     String detectedIP;
                     bool inverterReachable = dongleDiscovery.isInverterReachable(wifiDiscoveryResult, detectedIP);
                     
+                    // Propagate discovered IP so setWorkMode can use it
+                    if (inverterReachable && !detectedIP.isEmpty() && wifiDiscoveryResult.inverterIP.isEmpty()) {
+                        wifiDiscoveryResult.inverterIP = detectedIP;
+                        LOGD("Stored discovered inverter IP: %s", detectedIP.c_str());
+                    }
+                    
                     xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
                     if (inverterReachable) {
                         String msg = String(TR(STR_SPLASH_INVERTER_FOUND));
@@ -1865,9 +1871,8 @@ void updateState()
                 }
                 else if (wifiDiscoveryResult.type == CONNECTION_TYPE_GOODWE)
                 {
-                    static GoodweDongleAPI goodweAPI;
                     // Use default SOC values for manual mode changes (10% min, 100% max)
-                    success = goodweAPI.setWorkMode(wifiDiscoveryResult.inverterIP, mode, 10, 100);
+                    success = goodweDongleAPI.setWorkMode(wifiDiscoveryResult.inverterIP, mode, 10, 100);
                 }
                 else if (wifiDiscoveryResult.type == CONNECTION_TYPE_SOFAR)
                 {

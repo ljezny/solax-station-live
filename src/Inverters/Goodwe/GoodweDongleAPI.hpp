@@ -72,8 +72,14 @@ public:
         
         if (ip == IPAddress(0, 0, 0, 0))
         {
-            LOGD("No IP address available for setWorkMode");
-            return false;
+            LOGD("No IP from parameter, trying UDP discovery for setWorkMode");
+            ip = discoverDongleIP();
+            if (ip == IPAddress(0, 0, 0, 0))
+            {
+                LOGW("No IP address available for setWorkMode after discovery");
+                return false;
+            }
+            LOGD("Discovered dongle IP for setWorkMode: %s", ip.toString().c_str());
         }
 
         return executeWorkModeChange(mode, minSoc, maxSoc);
